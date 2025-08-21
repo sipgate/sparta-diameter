@@ -1,0 +1,14 @@
+services:
+  diameter-server:
+    build:
+      context: ./docker/python-diameter
+      dockerfile: Dockerfile
+    ports:
+      - "3868:3868"
+    container_name: development-server
+    networks:
+      - diameter-net
+
+networks:
+  diameter-net:
+    driver: bridge
