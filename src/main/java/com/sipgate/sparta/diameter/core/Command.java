@@ -1,10 +1,7 @@
-package com.sipgate.sparta.diameter.base;
-
-import com.sipgate.sparta.diameter.base.AVP;
+package com.sipgate.sparta.diameter.core;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 

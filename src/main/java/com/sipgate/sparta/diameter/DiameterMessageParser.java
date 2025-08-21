@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter;
 
-import com.sipgate.sparta.diameter.base.*;
+import com.sipgate.sparta.diameter.core.*;
+import com.sipgate.sparta.diameter.messages.base.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;

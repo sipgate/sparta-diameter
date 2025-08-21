@@ -1,4 +1,4 @@
-package com.sipgate.sparta.diameter.base;
+package com.sipgate.sparta.diameter.core;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;

@@ -1,4 +1,4 @@
-package com.sipgate.sparta.diameter.base;
+package com.sipgate.sparta.diameter.core;
 
 /**
  * Base class for all Diameter request messages.

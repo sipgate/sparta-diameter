@@ -1,4 +1,8 @@
-package com.sipgate.sparta.diameter.base;
+package com.sipgate.sparta.diameter.messages.base;
+
+import com.sipgate.sparta.diameter.core.*;
+import com.sipgate.sparta.diameter.core.mixins.OriginStateAware;
+import com.sipgate.sparta.diameter.core.DiameterConstants;
 
 /**
  * Device Watchdog Request (DWR) message.

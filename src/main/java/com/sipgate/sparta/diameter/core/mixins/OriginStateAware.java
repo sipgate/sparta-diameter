@@ -1,4 +1,7 @@
-package com.sipgate.sparta.diameter.base;
+package com.sipgate.sparta.diameter.core.mixins;
+
+import com.sipgate.sparta.diameter.core.AVP;
+import com.sipgate.sparta.diameter.core.DiameterConstants;
 
 /**
  * Interface for Diameter messages that include Origin-State-Id AVP.

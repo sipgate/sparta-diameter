@@ -1,4 +1,4 @@
-package com.sipgate.sparta.diameter.base;
+package com.sipgate.sparta.diameter.core;
 
 /**
  * Generic command implementation for unknown or unsupported command codes.

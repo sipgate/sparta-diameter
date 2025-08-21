@@ -1,4 +1,6 @@
-package com.sipgate.sparta.diameter.base;
+package com.sipgate.sparta.diameter.core.mixins;
+
+import com.sipgate.sparta.diameter.core.AVP;
 
 /**
  * Base interface for Diameter messages that need AVP operations.
