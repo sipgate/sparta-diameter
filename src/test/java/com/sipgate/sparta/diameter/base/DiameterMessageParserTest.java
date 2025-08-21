@@ -2,6 +2,9 @@ package com.sipgate.sparta.diameter.base;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -50,6 +53,30 @@ public class DiameterMessageParserTest {
         assertFalse(originRealmAVP.isVendorSpecific(), "Origin-Realm should not be vendor-specific");
     }
 
+    @Test
+    void testDeviceWatchdogRequestRoundTrip() throws Exception {
+        // Parse the DWR from hex data
+        final byte[] originalData = hexStringToByteArray(DWR_HEX);
+        final Command command = DiameterMessageParser.parseMessage(originalData);
+
+        // Verify it's a DeviceWatchdogRequest
+        assertInstanceOf(DeviceWatchdogRequest.class, command, "Should be DeviceWatchdogRequest");
+        final DeviceWatchdogRequest dwr = (DeviceWatchdogRequest) command;
+
+        // Serialize back to bytes
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        final DataOutputStream dataOutputStream = new DataOutputStream(outputStream);
+        dwr.writeTo(dataOutputStream);
+        dataOutputStream.flush();
+
+        final byte[] serializedData = outputStream.toByteArray();
+        final String serializedHex = byteArrayToHexString(serializedData);
+
+        // Compare with original hex string (should be identical)
+        assertEquals(DWR_HEX.toLowerCase(), serializedHex.toLowerCase(),
+                "Round-trip serialization should produce identical result");
+    }
+
     private byte[] hexStringToByteArray(final String hexString) {
         final int length = hexString.length();
         final byte[] data = new byte[length / 2];
@@ -58,5 +85,13 @@ public class DiameterMessageParserTest {
                     + Character.digit(hexString.charAt(i + 1), 16));
         }
         return data;
+    }
+
+    private String byteArrayToHexString(final byte[] data) {
+        final StringBuilder sb = new StringBuilder();
+        for (final byte b : data) {
+            sb.append(String.format("%02x", b & 0xFF));
+        }
+        return sb.toString();
     }
 }
