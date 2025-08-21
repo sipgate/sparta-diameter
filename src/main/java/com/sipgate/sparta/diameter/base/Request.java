@@ -8,7 +8,7 @@ public abstract class Request extends Command {
 
     protected Request(final int commandCode, final boolean proxiable, final int applicationId,
                       final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(commandCode, true, proxiable, false, false, applicationId,
+        super(commandCode, true, proxiable, false, applicationId,
               hopByHopIdentifier, endToEndIdentifier);
     }
 

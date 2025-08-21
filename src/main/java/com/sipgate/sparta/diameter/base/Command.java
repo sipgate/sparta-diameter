@@ -19,7 +19,6 @@ public abstract class Command {
     private final boolean request;
     private final boolean proxiable;
     private final boolean error;
-    private final boolean retransmitted;
     private final int applicationId;
     private final int hopByHopIdentifier;
     private final int endToEndIdentifier;
@@ -28,14 +27,13 @@ public abstract class Command {
     private final List<AVP> avps;
 
     protected Command(final int commandCode, final boolean request, final boolean proxiable, final boolean error,
-                      final boolean retransmitted, final int applicationId, final int hopByHopIdentifier,
+                      final int applicationId, final int hopByHopIdentifier,
                       final int endToEndIdentifier) {
         this.version = 1; // Diameter version is always 1
         this.commandCode = commandCode;
         this.request = request;
         this.proxiable = proxiable;
         this.error = error;
-        this.retransmitted = retransmitted;
         this.applicationId = applicationId;
         this.hopByHopIdentifier = hopByHopIdentifier;
         this.endToEndIdentifier = endToEndIdentifier;
@@ -48,7 +46,6 @@ public abstract class Command {
     public boolean isRequest() { return request; }
     public boolean isProxiable() { return proxiable; }
     public boolean isError() { return error; }
-    public boolean isRetransmitted() { return retransmitted; }
     public int getApplicationId() { return applicationId; }
     public int getHopByHopIdentifier() { return hopByHopIdentifier; }
     public int getEndToEndIdentifier() { return endToEndIdentifier; }
@@ -119,7 +116,7 @@ public abstract class Command {
         if (request) flags |= 0x80;
         if (proxiable) flags |= 0x40;
         if (error) flags |= 0x20;
-        if (retransmitted) flags |= 0x10;
+        // Bit 0x10 is reserved and must be 0
         outputStream.writeByte(flags);
 
         // Command Code (3 bytes)

@@ -8,7 +8,7 @@ public abstract class Answer extends Command {
 
     protected Answer(final int commandCode, final boolean proxiable, final boolean error, final int applicationId,
                      final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(commandCode, false, proxiable, error, false, applicationId,
+        super(commandCode, false, proxiable, error, applicationId,
               hopByHopIdentifier, endToEndIdentifier);
     }
 

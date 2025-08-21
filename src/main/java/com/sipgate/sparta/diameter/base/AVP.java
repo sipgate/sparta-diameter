@@ -1,7 +1,9 @@
 package com.sipgate.sparta.diameter.base;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * Represents a Diameter Attribute-Value Pair (AVP).
@@ -51,6 +53,20 @@ public class AVP {
 
     public byte[] getData() {
         return data.clone();
+    }
+
+    /**
+     * Converts this AVP to a ByteBuffer (useful for Netty integration).
+     */
+    public ByteBuffer toByteBuffer() {
+        try {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            final DataOutputStream dos = new DataOutputStream(baos);
+            writeTo(dos);
+            return ByteBuffer.wrap(baos.toByteArray());
+        } catch (final IOException e) {
+            throw new RuntimeException("Failed to convert AVP to ByteBuffer", e);
+        }
     }
 
     /**

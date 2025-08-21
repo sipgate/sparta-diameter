@@ -7,7 +7,7 @@ package com.sipgate.sparta.diameter.base;
 public class DeviceWatchdogRequest extends Request {
 
     public DeviceWatchdogRequest(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(DiameterConstants.DEVICE_WATCHDOG_REQUEST, true,
+        super(DiameterConstants.DEVICE_WATCHDOG_REQUEST, false,
               DiameterConstants.DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
