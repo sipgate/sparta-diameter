@@ -1,4 +1,4 @@
-package com.sipgate.sparta.diameter.base;
+package com.sipgate.sparta.diameter;
 
 /**
  * Exception thrown for Diameter protocol related errors.

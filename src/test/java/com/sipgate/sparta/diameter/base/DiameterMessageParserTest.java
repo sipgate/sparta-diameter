@@ -1,5 +1,6 @@
 package com.sipgate.sparta.diameter.base;
 
+import com.sipgate.sparta.diameter.DiameterMessageParser;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -31,6 +32,7 @@ public class DiameterMessageParserTest {
         assertTrue(dwr.isRequest(), "Should be request");
         assertFalse(dwr.isProxiable(), "Should not be proxiable");
         assertFalse(dwr.isError(), "Should not be error");
+        assertFalse(dwr.isRetransmitted(), "Should not be retransmitted");
         assertEquals(DiameterConstants.DIAMETER_COMMON_MESSAGES, dwr.getApplicationId(), "Application ID should be 0");
         assertEquals(0x24056030, dwr.getHopByHopIdentifier(), "Hop-by-Hop ID should match");
         assertEquals(0x24056030, dwr.getEndToEndIdentifier(), "End-to-End ID should match");

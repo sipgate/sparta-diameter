@@ -7,9 +7,9 @@ package com.sipgate.sparta.diameter.base;
 public class GenericCommand extends Command {
 
     public GenericCommand(final int commandCode, final boolean request, final boolean proxiable,
-                         final boolean error, final int applicationId,
+                         final boolean error, final boolean retransmitted, final int applicationId,
                          final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(commandCode, request, proxiable, error, applicationId,
+        super(commandCode, request, proxiable, error, retransmitted, applicationId,
               hopByHopIdentifier, endToEndIdentifier);
     }
 }

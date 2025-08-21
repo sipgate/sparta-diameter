@@ -1,4 +1,6 @@
-package com.sipgate.sparta.diameter.base;
+package com.sipgate.sparta.diameter;
+
+import com.sipgate.sparta.diameter.base.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -93,6 +95,7 @@ public final class DiameterMessageParser {
             final boolean isRequest = (flags & 0x80) != 0;
             final boolean isProxiable = (flags & 0x40) != 0;
             final boolean isError = (flags & 0x20) != 0;
+            final boolean isRetransmitted = (flags & 0x10) != 0; // T flag (RFC 6733)
 
             // Command Code (3 bytes)
             final int commandCode = (inputStream.readUnsignedByte() << 16) |
@@ -113,7 +116,7 @@ public final class DiameterMessageParser {
 
             // Create appropriate message type
             final Command command = createCommand(commandCode, isRequest, isProxiable,
-                                                isError, applicationId,
+                                                isError, isRetransmitted, applicationId,
                                                 hopByHopId, endToEndId);
 
             // Add parsed AVPs
@@ -196,29 +199,37 @@ public final class DiameterMessageParser {
      */
     private static Command createCommand(final int commandCode, final boolean isRequest,
                                        final boolean isProxiable, final boolean isError,
-                                       final int applicationId, final int hopByHopId,
-                                       final int endToEndId) {
+                                       final boolean isRetransmitted, final int applicationId,
+                                       final int hopByHopId, final int endToEndId) {
 
         // Handle known command codes
         switch (commandCode) {
             case DiameterConstants.CAPABILITIES_EXCHANGE_REQUEST:
                 if (isRequest) {
-                    return new CapabilitiesExchangeRequest(hopByHopId, endToEndId);
+                    return new CapabilitiesExchangeRequest(isRetransmitted, hopByHopId, endToEndId);
                 } else {
-                    return new CapabilitiesExchangeAnswer(hopByHopId, endToEndId, isError);
+                    if (isError) {
+                        return new CapabilitiesExchangeAnswer(isRetransmitted, hopByHopId, endToEndId, isError);
+                    } else {
+                        return new CapabilitiesExchangeAnswer(isRetransmitted, hopByHopId, endToEndId);
+                    }
                 }
 
             case DiameterConstants.DEVICE_WATCHDOG_REQUEST:
                 if (isRequest) {
-                    return new DeviceWatchdogRequest(hopByHopId, endToEndId);
+                    return new DeviceWatchdogRequest(isRetransmitted, hopByHopId, endToEndId);
                 } else {
-                    return new DeviceWatchdogAnswer(hopByHopId, endToEndId, isError);
+                    if (isError) {
+                        return new DeviceWatchdogAnswer(isRetransmitted, hopByHopId, endToEndId, isError);
+                    } else {
+                        return new DeviceWatchdogAnswer(isRetransmitted, hopByHopId, endToEndId);
+                    }
                 }
 
             default:
                 // For unknown command codes, create a generic command
                 return new GenericCommand(commandCode, isRequest, isProxiable, isError,
-                                        applicationId, hopByHopId, endToEndId);
+                                        isRetransmitted, applicationId, hopByHopId, endToEndId);
         }
     }
 }

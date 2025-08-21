@@ -6,15 +6,20 @@ package com.sipgate.sparta.diameter.base;
  */
 public class CapabilitiesExchangeAnswer extends CapabilitiesExchange {
 
+    public CapabilitiesExchangeAnswer(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
+        super(false, true, false, retransmitted, hopByHopIdentifier, endToEndIdentifier);
+    }
+
+    // Convenience constructor for backward compatibility (non-retransmitted messages)
     public CapabilitiesExchangeAnswer(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(false, true, false, hopByHopIdentifier, endToEndIdentifier);
+        this(false, hopByHopIdentifier, endToEndIdentifier);
     }
 
     /**
      * Constructor for error responses.
      */
-    public CapabilitiesExchangeAnswer(final int hopByHopIdentifier, final int endToEndIdentifier, final boolean error) {
-        super(false, true, error, hopByHopIdentifier, endToEndIdentifier);
+    public CapabilitiesExchangeAnswer(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier, final boolean error) {
+        super(false, true, error, retransmitted, hopByHopIdentifier, endToEndIdentifier);
     }
 
     /**

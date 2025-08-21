@@ -10,8 +10,8 @@ import java.nio.charset.StandardCharsets;
 public abstract class CapabilitiesExchange extends Command {
 
     protected CapabilitiesExchange(final boolean request, final boolean proxiable, final boolean error,
-                                   final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(DiameterConstants.CAPABILITIES_EXCHANGE_REQUEST, request, proxiable, error,
+                                   final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
+        super(DiameterConstants.CAPABILITIES_EXCHANGE_REQUEST, request, proxiable, error, retransmitted,
               DiameterConstants.DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
