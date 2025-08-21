@@ -4,7 +4,7 @@ package com.sipgate.sparta.diameter.base;
  * Capabilities Exchange Answer (CEA) message.
  * Response to a CER message, used to exchange capabilities between Diameter peers.
  */
-public class CapabilitiesExchangeAnswer extends Answer implements CapabilitiesExchange {
+public class CapabilitiesExchangeAnswer extends Answer implements CapabilitiesExchange, OriginStateAware {
 
     public CapabilitiesExchangeAnswer(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
         super(DiameterConstants.CAPABILITIES_EXCHANGE_REQUEST, true, retransmitted,

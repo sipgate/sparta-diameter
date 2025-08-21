@@ -191,23 +191,4 @@ public abstract class Command {
         }
         return null;
     }
-
-    /**
-     * Sets the Origin-State-Id AVP.
-     * This AVP is used to detect peer restarts.
-     */
-    public void setOriginStateId(final int originStateId) {
-        setAVP(AVP.createIntegerAVP(DiameterConstants.ORIGIN_STATE_ID, true, originStateId));
-    }
-
-    /**
-     * Gets the Origin-State-Id from this message.
-     */
-    public int getOriginStateId() {
-        final AVP originStateIdAVP = findAVP(DiameterConstants.ORIGIN_STATE_ID);
-        if (originStateIdAVP != null && originStateIdAVP.getData().length >= 4) {
-            return originStateIdAVP.getDataAsInt();
-        }
-        return -1;
-    }
 }

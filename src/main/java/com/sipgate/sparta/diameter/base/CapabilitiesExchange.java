@@ -7,12 +7,7 @@ import java.net.InetAddress;
  * Contains common functionality for exchanging capabilities between Diameter peers.
  * This interface provides default implementations that can be used as mixins.
  */
-public interface CapabilitiesExchange {
-
-    // These methods need to be implemented by the concrete classes
-    void addAVP(AVP avp);
-    void setAVP(AVP avp);
-    AVP findAVP(int code);
+public interface CapabilitiesExchange extends DiameterMessage {
 
     /**
      * Adds a Host-IP-Address AVP with proper encoding for IPv4 and IPv6 addresses.
