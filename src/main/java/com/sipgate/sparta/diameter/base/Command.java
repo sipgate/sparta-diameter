@@ -62,6 +62,18 @@ public abstract class Command {
     }
 
     /**
+     * Add or update an AVP to this command, ensuring uniqueness by AVP code.
+     * If an AVP with the same code already exists, it will be replaced.
+     * Otherwise, the AVP will be added.
+     */
+    public void setAVP(final AVP avp) {
+        // Find and remove existing AVP with the same code
+        avps.removeIf(existingAvp -> existingAvp.getCode() == avp.getCode());
+        // Add the new AVP
+        avps.add(avp);
+    }
+
+    /**
      * Find an AVP by its code.
      */
     public AVP findAVP(final int code) {
@@ -147,7 +159,7 @@ public abstract class Command {
      * This is a mandatory AVP for most Diameter messages.
      */
     public void setOriginHost(final String originHost) {
-        addAVP(AVP.createStringAVP(DiameterConstants.ORIGIN_HOST, true, originHost));
+        setAVP(AVP.createStringAVP(DiameterConstants.ORIGIN_HOST, true, originHost));
     }
 
     /**
@@ -155,7 +167,7 @@ public abstract class Command {
      * This is a mandatory AVP for most Diameter messages.
      */
     public void setOriginRealm(final String originRealm) {
-        addAVP(AVP.createStringAVP(DiameterConstants.ORIGIN_REALM, true, originRealm));
+        setAVP(AVP.createStringAVP(DiameterConstants.ORIGIN_REALM, true, originRealm));
     }
 
     /**
@@ -185,7 +197,7 @@ public abstract class Command {
      * This AVP is used to detect peer restarts.
      */
     public void setOriginStateId(final int originStateId) {
-        addAVP(AVP.createIntegerAVP(DiameterConstants.ORIGIN_STATE_ID, true, originStateId));
+        setAVP(AVP.createIntegerAVP(DiameterConstants.ORIGIN_STATE_ID, true, originStateId));
     }
 
     /**

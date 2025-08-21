@@ -1,24 +1,23 @@
 package com.sipgate.sparta.diameter.base;
 
 import java.net.InetAddress;
-import java.nio.charset.StandardCharsets;
 
 /**
- * Abstract base class for Capabilities Exchange messages (CER/CEA).
+ * Interface for Capabilities Exchange messages (CER/CEA).
  * Contains common functionality for exchanging capabilities between Diameter peers.
+ * This interface provides default implementations that can be used as mixins.
  */
-public abstract class CapabilitiesExchange extends Command {
+public interface CapabilitiesExchange {
 
-    protected CapabilitiesExchange(final boolean request, final boolean proxiable, final boolean error,
-                                   final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(DiameterConstants.CAPABILITIES_EXCHANGE_REQUEST, request, proxiable, error, retransmitted,
-              DiameterConstants.DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
-    }
+    // These methods need to be implemented by the concrete classes
+    void addAVP(AVP avp);
+    void setAVP(AVP avp);
+    AVP findAVP(int code);
 
     /**
      * Adds a Host-IP-Address AVP with proper encoding for IPv4 and IPv6 addresses.
      */
-    public void addHostIPAddress(final InetAddress address) {
+    default void addHostIPAddress(final InetAddress address) {
         final byte[] addressBytes = address.getAddress();
         final byte[] data;
 
@@ -44,49 +43,49 @@ public abstract class CapabilitiesExchange extends Command {
     /**
      * Sets the Vendor-Id AVP.
      */
-    public void setVendorId(final int vendorId) {
-        addAVP(AVP.createIntegerAVP(DiameterConstants.VENDOR_ID, true, vendorId));
+    default void setVendorId(final int vendorId) {
+        setAVP(AVP.createIntegerAVP(DiameterConstants.VENDOR_ID, true, vendorId));
     }
 
     /**
      * Sets the Product-Name AVP.
      */
-    public void setProductName(final String productName) {
-        addAVP(AVP.createStringAVP(DiameterConstants.PRODUCT_NAME, false, productName));
+    default void setProductName(final String productName) {
+        setAVP(AVP.createStringAVP(DiameterConstants.PRODUCT_NAME, false, productName));
     }
 
     /**
      * Adds a Supported-Vendor-Id AVP.
      */
-    public void addSupportedVendorId(final int vendorId) {
+    default void addSupportedVendorId(final int vendorId) {
         addAVP(AVP.createIntegerAVP(DiameterConstants.SUPPORTED_VENDOR_ID, true, vendorId));
     }
 
     /**
      * Adds an Auth-Application-Id AVP.
      */
-    public void addAuthApplicationId(final int applicationId) {
+    default void addAuthApplicationId(final int applicationId) {
         addAVP(AVP.createIntegerAVP(DiameterConstants.AUTH_APPLICATION_ID, true, applicationId));
     }
 
     /**
      * Adds an Acct-Application-Id AVP.
      */
-    public void addAcctApplicationId(final int applicationId) {
+    default void addAcctApplicationId(final int applicationId) {
         addAVP(AVP.createIntegerAVP(DiameterConstants.ACCT_APPLICATION_ID, true, applicationId));
     }
 
     /**
      * Sets the Firmware-Revision AVP.
      */
-    public void setFirmwareRevision(final int firmwareRevision) {
-        addAVP(AVP.createIntegerAVP(DiameterConstants.FIRMWARE_REVISION, false, firmwareRevision));
+    default void setFirmwareRevision(final int firmwareRevision) {
+        setAVP(AVP.createIntegerAVP(DiameterConstants.FIRMWARE_REVISION, false, firmwareRevision));
     }
 
     /**
      * Gets the Vendor-Id from this message.
      */
-    public int getVendorId() {
+    default int getVendorId() {
         final AVP vendorIdAVP = findAVP(DiameterConstants.VENDOR_ID);
         if (vendorIdAVP != null && vendorIdAVP.getData().length >= 4) {
             return vendorIdAVP.getDataAsInt();
@@ -97,7 +96,7 @@ public abstract class CapabilitiesExchange extends Command {
     /**
      * Gets the Product-Name from this message.
      */
-    public String getProductName() {
+    default String getProductName() {
         final AVP productNameAVP = findAVP(DiameterConstants.PRODUCT_NAME);
         if (productNameAVP != null) {
             return productNameAVP.getDataAsString();
@@ -108,7 +107,7 @@ public abstract class CapabilitiesExchange extends Command {
     /**
      * Gets the Firmware-Revision from this message.
      */
-    public int getFirmwareRevision() {
+    default int getFirmwareRevision() {
         final AVP firmwareRevisionAVP = findAVP(DiameterConstants.FIRMWARE_REVISION);
         if (firmwareRevisionAVP != null && firmwareRevisionAVP.getData().length >= 4) {
             return firmwareRevisionAVP.getDataAsInt();

@@ -4,10 +4,11 @@ package com.sipgate.sparta.diameter.base;
  * Capabilities Exchange Answer (CEA) message.
  * Response to a CER message, used to exchange capabilities between Diameter peers.
  */
-public class CapabilitiesExchangeAnswer extends CapabilitiesExchange {
+public class CapabilitiesExchangeAnswer extends Answer implements CapabilitiesExchange {
 
     public CapabilitiesExchangeAnswer(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(false, true, false, retransmitted, hopByHopIdentifier, endToEndIdentifier);
+        super(DiameterConstants.CAPABILITIES_EXCHANGE_REQUEST, true, retransmitted,
+              DiameterConstants.DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
     // Convenience constructor for backward compatibility (non-retransmitted messages)
@@ -19,25 +20,44 @@ public class CapabilitiesExchangeAnswer extends CapabilitiesExchange {
      * Constructor for error responses.
      */
     public CapabilitiesExchangeAnswer(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier, final boolean error) {
-        super(false, true, error, retransmitted, hopByHopIdentifier, endToEndIdentifier);
+        super(DiameterConstants.CAPABILITIES_EXCHANGE_REQUEST, true, error, retransmitted,
+              DiameterConstants.DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
+    }
+
+    // Convenience constructor for error responses (backward compatibility)
+    public CapabilitiesExchangeAnswer(final int hopByHopIdentifier, final int endToEndIdentifier, final boolean error) {
+        this(false, hopByHopIdentifier, endToEndIdentifier, error);
     }
 
     /**
-     * Gets the Result-Code AVP from this answer.
-     * @return the result code, or -1 if not found
+     * Sets the Error-Message AVP for this answer.
      */
-    public int getResultCode() {
-        final AVP resultCodeAVP = findAVP(DiameterConstants.RESULT_CODE);
-        if (resultCodeAVP != null && resultCodeAVP.getData().length >= 4) {
-            return resultCodeAVP.getDataAsInt();
+    public void setErrorMessage(final String errorMessage) {
+        setAVP(AVP.createStringAVP(DiameterConstants.ERROR_MESSAGE, false, errorMessage));
+    }
+
+    /**
+     * Gets the Error-Message from this answer.
+     */
+    public String getErrorMessage() {
+        final AVP errorMessageAVP = findAVP(DiameterConstants.ERROR_MESSAGE);
+        if (errorMessageAVP != null) {
+            return errorMessageAVP.getDataAsString();
         }
-        return -1;
+        return null;
     }
 
     /**
-     * Sets the Result-Code AVP for this answer.
+     * Sets the Failed-AVP for this answer.
      */
-    public void setResultCode(final int resultCode) {
-        addAVP(AVP.createIntegerAVP(DiameterConstants.RESULT_CODE, true, resultCode));
+    public void setFailedAVP(final AVP failedAVP) {
+        setAVP(new AVP(DiameterConstants.FAILED_AVP, true, failedAVP.getData()));
+    }
+
+    /**
+     * Gets the Failed-AVP from this answer.
+     */
+    public AVP getFailedAVP() {
+        return findAVP(DiameterConstants.FAILED_AVP);
     }
 }

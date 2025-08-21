@@ -4,10 +4,11 @@ package com.sipgate.sparta.diameter.base;
  * Capabilities Exchange Request (CER) message.
  * Used to exchange capabilities between Diameter peers during connection establishment.
  */
-public class CapabilitiesExchangeRequest extends CapabilitiesExchange {
+public class CapabilitiesExchangeRequest extends Request implements CapabilitiesExchange {
 
     public CapabilitiesExchangeRequest(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(true, true, false, retransmitted, hopByHopIdentifier, endToEndIdentifier);
+        super(DiameterConstants.CAPABILITIES_EXCHANGE_REQUEST, true, retransmitted,
+              DiameterConstants.DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
     // Convenience constructor for backward compatibility (non-retransmitted messages)

@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Represents a Diameter Attribute-Value Pair (AVP).
@@ -88,7 +89,7 @@ public class AVP {
      * @return the string value
      */
     public String getDataAsString() {
-        return new String(data, java.nio.charset.StandardCharsets.UTF_8);
+        return new String(data, StandardCharsets.UTF_8);
     }
 
     /**
@@ -124,7 +125,7 @@ public class AVP {
      * @return the created AVP
      */
     public static AVP createStringAVP(final int code, final boolean mandatory, final String value) {
-        return new AVP(code, mandatory, value.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        return new AVP(code, mandatory, value.getBytes(StandardCharsets.UTF_8));
     }
 
     public int getLength() {

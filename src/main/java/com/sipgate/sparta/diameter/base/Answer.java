@@ -36,6 +36,6 @@ public abstract class Answer extends Command {
      * Sets the Result-Code AVP for this answer.
      */
     public void setResultCode(final int resultCode) {
-        addAVP(AVP.createIntegerAVP(DiameterConstants.RESULT_CODE, true, resultCode));
+        setAVP(AVP.createIntegerAVP(DiameterConstants.RESULT_CODE, true, resultCode));
     }
 }

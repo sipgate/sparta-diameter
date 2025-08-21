@@ -32,6 +32,8 @@ public final class DiameterConstants {
     public static final int VENDOR_SPECIFIC_APPLICATION_ID = 260;
     public static final int FIRMWARE_REVISION = 267;
     public static final int ORIGIN_STATE_ID = 278;
+    public static final int ERROR_MESSAGE = 281;
+    public static final int FAILED_AVP = 279;
     public static final int DISCONNECT_CAUSE = 273;
 
     // Result Codes
