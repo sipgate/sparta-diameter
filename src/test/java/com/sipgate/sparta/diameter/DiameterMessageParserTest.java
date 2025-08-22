@@ -28,7 +28,7 @@ public class DiameterMessageParserTest {
         final DeviceWatchdogRequest dwr = (DeviceWatchdogRequest) command;
 
         assertThat(dwr.getVersion()).isEqualTo(1);
-        assertThat(dwr.getCommandCode()).isEqualTo(DiameterConstants.DEVICE_WATCHDOG_REQUEST);
+        assertThat(dwr.getCommandCode()).isEqualTo(DiameterConstants.CMD_DEVICE_WATCHDOG);
         assertThat(dwr.isRequest()).isTrue();
         assertThat(dwr.isProxiable()).isFalse();
         assertThat(dwr.isError()).isFalse();

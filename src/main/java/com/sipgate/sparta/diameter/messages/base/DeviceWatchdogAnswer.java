@@ -22,7 +22,7 @@ public class DeviceWatchdogAnswer extends Answer implements OriginStateAware {
      * @param endToEndIdentifier The end-to-end identifier.
      */
     public DeviceWatchdogAnswer(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(DiameterConstants.DEVICE_WATCHDOG_REQUEST, true, retransmitted,
+        super(DiameterConstants.CMD_DEVICE_WATCHDOG, true, retransmitted,
               DiameterConstants.DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
@@ -45,7 +45,7 @@ public class DeviceWatchdogAnswer extends Answer implements OriginStateAware {
      * @param error              Indicates whether the message is an error response.
      */
     public DeviceWatchdogAnswer(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier, final boolean error) {
-        super(DiameterConstants.DEVICE_WATCHDOG_REQUEST, true, error, retransmitted,
+        super(DiameterConstants.CMD_DEVICE_WATCHDOG, true, error, retransmitted,
               DiameterConstants.DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 }

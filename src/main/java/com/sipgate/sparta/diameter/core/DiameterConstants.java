@@ -9,12 +9,9 @@ public final class DiameterConstants {
     public static final int DIAMETER_VERSION = 1;
 
     // Common Command Codes
-    public static final int CAPABILITIES_EXCHANGE_REQUEST = 257;
-    public static final int CAPABILITIES_EXCHANGE_ANSWER = 257;
-    public static final int DEVICE_WATCHDOG_REQUEST = 280;
-    public static final int DEVICE_WATCHDOG_ANSWER = 280;
-    public static final int DISCONNECT_PEER_REQUEST = 282;
-    public static final int DISCONNECT_PEER_ANSWER = 282;
+    public static final int CMD_CAPABILITIES_EXCHANGE = 257;
+    public static final int CMD_DEVICE_WATCHDOG = 280;
+    public static final int CMD_DISCONNECT_PEER = 282;
 
     // Common Application IDs
     public static final int DIAMETER_COMMON_MESSAGES = 0;

@@ -23,7 +23,7 @@ public class CapabilitiesExchangeAnswer extends Answer implements CapabilitiesEx
      * @param endToEndIdentifier The end-to-end identifier.
      */
     public CapabilitiesExchangeAnswer(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(DiameterConstants.CAPABILITIES_EXCHANGE_REQUEST, true, retransmitted,
+        super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, true, retransmitted,
               DiameterConstants.DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
@@ -46,7 +46,7 @@ public class CapabilitiesExchangeAnswer extends Answer implements CapabilitiesEx
      * @param error              Indicates whether the message is an error response.
      */
     public CapabilitiesExchangeAnswer(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier, final boolean error) {
-        super(DiameterConstants.CAPABILITIES_EXCHANGE_REQUEST, true, error, retransmitted,
+        super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, true, error, retransmitted,
               DiameterConstants.DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 

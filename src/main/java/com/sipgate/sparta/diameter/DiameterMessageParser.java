@@ -218,7 +218,7 @@ public final class DiameterMessageParser {
 
         // Handle known command codes
         switch (commandCode) {
-            case DiameterConstants.CAPABILITIES_EXCHANGE_REQUEST:
+            case DiameterConstants.CMD_CAPABILITIES_EXCHANGE:
                 if (isRequest) {
                     return new CapabilitiesExchangeRequest(isRetransmitted, hopByHopId, endToEndId);
                 }
@@ -229,7 +229,7 @@ public final class DiameterMessageParser {
 
                 return new CapabilitiesExchangeAnswer(isRetransmitted, hopByHopId, endToEndId);
 
-            case DiameterConstants.DEVICE_WATCHDOG_REQUEST:
+            case DiameterConstants.CMD_DEVICE_WATCHDOG:
                 if (isRequest) {
                     return new DeviceWatchdogRequest(isRetransmitted, hopByHopId, endToEndId);
                 }

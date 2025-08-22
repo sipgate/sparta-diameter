@@ -22,7 +22,7 @@ public class DeviceWatchdogRequest extends Request implements OriginStateAware {
      * @param endToEndIdentifier The end-to-end identifier.
      */
     public DeviceWatchdogRequest(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(DiameterConstants.DEVICE_WATCHDOG_REQUEST, false, retransmitted,
+        super(DiameterConstants.CMD_DEVICE_WATCHDOG, false, retransmitted,
               DiameterConstants.DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
