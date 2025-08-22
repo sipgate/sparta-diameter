@@ -4,33 +4,23 @@ package com.sipgate.sparta.diameter;
  * Exception thrown for Diameter protocol related errors.
  */
 public class DiameterException extends Exception {
-    private final int resultCode;
 
+    /**
+     * Constructs a DiameterException with the specified message.
+     *
+     * @param message the detail message
+     */
     public DiameterException(final String message) {
         super(message);
-        this.resultCode = -1;
     }
 
+    /**
+     * Constructs a DiameterException with the specified message and cause.
+     *
+     * @param message the detail message
+     * @param cause the cause of the exception
+     */
     public DiameterException(final String message, final Throwable cause) {
         super(message, cause);
-        this.resultCode = -1;
-    }
-
-    public DiameterException(final String message, final int resultCode) {
-        super(message);
-        this.resultCode = resultCode;
-    }
-
-    public DiameterException(final String message, final int resultCode, final Throwable cause) {
-        super(message, cause);
-        this.resultCode = resultCode;
-    }
-
-    public int getResultCode() {
-        return resultCode;
-    }
-
-    public boolean hasResultCode() {
-        return resultCode != -1;
     }
 }
