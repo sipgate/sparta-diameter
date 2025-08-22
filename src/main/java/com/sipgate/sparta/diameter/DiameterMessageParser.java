@@ -54,7 +54,7 @@ public final class DiameterMessageParser {
         try {
             // Read Diameter header (20 bytes)
             final int version = inputStream.readUnsignedByte();
-            if (version != 1) {
+            if (version != DiameterConstants.DIAMETER_VERSION) {
                 throw new DiameterException("Unsupported Diameter version: " + version);
             }
             // Skip already-read messageLength
