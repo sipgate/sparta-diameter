@@ -22,19 +22,31 @@ public class CapabilitiesExchangeRequest extends Request implements Capabilities
      * @param hopByHopIdentifier The hop-by-hop identifier.
      * @param endToEndIdentifier The end-to-end identifier.
      */
-    public CapabilitiesExchangeRequest(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, true, retransmitted,
+    private CapabilitiesExchangeRequest(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
+        super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false, retransmitted,
               DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
     /**
-     * Constructs a Capabilities Exchange Request message with default retransmission flag set to false.
+     * Creates a Capabilities Exchange Request message.
      *
      * @param hopByHopIdentifier The hop-by-hop identifier.
      * @param endToEndIdentifier The end-to-end identifier.
+     * @return A new CapabilitiesExchangeRequest instance.
      */
-    public CapabilitiesExchangeRequest(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        this(false, hopByHopIdentifier, endToEndIdentifier);
+    public static CapabilitiesExchangeRequest create(final int hopByHopIdentifier, final int endToEndIdentifier) {
+        return new CapabilitiesExchangeRequest(false, hopByHopIdentifier, endToEndIdentifier);
+    }
+
+    /**
+     * Creates a retransmitted Capabilities Exchange Request message.
+     *
+     * @param hopByHopIdentifier The hop-by-hop identifier.
+     * @param endToEndIdentifier The end-to-end identifier.
+     * @return A new CapabilitiesExchangeRequest instance with retransmitted flag set.
+     */
+    public static CapabilitiesExchangeRequest createRetransmitted(final int hopByHopIdentifier, final int endToEndIdentifier) {
+        return new CapabilitiesExchangeRequest(true, hopByHopIdentifier, endToEndIdentifier);
     }
 
     /**
@@ -42,7 +54,7 @@ public class CapabilitiesExchangeRequest extends Request implements Capabilities
      */
     @Override
     public CapabilitiesExchangeAnswer createAnswer(final int resultCode) {
-        final CapabilitiesExchangeAnswer cea = new CapabilitiesExchangeAnswer(
+        final CapabilitiesExchangeAnswer cea = CapabilitiesExchangeAnswer.create(
             getHopByHopIdentifier(), getEndToEndIdentifier());
         cea.setResultCode(resultCode);
         return cea;

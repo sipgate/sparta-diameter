@@ -220,25 +220,25 @@ public final class DiameterMessageParser {
         switch (commandCode) {
             case DiameterConstants.CMD_CAPABILITIES_EXCHANGE:
                 if (isRequest) {
-                    return new CapabilitiesExchangeRequest(isRetransmitted, hopByHopId, endToEndId);
+                    return isRetransmitted
+                        ? CapabilitiesExchangeRequest.createRetransmitted(hopByHopId, endToEndId)
+                        : CapabilitiesExchangeRequest.create(hopByHopId, endToEndId);
                 }
 
-                if (isError) {
-                    return new CapabilitiesExchangeAnswer(isRetransmitted, hopByHopId, endToEndId, isError);
-                }
-
-                return new CapabilitiesExchangeAnswer(isRetransmitted, hopByHopId, endToEndId);
+                return isError
+                    ? CapabilitiesExchangeAnswer.createError(hopByHopId, endToEndId)
+                    : CapabilitiesExchangeAnswer.create(hopByHopId, endToEndId);
 
             case DiameterConstants.CMD_DEVICE_WATCHDOG:
                 if (isRequest) {
-                    return new DeviceWatchdogRequest(isRetransmitted, hopByHopId, endToEndId);
+                    return isRetransmitted
+                        ? DeviceWatchdogRequest.createRetransmitted(hopByHopId, endToEndId)
+                        : DeviceWatchdogRequest.create(hopByHopId, endToEndId);
                 }
 
-                if (isError) {
-                    return new DeviceWatchdogAnswer(isRetransmitted, hopByHopId, endToEndId, isError);
-                }
-
-                return new DeviceWatchdogAnswer(isRetransmitted, hopByHopId, endToEndId);
+                return isError
+                    ? DeviceWatchdogAnswer.createError(hopByHopId, endToEndId)
+                    : DeviceWatchdogAnswer.create(hopByHopId, endToEndId);
 
             default:
                 // For unknown command codes, create a generic command

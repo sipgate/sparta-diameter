@@ -18,36 +18,35 @@ public class CapabilitiesExchangeAnswer extends Answer implements CapabilitiesEx
     /**
      * Constructs a Capabilities Exchange Answer message.
      *
-     * @param retransmitted      Indicates whether the message is retransmitted.
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     */
-    public CapabilitiesExchangeAnswer(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, true, retransmitted,
-              DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    /**
-     * Constructs a Capabilities Exchange Answer message with default retransmission flag set to false.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     */
-    public CapabilitiesExchangeAnswer(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        this(false, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    /**
-     * Constructs a Capabilities Exchange Answer message for error responses.
-     *
-     * @param retransmitted      Indicates whether the message is retransmitted.
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
      * @param error              Indicates whether the message is an error response.
+     * @param hopByHopIdentifier The hop-by-hop identifier.
+     * @param endToEndIdentifier The end-to-end identifier.
      */
-    public CapabilitiesExchangeAnswer(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier, final boolean error) {
-        super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, true, error, retransmitted,
+    private CapabilitiesExchangeAnswer(final boolean error, final int hopByHopIdentifier, final int endToEndIdentifier) {
+        super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false, error, false,
               DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
+    }
+
+    /**
+     * Creates a Capabilities Exchange Answer message.
+     *
+     * @param hopByHopIdentifier The hop-by-hop identifier.
+     * @param endToEndIdentifier The end-to-end identifier.
+     * @return A new CapabilitiesExchangeAnswer instance.
+     */
+    public static CapabilitiesExchangeAnswer create(final int hopByHopIdentifier, final int endToEndIdentifier) {
+        return new CapabilitiesExchangeAnswer(false, hopByHopIdentifier, endToEndIdentifier);
+    }
+
+    /**
+     * Creates an error Capabilities Exchange Answer message.
+     *
+     * @param hopByHopIdentifier The hop-by-hop identifier.
+     * @param endToEndIdentifier The end-to-end identifier.
+     * @return A new CapabilitiesExchangeAnswer instance with error flag set.
+     */
+    public static CapabilitiesExchangeAnswer createError(final int hopByHopIdentifier, final int endToEndIdentifier) {
+        return new CapabilitiesExchangeAnswer(true, hopByHopIdentifier, endToEndIdentifier);
     }
 
     /**

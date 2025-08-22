@@ -21,19 +21,31 @@ public class DeviceWatchdogRequest extends Request implements OriginStateAware {
      * @param hopByHopIdentifier The hop-by-hop identifier.
      * @param endToEndIdentifier The end-to-end identifier.
      */
-    public DeviceWatchdogRequest(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
+    private DeviceWatchdogRequest(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
         super(DiameterConstants.CMD_DEVICE_WATCHDOG, false, retransmitted,
               DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
     /**
-     * Constructs a Device Watchdog Request message with default retransmission flag set to false.
+     * Creates a Device Watchdog Request message.
      *
      * @param hopByHopIdentifier The hop-by-hop identifier.
      * @param endToEndIdentifier The end-to-end identifier.
+     * @return A new DeviceWatchdogRequest instance.
      */
-    public DeviceWatchdogRequest(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        this(false, hopByHopIdentifier, endToEndIdentifier);
+    public static DeviceWatchdogRequest create(final int hopByHopIdentifier, final int endToEndIdentifier) {
+        return new DeviceWatchdogRequest(false, hopByHopIdentifier, endToEndIdentifier);
+    }
+
+    /**
+     * Creates a retransmitted Device Watchdog Request message.
+     *
+     * @param hopByHopIdentifier The hop-by-hop identifier.
+     * @param endToEndIdentifier The end-to-end identifier.
+     * @return A new DeviceWatchdogRequest instance with retransmitted flag set.
+     */
+    public static DeviceWatchdogRequest createRetransmitted(final int hopByHopIdentifier, final int endToEndIdentifier) {
+        return new DeviceWatchdogRequest(true, hopByHopIdentifier, endToEndIdentifier);
     }
 
     /**
@@ -41,7 +53,7 @@ public class DeviceWatchdogRequest extends Request implements OriginStateAware {
      */
     @Override
     public Answer createAnswer(final int resultCode) {
-        final DeviceWatchdogAnswer dwa = new DeviceWatchdogAnswer(
+        final DeviceWatchdogAnswer dwa = DeviceWatchdogAnswer.create(
             getHopByHopIdentifier(), getEndToEndIdentifier());
         dwa.setResultCode(resultCode);
         return dwa;
