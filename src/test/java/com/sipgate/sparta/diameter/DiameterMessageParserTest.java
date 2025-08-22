@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.nio.ByteBuffer;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -17,9 +18,10 @@ public class DiameterMessageParserTest {
     void it_parses_a_DWR_from_binary_input() throws Exception {
         // GIVEN
         final byte[] messageData = hexStringToByteArray(DWR_HEX);
+        final ByteBuffer buffer = ByteBuffer.wrap(messageData);
 
         // WHEN
-        final Command command = DiameterMessageParser.parseMessage(messageData);
+        final Command command = DiameterMessageParser.parseMessage(buffer);
 
         // THEN
         assertThat(command).isInstanceOf(DeviceWatchdogRequest.class);
@@ -52,7 +54,7 @@ public class DiameterMessageParserTest {
     @Test
     void it_serializes_a_DWR_to_binary() throws Exception {
         // GIVEN
-        final byte[] originalData = hexStringToByteArray(DWR_HEX);
+        final ByteBuffer originalData = ByteBuffer.wrap(hexStringToByteArray(DWR_HEX));
 
         // WHEN
         final Command command = DiameterMessageParser.parseMessage(originalData);
@@ -66,6 +68,34 @@ public class DiameterMessageParserTest {
 
         // THEN
         assertThat(serializedHex.toLowerCase()).isEqualTo(DWR_HEX.toLowerCase());
+    }
+
+    @Test
+    void it_does_not_change_bytebuffer_position_when_getting_message_length() throws Exception {
+        // GIVEN
+        final byte[] data = hexStringToByteArray(DWR_HEX);
+        final ByteBuffer buffer = ByteBuffer.wrap(data);
+        final int initialPosition = buffer.position();
+
+        // WHEN
+        DiameterMessageParser.getMessageLength(buffer);
+
+        // THEN
+        assertThat(buffer.position()).isEqualTo(initialPosition);
+    }
+
+    @Test
+    void it_does_not_change_bytebuffer_position_when_parsing_message() throws Exception {
+        // GIVEN
+        final byte[] data = hexStringToByteArray(DWR_HEX);
+        final ByteBuffer buffer = ByteBuffer.wrap(data);
+        final int initialPosition = buffer.position();
+
+        // WHEN
+        DiameterMessageParser.parseMessage(buffer);
+
+        // THEN
+        assertThat(buffer.position()).isEqualTo(initialPosition);
     }
 
     private byte[] hexStringToByteArray(final String hexString) {

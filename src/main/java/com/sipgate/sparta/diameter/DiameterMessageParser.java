@@ -11,85 +11,54 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Parser for Diameter messages from binary data.
- * Designed to work with Netty ByteBufs and other binary sources.
+ * Parses Diameter messages from binary data.
+ * <p>
+ * Provides methods to construct Diameter Command objects from binary sources.
+ * Designed to handle Diameter protocol messages as defined in RFC 6733.
+ * </p>
  */
 public final class DiameterMessageParser {
 
     /**
-     * Extracts the message length from the Diameter header.
-     * Useful for Netty frame detection without full parsing.
-     */
-    public static int getMessageLength(final byte[] headerBytes) throws DiameterException {
-        if (headerBytes == null || headerBytes.length < 4) {
-            throw new DiameterException("Need at least 4 bytes to read message length");
-        }
-
-        // Skip version byte, read 3-byte length field
-        return ((headerBytes[1] & 0xFF) << 16) |
-               ((headerBytes[2] & 0xFF) << 8) |
-               (headerBytes[3] & 0xFF);
-    }
-
-    /**
-     * Extracts the message length from a ByteBuffer.
-     * Does not modify the buffer position.
-     */
-    public static int getMessageLength(final ByteBuffer buffer) throws DiameterException {
-        if (buffer.remaining() < 4) {
-            throw new DiameterException("Need at least 4 bytes to read message length");
-        }
-
-        // Read length without changing buffer position
-        final int position = buffer.position();
-        buffer.get(); // Skip version
-        final int length = ((buffer.get() & 0xFF) << 16) |
-                          ((buffer.get() & 0xFF) << 8) |
-                          (buffer.get() & 0xFF);
-        buffer.position(position); // Reset position
-
-        return length;
-    }
-
-    /**
-     * Parses a Diameter message from a byte array.
-     */
-    public static Command parseMessage(final byte[] data) throws DiameterException {
-        if (data == null || data.length < 20) {
-            throw new DiameterException("Invalid Diameter message: too short");
-        }
-
-        return parseMessage(new DataInputStream(new ByteArrayInputStream(data)));
-    }
-
-    /**
      * Parses a Diameter message from a ByteBuffer (useful for Netty integration).
+     * Does not change the buffer position.
+     *
+     * @param buffer the ByteBuffer containing the Diameter message
+     * @return the parsed Command object representing the Diameter message
+     * @throws DiameterException if the buffer does not contain the number of bytes required for a valid Diameter message
      */
     public static Command parseMessage(final ByteBuffer buffer) throws DiameterException {
-        if (buffer.remaining() < 20) {
+        final int messageLength = getMessageLength(buffer);
+        if (buffer.remaining() < messageLength) {
             throw new DiameterException("Invalid Diameter message: too short");
         }
+        final byte[] data = new byte[messageLength];
 
-        final byte[] data = new byte[buffer.remaining()];
+        // Do not change the buffer position
+        final int position = buffer.position();
         buffer.get(data);
-        return parseMessage(data);
+        buffer.position(position);
+
+        return parseMessage(new DataInputStream(new ByteArrayInputStream(data)), messageLength);
     }
 
     /**
      * Parses a Diameter message from a DataInputStream.
+     *
+     * @param inputStream the DataInputStream containing the Diameter message
+     * @param messageLength the length of the Diameter message
+     * @return the parsed Command object representing the Diameter message
+     * @throws DiameterException if an error occurs while parsing the message
      */
-    public static Command parseMessage(final DataInputStream inputStream) throws DiameterException {
+    private static Command parseMessage(final DataInputStream inputStream, final int messageLength) throws DiameterException {
         try {
             // Read Diameter header (20 bytes)
             final int version = inputStream.readUnsignedByte();
             if (version != 1) {
                 throw new DiameterException("Unsupported Diameter version: " + version);
             }
-
-            // Message Length (3 bytes)
-            final int messageLength = (inputStream.readUnsignedByte() << 16) |
-                                    (inputStream.readUnsignedByte() << 8) |
-                                    inputStream.readUnsignedByte();
+            // Skip already-read messageLength
+            inputStream.skipBytes(3);
 
             // Flags (1 byte)
             final int flags = inputStream.readUnsignedByte();
@@ -133,7 +102,37 @@ public final class DiameterMessageParser {
     }
 
     /**
+     * Extracts the message length from a ByteBuffer.
+     * Does not modify the buffer position.
+     *
+     * @param buffer the ByteBuffer containing the Diameter message
+     * @return the length of the Diameter message
+     * @throws DiameterException if the buffer does not contain enough data to read the length
+     */
+    public static int getMessageLength(final ByteBuffer buffer) throws DiameterException {
+        if (buffer.remaining() < 4) {
+            throw new DiameterException("Need at least 4 bytes to read message length");
+        }
+
+        // Read length without changing buffer position
+        final int position = buffer.position();
+        buffer.get(); // Skip version
+        final int length = ((buffer.get() & 0xFF) << 16) |
+                ((buffer.get() & 0xFF) << 8) |
+                (buffer.get() & 0xFF);
+        buffer.position(position); // Reset position
+
+        return length;
+    }
+
+    /**
      * Parses AVPs from the input stream.
+     *
+     * @param inputStream the DataInputStream to read from
+     * @param remainingLength the number of bytes remaining in the message after the header
+     * @return a list of parsed AVPs
+     * @throws IOException if an I/O error occurs while reading the AVPs
+     * @throws DiameterException if the AVPs are invalid
      */
     private static List<AVP> parseAVPs(final DataInputStream inputStream, final int remainingLength)
             throws IOException, DiameterException {
@@ -164,8 +163,12 @@ public final class DiameterMessageParser {
 
     /**
      * Parses a single AVP from the input stream.
+     *
+     * @param inputStream the DataInputStream to read from
+     * @return the parsed AVP object
+     * @throws IOException if an I/O error occurs while reading the AVP
      */
-    private static AVP parseAVP(final DataInputStream inputStream) throws IOException, DiameterException {
+    private static AVP parseAVP(final DataInputStream inputStream) throws IOException {
         // AVP Code (4 bytes)
         final int code = inputStream.readInt();
 
@@ -197,6 +200,16 @@ public final class DiameterMessageParser {
 
     /**
      * Creates the appropriate Command subclass based on the message parameters.
+     *
+     * @param commandCode the command code of the Diameter message
+     * @param isRequest whether the message is a request
+     * @param isProxiable whether the message is proxiable
+     * @param isError whether the message indicates an error
+     * @param isRetransmitted whether the message is a retransmission
+     * @param applicationId the application ID of the Diameter message
+     * @param hopByHopId the hop-by-hop identifier of the Diameter message
+     * @param endToEndId the end-to-end identifier of the Diameter message
+     * @return the created Command object
      */
     private static Command createCommand(final int commandCode, final boolean isRequest,
                                        final boolean isProxiable, final boolean isError,
@@ -208,24 +221,24 @@ public final class DiameterMessageParser {
             case DiameterConstants.CAPABILITIES_EXCHANGE_REQUEST:
                 if (isRequest) {
                     return new CapabilitiesExchangeRequest(isRetransmitted, hopByHopId, endToEndId);
-                } else {
-                    if (isError) {
-                        return new CapabilitiesExchangeAnswer(isRetransmitted, hopByHopId, endToEndId, isError);
-                    } else {
-                        return new CapabilitiesExchangeAnswer(isRetransmitted, hopByHopId, endToEndId);
-                    }
                 }
+
+                if (isError) {
+                    return new CapabilitiesExchangeAnswer(isRetransmitted, hopByHopId, endToEndId, isError);
+                }
+
+                return new CapabilitiesExchangeAnswer(isRetransmitted, hopByHopId, endToEndId);
 
             case DiameterConstants.DEVICE_WATCHDOG_REQUEST:
                 if (isRequest) {
                     return new DeviceWatchdogRequest(isRetransmitted, hopByHopId, endToEndId);
-                } else {
-                    if (isError) {
-                        return new DeviceWatchdogAnswer(isRetransmitted, hopByHopId, endToEndId, isError);
-                    } else {
-                        return new DeviceWatchdogAnswer(isRetransmitted, hopByHopId, endToEndId);
-                    }
                 }
+
+                if (isError) {
+                    return new DeviceWatchdogAnswer(isRetransmitted, hopByHopId, endToEndId, isError);
+                }
+
+                return new DeviceWatchdogAnswer(isRetransmitted, hopByHopId, endToEndId);
 
             default:
                 // For unknown command codes, create a generic command
