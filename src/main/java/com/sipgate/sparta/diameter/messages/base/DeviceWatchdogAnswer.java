@@ -23,7 +23,7 @@ public class DeviceWatchdogAnswer extends Answer implements OriginStateAware {
      */
     public DeviceWatchdogAnswer(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
         super(DiameterConstants.CMD_DEVICE_WATCHDOG, true, retransmitted,
-              DiameterConstants.DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
+              DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
     /**
@@ -46,6 +46,6 @@ public class DeviceWatchdogAnswer extends Answer implements OriginStateAware {
      */
     public DeviceWatchdogAnswer(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier, final boolean error) {
         super(DiameterConstants.CMD_DEVICE_WATCHDOG, true, error, retransmitted,
-              DiameterConstants.DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
+              DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 }

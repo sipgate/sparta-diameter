@@ -23,7 +23,7 @@ public class DeviceWatchdogRequest extends Request implements OriginStateAware {
      */
     public DeviceWatchdogRequest(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
         super(DiameterConstants.CMD_DEVICE_WATCHDOG, false, retransmitted,
-              DiameterConstants.DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
+              DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
     /**

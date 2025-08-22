@@ -33,19 +33,19 @@ public class DiameterMessageParserTest {
         assertThat(dwr.isProxiable()).isFalse();
         assertThat(dwr.isError()).isFalse();
         assertThat(dwr.isRetransmitted()).isFalse();
-        assertThat(dwr.getApplicationId()).isEqualTo(DiameterConstants.DIAMETER_COMMON_MESSAGES);
+        assertThat(dwr.getApplicationId()).isEqualTo(DiameterConstants.APP_DIAMETER_COMMON_MESSAGES);
         assertThat(dwr.getHopByHopIdentifier()).isEqualTo(0x24056030);
         assertThat(dwr.getEndToEndIdentifier()).isEqualTo(0x24056030);
 
         assertThat(dwr.getOriginHost()).isEqualTo("tstccncd.ccn.intmet.ie");
         assertThat(dwr.getOriginRealm()).isEqualTo("tstccn.intmet.ie");
 
-        final AVP originHostAVP = dwr.findAVP(DiameterConstants.ORIGIN_HOST);
+        final AVP originHostAVP = dwr.findAVP(DiameterConstants.AVP_ORIGIN_HOST);
         assertThat(originHostAVP).isNotNull();
         assertThat(originHostAVP.isMandatory()).isTrue();
         assertThat(originHostAVP.isVendorSpecific()).isFalse();
 
-        final AVP originRealmAVP = dwr.findAVP(DiameterConstants.ORIGIN_REALM);
+        final AVP originRealmAVP = dwr.findAVP(DiameterConstants.AVP_ORIGIN_REALM);
         assertThat(originRealmAVP).isNotNull();
         assertThat(originRealmAVP.isMandatory()).isTrue();
         assertThat(originRealmAVP.isVendorSpecific()).isFalse();

@@ -48,7 +48,7 @@ public abstract class Answer extends Command {
      * @return The result code, or -1 if not found.
      */
     public int getResultCode() {
-        final AVP resultCodeAVP = findAVP(DiameterConstants.RESULT_CODE);
+        final AVP resultCodeAVP = findAVP(DiameterConstants.AVP_RESULT_CODE);
         if (resultCodeAVP != null && resultCodeAVP.getData().length >= 4) {
             return resultCodeAVP.getDataAsInt();
         }
@@ -61,6 +61,6 @@ public abstract class Answer extends Command {
      * @param resultCode The result code to set.
      */
     public void setResultCode(final int resultCode) {
-        setAVP(AVP.createIntegerAVP(DiameterConstants.RESULT_CODE, true, resultCode));
+        setAVP(AVP.createIntegerAVP(DiameterConstants.AVP_RESULT_CODE, true, resultCode));
     }
 }

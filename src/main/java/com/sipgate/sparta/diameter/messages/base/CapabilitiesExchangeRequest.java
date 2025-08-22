@@ -24,7 +24,7 @@ public class CapabilitiesExchangeRequest extends Request implements Capabilities
      */
     public CapabilitiesExchangeRequest(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
         super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, true, retransmitted,
-              DiameterConstants.DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
+              DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
     /**

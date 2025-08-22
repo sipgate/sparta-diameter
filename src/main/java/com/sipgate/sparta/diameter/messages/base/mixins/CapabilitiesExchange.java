@@ -41,7 +41,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
             throw new IllegalArgumentException("Invalid IP address");
         }
 
-        addAVP(new AVP(DiameterConstants.HOST_IP_ADDRESS, true, data));
+        addAVP(new AVP(DiameterConstants.AVP_HOST_IP_ADDRESS, true, data));
     }
 
     /**
@@ -50,7 +50,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      * @param vendorId The vendor ID to set.
      */
     default void setVendorId(final int vendorId) {
-        setAVP(AVP.createIntegerAVP(DiameterConstants.VENDOR_ID, true, vendorId));
+        setAVP(AVP.createIntegerAVP(DiameterConstants.AVP_VENDOR_ID, true, vendorId));
     }
 
     /**
@@ -59,7 +59,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      * @param productName The product name to set.
      */
     default void setProductName(final String productName) {
-        setAVP(AVP.createStringAVP(DiameterConstants.PRODUCT_NAME, false, productName));
+        setAVP(AVP.createStringAVP(DiameterConstants.AVP_PRODUCT_NAME, false, productName));
     }
 
     /**
@@ -68,7 +68,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      * @param vendorId The supported vendor ID to add.
      */
     default void addSupportedVendorId(final int vendorId) {
-        addAVP(AVP.createIntegerAVP(DiameterConstants.SUPPORTED_VENDOR_ID, true, vendorId));
+        addAVP(AVP.createIntegerAVP(DiameterConstants.AVP_SUPPORTED_VENDOR_ID, true, vendorId));
     }
 
     /**
@@ -77,7 +77,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      * @param applicationId The authentication application ID to add.
      */
     default void addAuthApplicationId(final int applicationId) {
-        addAVP(AVP.createIntegerAVP(DiameterConstants.AUTH_APPLICATION_ID, true, applicationId));
+        addAVP(AVP.createIntegerAVP(DiameterConstants.AVP_AUTH_APPLICATION_ID, true, applicationId));
     }
 
     /**
@@ -86,7 +86,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      * @param applicationId The accounting application ID to add.
      */
     default void addAcctApplicationId(final int applicationId) {
-        addAVP(AVP.createIntegerAVP(DiameterConstants.ACCT_APPLICATION_ID, true, applicationId));
+        addAVP(AVP.createIntegerAVP(DiameterConstants.AVP_ACCT_APPLICATION_ID, true, applicationId));
     }
 
     /**
@@ -95,7 +95,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      * @param firmwareRevision The firmware revision to set.
      */
     default void setFirmwareRevision(final int firmwareRevision) {
-        setAVP(AVP.createIntegerAVP(DiameterConstants.FIRMWARE_REVISION, false, firmwareRevision));
+        setAVP(AVP.createIntegerAVP(DiameterConstants.AVP_FIRMWARE_REVISION, false, firmwareRevision));
     }
 
     /**
@@ -104,7 +104,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      * @return The vendor ID, or -1 if not present.
      */
     default int getVendorId() {
-        final AVP vendorIdAVP = findAVP(DiameterConstants.VENDOR_ID);
+        final AVP vendorIdAVP = findAVP(DiameterConstants.AVP_VENDOR_ID);
         if (vendorIdAVP != null && vendorIdAVP.getData().length >= 4) {
             return vendorIdAVP.getDataAsInt();
         }
@@ -117,7 +117,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      * @return The product name, or null if not present.
      */
     default String getProductName() {
-        final AVP productNameAVP = findAVP(DiameterConstants.PRODUCT_NAME);
+        final AVP productNameAVP = findAVP(DiameterConstants.AVP_PRODUCT_NAME);
         if (productNameAVP != null) {
             return productNameAVP.getDataAsString();
         }
@@ -130,7 +130,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      * @return The firmware revision, or -1 if not present.
      */
     default int getFirmwareRevision() {
-        final AVP firmwareRevisionAVP = findAVP(DiameterConstants.FIRMWARE_REVISION);
+        final AVP firmwareRevisionAVP = findAVP(DiameterConstants.AVP_FIRMWARE_REVISION);
         if (firmwareRevisionAVP != null && firmwareRevisionAVP.getData().length >= 4) {
             return firmwareRevisionAVP.getDataAsInt();
         }

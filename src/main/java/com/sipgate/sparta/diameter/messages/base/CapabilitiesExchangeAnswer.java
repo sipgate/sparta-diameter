@@ -24,7 +24,7 @@ public class CapabilitiesExchangeAnswer extends Answer implements CapabilitiesEx
      */
     public CapabilitiesExchangeAnswer(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
         super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, true, retransmitted,
-              DiameterConstants.DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
+              DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
     /**
@@ -47,7 +47,7 @@ public class CapabilitiesExchangeAnswer extends Answer implements CapabilitiesEx
      */
     public CapabilitiesExchangeAnswer(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier, final boolean error) {
         super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, true, error, retransmitted,
-              DiameterConstants.DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
+              DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
     /**
@@ -56,7 +56,7 @@ public class CapabilitiesExchangeAnswer extends Answer implements CapabilitiesEx
      * @param errorMessage The error message to set.
      */
     public void setErrorMessage(final String errorMessage) {
-        setAVP(AVP.createStringAVP(DiameterConstants.ERROR_MESSAGE, false, errorMessage));
+        setAVP(AVP.createStringAVP(DiameterConstants.AVP_ERROR_MESSAGE, false, errorMessage));
     }
 
     /**
@@ -65,7 +65,7 @@ public class CapabilitiesExchangeAnswer extends Answer implements CapabilitiesEx
      * @return The error message, or null if not set.
      */
     public String getErrorMessage() {
-        final AVP errorMessageAVP = findAVP(DiameterConstants.ERROR_MESSAGE);
+        final AVP errorMessageAVP = findAVP(DiameterConstants.AVP_ERROR_MESSAGE);
         if (errorMessageAVP != null) {
             return errorMessageAVP.getDataAsString();
         }
@@ -78,7 +78,7 @@ public class CapabilitiesExchangeAnswer extends Answer implements CapabilitiesEx
      * @param failedAVP The Failed-AVP to set.
      */
     public void setFailedAVP(final AVP failedAVP) {
-        setAVP(new AVP(DiameterConstants.FAILED_AVP, true, failedAVP.getData()));
+        setAVP(new AVP(DiameterConstants.AVP_FAILED_AVP, true, failedAVP.getData()));
     }
 
     /**
@@ -87,6 +87,6 @@ public class CapabilitiesExchangeAnswer extends Answer implements CapabilitiesEx
      * @return The Failed-AVP, or null if not set.
      */
     public AVP getFailedAVP() {
-        return findAVP(DiameterConstants.FAILED_AVP);
+        return findAVP(DiameterConstants.AVP_FAILED_AVP);
     }
 }
