@@ -14,7 +14,7 @@ public class DiameterMessageParserTest {
     private static final String DWR_HEX = "0100004c80000118000000002405603024056030000001084000001e74737463636e63642e63636e2e696e746d65742e69650000000001284000001874737463636e2e696e746d65742e6965";
 
     @Test
-    void testParseDeviceWatchdogRequest() throws Exception {
+    void it_parses_a_DWR_from_binary_input() throws Exception {
         // GIVEN
         final byte[] messageData = hexStringToByteArray(DWR_HEX);
 
@@ -50,7 +50,7 @@ public class DiameterMessageParserTest {
     }
 
     @Test
-    void testDeviceWatchdogRequestRoundTrip() throws Exception {
+    void it_serializes_a_DWR_to_binary() throws Exception {
         // GIVEN
         final byte[] originalData = hexStringToByteArray(DWR_HEX);
 
