@@ -8,7 +8,11 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * Represents a Diameter Attribute-Value Pair (AVP).
- * An AVP is a data container that carries specific information in Diameter messages.
+ * <p>
+ * This class represents an AVP as defined in
+ * <a href="https://datatracker.ietf.org/doc/html/rfc6733#section-4">RFC 6733, Section 4</a>.
+ * AVPs are used to encapsulate protocol-specific data in Diameter messages.
+ * </p>
  */
 public class AVP {
     private final int code;
@@ -18,6 +22,16 @@ public class AVP {
     private final int vendorId;
     private final byte[] data;
 
+    /**
+     * Constructs an AVP with the specified parameters.
+     *
+     * @param code           The AVP code.
+     * @param vendorSpecific Indicates whether the AVP is vendor-specific.
+     * @param mandatory      Indicates whether the AVP is mandatory.
+     * @param protectedAVP   Indicates whether the AVP is protected.
+     * @param vendorId       The vendor ID.
+     * @param data           The AVP data.
+     */
     public AVP(final int code, final boolean vendorSpecific, final boolean mandatory, final boolean protectedAVP,
                final int vendorId, final byte[] data) {
         this.code = code;
@@ -28,36 +42,75 @@ public class AVP {
         this.data = data != null ? data.clone() : new byte[0];
     }
 
+    /**
+     * Constructs an AVP with the specified code, mandatory flag, and data.
+     *
+     * @param code      The AVP code.
+     * @param mandatory Indicates whether the AVP is mandatory.
+     * @param data      The AVP data.
+     */
     public AVP(final int code, final boolean mandatory, final byte[] data) {
         this(code, false, mandatory, false, 0, data);
     }
 
+    /**
+     * Retrieves the AVP code.
+     *
+     * @return The AVP code.
+     */
     public int getCode() {
         return code;
     }
 
+    /**
+     * Checks if the AVP is vendor-specific.
+     *
+     * @return True if the AVP is vendor-specific, false otherwise.
+     */
     public boolean isVendorSpecific() {
         return vendorSpecific;
     }
 
+    /**
+     * Checks if the AVP is mandatory.
+     *
+     * @return True if the AVP is mandatory, false otherwise.
+     */
     public boolean isMandatory() {
         return mandatory;
     }
 
+    /**
+     * Checks if the AVP is protected.
+     *
+     * @return True if the AVP is protected, false otherwise.
+     */
     public boolean isProtected() {
         return protectedAVP;
     }
 
+    /**
+     * Retrieves the vendor ID.
+     *
+     * @return The vendor ID, or 0 if not vendor-specific.
+     */
     public int getVendorId() {
         return vendorId;
     }
 
+    /**
+     * Retrieves the AVP data.
+     *
+     * @return A copy of the AVP data.
+     */
     public byte[] getData() {
         return data.clone();
     }
 
     /**
-     * Converts this AVP to a ByteBuffer (useful for Netty integration).
+     * Converts this AVP to a ByteBuffer.
+     *
+     * @return A ByteBuffer containing the serialized AVP.
      */
     public ByteBuffer toByteBuffer() {
         try {
@@ -139,6 +192,9 @@ public class AVP {
 
     /**
      * Writes this AVP to the given DataOutputStream.
+     *
+     * @param outputStream The DataOutputStream to write to.
+     * @throws IOException If an I/O error occurs.
      */
     public void writeTo(final DataOutputStream outputStream) throws IOException {
         // AVP Code (4 bytes)

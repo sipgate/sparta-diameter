@@ -7,7 +7,11 @@ import java.util.List;
 
 /**
  * Base class for all Diameter commands (messages).
- * Contains the common Diameter header and AVP handling functionality.
+ * <p>
+ * This class represents a Diameter command as defined in
+ * <a href="https://datatracker.ietf.org/doc/html/rfc6733#section-3">RFC 6733, Section 3</a>.
+ * It provides common functionality for handling the Diameter header and AVPs.
+ * </p>
  */
 public abstract class Command {
     // Diameter header fields
@@ -24,6 +28,18 @@ public abstract class Command {
     // AVPs contained in this command
     private final List<AVP> avps;
 
+    /**
+     * Constructs a Diameter command with the specified parameters.
+     *
+     * @param commandCode        The command code of the message.
+     * @param request            Indicates whether the message is a request.
+     * @param proxiable          Indicates whether the message is proxiable.
+     * @param error              Indicates whether the message is an error.
+     * @param retransmitted      Indicates whether the message is retransmitted.
+     * @param applicationId      The application ID of the message.
+     * @param hopByHopIdentifier The hop-by-hop identifier.
+     * @param endToEndIdentifier The end-to-end identifier.
+     */
     protected Command(final int commandCode, final boolean request, final boolean proxiable,
                       final boolean error, final boolean retransmitted, final int applicationId,
                       final int hopByHopIdentifier, final int endToEndIdentifier) {
@@ -39,29 +55,91 @@ public abstract class Command {
         this.avps = new ArrayList<>();
     }
 
-    // Getters
+    /**
+     * Retrieves the Diameter version.
+     *
+     * @return The Diameter version, which is always 1.
+     */
     public int getVersion() { return version; }
+
+    /**
+     * Retrieves the command code of the message.
+     *
+     * @return The command code.
+     */
     public int getCommandCode() { return commandCode; }
+
+    /**
+     * Checks if the message is a request.
+     *
+     * @return True if the message is a request, false otherwise.
+     */
     public boolean isRequest() { return request; }
+
+    /**
+     * Checks if the message is proxiable.
+     *
+     * @return True if the message is proxiable, false otherwise.
+     */
     public boolean isProxiable() { return proxiable; }
+
+    /**
+     * Checks if the message is an error.
+     *
+     * @return True if the message is an error, false otherwise.
+     */
     public boolean isError() { return error; }
+
+    /**
+     * Checks if the message is retransmitted.
+     *
+     * @return True if the message is retransmitted, false otherwise.
+     */
     public boolean isRetransmitted() { return retransmitted; }
+
+    /**
+     * Retrieves the application ID of the message.
+     *
+     * @return The application ID.
+     */
     public int getApplicationId() { return applicationId; }
+
+    /**
+     * Retrieves the hop-by-hop identifier.
+     *
+     * @return The hop-by-hop identifier.
+     */
     public int getHopByHopIdentifier() { return hopByHopIdentifier; }
+
+    /**
+     * Retrieves the end-to-end identifier.
+     *
+     * @return The end-to-end identifier.
+     */
     public int getEndToEndIdentifier() { return endToEndIdentifier; }
+
+    /**
+     * Retrieves the list of AVPs contained in this command.
+     *
+     * @return A copy of the list of AVPs.
+     */
     public List<AVP> getAVPs() { return new ArrayList<>(avps); }
 
     /**
-     * Add an AVP to this command.
+     * Adds an AVP to this command.
+     *
+     * @param avp The AVP to add.
      */
     public void addAVP(final AVP avp) {
         avps.add(avp);
     }
 
     /**
-     * Add or update an AVP to this command, ensuring uniqueness by AVP code.
+     * Adds or updates an AVP in this command, ensuring uniqueness by AVP code.
      * If an AVP with the same code already exists, it will be replaced.
      * Otherwise, the AVP will be added.
+     *
+     * @param avp The AVP to add or update.
      */
     public void setAVP(final AVP avp) {
         // Find and remove existing AVP with the same code
@@ -72,6 +150,9 @@ public abstract class Command {
 
     /**
      * Find an AVP by its code.
+     *
+     * @param code The AVP code to search for.
+     * @return The AVP with the given code, or null if not found.
      */
     public AVP findAVP(final int code) {
         for (final AVP avp : avps) {
@@ -84,6 +165,9 @@ public abstract class Command {
 
     /**
      * Find all AVPs with the given code.
+     *
+     * @param code The AVP code to search for.
+     * @return A list of AVPs with the given code.
      */
     public List<AVP> findAVPs(final int code) {
         final List<AVP> result = new ArrayList<>();
@@ -97,6 +181,8 @@ public abstract class Command {
 
     /**
      * Calculate the total length of the message including header and all AVPs.
+     *
+     * @return The total length of the message in bytes.
      */
     protected int getMessageLength() {
         int length = 20; // Diameter header is 20 bytes
@@ -112,6 +198,9 @@ public abstract class Command {
     /**
      * Writes this command to the given DataOutputStream.
      * This method serializes the Diameter header followed by all AVPs.
+     *
+     * @param outputStream The DataOutputStream to write to.
+     * @throws IOException If an I/O error occurs while writing.
      */
     public void writeTo(final DataOutputStream outputStream) throws IOException {
         // Version (1 byte)
@@ -154,6 +243,8 @@ public abstract class Command {
     /**
      * Sets the Origin-Host AVP.
      * This is a mandatory AVP for most Diameter messages.
+     *
+     * @param originHost The origin host value.
      */
     public void setOriginHost(final String originHost) {
         setAVP(AVP.createStringAVP(DiameterConstants.ORIGIN_HOST, true, originHost));
@@ -162,6 +253,8 @@ public abstract class Command {
     /**
      * Sets the Origin-Realm AVP.
      * This is a mandatory AVP for most Diameter messages.
+     *
+     * @param originRealm The origin realm value.
      */
     public void setOriginRealm(final String originRealm) {
         setAVP(AVP.createStringAVP(DiameterConstants.ORIGIN_REALM, true, originRealm));
@@ -169,6 +262,8 @@ public abstract class Command {
 
     /**
      * Gets the Origin-Host from this message.
+     *
+     * @return The Origin-Host value, or null if not present.
      */
     public String getOriginHost() {
         final AVP originHostAVP = findAVP(DiameterConstants.ORIGIN_HOST);
@@ -180,6 +275,8 @@ public abstract class Command {
 
     /**
      * Gets the Origin-Realm from this message.
+     *
+     * @return The Origin-Realm value, or null if not present.
      */
     public String getOriginRealm() {
         final AVP originRealmAVP = findAVP(DiameterConstants.ORIGIN_REALM);

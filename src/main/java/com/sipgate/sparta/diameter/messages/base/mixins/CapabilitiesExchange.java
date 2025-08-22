@@ -8,13 +8,18 @@ import java.net.InetAddress;
 
 /**
  * Interface for Capabilities Exchange messages (CER/CEA).
- * Contains common functionality for exchanging capabilities between Diameter peers.
- * This interface provides default implementations that can be used as mixins.
+ * <p>
+ * This interface provides common functionality as mixins for exchanging capabilities between Diameter peers
+ * as defined in <a href="https://datatracker.ietf.org/doc/html/rfc6733#section-5.3">RFC 6733, Section 5.3</a>.
+ * </p>
  */
 public interface CapabilitiesExchange extends DiameterMessage {
 
     /**
      * Adds a Host-IP-Address AVP with proper encoding for IPv4 and IPv6 addresses.
+     *
+     * @param address The IP address to add.
+     * @throws IllegalArgumentException if the provided address is invalid.
      */
     default void addHostIPAddress(final InetAddress address) {
         final byte[] addressBytes = address.getAddress();
@@ -41,6 +46,8 @@ public interface CapabilitiesExchange extends DiameterMessage {
 
     /**
      * Sets the Vendor-Id AVP.
+     *
+     * @param vendorId The vendor ID to set.
      */
     default void setVendorId(final int vendorId) {
         setAVP(AVP.createIntegerAVP(DiameterConstants.VENDOR_ID, true, vendorId));
@@ -48,6 +55,8 @@ public interface CapabilitiesExchange extends DiameterMessage {
 
     /**
      * Sets the Product-Name AVP.
+     *
+     * @param productName The product name to set.
      */
     default void setProductName(final String productName) {
         setAVP(AVP.createStringAVP(DiameterConstants.PRODUCT_NAME, false, productName));
@@ -55,6 +64,8 @@ public interface CapabilitiesExchange extends DiameterMessage {
 
     /**
      * Adds a Supported-Vendor-Id AVP.
+     *
+     * @param vendorId The supported vendor ID to add.
      */
     default void addSupportedVendorId(final int vendorId) {
         addAVP(AVP.createIntegerAVP(DiameterConstants.SUPPORTED_VENDOR_ID, true, vendorId));
@@ -62,6 +73,8 @@ public interface CapabilitiesExchange extends DiameterMessage {
 
     /**
      * Adds an Auth-Application-Id AVP.
+     *
+     * @param applicationId The authentication application ID to add.
      */
     default void addAuthApplicationId(final int applicationId) {
         addAVP(AVP.createIntegerAVP(DiameterConstants.AUTH_APPLICATION_ID, true, applicationId));
@@ -69,6 +82,8 @@ public interface CapabilitiesExchange extends DiameterMessage {
 
     /**
      * Adds an Acct-Application-Id AVP.
+     *
+     * @param applicationId The accounting application ID to add.
      */
     default void addAcctApplicationId(final int applicationId) {
         addAVP(AVP.createIntegerAVP(DiameterConstants.ACCT_APPLICATION_ID, true, applicationId));
@@ -76,6 +91,8 @@ public interface CapabilitiesExchange extends DiameterMessage {
 
     /**
      * Sets the Firmware-Revision AVP.
+     *
+     * @param firmwareRevision The firmware revision to set.
      */
     default void setFirmwareRevision(final int firmwareRevision) {
         setAVP(AVP.createIntegerAVP(DiameterConstants.FIRMWARE_REVISION, false, firmwareRevision));
@@ -83,6 +100,8 @@ public interface CapabilitiesExchange extends DiameterMessage {
 
     /**
      * Gets the Vendor-Id from this message.
+     *
+     * @return The vendor ID, or -1 if not present.
      */
     default int getVendorId() {
         final AVP vendorIdAVP = findAVP(DiameterConstants.VENDOR_ID);
@@ -94,6 +113,8 @@ public interface CapabilitiesExchange extends DiameterMessage {
 
     /**
      * Gets the Product-Name from this message.
+     *
+     * @return The product name, or null if not present.
      */
     default String getProductName() {
         final AVP productNameAVP = findAVP(DiameterConstants.PRODUCT_NAME);
@@ -105,6 +126,8 @@ public interface CapabilitiesExchange extends DiameterMessage {
 
     /**
      * Gets the Firmware-Revision from this message.
+     *
+     * @return The firmware revision, or -1 if not present.
      */
     default int getFirmwareRevision() {
         final AVP firmwareRevisionAVP = findAVP(DiameterConstants.FIRMWARE_REVISION);

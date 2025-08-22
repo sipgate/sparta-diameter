@@ -5,14 +5,18 @@ import com.sipgate.sparta.diameter.core.DiameterConstants;
 
 /**
  * Interface for Diameter messages that include Origin-State-Id AVP.
- * Can be used by any message type that needs to handle Origin-State-Id.
- * This interface provides default implementations that can be used as mixins.
+ * <p>
+ * This interface provides default implementations for handling the Origin-State-Id AVP
+ * as defined in <a href="https://datatracker.ietf.org/doc/html/rfc6733#section-8.16">RFC 6733, Section 8.16</a>.
+ * The Origin-State-Id AVP is used to detect and manage peer restarts.
+ * </p>
  */
 public interface OriginStateAware extends DiameterMessage {
 
     /**
      * Sets the Origin-State-Id AVP.
-     * This AVP is used to detect peer restarts.
+     *
+     * @param originStateId The origin state identifier to set.
      */
     default void setOriginStateId(final int originStateId) {
         setAVP(AVP.createIntegerAVP(DiameterConstants.ORIGIN_STATE_ID, true, originStateId));
@@ -20,7 +24,8 @@ public interface OriginStateAware extends DiameterMessage {
 
     /**
      * Gets the Origin-State-Id from this message.
-     * @return the origin state id, or -1 if not found
+     *
+     * @return The origin state identifier, or -1 if not found.
      */
     default int getOriginStateId() {
         final AVP originStateIdAVP = findAVP(DiameterConstants.ORIGIN_STATE_ID);
