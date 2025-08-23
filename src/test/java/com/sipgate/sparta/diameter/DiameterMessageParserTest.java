@@ -1,8 +1,8 @@
 package com.sipgate.sparta.diameter;
 
 import com.sipgate.sparta.diameter.core.*;
+import com.sipgate.sparta.diameter.core.avp.AVP;
 import com.sipgate.sparta.diameter.messages.base.*;
-import com.sipgate.sparta.diameter.core.DiameterConstants;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;

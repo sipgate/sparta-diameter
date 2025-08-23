@@ -1,4 +1,4 @@
-package com.sipgate.sparta.diameter.core;
+package com.sipgate.sparta.diameter.core.avp;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -161,6 +161,11 @@ public class AVP {
 
     /**
      * Creates an AVP with an integer value.
+     * <p>
+     *  Consider using {@link AVPFactory#create(int, int)} instead for automatic
+     *  type deduction and flag handling based on AVP definitions.
+     * </p>
+     *
      * @param code the AVP code
      * @param mandatory whether the AVP is mandatory
      * @param value the integer value
@@ -172,6 +177,10 @@ public class AVP {
 
     /**
      * Creates an AVP with a string value.
+     * <p>
+     *  Consider using {@link AVPFactory#create(int, String)} instead for automatic
+     *  type deduction and flag handling based on AVP definitions.
+     * </p>
      * @param code the AVP code
      * @param mandatory whether the AVP is mandatory
      * @param value the string value
@@ -228,3 +237,9 @@ public class AVP {
         }
     }
 }
+
+
+
+
+
+

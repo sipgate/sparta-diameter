@@ -1,6 +1,6 @@
 package com.sipgate.sparta.diameter.messages.base.mixins;
 
-import com.sipgate.sparta.diameter.core.AVP;
+import com.sipgate.sparta.diameter.core.avp.AVP;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
 import com.sipgate.sparta.diameter.core.mixins.DiameterMessage;
 

@@ -1,5 +1,7 @@
 package com.sipgate.sparta.diameter.core;
 
+import com.sipgate.sparta.diameter.core.avp.AVP;
+
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;

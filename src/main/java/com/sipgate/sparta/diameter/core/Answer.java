@@ -1,5 +1,7 @@
 package com.sipgate.sparta.diameter.core;
 
+import com.sipgate.sparta.diameter.core.avp.AVP;
+
 /**
  * Base class for all Diameter answer messages.
  * <p>
