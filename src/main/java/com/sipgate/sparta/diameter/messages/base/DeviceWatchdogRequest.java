@@ -53,8 +53,9 @@ public class DeviceWatchdogRequest extends Request implements OriginStateAware {
      */
     @Override
     public Answer createAnswer(final int resultCode) {
-        final DeviceWatchdogAnswer dwa = DeviceWatchdogAnswer.create(
-            getHopByHopIdentifier(), getEndToEndIdentifier());
+        final DeviceWatchdogAnswer dwa = ResultCodeUtil.isErrorCode(resultCode)
+            ? DeviceWatchdogAnswer.createError(getHopByHopIdentifier(), getEndToEndIdentifier())
+            : DeviceWatchdogAnswer.create(getHopByHopIdentifier(), getEndToEndIdentifier());
         dwa.setResultCode(resultCode);
         return dwa;
     }

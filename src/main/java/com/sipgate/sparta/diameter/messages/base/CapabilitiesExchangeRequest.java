@@ -54,8 +54,9 @@ public class CapabilitiesExchangeRequest extends Request implements Capabilities
      */
     @Override
     public CapabilitiesExchangeAnswer createAnswer(final int resultCode) {
-        final CapabilitiesExchangeAnswer cea = CapabilitiesExchangeAnswer.create(
-            getHopByHopIdentifier(), getEndToEndIdentifier());
+        final CapabilitiesExchangeAnswer cea = ResultCodeUtil.isErrorCode(resultCode)
+            ? CapabilitiesExchangeAnswer.createError(getHopByHopIdentifier(), getEndToEndIdentifier())
+            : CapabilitiesExchangeAnswer.create(getHopByHopIdentifier(), getEndToEndIdentifier());
         cea.setResultCode(resultCode);
         return cea;
     }
