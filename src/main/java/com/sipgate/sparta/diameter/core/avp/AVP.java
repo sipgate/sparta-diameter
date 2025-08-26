@@ -31,6 +31,14 @@ public class AVP {
     private final int vendorId;
     private final byte[] data;
 
+    // Factory functionality merged from AVPFactory
+    private static final Map<Integer, AVPDefinition> registry = new ConcurrentHashMap<>();
+
+    static {
+        // Register core protocol AVPs by default
+        registerProvider(new CoreAVPProvider());
+    }
+
     /**
      * Constructs an AVP with the specified parameters.
      *
@@ -604,15 +612,6 @@ public class AVP {
         return value.getAddress();
     }
 
-
-    // Factory functionality merged from AVPFactory
-    private static final Map<Integer, AVPDefinition> registry = new ConcurrentHashMap<>();
-
-    static {
-        // Register core protocol AVPs by default
-        registerProvider(new CoreAVPProvider());
-    }
-
     /**
      * Registers all AVP definitions from the given provider.
      *
@@ -634,6 +633,7 @@ public class AVP {
      */
     public static AVP create(final int avpCode, final int value) {
         final AVPDefinition definition = getDefinition(avpCode);
+        validateType(definition, Integer.class);
         return createIntegerAVP(avpCode, definition.mandatory(), value);
     }
 
@@ -647,6 +647,7 @@ public class AVP {
      */
     public static AVP create(final int avpCode, final long value) {
         final AVPDefinition definition = getDefinition(avpCode);
+        validateType(definition, Long.class);
         return createLongAVP(avpCode, definition.mandatory(), value);
     }
 

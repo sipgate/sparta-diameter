@@ -121,6 +121,145 @@ class AVPTest {
     }
 
     @Test
+    void it_throws_exception_for_type_mismatch_long_expected() {
+        // GIVEN & WHEN & THEN
+        assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_ACCOUNTING_SUB_SESSION_ID, "not a long"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Type mismatch")
+            .hasMessageContaining("expected Long")
+            .hasMessageContaining("got String");
+    }
+
+    @Test
+    void it_throws_exception_for_type_mismatch_byte_array_expected() {
+        // GIVEN & WHEN & THEN
+        assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_HOST_IP_ADDRESS, "not a byte array"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Type mismatch")
+            .hasMessageContaining("expected byte[]")
+            .hasMessageContaining("got String");
+    }
+
+    @Test
+    void it_throws_exception_for_integer_passed_to_long_avp() {
+        // GIVEN & WHEN & THEN
+        assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_ACCOUNTING_SUB_SESSION_ID, 123))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Type mismatch")
+            .hasMessageContaining("expected Long")
+            .hasMessageContaining("got Integer");
+    }
+
+    @Test
+    void it_throws_exception_for_long_passed_to_integer_avp() {
+        // GIVEN & WHEN & THEN
+        assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_RESULT_CODE, 123L))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Type mismatch")
+            .hasMessageContaining("expected Integer")
+            .hasMessageContaining("got Long");
+    }
+
+    @Test
+    void it_throws_exception_for_string_passed_to_byte_array_avp() {
+        // GIVEN & WHEN & THEN
+        assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_FAILED_AVP, "not a byte array"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Type mismatch")
+            .hasMessageContaining("expected byte[]")
+            .hasMessageContaining("got String");
+    }
+
+    @Test
+    void it_throws_exception_for_byte_array_passed_to_string_avp() {
+        // GIVEN
+        final byte[] data = {0x01, 0x02, 0x03};
+
+        // WHEN & THEN
+        assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_ORIGIN_HOST, data))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Type mismatch")
+            .hasMessageContaining("expected String")
+            .hasMessageContaining("got byte[]");
+    }
+
+    @Test
+    void it_throws_exception_for_integer_passed_to_string_avp() {
+        // GIVEN & WHEN & THEN
+        assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_PRODUCT_NAME, 12345))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Type mismatch")
+            .hasMessageContaining("expected String")
+            .hasMessageContaining("got Integer");
+    }
+
+    @Test
+    void it_throws_exception_for_string_passed_to_integer_avp() {
+        // GIVEN & WHEN & THEN
+        assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_VENDOR_ID, "not an integer"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Type mismatch")
+            .hasMessageContaining("expected Integer")
+            .hasMessageContaining("got String");
+    }
+
+    @Test
+    void it_throws_exception_for_byte_array_passed_to_integer_avp() {
+        // GIVEN
+        final byte[] data = {0x01, 0x02, 0x03, 0x04};
+
+        // WHEN & THEN
+        assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_FIRMWARE_REVISION, data))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Type mismatch")
+            .hasMessageContaining("expected Integer")
+            .hasMessageContaining("got byte[]");
+    }
+
+    @Test
+    void it_throws_exception_for_integer_passed_to_byte_array_avp() {
+        // GIVEN & WHEN & THEN
+        assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 12345))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Type mismatch")
+            .hasMessageContaining("expected byte[]")
+            .hasMessageContaining("got Integer");
+    }
+
+    @Test
+    void it_throws_exception_for_long_passed_to_string_avp() {
+        // GIVEN & WHEN & THEN
+        assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_SESSION_ID, 123456789L))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Type mismatch")
+            .hasMessageContaining("expected String")
+            .hasMessageContaining("got Long");
+    }
+
+    @Test
+    void it_throws_exception_for_long_passed_to_byte_array_avp() {
+        // GIVEN & WHEN & THEN
+        assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_HOST_IP_ADDRESS, 123456789L))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Type mismatch")
+            .hasMessageContaining("expected byte[]")
+            .hasMessageContaining("got Long");
+    }
+
+    @Test
+    void it_throws_exception_for_byte_array_passed_to_long_avp() {
+        // GIVEN
+        final byte[] data = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+
+        // WHEN & THEN
+        assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_ACCOUNTING_SUB_SESSION_ID, data))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Type mismatch")
+            .hasMessageContaining("expected Long")
+            .hasMessageContaining("got byte[]");
+    }
+
+    @Test
     void it_allows_external_provider_registration() {
         // GIVEN
         final int customCode = 10001;
