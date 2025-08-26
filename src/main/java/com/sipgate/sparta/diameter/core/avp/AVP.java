@@ -3,8 +3,14 @@ package com.sipgate.sparta.diameter.core.avp;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 
 /**
  * Represents a Diameter Attribute-Value Pair (AVP).
@@ -146,48 +152,140 @@ public class AVP {
     }
 
     /**
-     * Creates a byte array from a 32-bit integer in network byte order.
-     * @param value the integer value
-     * @return byte array representation
+     * Gets the data as a 64-bit signed integer (network byte order).
+     * @return the long value, or throws IllegalArgumentException if data length < 8
      */
-    public static byte[] intToBytes(final int value) {
-        final byte[] data = new byte[4];
-        data[0] = (byte) ((value >> 24) & 0xFF);
-        data[1] = (byte) ((value >> 16) & 0xFF);
-        data[2] = (byte) ((value >> 8) & 0xFF);
-        data[3] = (byte) (value & 0xFF);
-        return data;
+    public long getDataAsLong() {
+        if (data.length < 8) {
+            throw new IllegalArgumentException("AVP data must be at least 8 bytes to read as long");
+        }
+        return ((long)(data[0] & 0xFF) << 56) |
+               ((long)(data[1] & 0xFF) << 48) |
+               ((long)(data[2] & 0xFF) << 40) |
+               ((long)(data[3] & 0xFF) << 32) |
+               ((long)(data[4] & 0xFF) << 24) |
+               ((long)(data[5] & 0xFF) << 16) |
+               ((long)(data[6] & 0xFF) << 8) |
+               ((long)(data[7] & 0xFF));
     }
 
     /**
-     * Creates an AVP with an integer value.
-     * <p>
-     *  Consider using {@link AVPFactory#create(int, int)} instead for automatic
-     *  type deduction and flag handling based on AVP definitions.
-     * </p>
-     *
-     * @param code the AVP code
-     * @param mandatory whether the AVP is mandatory
-     * @param value the integer value
-     * @return the created AVP
+     * Gets the data as a 32-bit unsigned integer (network byte order).
+     * @return the unsigned integer value as long, or throws IllegalArgumentException if data length < 4
      */
-    public static AVP createIntegerAVP(final int code, final boolean mandatory, final int value) {
-        return new AVP(code, mandatory, intToBytes(value));
+    public long getDataAsUnsignedInt() {
+        if (data.length < 4) {
+            throw new IllegalArgumentException("AVP data must be at least 4 bytes to read as unsigned integer");
+        }
+        return ((long)(data[0] & 0xFF) << 24) |
+               ((long)(data[1] & 0xFF) << 16) |
+               ((long)(data[2] & 0xFF) << 8) |
+               ((long)(data[3] & 0xFF));
     }
 
     /**
-     * Creates an AVP with a string value.
-     * <p>
-     *  Consider using {@link AVPFactory#create(int, String)} instead for automatic
-     *  type deduction and flag handling based on AVP definitions.
-     * </p>
-     * @param code the AVP code
-     * @param mandatory whether the AVP is mandatory
-     * @param value the string value
-     * @return the created AVP
+     * Gets the data as a 64-bit unsigned integer (network byte order).
+     * @return the unsigned long value as BigInteger, or throws IllegalArgumentException if data length < 8
      */
-    public static AVP createStringAVP(final int code, final boolean mandatory, final String value) {
-        return new AVP(code, mandatory, value.getBytes(StandardCharsets.UTF_8));
+    public BigInteger getDataAsUnsignedLong() {
+        if (data.length < 8) {
+            throw new IllegalArgumentException("AVP data must be at least 8 bytes to read as unsigned long");
+        }
+        // Create BigInteger from unsigned byte array
+        final byte[] unsignedBytes = new byte[9]; // 9 bytes to ensure positive value
+        unsignedBytes[0] = 0; // Sign byte
+        System.arraycopy(data, 0, unsignedBytes, 1, 8);
+        return new BigInteger(unsignedBytes);
+    }
+
+    /**
+     * Gets the data as a 32-bit IEEE 754 float (network byte order).
+     * @return the float value, or throws IllegalArgumentException if data length < 4
+     */
+    public float getDataAsFloat() {
+        if (data.length < 4) {
+            throw new IllegalArgumentException("AVP data must be at least 4 bytes to read as float");
+        }
+        return Float.intBitsToFloat(getDataAsInt());
+    }
+
+    /**
+     * Gets the data as a 64-bit IEEE 754 double (network byte order).
+     * @return the double value, or throws IllegalArgumentException if data length < 8
+     */
+    public double getDataAsDouble() {
+        if (data.length < 8) {
+            throw new IllegalArgumentException("AVP data must be at least 8 bytes to read as double");
+        }
+        return Double.longBitsToDouble(getDataAsLong());
+    }
+
+    /**
+     * Gets the data as an enumerated value (32-bit integer).
+     * @return the enumerated value, or throws IllegalArgumentException if data length < 4
+     */
+    public int getDataAsEnumerated() {
+        return getDataAsInt();
+    }
+
+    /**
+     * Gets the data as a Diameter Time (NTP timestamp format).
+     * NTP timestamp is seconds since January 1, 1900 00:00 UTC.
+     * @return the Date value, or throws IllegalArgumentException if data length < 4
+     */
+    public Date getDataAsTime() {
+        if (data.length < 4) {
+            throw new IllegalArgumentException("AVP data must be at least 4 bytes to read as time");
+        }
+        final long ntpTime = getDataAsUnsignedInt();
+        // Convert NTP time (seconds since 1900) to Unix time (seconds since 1970)
+        // NTP epoch is 70 years before Unix epoch: 70 * 365.25 * 24 * 3600 = 2208988800L
+        final long unixTime = ntpTime - 2208988800L;
+        return new Date(unixTime * 1000);
+    }
+
+    /**
+     * Gets the data as a Diameter Identity (domain name string).
+     * @return the domain name string
+     */
+    public String getDataAsDiameterIdentity() {
+        return getDataAsString();
+    }
+
+    /**
+     * Gets the data as a Diameter URI string.
+     * @return the URI string
+     */
+    public String getDataAsDiameterURI() {
+        return getDataAsString();
+    }
+
+    /**
+     * Gets the data as an IP Address (IPv4 or IPv6).
+     * @return the InetAddress, or throws IllegalArgumentException if data is not valid IP address format
+     */
+    public InetAddress getDataAsIPAddress() {
+        try {
+            if (data.length == 4) {
+                // IPv4 address
+                return Inet4Address.getByAddress(data);
+            } else if (data.length == 16) {
+                // IPv6 address
+                return Inet6Address.getByAddress(data);
+            } else {
+                throw new IllegalArgumentException("AVP data must be 4 bytes (IPv4) or 16 bytes (IPv6) to read as IP address");
+            }
+        } catch (final UnknownHostException e) {
+            throw new IllegalArgumentException("Invalid IP address data", e);
+        }
+    }
+
+    /**
+     * Gets the data as raw bytes (OctetString).
+     * @return a copy of the raw byte data
+     */
+    public byte[] getDataAsOctetString() {
+        return getData();
     }
 
     public int getLength() {
@@ -236,10 +334,262 @@ public class AVP {
             outputStream.writeByte(0);
         }
     }
+
+    /**
+     * Creates an AVP with an integer value.
+     * <p>
+     *  Consider using {@link AVPFactory#create(int, int)} instead for automatic
+     *  type deduction and flag handling based on AVP definitions.
+     * </p>
+     *
+     * @param code the AVP code
+     * @param mandatory whether the AVP is mandatory
+     * @param value the integer value
+     * @return the created AVP
+     */
+    public static AVP createIntegerAVP(final int code, final boolean mandatory, final int value) {
+        return new AVP(code, mandatory, intToBytes(value));
+    }
+
+    /**
+     * Creates an AVP with a string value.
+     * <p>
+     *  Consider using {@link AVPFactory#create(int, String)} instead for automatic
+     *  type deduction and flag handling based on AVP definitions.
+     * </p>
+     * @param code the AVP code
+     * @param mandatory whether the AVP is mandatory
+     * @param value the string value
+     * @return the created AVP
+     */
+    public static AVP createStringAVP(final int code, final boolean mandatory, final String value) {
+        return new AVP(code, mandatory, value.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Creates an AVP with a 64-bit signed integer value.
+     * @param code the AVP code
+     * @param mandatory whether the AVP is mandatory
+     * @param value the long value
+     * @return the created AVP
+     */
+    public static AVP createLongAVP(final int code, final boolean mandatory, final long value) {
+        return new AVP(code, mandatory, longToBytes(value));
+    }
+
+    /**
+     * Creates an AVP with a 32-bit unsigned integer value.
+     * @param code the AVP code
+     * @param mandatory whether the AVP is mandatory
+     * @param value the unsigned integer value as long
+     * @return the created AVP
+     */
+    public static AVP createUnsignedIntAVP(final int code, final boolean mandatory, final long value) {
+        return new AVP(code, mandatory, unsignedIntToBytes(value));
+    }
+
+    /**
+     * Creates an AVP with a 64-bit unsigned integer value.
+     * @param code the AVP code
+     * @param mandatory whether the AVP is mandatory
+     * @param value the unsigned long value as BigInteger
+     * @return the created AVP
+     */
+    public static AVP createUnsignedLongAVP(final int code, final boolean mandatory, final BigInteger value) {
+        return new AVP(code, mandatory, unsignedLongToBytes(value));
+    }
+
+    /**
+     * Creates an AVP with a 32-bit float value.
+     * @param code the AVP code
+     * @param mandatory whether the AVP is mandatory
+     * @param value the float value
+     * @return the created AVP
+     */
+    public static AVP createFloatAVP(final int code, final boolean mandatory, final float value) {
+        return new AVP(code, mandatory, floatToBytes(value));
+    }
+
+    /**
+     * Creates an AVP with a 64-bit double value.
+     * @param code the AVP code
+     * @param mandatory whether the AVP is mandatory
+     * @param value the double value
+     * @return the created AVP
+     */
+    public static AVP createDoubleAVP(final int code, final boolean mandatory, final double value) {
+        return new AVP(code, mandatory, doubleToBytes(value));
+    }
+
+    /**
+     * Creates an AVP with an enumerated value.
+     * @param code the AVP code
+     * @param mandatory whether the AVP is mandatory
+     * @param value the enumerated value
+     * @return the created AVP
+     */
+    public static AVP createEnumeratedAVP(final int code, final boolean mandatory, final int value) {
+        return new AVP(code, mandatory, intToBytes(value));
+    }
+
+    /**
+     * Creates an AVP with a Diameter Time value.
+     * @param code the AVP code
+     * @param mandatory whether the AVP is mandatory
+     * @param value the Date value
+     * @return the created AVP
+     */
+    public static AVP createTimeAVP(final int code, final boolean mandatory, final Date value) {
+        return new AVP(code, mandatory, timeToBytes(value));
+    }
+
+    /**
+     * Creates an AVP with a Diameter Identity value.
+     * @param code the AVP code
+     * @param mandatory whether the AVP is mandatory
+     * @param value the domain name string
+     * @return the created AVP
+     */
+    public static AVP createDiameterIdentityAVP(final int code, final boolean mandatory, final String value) {
+        return new AVP(code, mandatory, value.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Creates an AVP with a Diameter URI value.
+     * @param code the AVP code
+     * @param mandatory whether the AVP is mandatory
+     * @param value the URI string
+     * @return the created AVP
+     */
+    public static AVP createDiameterURIAVP(final int code, final boolean mandatory, final String value) {
+        return new AVP(code, mandatory, value.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Creates an AVP with an IP Address value.
+     * @param code the AVP code
+     * @param mandatory whether the AVP is mandatory
+     * @param value the InetAddress value
+     * @return the created AVP
+     */
+    public static AVP createIPAddressAVP(final int code, final boolean mandatory, final InetAddress value) {
+        return new AVP(code, mandatory, ipAddressToBytes(value));
+    }
+
+    /**
+     * Creates an AVP with an OctetString value.
+     * @param code the AVP code
+     * @param mandatory whether the AVP is mandatory
+     * @param value the byte array value
+     * @return the created AVP
+     */
+    public static AVP createOctetStringAVP(final int code, final boolean mandatory, final byte[] value) {
+        return new AVP(code, mandatory, value);
+    }
+
+    /**
+     * Creates a byte array from a 32-bit integer in network byte order.
+     * @param value the integer value
+     * @return byte array representation
+     */
+    private static byte[] intToBytes(final int value) {
+        final byte[] data = new byte[4];
+        data[0] = (byte) ((value >> 24) & 0xFF);
+        data[1] = (byte) ((value >> 16) & 0xFF);
+        data[2] = (byte) ((value >> 8) & 0xFF);
+        data[3] = (byte) (value & 0xFF);
+        return data;
+    }
+
+    /**
+     * Creates a byte array from a 64-bit long in network byte order.
+     * @param value the long value
+     * @return byte array representation
+     */
+    private static byte[] longToBytes(final long value) {
+        final byte[] data = new byte[8];
+        data[0] = (byte) ((value >> 56) & 0xFF);
+        data[1] = (byte) ((value >> 48) & 0xFF);
+        data[2] = (byte) ((value >> 40) & 0xFF);
+        data[3] = (byte) ((value >> 32) & 0xFF);
+        data[4] = (byte) ((value >> 24) & 0xFF);
+        data[5] = (byte) ((value >> 16) & 0xFF);
+        data[6] = (byte) ((value >> 8) & 0xFF);
+        data[7] = (byte) (value & 0xFF);
+        return data;
+    }
+
+    /**
+     * Creates a byte array from a 32-bit unsigned integer in network byte order.
+     * @param value the unsigned integer value as long
+     * @return byte array representation
+     */
+    private static byte[] unsignedIntToBytes(final long value) {
+        if (value < 0 || value > 0xFFFFFFFFL) {
+            throw new IllegalArgumentException("Value must be between 0 and 4294967295");
+        }
+        return intToBytes((int) value);
+    }
+
+    /**
+     * Creates a byte array from a 64-bit unsigned integer in network byte order.
+     * @param value the unsigned long value as BigInteger
+     * @return byte array representation
+     */
+    private static byte[] unsignedLongToBytes(final BigInteger value) {
+        if (value.signum() < 0 || value.bitLength() > 64) {
+            throw new IllegalArgumentException("Value must be between 0 and 18446744073709551615");
+        }
+        final byte[] bytes = value.toByteArray();
+        if (bytes.length <= 8) {
+            // Pad with leading zeros if necessary
+            final byte[] result = new byte[8];
+            System.arraycopy(bytes, 0, result, 8 - bytes.length, bytes.length);
+            return result;
+        } else {
+            // Remove leading zero byte if present
+            final byte[] result = new byte[8];
+            System.arraycopy(bytes, bytes.length - 8, result, 0, 8);
+            return result;
+        }
+    }
+
+    /**
+     * Creates a byte array from a 32-bit float in network byte order.
+     * @param value the float value
+     * @return byte array representation
+     */
+    private static byte[] floatToBytes(final float value) {
+        return intToBytes(Float.floatToIntBits(value));
+    }
+
+    /**
+     * Creates a byte array from a 64-bit double in network byte order.
+     * @param value the double value
+     * @return byte array representation
+     */
+    private static byte[] doubleToBytes(final double value) {
+        return longToBytes(Double.doubleToLongBits(value));
+    }
+
+    /**
+     * Creates a byte array from a Date for Diameter Time (NTP timestamp format).
+     * @param value the Date value
+     * @return byte array representation
+     */
+    private static byte[] timeToBytes(final Date value) {
+        // Convert Unix time to NTP time
+        final long unixTime = value.getTime() / 1000;
+        final long ntpTime = unixTime + 2208988800L; // Add NTP epoch offset
+        return unsignedIntToBytes(ntpTime);
+    }
+
+    /**
+     * Creates a byte array from an InetAddress for IPAddress format.
+     * @param value the InetAddress value
+     * @return byte array representation
+     */
+    private static byte[] ipAddressToBytes(final InetAddress value) {
+        return value.getAddress();
+    }
 }
-
-
-
-
-
-

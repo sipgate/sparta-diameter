@@ -40,8 +40,7 @@ public final class AVPFactory {
     public static AVP create(final int avpCode, final int value) {
         final AVPDefinition definition = getDefinition(avpCode);
         validateType(definition, Integer.class);
-        return new AVP(avpCode, definition.vendorSpecific(), definition.mandatory(),
-                      false, definition.vendorId(), AVP.intToBytes(value));
+        return AVP.createIntegerAVP(avpCode, definition.mandatory(), value);
     }
 
     /**
@@ -55,8 +54,7 @@ public final class AVPFactory {
     public static AVP create(final int avpCode, final long value) {
         final AVPDefinition definition = getDefinition(avpCode);
         validateType(definition, Long.class);
-        return new AVP(avpCode, definition.vendorSpecific(), definition.mandatory(),
-                      false, definition.vendorId(), longToBytes(value));
+        return AVP.createLongAVP(avpCode, definition.vendorSpecific(), value);
     }
 
     /**
@@ -119,25 +117,6 @@ public final class AVPFactory {
                 definition.name(), definition.code(),
                 definition.dataType().getSimpleName(), valueType.getSimpleName()));
         }
-    }
-
-    /**
-     * Converts a long value to bytes in network byte order.
-     *
-     * @param value The long value
-     * @return Byte array representation
-     */
-    private static byte[] longToBytes(final long value) {
-        final byte[] data = new byte[8];
-        data[0] = (byte) ((value >> 56) & 0xFF);
-        data[1] = (byte) ((value >> 48) & 0xFF);
-        data[2] = (byte) ((value >> 40) & 0xFF);
-        data[3] = (byte) ((value >> 32) & 0xFF);
-        data[4] = (byte) ((value >> 24) & 0xFF);
-        data[5] = (byte) ((value >> 16) & 0xFF);
-        data[6] = (byte) ((value >> 8) & 0xFF);
-        data[7] = (byte) (value & 0xFF);
-        return data;
     }
 
     private AVPFactory() {
