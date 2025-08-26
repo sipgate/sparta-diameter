@@ -51,12 +51,12 @@ public class CapabilitiesExchangeAnswer extends Answer implements CapabilitiesEx
     }
 
     /**
-     * Sets the Error-Message AVP for this answer.
+     * Sets the Error-Message AVP for error answers.
      *
      * @param errorMessage The error message to set.
      */
     public void setErrorMessage(final String errorMessage) {
-        setAVP(AVP.createStringAVP(DiameterConstants.AVP_ERROR_MESSAGE, false, errorMessage));
+        setAVP(AVP.create(DiameterConstants.AVP_ERROR_MESSAGE, errorMessage));
     }
 
     /**
@@ -78,7 +78,7 @@ public class CapabilitiesExchangeAnswer extends Answer implements CapabilitiesEx
      * @param failedAVP The Failed-AVP to set.
      */
     public void setFailedAVP(final AVP failedAVP) {
-        setAVP(new AVP(DiameterConstants.AVP_FAILED_AVP, true, failedAVP.getData()));
+        setAVP(failedAVP);
     }
 
     /**

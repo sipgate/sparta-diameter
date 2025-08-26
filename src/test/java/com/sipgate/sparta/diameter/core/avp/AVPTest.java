@@ -9,7 +9,7 @@ import java.util.Collection;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class AVPFactoryTest {
+class AVPTest {
 
     @Test
     void it_creates_integer_avp_with_correct_flags() {
@@ -17,7 +17,7 @@ class AVPFactoryTest {
         final int resultCode = DiameterConstants.RES_DIAMETER_SUCCESS;
 
         // WHEN
-        final AVP avp = AVPFactory.create(DiameterConstants.AVP_RESULT_CODE, resultCode);
+        final AVP avp = AVP.create(DiameterConstants.AVP_RESULT_CODE, resultCode);
 
         // THEN
         assertThat(avp.getCode()).isEqualTo(DiameterConstants.AVP_RESULT_CODE);
@@ -34,7 +34,7 @@ class AVPFactoryTest {
         final String hostname = "diameter.example.com";
 
         // WHEN
-        final AVP avp = AVPFactory.create(DiameterConstants.AVP_ORIGIN_HOST, hostname);
+        final AVP avp = AVP.create(DiameterConstants.AVP_ORIGIN_HOST, hostname);
 
         // THEN
         assertThat(avp.getCode()).isEqualTo(DiameterConstants.AVP_ORIGIN_HOST);
@@ -50,7 +50,7 @@ class AVPFactoryTest {
         final String productName = "Sparta Diameter";
 
         // WHEN
-        final AVP avp = AVPFactory.create(DiameterConstants.AVP_PRODUCT_NAME, productName);
+        final AVP avp = AVP.create(DiameterConstants.AVP_PRODUCT_NAME, productName);
 
         // THEN
         assertThat(avp.getCode()).isEqualTo(DiameterConstants.AVP_PRODUCT_NAME);
@@ -65,13 +65,13 @@ class AVPFactoryTest {
         final long subSessionId = 123456789L;
 
         // WHEN
-        final AVP avp = AVPFactory.create(DiameterConstants.AVP_ACCOUNTING_SUB_SESSION_ID, subSessionId);
+        final AVP avp = AVP.create(DiameterConstants.AVP_ACCOUNTING_SUB_SESSION_ID, subSessionId);
 
         // THEN
         assertThat(avp.getCode()).isEqualTo(DiameterConstants.AVP_ACCOUNTING_SUB_SESSION_ID);
+        assertThat(avp.getDataAsLong()).isEqualTo(subSessionId);
         assertThat(avp.isMandatory()).isFalse(); // Accounting-Sub-Session-Id is optional
         assertThat(avp.isVendorSpecific()).isFalse();
-        // Note: We'd need a getDataAsLong() method in AVP to fully test this
     }
 
     @Test
@@ -80,7 +80,7 @@ class AVPFactoryTest {
         final byte[] data = {0x01, 0x02, 0x03, 0x04};
 
         // WHEN
-        final AVP avp = AVPFactory.create(DiameterConstants.AVP_CLASS, data);
+        final AVP avp = AVP.create(DiameterConstants.AVP_CLASS, data);
 
         // THEN
         assertThat(avp.getCode()).isEqualTo(DiameterConstants.AVP_CLASS);
@@ -95,7 +95,7 @@ class AVPFactoryTest {
         final int unknownCode = 99999;
 
         // WHEN & THEN
-        assertThatThrownBy(() -> AVPFactory.create(unknownCode, "test"))
+        assertThatThrownBy(() -> AVP.create(unknownCode, "test"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Unknown AVP code: " + unknownCode);
     }
@@ -103,7 +103,7 @@ class AVPFactoryTest {
     @Test
     void it_throws_exception_for_type_mismatch_integer_expected() {
         // GIVEN & WHEN & THEN
-        assertThatThrownBy(() -> AVPFactory.create(DiameterConstants.AVP_RESULT_CODE, "not an integer"))
+        assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_RESULT_CODE, "not an integer"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Type mismatch")
             .hasMessageContaining("expected Integer")
@@ -113,7 +113,7 @@ class AVPFactoryTest {
     @Test
     void it_throws_exception_for_type_mismatch_string_expected() {
         // GIVEN & WHEN & THEN
-        assertThatThrownBy(() -> AVPFactory.create(DiameterConstants.AVP_ORIGIN_HOST, 12345))
+        assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_ORIGIN_HOST, 12345))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Type mismatch")
             .hasMessageContaining("expected String")
@@ -138,8 +138,8 @@ class AVPFactoryTest {
         };
 
         // WHEN
-        AVPFactory.registerProvider(customProvider);
-        final AVP avp = AVPFactory.create(customCode, customValue);
+        AVP.registerProvider(customProvider);
+        final AVP avp = AVP.create(customCode, customValue);
 
         // THEN
         assertThat(avp.getCode()).isEqualTo(customCode);

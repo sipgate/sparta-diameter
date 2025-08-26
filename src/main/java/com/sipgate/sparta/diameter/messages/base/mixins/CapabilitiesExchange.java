@@ -16,41 +16,12 @@ import java.net.InetAddress;
 public interface CapabilitiesExchange extends DiameterMessage {
 
     /**
-     * Adds a Host-IP-Address AVP with proper encoding for IPv4 and IPv6 addresses.
-     *
-     * @param address The IP address to add.
-     * @throws IllegalArgumentException if the provided address is invalid.
-     */
-    default void addHostIPAddress(final InetAddress address) {
-        final byte[] addressBytes = address.getAddress();
-        final byte[] data;
-
-        if (addressBytes.length == 4) {
-            // IPv4 - Address Type 1
-            data = new byte[6];
-            data[0] = 0x00;
-            data[1] = 0x01;
-            System.arraycopy(addressBytes, 0, data, 2, 4);
-        } else if (addressBytes.length == 16) {
-            // IPv6 - Address Type 2
-            data = new byte[18];
-            data[0] = 0x00;
-            data[1] = 0x02;
-            System.arraycopy(addressBytes, 0, data, 2, 16);
-        } else {
-            throw new IllegalArgumentException("Invalid IP address");
-        }
-
-        addAVP(new AVP(DiameterConstants.AVP_HOST_IP_ADDRESS, true, data));
-    }
-
-    /**
      * Sets the Vendor-Id AVP.
      *
      * @param vendorId The vendor ID to set.
      */
     default void setVendorId(final int vendorId) {
-        setAVP(AVP.createIntegerAVP(DiameterConstants.AVP_VENDOR_ID, true, vendorId));
+        setAVP(AVP.create(DiameterConstants.AVP_VENDOR_ID, vendorId));
     }
 
     /**
@@ -59,7 +30,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      * @param productName The product name to set.
      */
     default void setProductName(final String productName) {
-        setAVP(AVP.createStringAVP(DiameterConstants.AVP_PRODUCT_NAME, false, productName));
+        setAVP(AVP.create(DiameterConstants.AVP_PRODUCT_NAME, productName));
     }
 
     /**
@@ -68,7 +39,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      * @param vendorId The supported vendor ID to add.
      */
     default void addSupportedVendorId(final int vendorId) {
-        addAVP(AVP.createIntegerAVP(DiameterConstants.AVP_SUPPORTED_VENDOR_ID, true, vendorId));
+        addAVP(AVP.create(DiameterConstants.AVP_SUPPORTED_VENDOR_ID, vendorId));
     }
 
     /**
@@ -77,7 +48,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      * @param applicationId The authentication application ID to add.
      */
     default void addAuthApplicationId(final int applicationId) {
-        addAVP(AVP.createIntegerAVP(DiameterConstants.AVP_AUTH_APPLICATION_ID, true, applicationId));
+        addAVP(AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, applicationId));
     }
 
     /**
@@ -86,7 +57,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      * @param applicationId The accounting application ID to add.
      */
     default void addAcctApplicationId(final int applicationId) {
-        addAVP(AVP.createIntegerAVP(DiameterConstants.AVP_ACCT_APPLICATION_ID, true, applicationId));
+        addAVP(AVP.create(DiameterConstants.AVP_ACCT_APPLICATION_ID, applicationId));
     }
 
     /**
@@ -95,7 +66,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      * @param firmwareRevision The firmware revision to set.
      */
     default void setFirmwareRevision(final int firmwareRevision) {
-        setAVP(AVP.createIntegerAVP(DiameterConstants.AVP_FIRMWARE_REVISION, false, firmwareRevision));
+        setAVP(AVP.create(DiameterConstants.AVP_FIRMWARE_REVISION, firmwareRevision));
     }
 
     /**

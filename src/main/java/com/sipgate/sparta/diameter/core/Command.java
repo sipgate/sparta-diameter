@@ -249,7 +249,7 @@ public abstract class Command {
      * @param originHost The origin host value.
      */
     public void setOriginHost(final String originHost) {
-        setAVP(AVP.createStringAVP(DiameterConstants.AVP_ORIGIN_HOST, true, originHost));
+        setAVP(AVP.create(DiameterConstants.AVP_ORIGIN_HOST, originHost));
     }
 
     /**
@@ -259,7 +259,7 @@ public abstract class Command {
      * @param originRealm The origin realm value.
      */
     public void setOriginRealm(final String originRealm) {
-        setAVP(AVP.createStringAVP(DiameterConstants.AVP_ORIGIN_REALM, true, originRealm));
+        setAVP(AVP.create(DiameterConstants.AVP_ORIGIN_REALM, originRealm));
     }
 
     /**

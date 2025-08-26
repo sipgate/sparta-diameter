@@ -196,7 +196,7 @@ public final class DiameterMessageParser {
         final byte[] data = new byte[dataLength];
         inputStream.readFully(data);
 
-        return new AVP(code, vendorSpecific, mandatory, protectedAVP, vendorId, data);
+        return AVP.createRaw(code, vendorSpecific, mandatory, protectedAVP, vendorId, data);
     }
 
     /**

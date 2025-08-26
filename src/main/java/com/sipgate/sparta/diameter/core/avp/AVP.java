@@ -9,8 +9,11 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
 import java.util.Date;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Represents a Diameter Attribute-Value Pair (AVP).
@@ -38,8 +41,8 @@ public class AVP {
      * @param vendorId       The vendor ID.
      * @param data           The AVP data.
      */
-    public AVP(final int code, final boolean vendorSpecific, final boolean mandatory, final boolean protectedAVP,
-               final int vendorId, final byte[] data) {
+    AVP(final int code, final boolean vendorSpecific, final boolean mandatory, final boolean protectedAVP,
+        final int vendorId, final byte[] data) {
         this.code = code;
         this.vendorSpecific = vendorSpecific;
         this.mandatory = mandatory;
@@ -55,8 +58,24 @@ public class AVP {
      * @param mandatory Indicates whether the AVP is mandatory.
      * @param data      The AVP data.
      */
-    public AVP(final int code, final boolean mandatory, final byte[] data) {
+    AVP(final int code, final boolean mandatory, final byte[] data) {
         this(code, false, mandatory, false, 0, data);
+    }
+
+    /**
+     * Creates an AVP with full manual specification. Ideally you should use one of the type-specific
+     * create() methods instead, and register custom types via registerProvider() if needed.
+     *
+     * @param code The AVP code.
+     * @param vendorSpecific Whether the AVP is vendor-specific.
+     * @param mandatory Whether the AVP is mandatory.
+     * @param protectedAVP Whether the AVP is protected.
+     * @param vendorId The vendor ID (0 if not vendor-specific).
+     * @param data The AVP data.
+     * @return The created AVP.
+     */
+    public static AVP createRaw(final int code, final boolean vendorSpecific, final boolean mandatory, final boolean protectedAVP, final int vendorId, final byte[] data) {
+        return new AVP(code, vendorSpecific, mandatory, protectedAVP, vendorId, data);
     }
 
     /**
@@ -168,7 +187,6 @@ public class AVP {
                ((long)(data[6] & 0xFF) << 8) |
                ((long)(data[7] & 0xFF));
     }
-
     /**
      * Gets the data as a 32-bit unsigned integer (network byte order).
      * @return the unsigned integer value as long, or throws IllegalArgumentException if data length < 4
@@ -288,6 +306,7 @@ public class AVP {
         return getData();
     }
 
+
     public int getLength() {
         int length = 8; // AVP header is 8 bytes minimum
         if (vendorSpecific) {
@@ -334,35 +353,27 @@ public class AVP {
             outputStream.writeByte(0);
         }
     }
-
     /**
      * Creates an AVP with an integer value.
-     * <p>
-     *  Consider using {@link AVPFactory#create(int, int)} instead for automatic
-     *  type deduction and flag handling based on AVP definitions.
-     * </p>
      *
      * @param code the AVP code
      * @param mandatory whether the AVP is mandatory
      * @param value the integer value
      * @return the created AVP
      */
-    public static AVP createIntegerAVP(final int code, final boolean mandatory, final int value) {
+    private static AVP createIntegerAVP(final int code, final boolean mandatory, final int value) {
         return new AVP(code, mandatory, intToBytes(value));
     }
 
     /**
      * Creates an AVP with a string value.
-     * <p>
-     *  Consider using {@link AVPFactory#create(int, String)} instead for automatic
-     *  type deduction and flag handling based on AVP definitions.
-     * </p>
+     *
      * @param code the AVP code
      * @param mandatory whether the AVP is mandatory
      * @param value the string value
      * @return the created AVP
      */
-    public static AVP createStringAVP(final int code, final boolean mandatory, final String value) {
+    private static AVP createStringAVP(final int code, final boolean mandatory, final String value) {
         return new AVP(code, mandatory, value.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -373,7 +384,7 @@ public class AVP {
      * @param value the long value
      * @return the created AVP
      */
-    public static AVP createLongAVP(final int code, final boolean mandatory, final long value) {
+    private static AVP createLongAVP(final int code, final boolean mandatory, final long value) {
         return new AVP(code, mandatory, longToBytes(value));
     }
 
@@ -384,7 +395,7 @@ public class AVP {
      * @param value the unsigned integer value as long
      * @return the created AVP
      */
-    public static AVP createUnsignedIntAVP(final int code, final boolean mandatory, final long value) {
+    private static AVP createUnsignedIntAVP(final int code, final boolean mandatory, final long value) {
         return new AVP(code, mandatory, unsignedIntToBytes(value));
     }
 
@@ -395,7 +406,7 @@ public class AVP {
      * @param value the unsigned long value as BigInteger
      * @return the created AVP
      */
-    public static AVP createUnsignedLongAVP(final int code, final boolean mandatory, final BigInteger value) {
+    private static AVP createUnsignedLongAVP(final int code, final boolean mandatory, final BigInteger value) {
         return new AVP(code, mandatory, unsignedLongToBytes(value));
     }
 
@@ -406,7 +417,7 @@ public class AVP {
      * @param value the float value
      * @return the created AVP
      */
-    public static AVP createFloatAVP(final int code, final boolean mandatory, final float value) {
+    private static AVP createFloatAVP(final int code, final boolean mandatory, final float value) {
         return new AVP(code, mandatory, floatToBytes(value));
     }
 
@@ -417,7 +428,7 @@ public class AVP {
      * @param value the double value
      * @return the created AVP
      */
-    public static AVP createDoubleAVP(final int code, final boolean mandatory, final double value) {
+    private static AVP createDoubleAVP(final int code, final boolean mandatory, final double value) {
         return new AVP(code, mandatory, doubleToBytes(value));
     }
 
@@ -428,7 +439,7 @@ public class AVP {
      * @param value the enumerated value
      * @return the created AVP
      */
-    public static AVP createEnumeratedAVP(final int code, final boolean mandatory, final int value) {
+    private static AVP createEnumeratedAVP(final int code, final boolean mandatory, final int value) {
         return new AVP(code, mandatory, intToBytes(value));
     }
 
@@ -439,7 +450,7 @@ public class AVP {
      * @param value the Date value
      * @return the created AVP
      */
-    public static AVP createTimeAVP(final int code, final boolean mandatory, final Date value) {
+    private static AVP createTimeAVP(final int code, final boolean mandatory, final Date value) {
         return new AVP(code, mandatory, timeToBytes(value));
     }
 
@@ -450,7 +461,7 @@ public class AVP {
      * @param value the domain name string
      * @return the created AVP
      */
-    public static AVP createDiameterIdentityAVP(final int code, final boolean mandatory, final String value) {
+    private static AVP createDiameterIdentityAVP(final int code, final boolean mandatory, final String value) {
         return new AVP(code, mandatory, value.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -461,7 +472,7 @@ public class AVP {
      * @param value the URI string
      * @return the created AVP
      */
-    public static AVP createDiameterURIAVP(final int code, final boolean mandatory, final String value) {
+    private static AVP createDiameterURIAVP(final int code, final boolean mandatory, final String value) {
         return new AVP(code, mandatory, value.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -472,7 +483,7 @@ public class AVP {
      * @param value the InetAddress value
      * @return the created AVP
      */
-    public static AVP createIPAddressAVP(final int code, final boolean mandatory, final InetAddress value) {
+    private static AVP createIPAddressAVP(final int code, final boolean mandatory, final InetAddress value) {
         return new AVP(code, mandatory, ipAddressToBytes(value));
     }
 
@@ -483,9 +494,10 @@ public class AVP {
      * @param value the byte array value
      * @return the created AVP
      */
-    public static AVP createOctetStringAVP(final int code, final boolean mandatory, final byte[] value) {
+    private static AVP createOctetStringAVP(final int code, final boolean mandatory, final byte[] value) {
         return new AVP(code, mandatory, value);
     }
+
 
     /**
      * Creates a byte array from a 32-bit integer in network byte order.
@@ -518,7 +530,6 @@ public class AVP {
         data[7] = (byte) (value & 0xFF);
         return data;
     }
-
     /**
      * Creates a byte array from a 32-bit unsigned integer in network byte order.
      * @param value the unsigned integer value as long
@@ -591,5 +602,113 @@ public class AVP {
      */
     private static byte[] ipAddressToBytes(final InetAddress value) {
         return value.getAddress();
+    }
+
+
+    // Factory functionality merged from AVPFactory
+    private static final Map<Integer, AVPDefinition> registry = new ConcurrentHashMap<>();
+
+    static {
+        // Register core protocol AVPs by default
+        registerProvider(new CoreAVPProvider());
+    }
+
+    /**
+     * Registers all AVP definitions from the given provider.
+     *
+     * @param provider The AVP provider to register
+     */
+    public static void registerProvider(final AVPProvider provider) {
+        for (final AVPDefinition definition : provider.getDefinitions()) {
+            registry.put(definition.code(), definition);
+        }
+    }
+
+    /**
+     * Creates an AVP with an integer value using automatic type deduction and flag handling.
+     *
+     * @param avpCode The AVP code constant from DiameterConstants
+     * @param value   The integer value
+     * @return The created AVP with appropriate flags
+     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
+     */
+    public static AVP create(final int avpCode, final int value) {
+        final AVPDefinition definition = getDefinition(avpCode);
+        return createIntegerAVP(avpCode, definition.mandatory(), value);
+    }
+
+    /**
+     * Creates an AVP with a long value using automatic type deduction and flag handling.
+     *
+     * @param avpCode The AVP code constant from DiameterConstants
+     * @param value   The long value
+     * @return The created AVP with appropriate flags
+     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
+     */
+    public static AVP create(final int avpCode, final long value) {
+        final AVPDefinition definition = getDefinition(avpCode);
+        return createLongAVP(avpCode, definition.mandatory(), value);
+    }
+
+    /**
+     * Creates an AVP with a string value using automatic type deduction and flag handling.
+     *
+     * @param avpCode The AVP code constant from DiameterConstants
+     * @param value   The string value
+     * @return The created AVP with appropriate flags
+     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
+     */
+    public static AVP create(final int avpCode, final String value) {
+        final AVPDefinition definition = getDefinition(avpCode);
+        validateType(definition, String.class);
+        return new AVP(avpCode, definition.vendorSpecific(), definition.mandatory(),
+                      false, definition.vendorId(), value.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Creates an AVP with a byte array value using automatic type deduction and flag handling.
+     *
+     * @param avpCode The AVP code constant from DiameterConstants
+     * @param value   The byte array value
+     * @return The created AVP with appropriate flags
+     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
+     */
+    public static AVP create(final int avpCode, final byte[] value) {
+        final AVPDefinition definition = getDefinition(avpCode);
+        validateType(definition, byte[].class);
+        return new AVP(avpCode, definition.vendorSpecific(), definition.mandatory(),
+                      false, definition.vendorId(), value);
+    }
+
+    /**
+     * Gets the definition for the given AVP code.
+     *
+     * @param avpCode The AVP code
+     * @return The AVP definition
+     * @throws IllegalArgumentException if AVP code is not registered
+     */
+    private static AVPDefinition getDefinition(final int avpCode) {
+        final AVPDefinition definition = registry.get(avpCode);
+        if (definition == null) {
+            throw new IllegalArgumentException("Unknown AVP code: " + avpCode +
+                ". Make sure the appropriate AVPProvider is registered.");
+        }
+        return definition;
+    }
+
+    /**
+     * Validates that the provided value type matches the expected AVP type.
+     *
+     * @param definition The AVP definition
+     * @param valueType  The actual value type
+     * @throws IllegalArgumentException if types don't match
+     */
+    private static void validateType(final AVPDefinition definition, final Class<?> valueType) {
+        if (!definition.dataType().equals(valueType)) {
+            throw new IllegalArgumentException(String.format(
+                "Type mismatch for AVP %s (code %d): expected %s, got %s",
+                definition.name(), definition.code(),
+                definition.dataType().getSimpleName(), valueType.getSimpleName()));
+        }
     }
 }

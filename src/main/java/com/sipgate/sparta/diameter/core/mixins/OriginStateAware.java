@@ -19,7 +19,7 @@ public interface OriginStateAware extends DiameterMessage {
      * @param originStateId The origin state identifier to set.
      */
     default void setOriginStateId(final int originStateId) {
-        setAVP(AVP.createIntegerAVP(DiameterConstants.AVP_ORIGIN_STATE_ID, true, originStateId));
+        setAVP(AVP.create(DiameterConstants.AVP_ORIGIN_STATE_ID, originStateId));
     }
 
     /**
