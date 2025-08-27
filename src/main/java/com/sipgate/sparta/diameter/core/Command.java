@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.core;
 
 import com.sipgate.sparta.diameter.core.avp.AVP;
+import com.sipgate.sparta.diameter.core.avp.AVPContainer;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -15,7 +16,7 @@ import java.util.List;
  * It provides common functionality for handling the Diameter header and AVPs.
  * </p>
  */
-public abstract class Command {
+public abstract class Command implements AVPContainer {
     // Diameter header fields
     private final int version;
     private final int commandCode;

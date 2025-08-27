@@ -1,23 +1,22 @@
-package com.sipgate.sparta.diameter.messages.base;
+package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.Answer;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class CapabilitiesExchangeRequestTest {
+class DeviceWatchdogRequestTest {
 
     @Test
     void it_creates_normal_answer_with_success_result_code() {
         // GIVEN
-        final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(12345, 67890);
+        final DeviceWatchdogRequest request = DeviceWatchdogRequest.create(12345, 67890);
         final long successCode = DiameterConstants.RES_DIAMETER_SUCCESS;
 
         // WHEN
         final Answer answer = request.createAnswer(successCode);
 
         // THEN
-        assertThat(answer).isInstanceOf(CapabilitiesExchangeAnswer.class);
         assertThat(answer.isError()).isFalse();
         assertThat(answer.getResultCode()).isEqualTo(successCode);
         assertThat(answer.getHopByHopIdentifier()).isEqualTo(12345);
@@ -27,8 +26,8 @@ class CapabilitiesExchangeRequestTest {
     @Test
     void it_creates_error_answer_with_protocol_error_result_code() {
         // GIVEN
-        final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(11111, 22222);
-        final long protocolErrorCode = DiameterConstants.RES_DIAMETER_UNSUPPORTED_VERSION;
+        final DeviceWatchdogRequest request = DeviceWatchdogRequest.create(11111, 22222);
+        final long protocolErrorCode = DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED;
 
         // WHEN
         final Answer answer = request.createAnswer(protocolErrorCode);
@@ -43,8 +42,8 @@ class CapabilitiesExchangeRequestTest {
     @Test
     void it_creates_error_answer_with_transient_failure_result_code() {
         // GIVEN
-        final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(33333, 44444);
-        final long transientFailureCode = DiameterConstants.RES_DIAMETER_OUT_OF_SPACE;
+        final DeviceWatchdogRequest request = DeviceWatchdogRequest.create(33333, 44444);
+        final long transientFailureCode = DiameterConstants.RES_DIAMETER_AUTHENTICATION_REJECTED;
 
         // WHEN
         final Answer answer = request.createAnswer(transientFailureCode);
@@ -57,8 +56,8 @@ class CapabilitiesExchangeRequestTest {
     @Test
     void it_creates_error_answer_with_permanent_failure_result_code() {
         // GIVEN
-        final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(55555, 66666);
-        final long permanentFailureCode = DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION;
+        final DeviceWatchdogRequest request = DeviceWatchdogRequest.create(55555, 66666);
+        final long permanentFailureCode = DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED;
 
         // WHEN
         final Answer answer = request.createAnswer(permanentFailureCode);
@@ -69,17 +68,17 @@ class CapabilitiesExchangeRequestTest {
     }
 
     @Test
-    void it_creates_normal_answer_with_limited_success_result_code() {
+    void it_creates_normal_answer_with_informational_result_code() {
         // GIVEN
-        final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(77777, 88888);
-        final long limitedSuccessCode = DiameterConstants.RES_DIAMETER_LIMITED_SUCCESS;
+        final DeviceWatchdogRequest request = DeviceWatchdogRequest.create(77777, 88888);
+        final long informationalCode = DiameterConstants.RES_DIAMETER_MULTI_ROUND_AUTH;
 
         // WHEN
-        final Answer answer = request.createAnswer(limitedSuccessCode);
+        final Answer answer = request.createAnswer(informationalCode);
 
         // THEN
         assertThat(answer.isError()).isFalse();
-        assertThat(answer.getResultCode()).isEqualTo(limitedSuccessCode);
+        assertThat(answer.getResultCode()).isEqualTo(informationalCode);
     }
 
     @Test
@@ -89,7 +88,7 @@ class CapabilitiesExchangeRequestTest {
         final int endToEndId = 67890;
 
         // WHEN
-        final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(hopByHopId, endToEndId);
+        final DeviceWatchdogRequest request = DeviceWatchdogRequest.create(hopByHopId, endToEndId);
 
         // THEN
         assertThat(request.getHopByHopIdentifier()).isEqualTo(hopByHopId);
@@ -106,7 +105,7 @@ class CapabilitiesExchangeRequestTest {
         final int endToEndId = 11111;
 
         // WHEN
-        final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.createRetransmitted(hopByHopId, endToEndId);
+        final DeviceWatchdogRequest request = DeviceWatchdogRequest.createRetransmitted(hopByHopId, endToEndId);
 
         // THEN
         assertThat(request.getHopByHopIdentifier()).isEqualTo(hopByHopId);
@@ -114,21 +113,5 @@ class CapabilitiesExchangeRequestTest {
         assertThat(request.isRequest()).isTrue();
         assertThat(request.isProxiable()).isFalse();
         assertThat(request.isRetransmitted()).isTrue();
-    }
-
-    @Test
-    void it_handles_edge_case_result_codes_correctly() {
-        // GIVEN
-        final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(10001, 20002);
-        final int borderlineErrorCode = 3000; // First error code
-        final int borderlineSuccessCode = 2999; // Last success code
-
-        // WHEN
-        final Answer errorAnswer = request.createAnswer(borderlineErrorCode);
-        final Answer successAnswer = request.createAnswer(borderlineSuccessCode);
-
-        // THEN
-        assertThat(errorAnswer.isError()).isTrue();
-        assertThat(successAnswer.isError()).isFalse();
     }
 }

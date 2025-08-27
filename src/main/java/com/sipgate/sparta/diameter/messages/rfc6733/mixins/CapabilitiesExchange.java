@@ -1,10 +1,8 @@
-package com.sipgate.sparta.diameter.messages.base.mixins;
+package com.sipgate.sparta.diameter.messages.rfc6733.mixins;
 
 import com.sipgate.sparta.diameter.core.avp.AVP;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
-import com.sipgate.sparta.diameter.core.mixins.DiameterMessage;
-
-import java.net.InetAddress;
+import com.sipgate.sparta.diameter.core.avp.AVPContainer;
 
 /**
  * Interface for Capabilities Exchange messages (CER/CEA).
@@ -13,7 +11,7 @@ import java.net.InetAddress;
  * as defined in <a href="https://datatracker.ietf.org/doc/html/rfc6733#section-5.3">RFC 6733, Section 5.3</a>.
  * </p>
  */
-public interface CapabilitiesExchange extends DiameterMessage {
+public interface CapabilitiesExchange extends AVPContainer {
 
     /**
      * Sets the Vendor-Id AVP.

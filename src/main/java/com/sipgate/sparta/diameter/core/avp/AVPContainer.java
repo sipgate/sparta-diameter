@@ -1,6 +1,4 @@
-package com.sipgate.sparta.diameter.core.mixins;
-
-import com.sipgate.sparta.diameter.core.avp.AVP;
+package com.sipgate.sparta.diameter.core.avp;
 
 /**
  * Base interface for Diameter messages that need AVP operations.
@@ -9,7 +7,7 @@ import com.sipgate.sparta.diameter.core.avp.AVP;
  * as defined in <a href="https://datatracker.ietf.org/doc/html/rfc6733#section-4.4">RFC 6733, Section 4.4</a>.
  * </p>
  */
-public interface DiameterMessage {
+public interface AVPContainer {
 
     /**
      * Adds an AVP to this message.

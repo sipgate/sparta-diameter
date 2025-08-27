@@ -2,7 +2,7 @@ package com.sipgate.sparta.diameter;
 
 import com.sipgate.sparta.diameter.core.*;
 import com.sipgate.sparta.diameter.core.avp.AVP;
-import com.sipgate.sparta.diameter.messages.base.*;
+import com.sipgate.sparta.diameter.messages.rfc6733.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;

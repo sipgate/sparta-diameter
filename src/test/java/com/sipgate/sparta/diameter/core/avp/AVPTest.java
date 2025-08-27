@@ -264,7 +264,7 @@ class AVPTest {
         assertThat(avp.isVendorSpecific()).isFalse();
         assertThat(avp.isProtected()).isFalse();
         assertThat(avp).isInstanceOf(GroupedAVP.class);
-
+        
         final GroupedAVP groupedAVP = (GroupedAVP) avp;
         assertThat(groupedAVP.getAVPs()).hasSize(2);
     }
@@ -285,7 +285,7 @@ class AVPTest {
         assertThat(avp.isMandatory()).isTrue(); // Experimental-Result is mandatory
         assertThat(avp.isVendorSpecific()).isFalse();
         assertThat(avp).isInstanceOf(GroupedAVP.class);
-
+        
         final GroupedAVP groupedAVP = (GroupedAVP) avp;
         assertThat(groupedAVP.getAVPs()).hasSize(2);
         assertThat(groupedAVP.findAVP(DiameterConstants.AVP_VENDOR_ID)).isNotNull();
