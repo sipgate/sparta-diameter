@@ -75,53 +75,63 @@ public final class DiameterConstants {
     // Service and Application AVPs
     public static final int AVP_MULTI_ROUND_TIME_OUT = 272;
 
+    // Additional missing AVPs from RFC 6733
+    public static final int AVP_ERROR_REPORTING_HOST = 294;
+    public static final int AVP_REDIRECT_HOST = 292;
+    public static final int AVP_REDIRECT_HOST_USAGE = 261;
+    public static final int AVP_REDIRECT_MAX_CACHE_TIME = 262;
+    public static final int AVP_INBAND_SECURITY_ID = 299;
+    public static final int AVP_SESSION_SERVER_FAILOVER = 271;
+    public static final int AVP_EVENT_TIMESTAMP = 55;
+    public static final int AVP_ACCT_INTERIM_INTERVAL = 85;
+
     // Experimental AVPs
     public static final int AVP_EXPERIMENTAL_RESULT = 297;
     public static final int AVP_EXPERIMENTAL_RESULT_CODE = 298;
 
     // Result Codes
     // Informational (1xxx)
-    public static final int RES_DIAMETER_MULTI_ROUND_AUTH = 1001;
+    public static final long RES_DIAMETER_MULTI_ROUND_AUTH = 1001;
 
     // Success (2xxx)
-    public static final int RES_DIAMETER_SUCCESS = 2001;
-    public static final int RES_DIAMETER_LIMITED_SUCCESS = 2002;
+    public static final long RES_DIAMETER_SUCCESS = 2001;
+    public static final long RES_DIAMETER_LIMITED_SUCCESS = 2002;
 
     // Protocol Errors (3xxx)
-    public static final int RES_DIAMETER_COMMAND_UNSUPPORTED = 3001;
-    public static final int RES_DIAMETER_UNABLE_TO_DELIVER = 3002;
-    public static final int RES_DIAMETER_REALM_NOT_SERVED = 3003;
-    public static final int RES_DIAMETER_TOO_BUSY = 3004;
-    public static final int RES_DIAMETER_LOOP_DETECTED = 3005;
-    public static final int RES_DIAMETER_REDIRECT_INDICATION = 3006;
-    public static final int RES_DIAMETER_APPLICATION_UNSUPPORTED = 3007;
-    public static final int RES_DIAMETER_INVALID_HDR_BITS = 3008;
-    public static final int RES_DIAMETER_INVALID_AVP_BITS = 3009;
-    public static final int RES_DIAMETER_UNKNOWN_PEER = 3010;
+    public static final long RES_DIAMETER_COMMAND_UNSUPPORTED = 3001;
+    public static final long RES_DIAMETER_UNABLE_TO_DELIVER = 3002;
+    public static final long RES_DIAMETER_REALM_NOT_SERVED = 3003;
+    public static final long RES_DIAMETER_TOO_BUSY = 3004;
+    public static final long RES_DIAMETER_LOOP_DETECTED = 3005;
+    public static final long RES_DIAMETER_REDIRECT_INDICATION = 3006;
+    public static final long RES_DIAMETER_APPLICATION_UNSUPPORTED = 3007;
+    public static final long RES_DIAMETER_INVALID_HDR_BITS = 3008;
+    public static final long RES_DIAMETER_INVALID_AVP_BITS = 3009;
+    public static final long RES_DIAMETER_UNKNOWN_PEER = 3010;
 
     // Transient Failures (4xxx)
-    public static final int RES_DIAMETER_AUTHENTICATION_REJECTED = 4001;
-    public static final int RES_DIAMETER_OUT_OF_SPACE = 4002;
-    public static final int RES_DIAMETER_ELECTION_LOST = 4003;
+    public static final long RES_DIAMETER_AUTHENTICATION_REJECTED = 4001;
+    public static final long RES_DIAMETER_OUT_OF_SPACE = 4002;
+    public static final long RES_DIAMETER_ELECTION_LOST = 4003;
 
     // Permanent Failures (5xxx)
-    public static final int RES_DIAMETER_AVP_UNSUPPORTED = 5001;
-    public static final int RES_DIAMETER_UNKNOWN_SESSION_ID = 5002;
-    public static final int RES_DIAMETER_AUTHORIZATION_REJECTED = 5003;
-    public static final int RES_DIAMETER_INVALID_AVP_VALUE = 5004;
-    public static final int RES_DIAMETER_MISSING_AVP = 5005;
-    public static final int RES_DIAMETER_RESOURCES_EXCEEDED = 5006;
-    public static final int RES_DIAMETER_CONTRADICTING_AVPS = 5007;
-    public static final int RES_DIAMETER_AVP_NOT_ALLOWED = 5008;
-    public static final int RES_DIAMETER_AVP_OCCURS_TOO_MANY_TIMES = 5009;
-    public static final int RES_DIAMETER_NO_COMMON_APPLICATION = 5010;
-    public static final int RES_DIAMETER_UNSUPPORTED_VERSION = 5011;
-    public static final int RES_DIAMETER_UNABLE_TO_COMPLY = 5012;
-    public static final int RES_DIAMETER_INVALID_BIT_IN_HEADER = 5013;
-    public static final int RES_DIAMETER_INVALID_AVP_LENGTH = 5014;
-    public static final int RES_DIAMETER_INVALID_MESSAGE_LENGTH = 5015;
-    public static final int RES_DIAMETER_INVALID_AVP_BIT_COMBO = 5016;
-    public static final int RES_DIAMETER_NO_COMMON_SECURITY = 5017;
+    public static final long RES_DIAMETER_AVP_UNSUPPORTED = 5001;
+    public static final long RES_DIAMETER_UNKNOWN_SESSION_ID = 5002;
+    public static final long RES_DIAMETER_AUTHORIZATION_REJECTED = 5003;
+    public static final long RES_DIAMETER_INVALID_AVP_VALUE = 5004;
+    public static final long RES_DIAMETER_MISSING_AVP = 5005;
+    public static final long RES_DIAMETER_RESOURCES_EXCEEDED = 5006;
+    public static final long RES_DIAMETER_CONTRADICTING_AVPS = 5007;
+    public static final long RES_DIAMETER_AVP_NOT_ALLOWED = 5008;
+    public static final long RES_DIAMETER_AVP_OCCURS_TOO_MANY_TIMES = 5009;
+    public static final long RES_DIAMETER_NO_COMMON_APPLICATION = 5010;
+    public static final long RES_DIAMETER_UNSUPPORTED_VERSION = 5011;
+    public static final long RES_DIAMETER_UNABLE_TO_COMPLY = 5012;
+    public static final long RES_DIAMETER_INVALID_BIT_IN_HEADER = 5013;
+    public static final long RES_DIAMETER_INVALID_AVP_LENGTH = 5014;
+    public static final long RES_DIAMETER_INVALID_MESSAGE_LENGTH = 5015;
+    public static final long RES_DIAMETER_INVALID_AVP_BIT_COMBO = 5016;
+    public static final long RES_DIAMETER_NO_COMMON_SECURITY = 5017;
 
     // Disconnect Causes
     public static final int DCC_REBOOTING = 0;

@@ -11,7 +11,7 @@ class DeviceWatchdogRequestTest {
     void it_creates_normal_answer_with_success_result_code() {
         // GIVEN
         final DeviceWatchdogRequest request = DeviceWatchdogRequest.create(12345, 67890);
-        final int successCode = DiameterConstants.RES_DIAMETER_SUCCESS;
+        final long successCode = DiameterConstants.RES_DIAMETER_SUCCESS;
 
         // WHEN
         final Answer answer = request.createAnswer(successCode);
@@ -27,7 +27,7 @@ class DeviceWatchdogRequestTest {
     void it_creates_error_answer_with_protocol_error_result_code() {
         // GIVEN
         final DeviceWatchdogRequest request = DeviceWatchdogRequest.create(11111, 22222);
-        final int protocolErrorCode = DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED;
+        final long protocolErrorCode = DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED;
 
         // WHEN
         final Answer answer = request.createAnswer(protocolErrorCode);
@@ -43,7 +43,7 @@ class DeviceWatchdogRequestTest {
     void it_creates_error_answer_with_transient_failure_result_code() {
         // GIVEN
         final DeviceWatchdogRequest request = DeviceWatchdogRequest.create(33333, 44444);
-        final int transientFailureCode = DiameterConstants.RES_DIAMETER_AUTHENTICATION_REJECTED;
+        final long transientFailureCode = DiameterConstants.RES_DIAMETER_AUTHENTICATION_REJECTED;
 
         // WHEN
         final Answer answer = request.createAnswer(transientFailureCode);
@@ -57,7 +57,7 @@ class DeviceWatchdogRequestTest {
     void it_creates_error_answer_with_permanent_failure_result_code() {
         // GIVEN
         final DeviceWatchdogRequest request = DeviceWatchdogRequest.create(55555, 66666);
-        final int permanentFailureCode = DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED;
+        final long permanentFailureCode = DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED;
 
         // WHEN
         final Answer answer = request.createAnswer(permanentFailureCode);
@@ -71,7 +71,7 @@ class DeviceWatchdogRequestTest {
     void it_creates_normal_answer_with_informational_result_code() {
         // GIVEN
         final DeviceWatchdogRequest request = DeviceWatchdogRequest.create(77777, 88888);
-        final int informationalCode = DiameterConstants.RES_DIAMETER_MULTI_ROUND_AUTH;
+        final long informationalCode = DiameterConstants.RES_DIAMETER_MULTI_ROUND_AUTH;
 
         // WHEN
         final Answer answer = request.createAnswer(informationalCode);

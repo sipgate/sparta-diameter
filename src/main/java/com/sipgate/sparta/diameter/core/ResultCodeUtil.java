@@ -23,8 +23,8 @@ public final class ResultCodeUtil {
      * @param resultCode The result code to check
      * @return true if the result code indicates an error, false otherwise
      */
-    public static boolean isErrorCode(final int resultCode) {
-        return resultCode >= 3000 && resultCode <= 5999;
+    public static boolean isErrorCode(final long resultCode) {
+        return resultCode >= 3000L && resultCode <= 5999L;
     }
 
     private ResultCodeUtil() {

@@ -53,7 +53,7 @@ public class CapabilitiesExchangeRequest extends Request implements Capabilities
      * {@inheritDoc}
      */
     @Override
-    public CapabilitiesExchangeAnswer createAnswer(final int resultCode) {
+    public CapabilitiesExchangeAnswer createAnswer(final long resultCode) {
         final CapabilitiesExchangeAnswer cea = ResultCodeUtil.isErrorCode(resultCode)
             ? CapabilitiesExchangeAnswer.createError(getHopByHopIdentifier(), getEndToEndIdentifier())
             : CapabilitiesExchangeAnswer.create(getHopByHopIdentifier(), getEndToEndIdentifier());

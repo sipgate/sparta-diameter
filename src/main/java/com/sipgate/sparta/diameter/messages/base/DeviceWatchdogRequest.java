@@ -52,7 +52,7 @@ public class DeviceWatchdogRequest extends Request implements OriginStateAware {
      * {@inheritDoc}
      */
     @Override
-    public Answer createAnswer(final int resultCode) {
+    public Answer createAnswer(final long resultCode) {
         final DeviceWatchdogAnswer dwa = ResultCodeUtil.isErrorCode(resultCode)
             ? DeviceWatchdogAnswer.createError(getHopByHopIdentifier(), getEndToEndIdentifier())
             : DeviceWatchdogAnswer.create(getHopByHopIdentifier(), getEndToEndIdentifier());

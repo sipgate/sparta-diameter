@@ -20,7 +20,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      *
      * @param vendorId The vendor ID to set.
      */
-    default void setVendorId(final int vendorId) {
+    default void setVendorId(final long vendorId) {
         setAVP(AVP.create(DiameterConstants.AVP_VENDOR_ID, vendorId));
     }
 
@@ -38,7 +38,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      *
      * @param vendorId The supported vendor ID to add.
      */
-    default void addSupportedVendorId(final int vendorId) {
+    default void addSupportedVendorId(final long vendorId) {
         addAVP(AVP.create(DiameterConstants.AVP_SUPPORTED_VENDOR_ID, vendorId));
     }
 
@@ -47,7 +47,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      *
      * @param applicationId The authentication application ID to add.
      */
-    default void addAuthApplicationId(final int applicationId) {
+    default void addAuthApplicationId(final long applicationId) {
         addAVP(AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, applicationId));
     }
 
@@ -56,7 +56,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      *
      * @param applicationId The accounting application ID to add.
      */
-    default void addAcctApplicationId(final int applicationId) {
+    default void addAcctApplicationId(final long applicationId) {
         addAVP(AVP.create(DiameterConstants.AVP_ACCT_APPLICATION_ID, applicationId));
     }
 
@@ -65,7 +65,7 @@ public interface CapabilitiesExchange extends DiameterMessage {
      *
      * @param firmwareRevision The firmware revision to set.
      */
-    default void setFirmwareRevision(final int firmwareRevision) {
+    default void setFirmwareRevision(final long firmwareRevision) {
         setAVP(AVP.create(DiameterConstants.AVP_FIRMWARE_REVISION, firmwareRevision));
     }
 
@@ -74,10 +74,10 @@ public interface CapabilitiesExchange extends DiameterMessage {
      *
      * @return The vendor ID, or -1 if not present.
      */
-    default int getVendorId() {
+    default long getVendorId() {
         final AVP vendorIdAVP = findAVP(DiameterConstants.AVP_VENDOR_ID);
         if (vendorIdAVP != null && vendorIdAVP.getData().length >= 4) {
-            return vendorIdAVP.getDataAsInt();
+            return vendorIdAVP.getDataAsUnsignedInt();
         }
         return -1;
     }
@@ -100,10 +100,10 @@ public interface CapabilitiesExchange extends DiameterMessage {
      *
      * @return The firmware revision, or -1 if not present.
      */
-    default int getFirmwareRevision() {
+    default long getFirmwareRevision() {
         final AVP firmwareRevisionAVP = findAVP(DiameterConstants.AVP_FIRMWARE_REVISION);
         if (firmwareRevisionAVP != null && firmwareRevisionAVP.getData().length >= 4) {
-            return firmwareRevisionAVP.getDataAsInt();
+            return firmwareRevisionAVP.getDataAsUnsignedInt();
         }
         return -1;
     }

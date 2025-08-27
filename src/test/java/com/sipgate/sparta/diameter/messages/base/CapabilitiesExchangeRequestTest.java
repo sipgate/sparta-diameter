@@ -11,7 +11,7 @@ class CapabilitiesExchangeRequestTest {
     void it_creates_normal_answer_with_success_result_code() {
         // GIVEN
         final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(12345, 67890);
-        final int successCode = DiameterConstants.RES_DIAMETER_SUCCESS;
+        final long successCode = DiameterConstants.RES_DIAMETER_SUCCESS;
 
         // WHEN
         final Answer answer = request.createAnswer(successCode);
@@ -28,7 +28,7 @@ class CapabilitiesExchangeRequestTest {
     void it_creates_error_answer_with_protocol_error_result_code() {
         // GIVEN
         final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(11111, 22222);
-        final int protocolErrorCode = DiameterConstants.RES_DIAMETER_UNSUPPORTED_VERSION;
+        final long protocolErrorCode = DiameterConstants.RES_DIAMETER_UNSUPPORTED_VERSION;
 
         // WHEN
         final Answer answer = request.createAnswer(protocolErrorCode);
@@ -44,7 +44,7 @@ class CapabilitiesExchangeRequestTest {
     void it_creates_error_answer_with_transient_failure_result_code() {
         // GIVEN
         final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(33333, 44444);
-        final int transientFailureCode = DiameterConstants.RES_DIAMETER_OUT_OF_SPACE;
+        final long transientFailureCode = DiameterConstants.RES_DIAMETER_OUT_OF_SPACE;
 
         // WHEN
         final Answer answer = request.createAnswer(transientFailureCode);
@@ -58,7 +58,7 @@ class CapabilitiesExchangeRequestTest {
     void it_creates_error_answer_with_permanent_failure_result_code() {
         // GIVEN
         final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(55555, 66666);
-        final int permanentFailureCode = DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION;
+        final long permanentFailureCode = DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION;
 
         // WHEN
         final Answer answer = request.createAnswer(permanentFailureCode);
@@ -72,7 +72,7 @@ class CapabilitiesExchangeRequestTest {
     void it_creates_normal_answer_with_limited_success_result_code() {
         // GIVEN
         final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(77777, 88888);
-        final int limitedSuccessCode = DiameterConstants.RES_DIAMETER_LIMITED_SUCCESS;
+        final long limitedSuccessCode = DiameterConstants.RES_DIAMETER_LIMITED_SUCCESS;
 
         // WHEN
         final Answer answer = request.createAnswer(limitedSuccessCode);

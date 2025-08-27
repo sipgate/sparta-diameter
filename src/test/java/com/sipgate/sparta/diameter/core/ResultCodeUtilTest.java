@@ -8,11 +8,11 @@ class ResultCodeUtilTest {
     @Test
     void it_identifies_error_codes_correctly() {
         // GIVEN
-        final int successCode = DiameterConstants.RES_DIAMETER_SUCCESS;
-        final int informationalCode = DiameterConstants.RES_DIAMETER_MULTI_ROUND_AUTH;
-        final int protocolError = DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED;
-        final int transientFailure = DiameterConstants.RES_DIAMETER_AUTHENTICATION_REJECTED;
-        final int permanentFailure = DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED;
+        final long successCode = DiameterConstants.RES_DIAMETER_SUCCESS;
+        final long informationalCode = DiameterConstants.RES_DIAMETER_MULTI_ROUND_AUTH;
+        final long protocolError = DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED;
+        final long transientFailure = DiameterConstants.RES_DIAMETER_AUTHENTICATION_REJECTED;
+        final long permanentFailure = DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED;
 
         // WHEN & THEN
         assertThat(ResultCodeUtil.isErrorCode(successCode)).isFalse();
@@ -25,10 +25,10 @@ class ResultCodeUtilTest {
     @Test
     void it_handles_edge_cases_for_error_detection() {
         // GIVEN
-        final int justBeforeErrors = 2999;
-        final int firstError = 3000;
-        final int lastError = 5999;
-        final int justAfterErrors = 6000;
+        final long justBeforeErrors = 2999;
+        final long firstError = 3000;
+        final long lastError = 5999;
+        final long justAfterErrors = 6000;
 
         // WHEN & THEN
         assertThat(ResultCodeUtil.isErrorCode(justBeforeErrors)).isFalse();

@@ -12,6 +12,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteBuffer;
 import java.util.Date;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -386,17 +387,6 @@ public class AVP {
     }
 
     /**
-     * Creates an AVP with a 64-bit signed integer value.
-     * @param code the AVP code
-     * @param mandatory whether the AVP is mandatory
-     * @param value the long value
-     * @return the created AVP
-     */
-    private static AVP createLongAVP(final int code, final boolean mandatory, final long value) {
-        return new AVP(code, mandatory, longToBytes(value));
-    }
-
-    /**
      * Creates an AVP with a 32-bit unsigned integer value.
      * @param code the AVP code
      * @param mandatory whether the AVP is mandatory
@@ -624,21 +614,8 @@ public class AVP {
     }
 
     /**
-     * Creates an AVP with an integer value using automatic type deduction and flag handling.
-     *
-     * @param avpCode The AVP code constant from DiameterConstants
-     * @param value   The integer value
-     * @return The created AVP with appropriate flags
-     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
-     */
-    public static AVP create(final int avpCode, final int value) {
-        final AVPDefinition definition = getDefinition(avpCode);
-        validateType(definition, Integer.class);
-        return createIntegerAVP(avpCode, definition.mandatory(), value);
-    }
-
-    /**
      * Creates an AVP with a long value using automatic type deduction and flag handling.
+     * Diameter Type: Unsigned32
      *
      * @param avpCode The AVP code constant from DiameterConstants
      * @param value   The long value
@@ -648,7 +625,7 @@ public class AVP {
     public static AVP create(final int avpCode, final long value) {
         final AVPDefinition definition = getDefinition(avpCode);
         validateType(definition, Long.class);
-        return createLongAVP(avpCode, definition.mandatory(), value);
+        return createUnsignedIntAVP(avpCode, definition.mandatory(), value);
     }
 
     /**
@@ -679,6 +656,78 @@ public class AVP {
         validateType(definition, byte[].class);
         return new AVP(avpCode, definition.vendorSpecific(), definition.mandatory(),
                       false, definition.vendorId(), value);
+    }
+
+    /**
+     * Creates an AVP with a BigInteger value using automatic type deduction and flag handling.
+     *
+     * @param avpCode The AVP code constant from DiameterConstants
+     * @param value   The BigInteger value
+     * @return The created AVP with appropriate flags
+     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
+     */
+    public static AVP create(final int avpCode, final BigInteger value) {
+        final AVPDefinition definition = getDefinition(avpCode);
+        validateType(definition, BigInteger.class);
+        return createUnsignedLongAVP(avpCode, definition.mandatory(), value);
+    }
+
+    /**
+     * Creates an AVP with an Integer value using automatic type deduction and flag handling.
+     *
+     * @param avpCode The AVP code constant from DiameterConstants
+     * @param value   The Integer value (for Enumerated types)
+     * @return The created AVP with appropriate flags
+     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
+     */
+    public static AVP create(final int avpCode, final Integer value) {
+        final AVPDefinition definition = getDefinition(avpCode);
+        validateType(definition, Integer.class);
+        return createEnumeratedAVP(avpCode, definition.mandatory(), value);
+    }
+
+    /**
+     * Creates an AVP with an InetAddress value using automatic type deduction and flag handling.
+     *
+     * @param avpCode The AVP code constant from DiameterConstants
+     * @param value   The InetAddress value (for Address types)
+     * @return The created AVP with appropriate flags
+     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
+     */
+    public static AVP create(final int avpCode, final InetAddress value) {
+        final AVPDefinition definition = getDefinition(avpCode);
+        validateType(definition, InetAddress.class);
+        return createIPAddressAVP(avpCode, definition.mandatory(), value);
+    }
+
+    /**
+     * Creates an AVP with a Date value using automatic type deduction and flag handling.
+     *
+     * @param avpCode The AVP code constant from DiameterConstants
+     * @param value   The Date value (for Time types)
+     * @return The created AVP with appropriate flags
+     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
+     */
+    public static AVP create(final int avpCode, final Date value) {
+        final AVPDefinition definition = getDefinition(avpCode);
+        validateType(definition, Date.class);
+        return createTimeAVP(avpCode, definition.mandatory(), value);
+    }
+
+    /**
+     * Creates an AVP with a list of nested AVPs using automatic type deduction and flag handling.
+     * This creates a GroupedAVP with the appropriate flags based on the AVP definition.
+     *
+     * @param avpCode The AVP code constant from DiameterConstants
+     * @param avps    The list of nested AVPs
+     * @return The created AVP with appropriate flags
+     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
+     */
+    public static AVP create(final int avpCode, final List<AVP> avps) {
+        final AVPDefinition definition = getDefinition(avpCode);
+        validateType(definition, GroupedAVP.class);
+        return new GroupedAVP(avpCode, definition.vendorSpecific(), definition.mandatory(),
+                              false, definition.vendorId(), avps);
     }
 
     /**

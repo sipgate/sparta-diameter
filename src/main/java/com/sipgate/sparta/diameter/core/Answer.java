@@ -62,7 +62,7 @@ public abstract class Answer extends Command {
      *
      * @param resultCode The result code to set.
      */
-    public void setResultCode(final int resultCode) {
+    public void setResultCode(final long resultCode) {
         setAVP(AVP.create(DiameterConstants.AVP_RESULT_CODE, resultCode));
     }
 }

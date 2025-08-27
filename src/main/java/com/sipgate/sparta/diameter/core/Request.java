@@ -33,5 +33,5 @@ public abstract class Request extends Command {
      * @param resultCode The result code to set in the answer.
      * @return The created answer.
      */
-    public abstract Answer createAnswer(int resultCode);
+    public abstract Answer createAnswer(long resultCode);
 }
