@@ -1,7 +1,7 @@
 package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.*;
-import com.sipgate.sparta.diameter.messages.rfc6733.mixins.OriginStateAware;
+import com.sipgate.sparta.diameter.core.avp.mixins.HasOriginStateIdAVP;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
 
 /**
@@ -12,7 +12,7 @@ import com.sipgate.sparta.diameter.core.DiameterConstants;
  * The DWR message is used to monitor the health of the transport connection between Diameter peers.
  * </p>
  */
-public class DeviceWatchdogRequest extends Request implements OriginStateAware {
+public class DeviceWatchdogRequest extends Request implements HasOriginStateIdAVP<DeviceWatchdogRequest> {
 
     /**
      * Constructs a Device Watchdog Request message.
@@ -52,11 +52,14 @@ public class DeviceWatchdogRequest extends Request implements OriginStateAware {
      * {@inheritDoc}
      */
     @Override
-    public Answer createAnswer(final long resultCode) {
-        final DeviceWatchdogAnswer dwa = ResultCodeUtil.isErrorCode(resultCode)
-            ? DeviceWatchdogAnswer.createError(getHopByHopIdentifier(), getEndToEndIdentifier())
-            : DeviceWatchdogAnswer.create(getHopByHopIdentifier(), getEndToEndIdentifier());
-        dwa.setResultCode(resultCode);
-        return dwa;
+    public DeviceWatchdogAnswer createAnswer(final long resultCode) {
+        return (DeviceWatchdogAnswer) DeviceWatchdogAnswer
+                .create(getHopByHopIdentifier(), getEndToEndIdentifier())
+                .setResultCode(resultCode);
+    }
+
+    @Override
+    public DeviceWatchdogRequest self() {
+        return this;
     }
 }

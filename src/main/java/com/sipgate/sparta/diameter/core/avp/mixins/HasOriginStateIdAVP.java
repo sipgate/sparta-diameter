@@ -1,4 +1,4 @@
-package com.sipgate.sparta.diameter.messages.rfc6733.mixins;
+package com.sipgate.sparta.diameter.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.core.avp.AVP;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
@@ -12,15 +12,16 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * The Origin-State-Id AVP is used to detect and manage peer restarts.
  * </p>
  */
-public interface OriginStateAware extends AVPContainer {
+public interface HasOriginStateIdAVP<T extends HasOriginStateIdAVP<T>> extends AVPContainer {
 
     /**
      * Sets the Origin-State-Id AVP.
      *
      * @param originStateId The origin state identifier to set.
      */
-    default void setOriginStateId(final long originStateId) {
+    default T setOriginStateId(final long originStateId) {
         setAVP(AVP.create(DiameterConstants.AVP_ORIGIN_STATE_ID, originStateId));
+        return self();
     }
 
     /**
@@ -34,5 +35,10 @@ public interface OriginStateAware extends AVPContainer {
             return originStateIdAVP.getDataAsInt();
         }
         return -1;
+    }
+
+    @SuppressWarnings("unchecked")
+    default T self() {
+        return (T) this;
     }
 }

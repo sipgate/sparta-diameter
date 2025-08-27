@@ -1,0 +1,43 @@
+package com.sipgate.sparta.diameter.core.avp.mixins;
+
+import com.sipgate.sparta.diameter.core.avp.AVP;
+import com.sipgate.sparta.diameter.core.DiameterConstants;
+import com.sipgate.sparta.diameter.core.avp.AVPContainer;
+
+/**
+ * Interface for Diameter messages that include Origin-Realm AVP.
+ * <p>
+ * This interface provides default implementations for handling the Origin-Realm AVP
+ * as defined in RFC 6733. The Origin-Realm AVP contains the realm of the originating host.
+ * </p>
+ */
+public interface HasOriginRealmAVP<T extends HasOriginRealmAVP<T>> extends AVPContainer {
+
+    /**
+     * Sets the Origin-Realm AVP.
+     *
+     * @param originRealm The origin realm identifier to set.
+     */
+    default T setOriginRealm(final String originRealm) {
+        setAVP(AVP.create(DiameterConstants.AVP_ORIGIN_REALM, originRealm));
+        return self();
+    }
+
+    /**
+     * Gets the Origin-Realm from this message.
+     *
+     * @return The origin realm identifier, or null if not found.
+     */
+    default String getOriginRealm() {
+        final AVP originRealmAVP = findAVP(DiameterConstants.AVP_ORIGIN_REALM);
+        if (originRealmAVP != null) {
+            return originRealmAVP.getDataAsString();
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    default T self() {
+        return (T) this;
+    }
+}

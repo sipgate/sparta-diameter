@@ -226,9 +226,7 @@ public final class DiameterMessageParser {
                         : CapabilitiesExchangeRequest.create(hopByHopId, endToEndId);
                 }
 
-                return isError
-                    ? CapabilitiesExchangeAnswer.createError(hopByHopId, endToEndId)
-                    : CapabilitiesExchangeAnswer.create(hopByHopId, endToEndId);
+                return CapabilitiesExchangeAnswer.create(hopByHopId, endToEndId);
 
             case DiameterConstants.CMD_DEVICE_WATCHDOG:
                 if (isRequest) {
@@ -237,9 +235,7 @@ public final class DiameterMessageParser {
                         : DeviceWatchdogRequest.create(hopByHopId, endToEndId);
                 }
 
-                return isError
-                    ? DeviceWatchdogAnswer.createError(hopByHopId, endToEndId)
-                    : DeviceWatchdogAnswer.create(hopByHopId, endToEndId);
+                return DeviceWatchdogAnswer.create(hopByHopId, endToEndId);
 
             default:
                 // For unknown command codes, create a generic command

@@ -2,6 +2,8 @@ package com.sipgate.sparta.diameter.core;
 
 import com.sipgate.sparta.diameter.core.avp.AVP;
 import com.sipgate.sparta.diameter.core.avp.AVPContainer;
+import com.sipgate.sparta.diameter.core.avp.mixins.HasOriginHostAVP;
+import com.sipgate.sparta.diameter.core.avp.mixins.HasOriginRealmAVP;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -16,14 +18,14 @@ import java.util.List;
  * It provides common functionality for handling the Diameter header and AVPs.
  * </p>
  */
-public abstract class Command implements AVPContainer {
+public abstract class Command implements HasOriginHostAVP<Command>, HasOriginRealmAVP<Command> {
     // Diameter header fields
     private final int version;
     private final int commandCode;
     private final boolean request;
     private final boolean proxiable;
     private final boolean error;
-    private final boolean retransmitted;
+    private boolean retransmitted;
     private final int applicationId;
     private final int hopByHopIdentifier;
     private final int endToEndIdentifier;
@@ -132,7 +134,9 @@ public abstract class Command implements AVPContainer {
      * Adds an AVP to this command.
      *
      * @param avp The AVP to add.
+     * @return This command instance for method chaining.
      */
+    @Override
     public void addAVP(final AVP avp) {
         avps.add(avp);
     }
@@ -144,6 +148,7 @@ public abstract class Command implements AVPContainer {
      *
      * @param avp The AVP to add or update.
      */
+    @Override
     public void setAVP(final AVP avp) {
         // Find and remove existing AVP with the same code
         avps.removeIf(existingAvp -> existingAvp.getCode() == avp.getCode());
@@ -157,6 +162,7 @@ public abstract class Command implements AVPContainer {
      * @param code The AVP code to search for.
      * @return The AVP with the given code, or null if not found.
      */
+    @Override
     public AVP findAVP(final int code) {
         for (final AVP avp : avps) {
             if (avp.getCode() == code) {
@@ -196,6 +202,10 @@ public abstract class Command implements AVPContainer {
             length += padding;
         }
         return length;
+    }
+
+    protected void setRetransmissionFlag() {
+        this.retransmitted = true;
     }
 
     /**
@@ -243,49 +253,8 @@ public abstract class Command implements AVPContainer {
         }
     }
 
-    /**
-     * Sets the Origin-Host AVP.
-     * This is a mandatory AVP for most Diameter messages.
-     *
-     * @param originHost The origin host value.
-     */
-    public void setOriginHost(final String originHost) {
-        setAVP(AVP.create(DiameterConstants.AVP_ORIGIN_HOST, originHost));
-    }
-
-    /**
-     * Sets the Origin-Realm AVP.
-     * This is a mandatory AVP for most Diameter messages.
-     *
-     * @param originRealm The origin realm value.
-     */
-    public void setOriginRealm(final String originRealm) {
-        setAVP(AVP.create(DiameterConstants.AVP_ORIGIN_REALM, originRealm));
-    }
-
-    /**
-     * Gets the Origin-Host from this message.
-     *
-     * @return The Origin-Host value, or null if not present.
-     */
-    public String getOriginHost() {
-        final AVP originHostAVP = findAVP(DiameterConstants.AVP_ORIGIN_HOST);
-        if (originHostAVP != null) {
-            return originHostAVP.getDataAsString();
-        }
-        return null;
-    }
-
-    /**
-     * Gets the Origin-Realm from this message.
-     *
-     * @return The Origin-Realm value, or null if not present.
-     */
-    public String getOriginRealm() {
-        final AVP originRealmAVP = findAVP(DiameterConstants.AVP_ORIGIN_REALM);
-        if (originRealmAVP != null) {
-            return originRealmAVP.getDataAsString();
-        }
-        return null;
+    @Override
+    public Command self() {
+        return this;
     }
 }

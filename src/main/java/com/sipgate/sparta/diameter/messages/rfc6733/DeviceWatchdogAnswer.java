@@ -1,7 +1,9 @@
 package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.*;
-import com.sipgate.sparta.diameter.messages.rfc6733.mixins.OriginStateAware;
+import com.sipgate.sparta.diameter.core.avp.mixins.HasErrorMessageAVP;
+import com.sipgate.sparta.diameter.core.avp.mixins.HasFailedAVP;
+import com.sipgate.sparta.diameter.core.avp.mixins.HasOriginStateIdAVP;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
 
 /**
@@ -12,17 +14,19 @@ import com.sipgate.sparta.diameter.core.DiameterConstants;
  * The DWA message is used to confirm the health of the transport connection in response to a DWR message.
  * </p>
  */
-public class DeviceWatchdogAnswer extends Answer implements OriginStateAware {
+public class DeviceWatchdogAnswer extends Answer implements
+        HasOriginStateIdAVP<DeviceWatchdogAnswer>,
+        HasErrorMessageAVP<DeviceWatchdogAnswer>,
+        HasFailedAVP<DeviceWatchdogAnswer> {
 
     /**
      * Constructs a Device Watchdog Answer message.
      *
-     * @param error              Indicates whether the message is an error response.
      * @param hopByHopIdentifier The hop-by-hop identifier.
      * @param endToEndIdentifier The end-to-end identifier.
      */
-    private DeviceWatchdogAnswer(final boolean error, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(DiameterConstants.CMD_DEVICE_WATCHDOG, false, error, false,
+    private DeviceWatchdogAnswer(final int hopByHopIdentifier, final int endToEndIdentifier) {
+        super(DiameterConstants.CMD_DEVICE_WATCHDOG, false, false,
               DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
@@ -34,17 +38,12 @@ public class DeviceWatchdogAnswer extends Answer implements OriginStateAware {
      * @return A new DeviceWatchdogAnswer instance.
      */
     public static DeviceWatchdogAnswer create(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new DeviceWatchdogAnswer(false, hopByHopIdentifier, endToEndIdentifier);
+        return new DeviceWatchdogAnswer(hopByHopIdentifier, endToEndIdentifier);
     }
 
-    /**
-     * Creates an error Device Watchdog Answer message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new DeviceWatchdogAnswer instance with error flag set.
-     */
-    public static DeviceWatchdogAnswer createError(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new DeviceWatchdogAnswer(true, hopByHopIdentifier, endToEndIdentifier);
+
+    @Override
+    public DeviceWatchdogAnswer self() {
+        return this;
     }
 }

@@ -1,10 +1,8 @@
 package com.sipgate.sparta.diameter.messages.rfc6733;
 
-import com.sipgate.sparta.diameter.core.*;
-import com.sipgate.sparta.diameter.core.avp.AVP;
-import com.sipgate.sparta.diameter.messages.rfc6733.mixins.CapabilitiesExchange;
-import com.sipgate.sparta.diameter.messages.rfc6733.mixins.OriginStateAware;
+import com.sipgate.sparta.diameter.core.Answer;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
+import com.sipgate.sparta.diameter.core.avp.mixins.*;
 
 /**
  * Capabilities Exchange Answer (CEA) message.
@@ -14,18 +12,18 @@ import com.sipgate.sparta.diameter.core.DiameterConstants;
  * The CEA message is used to respond to a CER message and exchange capabilities between Diameter peers.
  * </p>
  */
-public class CapabilitiesExchangeAnswer extends Answer implements CapabilitiesExchange, OriginStateAware {
+public final class CapabilitiesExchangeAnswer extends Answer implements HasVendorIdAVP<CapabilitiesExchangeAnswer>,
+        HasProductNameAVP<CapabilitiesExchangeAnswer>,
+        HasSupportedVendorIdAVP<CapabilitiesExchangeAnswer>,
+        HasAuthApplicationIdAVP<CapabilitiesExchangeAnswer>,
+        HasAcctApplicationIdAVP<CapabilitiesExchangeAnswer>,
+        HasFirmwareRevisionAVP<CapabilitiesExchangeAnswer>,
+        HasErrorMessageAVP<CapabilitiesExchangeAnswer>,
+        HasFailedAVP<CapabilitiesExchangeAnswer> {
 
-    /**
-     * Constructs a Capabilities Exchange Answer message.
-     *
-     * @param error              Indicates whether the message is an error response.
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     */
-    private CapabilitiesExchangeAnswer(final boolean error, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false, error, false,
-              DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
+    public CapabilitiesExchangeAnswer(final int commandCode, final boolean proxiable, final boolean retransmitted,
+                                      final int applicationId, final int hopByHopIdentifier, final int endToEndIdentifier) {
+        super(commandCode, proxiable, retransmitted, applicationId, hopByHopIdentifier, endToEndIdentifier);
     }
 
     /**
@@ -36,57 +34,11 @@ public class CapabilitiesExchangeAnswer extends Answer implements CapabilitiesEx
      * @return A new CapabilitiesExchangeAnswer instance.
      */
     public static CapabilitiesExchangeAnswer create(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new CapabilitiesExchangeAnswer(false, hopByHopIdentifier, endToEndIdentifier);
+        return new CapabilitiesExchangeAnswer(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false, false, DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
-    /**
-     * Creates an error Capabilities Exchange Answer message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new CapabilitiesExchangeAnswer instance with error flag set.
-     */
-    public static CapabilitiesExchangeAnswer createError(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new CapabilitiesExchangeAnswer(true, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    /**
-     * Sets the Error-Message AVP for error answers.
-     *
-     * @param errorMessage The error message to set.
-     */
-    public void setErrorMessage(final String errorMessage) {
-        setAVP(AVP.create(DiameterConstants.AVP_ERROR_MESSAGE, errorMessage));
-    }
-
-    /**
-     * Gets the Error-Message from this answer.
-     *
-     * @return The error message, or null if not set.
-     */
-    public String getErrorMessage() {
-        final AVP errorMessageAVP = findAVP(DiameterConstants.AVP_ERROR_MESSAGE);
-        if (errorMessageAVP != null) {
-            return errorMessageAVP.getDataAsString();
-        }
-        return null;
-    }
-
-    /**
-     * Sets the Failed-AVP for this answer.
-     *
-     * @param failedAVP The Failed-AVP to set.
-     */
-    public void setFailedAVP(final AVP failedAVP) {
-        setAVP(failedAVP);
-    }
-
-    /**
-     * Gets the Failed-AVP from this answer.
-     *
-     * @return The Failed-AVP, or null if not set.
-     */
-    public AVP getFailedAVP() {
-        return findAVP(DiameterConstants.AVP_FAILED_AVP);
+    @Override
+    public CapabilitiesExchangeAnswer self() {
+        return this;
     }
 }

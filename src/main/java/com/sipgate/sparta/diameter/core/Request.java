@@ -34,4 +34,14 @@ public abstract class Request extends Command {
      * @return The created answer.
      */
     public abstract Answer createAnswer(long resultCode);
+
+    /**
+     * Marks this Request as retransmitted by setting the retransmission flag.
+     *
+     * @return This Request instance for method chaining.
+     */
+    public Request markAsRetransmitted() {
+        setRetransmissionFlag();
+        return this;
+    }
 }

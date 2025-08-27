@@ -1,6 +1,6 @@
 package com.sipgate.sparta.diameter.core;
 
-import com.sipgate.sparta.diameter.core.avp.AVP;
+import com.sipgate.sparta.diameter.core.avp.mixins.HasResultCodeAVP;
 
 /**
  * Base class for all Diameter answer messages.
@@ -10,27 +10,10 @@ import com.sipgate.sparta.diameter.core.avp.AVP;
  * Answer messages have the R-bit cleared in the Diameter header flags.
  * </p>
  */
-public abstract class Answer extends Command {
+public abstract class Answer extends Command implements HasResultCodeAVP<Answer> {
 
     /**
      * Constructs a Diameter answer message.
-     *
-     * @param commandCode        The command code of the answer.
-     * @param proxiable          Indicates whether the message is proxiable.
-     * @param error              Indicates whether the message is an error.
-     * @param retransmitted      Indicates whether the message is retransmitted.
-     * @param applicationId      The application ID of the answer.
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     */
-    protected Answer(final int commandCode, final boolean proxiable, final boolean error, final boolean retransmitted,
-                     final int applicationId, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(commandCode, false, proxiable, error, retransmitted, applicationId,
-              hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    /**
-     * Constructs a Diameter answer message for successful responses (no error flag set).
      *
      * @param commandCode        The command code of the answer.
      * @param proxiable          Indicates whether the message is proxiable.
@@ -41,28 +24,12 @@ public abstract class Answer extends Command {
      */
     protected Answer(final int commandCode, final boolean proxiable, final boolean retransmitted,
                      final int applicationId, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        this(commandCode, proxiable, false, retransmitted, applicationId, hopByHopIdentifier, endToEndIdentifier);
+        super(commandCode, false, proxiable, false, retransmitted, applicationId,
+              hopByHopIdentifier, endToEndIdentifier);
     }
 
-    /**
-     * Retrieves the Result-Code AVP from this answer.
-     *
-     * @return The result code, or -1 if not found.
-     */
-    public int getResultCode() {
-        final AVP resultCodeAVP = findAVP(DiameterConstants.AVP_RESULT_CODE);
-        if (resultCodeAVP != null && resultCodeAVP.getData().length >= 4) {
-            return resultCodeAVP.getDataAsInt();
-        }
-        return -1;
-    }
-
-    /**
-     * Sets the Result-Code AVP for this answer.
-     *
-     * @param resultCode The result code to set.
-     */
-    public void setResultCode(final long resultCode) {
-        setAVP(AVP.create(DiameterConstants.AVP_RESULT_CODE, resultCode));
+    @Override
+    public Answer self() {
+        return this;
     }
 }

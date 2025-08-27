@@ -1,8 +1,7 @@
 package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.*;
-import com.sipgate.sparta.diameter.messages.rfc6733.mixins.CapabilitiesExchange;
-import com.sipgate.sparta.diameter.messages.rfc6733.mixins.OriginStateAware;
+import com.sipgate.sparta.diameter.core.avp.mixins.*;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
 
 /**
@@ -13,7 +12,13 @@ import com.sipgate.sparta.diameter.core.DiameterConstants;
  * The CER message is used to exchange capabilities between Diameter peers during connection establishment.
  * </p>
  */
-public class CapabilitiesExchangeRequest extends Request implements CapabilitiesExchange, OriginStateAware {
+public final class CapabilitiesExchangeRequest extends Request implements
+        HasVendorIdAVP<CapabilitiesExchangeRequest>,
+        HasProductNameAVP<CapabilitiesExchangeRequest>,
+        HasSupportedVendorIdAVP<CapabilitiesExchangeRequest>,
+        HasAuthApplicationIdAVP<CapabilitiesExchangeRequest>,
+        HasAcctApplicationIdAVP<CapabilitiesExchangeRequest>,
+        HasFirmwareRevisionAVP<CapabilitiesExchangeRequest> {
 
     /**
      * Constructs a Capabilities Exchange Request message.
@@ -54,10 +59,11 @@ public class CapabilitiesExchangeRequest extends Request implements Capabilities
      */
     @Override
     public CapabilitiesExchangeAnswer createAnswer(final long resultCode) {
-        final CapabilitiesExchangeAnswer cea = ResultCodeUtil.isErrorCode(resultCode)
-            ? CapabilitiesExchangeAnswer.createError(getHopByHopIdentifier(), getEndToEndIdentifier())
-            : CapabilitiesExchangeAnswer.create(getHopByHopIdentifier(), getEndToEndIdentifier());
-        cea.setResultCode(resultCode);
-        return cea;
+       return (CapabilitiesExchangeAnswer) CapabilitiesExchangeAnswer.create(getHopByHopIdentifier(), getEndToEndIdentifier()).setResultCode(resultCode);
+    }
+
+    @Override
+    public CapabilitiesExchangeRequest self() {
+        return this;
     }
 }
