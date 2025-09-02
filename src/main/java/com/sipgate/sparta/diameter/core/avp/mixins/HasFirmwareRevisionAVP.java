@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Firmware-Revision AVP is used to inform a peer of the firmware revision of the issuing device.
  * </p>
  */
-public interface HasFirmwareRevisionAVP<T extends HasFirmwareRevisionAVP<T>> extends AVPContainer {
+public interface HasFirmwareRevisionAVP<T extends HasFirmwareRevisionAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Firmware-Revision AVP.
@@ -34,10 +34,5 @@ public interface HasFirmwareRevisionAVP<T extends HasFirmwareRevisionAVP<T>> ext
             return firmwareRevisionAVP.getDataAsLong();
         }
         return -1;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

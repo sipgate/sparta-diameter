@@ -13,7 +13,7 @@ import java.math.BigInteger;
  * as defined in RFC 6733. The Accounting-Sub-Session-Id AVP contains the accounting sub-session identifier.
  * </p>
  */
-public interface HasAccountingSubSessionIdAVP<T extends HasAccountingSubSessionIdAVP<T>> extends AVPContainer {
+public interface HasAccountingSubSessionIdAVP<T extends HasAccountingSubSessionIdAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Accounting-Sub-Session-Id AVP.
@@ -36,10 +36,5 @@ public interface HasAccountingSubSessionIdAVP<T extends HasAccountingSubSessionI
             return accountingSubSessionIdAVP.getDataAsUnsignedLong();
         }
         return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

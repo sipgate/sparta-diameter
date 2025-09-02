@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Multi-Round-Time-Out AVP contains the maximum time allowed for a multi-round authentication exchange.
  * </p>
  */
-public interface HasMultiRoundTimeOutAVP<T extends HasMultiRoundTimeOutAVP<T>> extends AVPContainer {
+public interface HasMultiRoundTimeOutAVP<T extends HasMultiRoundTimeOutAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Multi-Round-Time-Out AVP.
@@ -34,10 +34,5 @@ public interface HasMultiRoundTimeOutAVP<T extends HasMultiRoundTimeOutAVP<T>> e
             return multiRoundTimeOutAVP.getDataAsLong();
         }
         return -1;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

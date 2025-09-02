@@ -12,7 +12,7 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
  * The CEA message is used to respond to a CER message and exchange capabilities between Diameter peers.
  * </p>
  */
-public final class CapabilitiesExchangeAnswer extends Answer implements HasVendorIdAVP<CapabilitiesExchangeAnswer>,
+public final class CapabilitiesExchangeAnswer extends Answer<CapabilitiesExchangeAnswer> implements HasVendorIdAVP<CapabilitiesExchangeAnswer>,
         HasProductNameAVP<CapabilitiesExchangeAnswer>,
         HasSupportedVendorIdAVP<CapabilitiesExchangeAnswer>,
         HasAuthApplicationIdAVP<CapabilitiesExchangeAnswer>,
@@ -35,10 +35,5 @@ public final class CapabilitiesExchangeAnswer extends Answer implements HasVendo
      */
     public static CapabilitiesExchangeAnswer create(final int hopByHopIdentifier, final int endToEndIdentifier) {
         return new CapabilitiesExchangeAnswer(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false, false, DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    @Override
-    public CapabilitiesExchangeAnswer self() {
-        return this;
     }
 }

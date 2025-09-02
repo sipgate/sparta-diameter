@@ -18,7 +18,7 @@ import java.util.List;
  * It provides common functionality for handling the Diameter header and AVPs.
  * </p>
  */
-public abstract class Command implements HasOriginHostAVP<Command>, HasOriginRealmAVP<Command> {
+public abstract class Command<T extends Command<T>> implements Selfable<T>, HasOriginHostAVP<T>, HasOriginRealmAVP<T> {
     // Diameter header fields
     private final int version;
     private final int commandCode;
@@ -251,10 +251,5 @@ public abstract class Command implements HasOriginHostAVP<Command>, HasOriginRea
         for (final AVP avp : avps) {
             avp.writeTo(outputStream);
         }
-    }
-
-    @Override
-    public Command self() {
-        return this;
     }
 }

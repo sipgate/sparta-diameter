@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Error-Reporting-Host AVP contains the identity of the Diameter host that sent the Result-Code AVP to a value other than 2001 (Success).
  * </p>
  */
-public interface HasErrorReportingHostAVP<T extends HasErrorReportingHostAVP<T>> extends AVPContainer {
+public interface HasErrorReportingHostAVP<T extends HasErrorReportingHostAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Error-Reporting-Host AVP.
@@ -34,10 +34,5 @@ public interface HasErrorReportingHostAVP<T extends HasErrorReportingHostAVP<T>>
             return errorReportingHostAVP.getDataAsString();
         }
         return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

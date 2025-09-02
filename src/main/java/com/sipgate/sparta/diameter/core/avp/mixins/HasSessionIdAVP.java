@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Session-Id AVP is used to identify a specific session.
  * </p>
  */
-public interface HasSessionIdAVP<T extends HasSessionIdAVP<T>> extends AVPContainer {
+public interface HasSessionIdAVP<T extends HasSessionIdAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Session-Id AVP.
@@ -34,10 +34,5 @@ public interface HasSessionIdAVP<T extends HasSessionIdAVP<T>> extends AVPContai
             return sessionIdAVP.getDataAsString();
         }
         return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

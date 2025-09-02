@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Redirect-Max-Cache-Time AVP contains the maximum number of seconds the routing entry may be cached.
  * </p>
  */
-public interface HasRedirectMaxCacheTimeAVP<T extends HasRedirectMaxCacheTimeAVP<T>> extends AVPContainer {
+public interface HasRedirectMaxCacheTimeAVP<T extends HasRedirectMaxCacheTimeAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Redirect-Max-Cache-Time AVP.
@@ -34,10 +34,5 @@ public interface HasRedirectMaxCacheTimeAVP<T extends HasRedirectMaxCacheTimeAVP
             return redirectMaxCacheTimeAVP.getDataAsLong();
         }
         return -1;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

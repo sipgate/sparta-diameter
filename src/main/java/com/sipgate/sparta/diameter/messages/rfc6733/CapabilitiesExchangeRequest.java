@@ -12,7 +12,7 @@ import com.sipgate.sparta.diameter.core.DiameterConstants;
  * The CER message is used to exchange capabilities between Diameter peers during connection establishment.
  * </p>
  */
-public final class CapabilitiesExchangeRequest extends Request implements
+public final class CapabilitiesExchangeRequest extends Request<CapabilitiesExchangeRequest, CapabilitiesExchangeAnswer> implements
         HasVendorIdAVP<CapabilitiesExchangeRequest>,
         HasProductNameAVP<CapabilitiesExchangeRequest>,
         HasSupportedVendorIdAVP<CapabilitiesExchangeRequest>,
@@ -59,11 +59,6 @@ public final class CapabilitiesExchangeRequest extends Request implements
      */
     @Override
     public CapabilitiesExchangeAnswer createAnswer(final long resultCode) {
-       return (CapabilitiesExchangeAnswer) CapabilitiesExchangeAnswer.create(getHopByHopIdentifier(), getEndToEndIdentifier()).setResultCode(resultCode);
-    }
-
-    @Override
-    public CapabilitiesExchangeRequest self() {
-        return this;
+       return CapabilitiesExchangeAnswer.create(getHopByHopIdentifier(), getEndToEndIdentifier()).setResultCode(resultCode);
     }
 }

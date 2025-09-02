@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Experimental-Result-Code AVP contains a vendor-assigned value representing the result of processing the request.
  * </p>
  */
-public interface HasExperimentalResultCodeAVP<T extends HasExperimentalResultCodeAVP<T>> extends AVPContainer {
+public interface HasExperimentalResultCodeAVP<T extends HasExperimentalResultCodeAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Experimental-Result-Code AVP.
@@ -34,10 +34,5 @@ public interface HasExperimentalResultCodeAVP<T extends HasExperimentalResultCod
             return experimentalResultCodeAVP.getDataAsLong();
         }
         return -1;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

@@ -13,7 +13,7 @@ import java.net.InetAddress;
  * as defined in RFC 6733. The Host-IP-Address AVP informs a peer of the sender's IP address.
  * </p>
  */
-public interface HasHostIpAddressAVP<T extends HasHostIpAddressAVP<T>> extends AVPContainer {
+public interface HasHostIpAddressAVP<T extends HasHostIpAddressAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Host-IP-Address AVP.
@@ -36,10 +36,5 @@ public interface HasHostIpAddressAVP<T extends HasHostIpAddressAVP<T>> extends A
             return hostIpAddressAVP.getDataAsIPAddress();
         }
         return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Route-Record AVP is used to identify the Diameter peers that have processed the message.
  * </p>
  */
-public interface HasRouteRecordAVP<T extends HasRouteRecordAVP<T>> extends AVPContainer {
+public interface HasRouteRecordAVP<T extends HasRouteRecordAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Route-Record AVP.
@@ -34,10 +34,5 @@ public interface HasRouteRecordAVP<T extends HasRouteRecordAVP<T>> extends AVPCo
             return routeRecordAVP.getDataAsString();
         }
         return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

@@ -12,7 +12,7 @@ import com.sipgate.sparta.diameter.core.avp.GroupedAVP;
  * as defined in RFC 6733. The Proxy-Info AVP is used to convey proxy-specific information.
  * </p>
  */
-public interface HasProxyInfoAVP<T extends HasProxyInfoAVP<T>> extends AVPContainer {
+public interface HasProxyInfoAVP<T extends HasProxyInfoAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Proxy-Info AVP.
@@ -35,10 +35,5 @@ public interface HasProxyInfoAVP<T extends HasProxyInfoAVP<T>> extends AVPContai
             return (GroupedAVP) proxyInfoAVP;
         }
         return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

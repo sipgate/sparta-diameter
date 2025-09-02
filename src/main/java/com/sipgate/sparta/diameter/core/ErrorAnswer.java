@@ -10,7 +10,7 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
  * Error messages have the 'E' bit set in the Diameter header flags and follow a specific CCF format.
  * </p>
  */
-public final class ErrorAnswer extends Answer implements HasSessionIdAVP<ErrorAnswer>, HasOriginStateIdAVP<ErrorAnswer>, HasErrorMessageAVP<ErrorAnswer>, HasErrorReportingHostAVP<ErrorAnswer>, HasFailedAVP<ErrorAnswer>, HasExperimentalResultAVP<ErrorAnswer>, HasProxyInfoAVP<ErrorAnswer> {
+public final class ErrorAnswer extends Answer<ErrorAnswer> implements HasSessionIdAVP<ErrorAnswer>, HasOriginStateIdAVP<ErrorAnswer>, HasErrorMessageAVP<ErrorAnswer>, HasErrorReportingHostAVP<ErrorAnswer>, HasFailedAVP<ErrorAnswer>, HasExperimentalResultAVP<ErrorAnswer>, HasProxyInfoAVP<ErrorAnswer> {
 
     /**
      * Constructs a Diameter error answer message.
@@ -39,10 +39,5 @@ public final class ErrorAnswer extends Answer implements HasSessionIdAVP<ErrorAn
     public static ErrorAnswer create(final int commandCode, final boolean proxiable, final int applicationId,
                                    final int hopByHopIdentifier, final int endToEndIdentifier) {
         return new ErrorAnswer(commandCode, proxiable, applicationId, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    @Override
-    public ErrorAnswer self() {
-        return this;
     }
 }

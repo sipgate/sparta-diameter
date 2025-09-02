@@ -14,7 +14,7 @@ import com.sipgate.sparta.diameter.core.avp.mixins.HasFailedAVP;
  * The DPA message is used to respond to a DPR message when gracefully disconnecting a Diameter peer connection.
  * </p>
  */
-public final class DisconnectPeerAnswer extends Answer implements
+public final class DisconnectPeerAnswer extends Answer<DisconnectPeerAnswer> implements
         HasErrorMessageAVP<DisconnectPeerAnswer>,
         HasFailedAVP<DisconnectPeerAnswer> {
 
@@ -38,10 +38,5 @@ public final class DisconnectPeerAnswer extends Answer implements
      */
     public static DisconnectPeerAnswer create(final int hopByHopIdentifier, final int endToEndIdentifier) {
         return new DisconnectPeerAnswer(hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    @Override
-    public DisconnectPeerAnswer self() {
-        return this;
     }
 }

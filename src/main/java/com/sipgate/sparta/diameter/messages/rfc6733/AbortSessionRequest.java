@@ -12,7 +12,7 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
  * The ASR message is used to request immediate termination of a user session.
  * </p>
  */
-public final class AbortSessionRequest extends Request implements
+public final class AbortSessionRequest extends Request<AbortSessionRequest, AbortSessionAnswer> implements
         HasSessionIdAVP<AbortSessionRequest>,
         HasAuthApplicationIdAVP<AbortSessionRequest>,
         HasUserNameAVP<AbortSessionRequest>,
@@ -56,13 +56,8 @@ public final class AbortSessionRequest extends Request implements
 
     @Override
     public AbortSessionAnswer createAnswer(final long resultCode) {
-        return (AbortSessionAnswer) AbortSessionAnswer
+        return AbortSessionAnswer
                 .create(getHopByHopIdentifier(), getEndToEndIdentifier())
                 .setResultCode(resultCode);
-    }
-
-    @Override
-    public AbortSessionRequest self() {
-        return this;
     }
 }

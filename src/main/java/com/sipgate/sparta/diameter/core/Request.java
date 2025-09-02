@@ -8,7 +8,7 @@ package com.sipgate.sparta.diameter.core;
  * Request messages have the R-bit set in the Diameter header flags.
  * </p>
  */
-public abstract class Request extends Command {
+public abstract class Request<T extends Request<T, ANSWER>, ANSWER extends Answer<ANSWER>> extends Command<T> {
 
     /**
      * Constructs a Diameter request message.
@@ -33,15 +33,15 @@ public abstract class Request extends Command {
      * @param resultCode The result code to set in the answer.
      * @return The created answer.
      */
-    public abstract Answer createAnswer(long resultCode);
+    public abstract ANSWER createAnswer(long resultCode);
 
     /**
      * Marks this Request as retransmitted by setting the retransmission flag.
      *
      * @return This Request instance for method chaining.
      */
-    public Request markAsRetransmitted() {
+    public T markAsRetransmitted() {
         setRetransmissionFlag();
-        return this;
+        return self();
     }
 }

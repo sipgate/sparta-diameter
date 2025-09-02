@@ -12,7 +12,7 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
  * The STA message is used to respond to a STR message for session termination requests.
  * </p>
  */
-public final class SessionTerminationAnswer extends Answer implements
+public final class SessionTerminationAnswer extends Answer<SessionTerminationAnswer> implements
         HasSessionIdAVP<SessionTerminationAnswer>,
         HasUserNameAVP<SessionTerminationAnswer>,
         HasClassAVP<SessionTerminationAnswer>,
@@ -45,10 +45,5 @@ public final class SessionTerminationAnswer extends Answer implements
      */
     public static SessionTerminationAnswer create(final int hopByHopIdentifier, final int endToEndIdentifier) {
         return new SessionTerminationAnswer(false, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    @Override
-    public SessionTerminationAnswer self() {
-        return this;
     }
 }

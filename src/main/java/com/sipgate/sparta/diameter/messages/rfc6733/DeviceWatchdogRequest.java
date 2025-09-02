@@ -12,7 +12,7 @@ import com.sipgate.sparta.diameter.core.DiameterConstants;
  * The DWR message is used to monitor the health of the transport connection between Diameter peers.
  * </p>
  */
-public class DeviceWatchdogRequest extends Request implements HasOriginStateIdAVP<DeviceWatchdogRequest> {
+public class DeviceWatchdogRequest extends Request<DeviceWatchdogRequest, DeviceWatchdogAnswer> implements HasOriginStateIdAVP<DeviceWatchdogRequest> {
 
     /**
      * Constructs a Device Watchdog Request message.
@@ -53,13 +53,8 @@ public class DeviceWatchdogRequest extends Request implements HasOriginStateIdAV
      */
     @Override
     public DeviceWatchdogAnswer createAnswer(final long resultCode) {
-        return (DeviceWatchdogAnswer) DeviceWatchdogAnswer
+        return DeviceWatchdogAnswer
                 .create(getHopByHopIdentifier(), getEndToEndIdentifier())
                 .setResultCode(resultCode);
-    }
-
-    @Override
-    public DeviceWatchdogRequest self() {
-        return this;
     }
 }

@@ -12,7 +12,7 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
  * The ACR message is used to send accounting information for a user session.
  * </p>
  */
-public final class AccountingRequest extends Request implements
+public final class AccountingRequest extends Request<AccountingRequest, AccountingAnswer> implements
         HasSessionIdAVP<AccountingRequest>,
         HasAccountingRecordTypeAVP<AccountingRequest>,
         HasAccountingRecordNumberAVP<AccountingRequest>,
@@ -66,13 +66,8 @@ public final class AccountingRequest extends Request implements
 
     @Override
     public AccountingAnswer createAnswer(final long resultCode) {
-        return (AccountingAnswer) AccountingAnswer
+        return AccountingAnswer
                 .create(getHopByHopIdentifier(), getEndToEndIdentifier())
                 .setResultCode(resultCode);
-    }
-
-    @Override
-    public AccountingRequest self() {
-        return this;
     }
 }

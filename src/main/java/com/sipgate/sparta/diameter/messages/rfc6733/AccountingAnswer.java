@@ -13,7 +13,7 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
  * The ACA message is used to respond to an ACR message for accounting requests.
  * </p>
  */
-public final class AccountingAnswer extends Answer implements
+public final class AccountingAnswer extends Answer<AccountingAnswer> implements
         HasSessionIdAVP<AccountingAnswer>,
         HasAccountingRecordTypeAVP<AccountingAnswer>,
         HasAccountingRecordNumberAVP<AccountingAnswer>,
@@ -51,10 +51,5 @@ public final class AccountingAnswer extends Answer implements
      */
     public static AccountingAnswer create(final int hopByHopIdentifier, final int endToEndIdentifier) {
         return new AccountingAnswer(hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    @Override
-    public AccountingAnswer self() {
-        return this;
     }
 }

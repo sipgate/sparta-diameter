@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Accounting-Record-Type AVP contains the type of accounting record being sent.
  * </p>
  */
-public interface HasAccountingRecordTypeAVP<T extends HasAccountingRecordTypeAVP<T>> extends AVPContainer {
+public interface HasAccountingRecordTypeAVP<T extends HasAccountingRecordTypeAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Accounting-Record-Type AVP.
@@ -34,10 +34,5 @@ public interface HasAccountingRecordTypeAVP<T extends HasAccountingRecordTypeAVP
             return accountingRecordTypeAVP.getDataAsInt();
         }
         return -1;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Redirect-Host-Usage AVP dictates how the routing entry resulting from a Redirect indication should be used.
  * </p>
  */
-public interface HasRedirectHostUsageAVP<T extends HasRedirectHostUsageAVP<T>> extends AVPContainer {
+public interface HasRedirectHostUsageAVP<T extends HasRedirectHostUsageAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Redirect-Host-Usage AVP.
@@ -34,10 +34,5 @@ public interface HasRedirectHostUsageAVP<T extends HasRedirectHostUsageAVP<T>> e
             return redirectHostUsageAVP.getDataAsInt();
         }
         return -1;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

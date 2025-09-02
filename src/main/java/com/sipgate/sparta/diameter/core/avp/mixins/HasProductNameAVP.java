@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Product-Name AVP contains the name of the Diameter stack.
  * </p>
  */
-public interface HasProductNameAVP<T extends HasProductNameAVP<T>> extends AVPContainer {
+public interface HasProductNameAVP<T extends HasProductNameAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Product-Name AVP.
@@ -34,10 +34,5 @@ public interface HasProductNameAVP<T extends HasProductNameAVP<T>> extends AVPCo
             return productNameAVP.getDataAsString();
         }
         return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

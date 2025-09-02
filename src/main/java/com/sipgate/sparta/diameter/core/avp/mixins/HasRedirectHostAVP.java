@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Redirect-Host AVP contains the host to which the client should re-send the request.
  * </p>
  */
-public interface HasRedirectHostAVP<T extends HasRedirectHostAVP<T>> extends AVPContainer {
+public interface HasRedirectHostAVP<T extends HasRedirectHostAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Redirect-Host AVP.
@@ -34,10 +34,5 @@ public interface HasRedirectHostAVP<T extends HasRedirectHostAVP<T>> extends AVP
             return redirectHostAVP.getDataAsString();
         }
         return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

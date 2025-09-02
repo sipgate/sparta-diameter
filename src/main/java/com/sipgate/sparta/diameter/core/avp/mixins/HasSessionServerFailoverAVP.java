@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Session-Server-Failover AVP is used to indicate the failover capabilities of the server.
  * </p>
  */
-public interface HasSessionServerFailoverAVP<T extends HasSessionServerFailoverAVP<T>> extends AVPContainer {
+public interface HasSessionServerFailoverAVP<T extends HasSessionServerFailoverAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Session-Server-Failover AVP.
@@ -34,10 +34,5 @@ public interface HasSessionServerFailoverAVP<T extends HasSessionServerFailoverA
             return sessionServerFailoverAVP.getDataAsInt();
         }
         return -1;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

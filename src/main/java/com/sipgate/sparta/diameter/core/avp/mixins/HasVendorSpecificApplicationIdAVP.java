@@ -12,7 +12,7 @@ import com.sipgate.sparta.diameter.core.avp.GroupedAVP;
  * as defined in RFC 6733. The Vendor-Specific-Application-Id AVP is used to advertise support of a vendor-specific Diameter Application.
  * </p>
  */
-public interface HasVendorSpecificApplicationIdAVP<T extends HasVendorSpecificApplicationIdAVP<T>> extends AVPContainer {
+public interface HasVendorSpecificApplicationIdAVP<T extends HasVendorSpecificApplicationIdAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Vendor-Specific-Application-Id AVP.
@@ -35,10 +35,5 @@ public interface HasVendorSpecificApplicationIdAVP<T extends HasVendorSpecificAp
             return (GroupedAVP) vendorSpecificApplicationIdAVP;
         }
         return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

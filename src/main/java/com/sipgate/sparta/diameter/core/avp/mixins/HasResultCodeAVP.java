@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Result-Code AVP indicates whether a particular request was completed successfully or whether an error occurred.
  * </p>
  */
-public interface HasResultCodeAVP<T extends HasResultCodeAVP<T>> extends AVPContainer {
+public interface HasResultCodeAVP<T extends HasResultCodeAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Result-Code AVP.
@@ -34,10 +34,5 @@ public interface HasResultCodeAVP<T extends HasResultCodeAVP<T>> extends AVPCont
             return resultCodeAVP.getDataAsUnsignedInt();
         }
         return -1;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

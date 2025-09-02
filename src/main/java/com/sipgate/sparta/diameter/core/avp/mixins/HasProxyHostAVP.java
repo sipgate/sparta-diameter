@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Proxy-Host AVP contains the identity of the host that added the Proxy-Info AVP.
  * </p>
  */
-public interface HasProxyHostAVP<T extends HasProxyHostAVP<T>> extends AVPContainer {
+public interface HasProxyHostAVP<T extends HasProxyHostAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Proxy-Host AVP.
@@ -34,10 +34,5 @@ public interface HasProxyHostAVP<T extends HasProxyHostAVP<T>> extends AVPContai
             return proxyHostAVP.getDataAsString();
         }
         return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

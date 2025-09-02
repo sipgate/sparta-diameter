@@ -12,7 +12,7 @@ import com.sipgate.sparta.diameter.core.avp.GroupedAVP;
  * as defined in RFC 6733. The Experimental-Result AVP indicates that an error occurred for which there is no appropriate Result-Code value.
  * </p>
  */
-public interface HasExperimentalResultAVP<T extends HasExperimentalResultAVP<T>> extends AVPContainer {
+public interface HasExperimentalResultAVP<T extends HasExperimentalResultAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Experimental-Result AVP.
@@ -35,10 +35,5 @@ public interface HasExperimentalResultAVP<T extends HasExperimentalResultAVP<T>>
             return (GroupedAVP) experimentalResultAVP;
         }
         return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Termination-Cause AVP is used to indicate the reason why a session is being terminated.
  * </p>
  */
-public interface HasTerminationCauseAVP<T extends HasTerminationCauseAVP<T>> extends AVPContainer {
+public interface HasTerminationCauseAVP<T extends HasTerminationCauseAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Termination-Cause AVP.
@@ -34,10 +34,5 @@ public interface HasTerminationCauseAVP<T extends HasTerminationCauseAVP<T>> ext
             return terminationCauseAVP.getDataAsInt();
         }
         return -1;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

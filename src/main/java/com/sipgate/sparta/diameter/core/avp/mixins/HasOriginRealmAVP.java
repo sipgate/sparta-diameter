@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Origin-Realm AVP contains the realm of the originating host.
  * </p>
  */
-public interface HasOriginRealmAVP<T extends HasOriginRealmAVP<T>> extends AVPContainer {
+public interface HasOriginRealmAVP<T extends HasOriginRealmAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Origin-Realm AVP.
@@ -34,10 +34,5 @@ public interface HasOriginRealmAVP<T extends HasOriginRealmAVP<T>> extends AVPCo
             return originRealmAVP.getDataAsString();
         }
         return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Auth-Grace-Period AVP contains the grace period between authentications.
  * </p>
  */
-public interface HasAuthGracePeriodAVP<T extends HasAuthGracePeriodAVP<T>> extends AVPContainer {
+public interface HasAuthGracePeriodAVP<T extends HasAuthGracePeriodAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Auth-Grace-Period AVP.
@@ -34,10 +34,5 @@ public interface HasAuthGracePeriodAVP<T extends HasAuthGracePeriodAVP<T>> exten
             return authGracePeriodAVP.getDataAsLong();
         }
         return -1;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

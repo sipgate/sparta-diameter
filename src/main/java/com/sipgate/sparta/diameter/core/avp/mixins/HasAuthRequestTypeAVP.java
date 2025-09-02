@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Auth-Request-Type AVP is used to determine session state.
  * </p>
  */
-public interface HasAuthRequestTypeAVP<T extends HasAuthRequestTypeAVP<T>> extends AVPContainer {
+public interface HasAuthRequestTypeAVP<T extends HasAuthRequestTypeAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Auth-Request-Type AVP.
@@ -34,10 +34,5 @@ public interface HasAuthRequestTypeAVP<T extends HasAuthRequestTypeAVP<T>> exten
             return authRequestTypeAVP.getDataAsInt();
         }
         return -1;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

@@ -1,5 +1,7 @@
 package com.sipgate.sparta.diameter.core.avp;
 
+import com.sipgate.sparta.diameter.core.Selfable;
+
 /**
  * Base interface for Diameter messages that need AVP operations.
  * <p>
@@ -7,7 +9,7 @@ package com.sipgate.sparta.diameter.core.avp;
  * as defined in <a href="https://datatracker.ietf.org/doc/html/rfc6733#section-4.4">RFC 6733, Section 4.4</a>.
  * </p>
  */
-public interface AVPContainer {
+public interface AVPContainer<T extends AVPContainer<T>> extends Selfable<T> {
 
     /**
      * Adds an AVP to this message.

@@ -14,7 +14,7 @@ import com.sipgate.sparta.diameter.core.DiameterConstants;
  * The DWA message is used to confirm the health of the transport connection in response to a DWR message.
  * </p>
  */
-public class DeviceWatchdogAnswer extends Answer implements
+public class DeviceWatchdogAnswer extends Answer<DeviceWatchdogAnswer> implements
         HasOriginStateIdAVP<DeviceWatchdogAnswer>,
         HasErrorMessageAVP<DeviceWatchdogAnswer>,
         HasFailedAVP<DeviceWatchdogAnswer> {
@@ -39,11 +39,5 @@ public class DeviceWatchdogAnswer extends Answer implements
      */
     public static DeviceWatchdogAnswer create(final int hopByHopIdentifier, final int endToEndIdentifier) {
         return new DeviceWatchdogAnswer(hopByHopIdentifier, endToEndIdentifier);
-    }
-
-
-    @Override
-    public DeviceWatchdogAnswer self() {
-        return this;
     }
 }

@@ -12,7 +12,7 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
  * The RAA message is used to respond to a RAR message for re-authentication requests.
  * </p>
  */
-public final class ReAuthAnswer extends Answer implements
+public final class ReAuthAnswer extends Answer<ReAuthAnswer> implements
         HasUserNameAVP<ReAuthAnswer>,
         HasOriginStateIdAVP<ReAuthAnswer>,
         HasErrorMessageAVP<ReAuthAnswer>,
@@ -42,11 +42,6 @@ public final class ReAuthAnswer extends Answer implements
      */
     public static ReAuthAnswer create(final int hopByHopIdentifier, final int endToEndIdentifier) {
         return new ReAuthAnswer(hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    @Override
-    public ReAuthAnswer self() {
-        return this;
     }
 
 }

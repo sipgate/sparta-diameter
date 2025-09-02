@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Acct-Application-Id AVP is used to advertise support of the Accounting portion of an application.
  * </p>
  */
-public interface HasAcctApplicationIdAVP<T extends HasAcctApplicationIdAVP<T>> extends AVPContainer {
+public interface HasAcctApplicationIdAVP<T extends HasAcctApplicationIdAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Acct-Application-Id AVP.
@@ -34,10 +34,5 @@ public interface HasAcctApplicationIdAVP<T extends HasAcctApplicationIdAVP<T>> e
             return acctApplicationIdAVP.getDataAsLong();
         }
         return -1;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

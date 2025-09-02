@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Error-Message AVP contains a human-readable error message.
  * </p>
  */
-public interface HasErrorMessageAVP<T extends HasErrorMessageAVP<T>> extends AVPContainer {
+public interface HasErrorMessageAVP<T extends HasErrorMessageAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Error-Message AVP.
@@ -34,10 +34,5 @@ public interface HasErrorMessageAVP<T extends HasErrorMessageAVP<T>> extends AVP
             return errorMessageAVP.getDataAsString();
         }
         return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

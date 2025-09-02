@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Inband-Security-Id AVP is used to convey security capabilities.
  * </p>
  */
-public interface HasInbandSecurityIdAVP<T extends HasInbandSecurityIdAVP<T>> extends AVPContainer {
+public interface HasInbandSecurityIdAVP<T extends HasInbandSecurityIdAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Inband-Security-Id AVP.
@@ -34,10 +34,5 @@ public interface HasInbandSecurityIdAVP<T extends HasInbandSecurityIdAVP<T>> ext
             return inbandSecurityIdAVP.getDataAsLong();
         }
         return -1;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

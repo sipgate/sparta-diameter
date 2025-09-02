@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Vendor-Id AVP contains the IANA-assigned "SMI Network Management Private Enterprise Codes" value.
  * </p>
  */
-public interface HasVendorIdAVP<T extends HasVendorIdAVP<T>> extends AVPContainer {
+public interface HasVendorIdAVP<T extends HasVendorIdAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Vendor-Id AVP.
@@ -34,10 +34,5 @@ public interface HasVendorIdAVP<T extends HasVendorIdAVP<T>> extends AVPContaine
             return vendorIdAVP.getDataAsLong();
         }
         return -1;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

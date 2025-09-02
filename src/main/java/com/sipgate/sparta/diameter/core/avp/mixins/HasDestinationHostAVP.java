@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Destination-Host AVP identifies the endpoint where the Diameter message should be routed.
  * </p>
  */
-public interface HasDestinationHostAVP<T extends HasDestinationHostAVP<T>> extends AVPContainer {
+public interface HasDestinationHostAVP<T extends HasDestinationHostAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Destination-Host AVP.
@@ -34,10 +34,5 @@ public interface HasDestinationHostAVP<T extends HasDestinationHostAVP<T>> exten
             return destinationHostAVP.getDataAsString();
         }
         return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

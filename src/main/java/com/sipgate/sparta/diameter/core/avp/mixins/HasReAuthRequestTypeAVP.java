@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Re-Auth-Request-Type AVP is used to inform the client of the action expected upon expiration of the Authorization-Lifetime.
  * </p>
  */
-public interface HasReAuthRequestTypeAVP<T extends HasReAuthRequestTypeAVP<T>> extends AVPContainer {
+public interface HasReAuthRequestTypeAVP<T extends HasReAuthRequestTypeAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Re-Auth-Request-Type AVP.
@@ -34,10 +34,5 @@ public interface HasReAuthRequestTypeAVP<T extends HasReAuthRequestTypeAVP<T>> e
             return reAuthRequestTypeAVP.getDataAsInt();
         }
         return -1;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

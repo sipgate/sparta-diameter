@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Supported-Vendor-Id AVP is used to advertise support of a vendor-specific Diameter Application.
  * </p>
  */
-public interface HasSupportedVendorIdAVP<T extends HasSupportedVendorIdAVP<T>> extends AVPContainer {
+public interface HasSupportedVendorIdAVP<T extends HasSupportedVendorIdAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Supported-Vendor-Id AVP.
@@ -34,10 +34,5 @@ public interface HasSupportedVendorIdAVP<T extends HasSupportedVendorIdAVP<T>> e
             return supportedVendorIdAVP.getDataAsLong();
         }
         return -1;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }

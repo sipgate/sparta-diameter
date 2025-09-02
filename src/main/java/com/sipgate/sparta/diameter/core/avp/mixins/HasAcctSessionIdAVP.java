@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Acct-Session-Id AVP is only used when RADIUS/Diameter translation occurs.
  * </p>
  */
-public interface HasAcctSessionIdAVP<T extends HasAcctSessionIdAVP<T>> extends AVPContainer {
+public interface HasAcctSessionIdAVP<T extends HasAcctSessionIdAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Acct-Session-Id AVP.
@@ -36,8 +36,4 @@ public interface HasAcctSessionIdAVP<T extends HasAcctSessionIdAVP<T>> extends A
         return null;
     }
 
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
-    }
 }

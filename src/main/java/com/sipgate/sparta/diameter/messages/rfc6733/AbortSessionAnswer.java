@@ -13,7 +13,7 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
  * The ASA message is used to respond to an ASR message for session abort requests.
  * </p>
  */
-public final class AbortSessionAnswer extends Answer implements
+public final class AbortSessionAnswer extends Answer<AbortSessionAnswer> implements
         HasSessionIdAVP<AbortSessionAnswer>,
         HasUserNameAVP<AbortSessionAnswer>,
         HasErrorMessageAVP<AbortSessionAnswer>,
@@ -44,10 +44,5 @@ public final class AbortSessionAnswer extends Answer implements
      */
     public static AbortSessionAnswer create(final int hopByHopIdentifier, final int endToEndIdentifier) {
         return new AbortSessionAnswer(hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    @Override
-    public AbortSessionAnswer self() {
-        return this;
     }
 }

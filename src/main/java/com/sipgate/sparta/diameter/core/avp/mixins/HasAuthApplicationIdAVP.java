@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Auth-Application-Id AVP is used to advertise support of the Authentication and Authorization portion of an application.
  * </p>
  */
-public interface HasAuthApplicationIdAVP<T extends HasAuthApplicationIdAVP<T>> extends AVPContainer {
+public interface HasAuthApplicationIdAVP<T extends HasAuthApplicationIdAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Auth-Application-Id AVP.
@@ -36,8 +36,4 @@ public interface HasAuthApplicationIdAVP<T extends HasAuthApplicationIdAVP<T>> e
         return -1;
     }
 
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
-    }
 }

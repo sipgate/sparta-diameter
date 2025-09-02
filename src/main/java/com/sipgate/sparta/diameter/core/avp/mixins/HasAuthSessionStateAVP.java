@@ -11,7 +11,7 @@ import com.sipgate.sparta.diameter.core.avp.AVPContainer;
  * as defined in RFC 6733. The Auth-Session-State AVP specifies whether state is maintained for a particular session.
  * </p>
  */
-public interface HasAuthSessionStateAVP<T extends HasAuthSessionStateAVP<T>> extends AVPContainer {
+public interface HasAuthSessionStateAVP<T extends HasAuthSessionStateAVP<T>> extends AVPContainer<T> {
 
     /**
      * Sets the Auth-Session-State AVP.
@@ -34,10 +34,5 @@ public interface HasAuthSessionStateAVP<T extends HasAuthSessionStateAVP<T>> ext
             return authSessionStateAVP.getDataAsInt();
         }
         return -1;
-    }
-
-    @SuppressWarnings("unchecked")
-    default T self() {
-        return (T) this;
     }
 }
