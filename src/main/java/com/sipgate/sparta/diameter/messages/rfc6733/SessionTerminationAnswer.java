@@ -9,7 +9,7 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
  * <p>
  * This class represents the Session Termination Answer message as defined in
  * <a href="https://datatracker.ietf.org/doc/html/rfc6733#section-8.4.2">RFC 6733, Section 8.4.2</a>.
- * The STA message is used to respond to a STR message for session termination requests.
+ * The STA message is used to respond to an STR message for session termination requests.
  * </p>
  */
 @DiameterResponse(DiameterConstants.CMD_SESSION_TERMINATION)
