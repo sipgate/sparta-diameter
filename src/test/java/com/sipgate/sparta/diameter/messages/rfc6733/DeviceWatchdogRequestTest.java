@@ -14,7 +14,7 @@ class DeviceWatchdogRequestTest {
         final long successCode = DiameterConstants.RES_DIAMETER_SUCCESS;
 
         // WHEN
-        final Answer answer = request.createAnswer(successCode);
+        final DeviceWatchdogAnswer answer = request.createAnswer(successCode);
 
         // THEN
         assertThat(answer.isError()).isFalse();

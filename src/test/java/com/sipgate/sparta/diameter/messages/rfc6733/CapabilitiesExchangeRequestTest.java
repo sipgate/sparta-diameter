@@ -14,10 +14,9 @@ class CapabilitiesExchangeRequestTest {
         final long successCode = DiameterConstants.RES_DIAMETER_SUCCESS;
 
         // WHEN
-        final Answer answer = request.createAnswer(successCode);
+        final CapabilitiesExchangeAnswer answer = request.createAnswer(successCode);
 
         // THEN
-        assertThat(answer).isInstanceOf(CapabilitiesExchangeAnswer.class);
         assertThat(answer.isError()).isFalse();
         assertThat(answer.getResultCode()).isEqualTo(successCode);
         assertThat(answer.getHopByHopIdentifier()).isEqualTo(12345);
