@@ -2,7 +2,6 @@ package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.*;
 import com.sipgate.sparta.diameter.core.annotations.DiameterResponse;
-import com.sipgate.sparta.diameter.core.DiameterConstants;
 import com.sipgate.sparta.diameter.core.avp.mixins.HasErrorMessageAVP;
 import com.sipgate.sparta.diameter.core.avp.mixins.HasFailedAVP;
 

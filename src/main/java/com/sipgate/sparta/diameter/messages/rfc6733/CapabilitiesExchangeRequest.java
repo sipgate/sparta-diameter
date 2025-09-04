@@ -3,7 +3,6 @@ package com.sipgate.sparta.diameter.messages.rfc6733;
 import com.sipgate.sparta.diameter.core.*;
 import com.sipgate.sparta.diameter.core.annotations.DiameterRequest;
 import com.sipgate.sparta.diameter.core.avp.mixins.*;
-import com.sipgate.sparta.diameter.core.DiameterConstants;
 
 /**
  * Capabilities Exchange Request (CER) message.

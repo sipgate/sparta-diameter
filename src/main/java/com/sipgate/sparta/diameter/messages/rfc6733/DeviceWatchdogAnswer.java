@@ -5,7 +5,6 @@ import com.sipgate.sparta.diameter.core.annotations.DiameterResponse;
 import com.sipgate.sparta.diameter.core.avp.mixins.HasErrorMessageAVP;
 import com.sipgate.sparta.diameter.core.avp.mixins.HasFailedAVP;
 import com.sipgate.sparta.diameter.core.avp.mixins.HasOriginStateIdAVP;
-import com.sipgate.sparta.diameter.core.DiameterConstants;
 
 /**
  * Device Watchdog Answer (DWA) message.
