@@ -28,12 +28,11 @@ public final class SessionTerminationAnswer extends Answer<SessionTerminationAns
     /**
      * Constructs a Session Termination Answer message.
      *
-     * @param error              Indicates whether the message is an error response.
      * @param hopByHopIdentifier The hop-by-hop identifier.
      * @param endToEndIdentifier The end-to-end identifier.
      */
-    private SessionTerminationAnswer(final boolean error, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(DiameterConstants.CMD_SESSION_TERMINATION, true, error,
+    private SessionTerminationAnswer(final int hopByHopIdentifier, final int endToEndIdentifier) {
+        super(DiameterConstants.CMD_SESSION_TERMINATION, true, false,
               DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
@@ -45,6 +44,6 @@ public final class SessionTerminationAnswer extends Answer<SessionTerminationAns
      * @return A new SessionTerminationAnswer instance.
      */
     public static SessionTerminationAnswer create(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new SessionTerminationAnswer(false, hopByHopIdentifier, endToEndIdentifier);
+        return new SessionTerminationAnswer(hopByHopIdentifier, endToEndIdentifier);
     }
 }
