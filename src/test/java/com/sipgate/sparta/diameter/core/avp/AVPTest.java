@@ -163,50 +163,58 @@ class AVPTest {
     @MethodSource("typeMismatchTestCases")
     void it_throws_exception_for_type_mismatch(final String testName, final String expectedType, final String actualType) {
         // GIVEN & WHEN & THEN - Test specific type mismatch scenarios
-        if (testName.equals("Long expected, String provided")) {
-            assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_RESULT_CODE, "wrong type"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Type mismatch")
-                .hasMessageContaining("expected " + expectedType)
-                .hasMessageContaining("got " + actualType);
-        } else if (testName.equals("String expected, Long provided")) {
-            assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_ORIGIN_HOST, 12345L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Type mismatch")
-                .hasMessageContaining("expected " + expectedType)
-                .hasMessageContaining("got " + actualType);
-        } else if (testName.equals("BigInteger expected, String provided")) {
-            assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_ACCOUNTING_SUB_SESSION_ID, "wrong type"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Type mismatch")
-                .hasMessageContaining("expected " + expectedType)
-                .hasMessageContaining("got " + actualType);
-        } else if (testName.equals("InetAddress expected, String provided")) {
-            assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_HOST_IP_ADDRESS, "wrong type"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Type mismatch")
-                .hasMessageContaining("expected " + expectedType)
-                .hasMessageContaining("got " + actualType);
-        } else if (testName.equals("byte[] expected, Integer provided")) {
-            // Use explicit Integer to ensure correct method resolution
-            final Integer wrongValue = Integer.valueOf(12345);
-            assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_CLASS, wrongValue))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Type mismatch")
-                .hasMessageContaining("expected " + expectedType)
-                .hasMessageContaining("got " + actualType);
-        } else if (testName.equals("Integer expected, Long provided")) {
-            assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_DISCONNECT_CAUSE, 123L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Type mismatch")
-                .hasMessageContaining("expected " + expectedType)
-                .hasMessageContaining("got " + actualType);
-        } else if (testName.equals("Date expected, String provided")) {
-            assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_EVENT_TIMESTAMP, "wrong type"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Type mismatch")
-                .hasMessageContaining("expected " + expectedType)
-                .hasMessageContaining("got " + actualType);
+        switch (testName) {
+            case "Long expected, String provided":
+                assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_RESULT_CODE, "wrong type"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("Type mismatch")
+                        .hasMessageContaining("expected " + expectedType)
+                        .hasMessageContaining("got " + actualType);
+                break;
+            case "String expected, Long provided":
+                assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_ORIGIN_HOST, 12345L))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("Type mismatch")
+                        .hasMessageContaining("expected " + expectedType)
+                        .hasMessageContaining("got " + actualType);
+                break;
+            case "BigInteger expected, String provided":
+                assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_ACCOUNTING_SUB_SESSION_ID, "wrong type"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("Type mismatch")
+                        .hasMessageContaining("expected " + expectedType)
+                        .hasMessageContaining("got " + actualType);
+                break;
+            case "InetAddress expected, String provided":
+                assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_HOST_IP_ADDRESS, "wrong type"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("Type mismatch")
+                        .hasMessageContaining("expected " + expectedType)
+                        .hasMessageContaining("got " + actualType);
+                break;
+            case "byte[] expected, Integer provided":
+                // Use explicit Integer to ensure correct method resolution
+                final Integer wrongValue = 12345;
+                assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_CLASS, wrongValue))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("Type mismatch")
+                        .hasMessageContaining("expected " + expectedType)
+                        .hasMessageContaining("got " + actualType);
+                break;
+            case "Integer expected, Long provided":
+                assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_DISCONNECT_CAUSE, 123L))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("Type mismatch")
+                        .hasMessageContaining("expected " + expectedType)
+                        .hasMessageContaining("got " + actualType);
+                break;
+            case "Date expected, String provided":
+                assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_EVENT_TIMESTAMP, "wrong type"))
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("Type mismatch")
+                        .hasMessageContaining("expected " + expectedType)
+                        .hasMessageContaining("got " + actualType);
+                break;
         }
     }
 
