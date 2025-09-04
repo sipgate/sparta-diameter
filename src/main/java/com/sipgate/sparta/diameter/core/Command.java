@@ -173,7 +173,6 @@ public abstract class Command<T extends Command<T>> implements Selfable<T>, HasO
      * Adds an AVP to this command.
      *
      * @param avp The AVP to add.
-     * @return This command instance for method chaining.
      */
     @Override
     public void addAVP(final AVP avp) {
