@@ -12,7 +12,7 @@ import com.sipgate.sparta.diameter.core.annotations.DiameterRequest;
  * </p>
  */
 @DiameterRequest(DiameterConstants.CMD_DISCONNECT_PEER)
-public final class DisconnectPeerRequest extends Request {
+public final class DisconnectPeerRequest extends Request<DisconnectPeerRequest, DisconnectPeerAnswer> {
 
     /**
      * Constructs a Disconnect Peer Request message.
@@ -50,7 +50,7 @@ public final class DisconnectPeerRequest extends Request {
 
     @Override
     public DisconnectPeerAnswer createAnswer(final long resultCode) {
-        return (DisconnectPeerAnswer) DisconnectPeerAnswer
+        return DisconnectPeerAnswer
                 .create(getHopByHopIdentifier(), getEndToEndIdentifier())
                 .setResultCode(resultCode);
     }

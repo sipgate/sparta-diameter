@@ -12,7 +12,7 @@ import com.sipgate.sparta.diameter.core.annotations.DiameterRequest;
  * </p>
  */
 @DiameterRequest(DiameterConstants.CMD_SESSION_TERMINATION)
-public final class SessionTerminationRequest extends Request {
+public final class SessionTerminationRequest extends Request<SessionTerminationRequest, SessionTerminationAnswer> {
 
     /**
      * Constructs a Session Termination Request message.

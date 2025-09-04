@@ -8,6 +8,7 @@ package com.sipgate.sparta.diameter.core;
  * It is used by the parser when encountering command codes that do not have specific implementations.
  * </p>
  */
+@SuppressWarnings("rawtypes")
 public class GenericCommand extends Command {
 
     /**
