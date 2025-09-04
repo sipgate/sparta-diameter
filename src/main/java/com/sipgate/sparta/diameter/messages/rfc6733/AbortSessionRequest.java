@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.*;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
+import com.sipgate.sparta.diameter.core.annotations.DiameterRequest;
 import com.sipgate.sparta.diameter.core.avp.mixins.*;
 
 /**
@@ -12,6 +13,7 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
  * The ASR message is used to request immediate termination of a user session.
  * </p>
  */
+@DiameterRequest(DiameterConstants.CMD_ABORT_SESSION)
 public final class AbortSessionRequest extends Request<AbortSessionRequest, AbortSessionAnswer> implements
         HasSessionIdAVP<AbortSessionRequest>,
         HasAuthApplicationIdAVP<AbortSessionRequest>,

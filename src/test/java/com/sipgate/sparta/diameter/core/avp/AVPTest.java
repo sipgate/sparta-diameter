@@ -6,8 +6,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -290,5 +294,53 @@ class AVPTest {
         assertThat(groupedAVP.getAVPs()).hasSize(2);
         assertThat(groupedAVP.findAVP(DiameterConstants.AVP_VENDOR_ID)).isNotNull();
         assertThat(groupedAVP.findAVP(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE)).isNotNull();
+    }
+
+    @Test
+    void it_can_parse_itself_from_bytes() throws IOException {
+        // GIVEN
+        final AVP originalAvp = AVP.create(DiameterConstants.AVP_RESULT_CODE, DiameterConstants.RES_DIAMETER_SUCCESS);
+        final ByteArrayOutputStream out = new ByteArrayOutputStream(8);
+        final DataOutputStream dos = new DataOutputStream(out);
+        originalAvp.writeTo(dos);
+        final byte[] avpBytes = out.toByteArray();
+
+        // WHEN
+        final AVP parsedAvp = AVP.readFrom(ByteBuffer.wrap(avpBytes));
+
+        // THEN
+        assertThat(parsedAvp.getCode()).isEqualTo(originalAvp.getCode());
+        assertThat(parsedAvp.getDataAsUnsignedInt()).isEqualTo(originalAvp.getDataAsUnsignedInt());
+        assertThat(parsedAvp.isMandatory()).isEqualTo(originalAvp.isMandatory());
+        assertThat(parsedAvp.isVendorSpecific()).isEqualTo(originalAvp.isVendorSpecific());
+    }
+
+    @Test
+    void it_can_parse_grouped_avps_from_bytes() throws IOException {
+        // GIVEN
+        final List<AVP> nestedAvps = Arrays.asList(
+            AVP.create(DiameterConstants.AVP_VENDOR_ID, 123L),
+            AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, 456L)
+        );
+        final AVP originalAvp = AVP.create(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, nestedAvps);
+        final ByteArrayOutputStream out = new ByteArrayOutputStream(64);
+        final DataOutputStream dos = new DataOutputStream(out);
+        originalAvp.writeTo(dos);
+        final byte[] avpBytes = out.toByteArray();
+
+        // WHEN
+        final AVP parsedAvp = AVP.readFrom(ByteBuffer.wrap(avpBytes));
+
+        // THEN
+        assertThat(parsedAvp.getCode()).isEqualTo(originalAvp.getCode());
+        assertThat(parsedAvp.isMandatory()).isEqualTo(originalAvp.isMandatory());
+        assertThat(parsedAvp).isInstanceOf(GroupedAVP.class);
+
+        final GroupedAVP parsedGrouped = (GroupedAVP) parsedAvp;
+        assertThat(parsedGrouped.getAVPs()).hasSize(2);
+        assertThat(parsedGrouped.findAVP(DiameterConstants.AVP_VENDOR_ID)).isNotNull();
+        assertThat(parsedGrouped.findAVP(DiameterConstants.AVP_AUTH_APPLICATION_ID)).isNotNull();
+        assertThat(parsedGrouped.findAVP(DiameterConstants.AVP_VENDOR_ID).getDataAsUnsignedInt()).isEqualTo(123L);
+        assertThat(parsedGrouped.findAVP(DiameterConstants.AVP_AUTH_APPLICATION_ID).getDataAsUnsignedInt()).isEqualTo(456L);
     }
 }

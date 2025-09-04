@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.*;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
+import com.sipgate.sparta.diameter.core.annotations.DiameterRequest;
 
 /**
  * Disconnect Peer Request (DPR) message.
@@ -11,6 +12,7 @@ import com.sipgate.sparta.diameter.core.DiameterConstants;
  * The DPR message is used to gracefully disconnect a Diameter peer connection.
  * </p>
  */
+@DiameterRequest(DiameterConstants.CMD_DISCONNECT_PEER)
 public final class DisconnectPeerRequest extends Request {
 
     /**

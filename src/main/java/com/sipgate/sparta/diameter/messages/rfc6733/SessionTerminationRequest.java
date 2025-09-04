@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.*;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
+import com.sipgate.sparta.diameter.core.annotations.DiameterRequest;
 
 /**
  * Session Termination Request (STR) message.
@@ -11,6 +12,7 @@ import com.sipgate.sparta.diameter.core.DiameterConstants;
  * The STR message is used to request termination of a user session.
  * </p>
  */
+@DiameterRequest(DiameterConstants.CMD_SESSION_TERMINATION)
 public final class SessionTerminationRequest extends Request {
 
     /**
@@ -49,7 +51,7 @@ public final class SessionTerminationRequest extends Request {
 
     @Override
     public SessionTerminationAnswer createAnswer(final long resultCode) {
-        return (SessionTerminationAnswer) SessionTerminationAnswer
+        return SessionTerminationAnswer
                 .create(getHopByHopIdentifier(), getEndToEndIdentifier())
                 .setResultCode(resultCode);
     }

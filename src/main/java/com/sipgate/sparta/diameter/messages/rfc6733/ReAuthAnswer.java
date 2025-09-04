@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.*;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
+import com.sipgate.sparta.diameter.core.annotations.DiameterResponse;
 import com.sipgate.sparta.diameter.core.avp.mixins.*;
 
 /**
@@ -12,6 +13,7 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
  * The RAA message is used to respond to a RAR message for re-authentication requests.
  * </p>
  */
+@DiameterResponse(DiameterConstants.CMD_RE_AUTH)
 public final class ReAuthAnswer extends Answer<ReAuthAnswer> implements
         HasUserNameAVP<ReAuthAnswer>,
         HasOriginStateIdAVP<ReAuthAnswer>,

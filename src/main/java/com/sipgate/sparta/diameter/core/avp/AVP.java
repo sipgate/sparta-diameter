@@ -1,7 +1,7 @@
 package com.sipgate.sparta.diameter.core.avp;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.Inet4Address;
@@ -9,9 +9,9 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.nio.ByteBuffer;
-import java.util.Date;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -139,22 +139,6 @@ public class AVP {
      */
     public byte[] getData() {
         return data.clone();
-    }
-
-    /**
-     * Converts this AVP to a ByteBuffer.
-     *
-     * @return A ByteBuffer containing the serialized AVP.
-     */
-    public ByteBuffer toByteBuffer() {
-        try {
-            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            final DataOutputStream dos = new DataOutputStream(baos);
-            writeTo(dos);
-            return ByteBuffer.wrap(baos.toByteArray());
-        } catch (final IOException e) {
-            throw new RuntimeException("Failed to convert AVP to ByteBuffer", e);
-        }
     }
 
     /**
@@ -760,6 +744,59 @@ public class AVP {
                 definition.name(), definition.code(),
                 definition.dataType().getSimpleName(), valueType.getSimpleName()));
         }
+    }
+
+    /**
+     * Reads an AVP from the given ByteBuffer.
+     *
+     * @param buffer The ByteBuffer to read from.
+     * @return The constructed AVP.
+     * @throws EOFException If the buffer does not contain valid AVP data.
+     */
+    public static AVP readFrom(final ByteBuffer buffer) throws EOFException {
+        if (buffer.remaining() < 8) {
+            throw new EOFException("Buffer does not contain enough data for an AVP header");
+        }
+
+        // AVP Code (4 bytes)
+        final int code = buffer.getInt();
+
+        // Flags (1 byte)
+        final byte flags = buffer.get();
+        final boolean vendorSpecific = (flags & 0x80) != 0;
+        final boolean mandatory = (flags & 0x40) != 0;
+        final boolean protectedAVP = (flags & 0x20) != 0;
+
+        // Length (3 bytes) - read the next 3 bytes after flags
+        final int length = ((buffer.get() & 0xFF) << 16) | ((buffer.get() & 0xFF) << 8) | (buffer.get() & 0xFF);
+        if (length < 8 || length > buffer.remaining() + 8) {
+            throw new EOFException("Invalid AVP length");
+        }
+
+        // Vendor-Id (4 bytes, if vendor-specific)
+        final int vendorId = vendorSpecific ? buffer.getInt() : 0;
+
+        // Data
+        final int dataLength = length - (vendorSpecific ? 12 : 8);
+        final byte[] data = new byte[dataLength];
+        buffer.get(data);
+
+        // Skip padding to 4-byte boundary
+        final int padding = (4 - (dataLength % 4)) % 4;
+        buffer.position(buffer.position() + padding);
+
+        final AVPDefinition definition = registry.get(code);
+        if (definition != null && definition.dataType().equals(GroupedAVP.class)) {
+            // Parse grouped AVP
+            final ByteBuffer dataBuffer = ByteBuffer.wrap(data);
+            final List<AVP> nestedAVPs = new ArrayList<>();
+            while (dataBuffer.remaining() >= 8) {
+                nestedAVPs.add(readFrom(dataBuffer));
+            }
+            return new GroupedAVP(code, vendorSpecific, mandatory, protectedAVP, vendorId, nestedAVPs);
+        }
+
+        return new AVP(code, vendorSpecific, mandatory, protectedAVP, vendorId, data);
     }
 }
 

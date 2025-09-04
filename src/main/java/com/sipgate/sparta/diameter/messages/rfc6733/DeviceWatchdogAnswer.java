@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.*;
+import com.sipgate.sparta.diameter.core.annotations.DiameterResponse;
 import com.sipgate.sparta.diameter.core.avp.mixins.HasErrorMessageAVP;
 import com.sipgate.sparta.diameter.core.avp.mixins.HasFailedAVP;
 import com.sipgate.sparta.diameter.core.avp.mixins.HasOriginStateIdAVP;
@@ -14,6 +15,7 @@ import com.sipgate.sparta.diameter.core.DiameterConstants;
  * The DWA message is used to confirm the health of the transport connection in response to a DWR message.
  * </p>
  */
+@DiameterResponse(DiameterConstants.CMD_DEVICE_WATCHDOG)
 public class DeviceWatchdogAnswer extends Answer<DeviceWatchdogAnswer> implements
         HasOriginStateIdAVP<DeviceWatchdogAnswer>,
         HasErrorMessageAVP<DeviceWatchdogAnswer>,

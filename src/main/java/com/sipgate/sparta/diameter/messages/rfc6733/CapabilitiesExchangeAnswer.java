@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.Answer;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
+import com.sipgate.sparta.diameter.core.annotations.DiameterResponse;
 import com.sipgate.sparta.diameter.core.avp.mixins.*;
 
 /**
@@ -12,6 +13,7 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
  * The CEA message is used to respond to a CER message and exchange capabilities between Diameter peers.
  * </p>
  */
+@DiameterResponse(DiameterConstants.CMD_CAPABILITIES_EXCHANGE)
 public final class CapabilitiesExchangeAnswer extends Answer<CapabilitiesExchangeAnswer> implements HasVendorIdAVP<CapabilitiesExchangeAnswer>,
         HasProductNameAVP<CapabilitiesExchangeAnswer>,
         HasSupportedVendorIdAVP<CapabilitiesExchangeAnswer>,

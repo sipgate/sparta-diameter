@@ -1,14 +1,17 @@
 package com.sipgate.sparta.diameter.core;
 
+import com.sipgate.sparta.diameter.DiameterException;
+import com.sipgate.sparta.diameter.core.annotations.DiameterRequest;
+import com.sipgate.sparta.diameter.core.annotations.DiameterResponse;
 import com.sipgate.sparta.diameter.core.avp.AVP;
-import com.sipgate.sparta.diameter.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.core.avp.mixins.HasOriginHostAVP;
 import com.sipgate.sparta.diameter.core.avp.mixins.HasOriginRealmAVP;
+import org.reflections.Reflections;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 /**
  * Base class for all Diameter commands (messages).
@@ -18,7 +21,43 @@ import java.util.List;
  * It provides common functionality for handling the Diameter header and AVPs.
  * </p>
  */
+@SuppressWarnings("rawtypes") // The parser cannot know ahead of time the exact type
 public abstract class Command<T extends Command<T>> implements Selfable<T>, HasOriginHostAVP<T>, HasOriginRealmAVP<T> {
+
+    private static final Map<Integer, Class<? extends Request>> REQUEST_TYPES = new HashMap<>();
+    private static final Map<Integer, Class<? extends Answer>> ANSWER_TYPES = new HashMap<>();
+    private static final Set<String> PACKAGES_TO_SCAN = new HashSet<>();
+
+    static {
+        PACKAGES_TO_SCAN.add("com.sipgate.sparta.diameter.messages.rfc6733");
+        initializeCommandTypes();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void initializeCommandTypes() {
+        // Clear existing mappings
+        REQUEST_TYPES.clear();
+        ANSWER_TYPES.clear();
+
+        // Scan specified packages for classes annotated with @DiameterRequest and @DiameterResponse
+        final Reflections reflections = new Reflections(PACKAGES_TO_SCAN);
+        final Set<Class<?>> requestClasses = reflections.getTypesAnnotatedWith(DiameterRequest.class);
+        for (final Class<?> cls : requestClasses) {
+            if (Request.class.isAssignableFrom(cls)) {
+                final DiameterRequest annotation = cls.getAnnotation(DiameterRequest.class);
+                REQUEST_TYPES.put(annotation.value(), (Class<? extends Request>) cls);
+            }
+        }
+
+        final Set<Class<?>> answerClasses = reflections.getTypesAnnotatedWith(DiameterResponse.class);
+        for (final Class<?> cls : answerClasses) {
+            if (Answer.class.isAssignableFrom(cls)) {
+                final DiameterResponse annotation = cls.getAnnotation(DiameterResponse.class);
+                ANSWER_TYPES.put(annotation.value(), (Class<? extends Answer>) cls);
+            }
+        }
+    }
+
     // Diameter header fields
     private final int version;
     private final int commandCode;
@@ -252,4 +291,144 @@ public abstract class Command<T extends Command<T>> implements Selfable<T>, HasO
             avp.writeTo(outputStream);
         }
     }
+
+    /**
+     * Extracts the message length from a ByteBuffer.
+     * Does not modify the buffer position.
+     *
+     * @param buffer the ByteBuffer containing the Diameter message
+     * @return the length of the Diameter message
+     * @throws DiameterException if the buffer does not contain enough data to read the length
+     */
+    public static int getMessageLength(final ByteBuffer buffer) throws DiameterException {
+        if (buffer.remaining() < 4) {
+            throw new DiameterException("Need at least 4 bytes to read message length");
+        }
+
+        // Read length without changing buffer position
+        final int position = buffer.position();
+        buffer.get(); // Skip version
+        final int length = ((buffer.get() & 0xFF) << 16) |
+                ((buffer.get() & 0xFF) << 8) |
+                (buffer.get() & 0xFF);
+        buffer.position(position); // Reset position
+
+        return length;
+    }
+
+    /**
+     * Parses a Diameter message from a ByteBuffer (useful for Netty integration).
+     *
+     * @param buffer the ByteBuffer containing the Diameter message
+     * @return the parsed Command object representing the Diameter message
+     * @throws DiameterException if the buffer does not contain the number of bytes required for a valid Diameter message
+     */
+    public static Command parseMessage(final ByteBuffer buffer) throws DiameterException {
+        final int messageLength = getMessageLength(buffer);
+        if (buffer.remaining() < messageLength) {
+            throw new DiameterException("Invalid Diameter message: too short");
+        }
+
+        return parseMessage(buffer, messageLength);
+    }
+
+    /**
+     * Parses a Diameter message from a DataInputStream.
+     *
+     * @param byteBuffer the DataInputStream containing the Diameter message
+     * @param messageLength the length of the Diameter message
+     * @return the parsed Command object representing the Diameter message
+     * @throws DiameterException if an error occurs while parsing the message
+     */
+    private static Command parseMessage(final ByteBuffer byteBuffer, final int messageLength) throws DiameterException {
+        try {
+            // Read Diameter header (20 bytes)
+            final int version = byteBuffer.get();
+            if (version != DiameterConstants.DIAMETER_VERSION) {
+                throw new DiameterException("Unsupported Diameter version: " + version);
+            }
+            // Skip already-read messageLength
+            byteBuffer.position(byteBuffer.position() + 3);
+
+            // Flags (1 byte)
+            final int flags = byteBuffer.get();
+            final boolean isRequest = (flags & 0x80) != 0;
+            final boolean isProxiable = (flags & 0x40) != 0;
+            final boolean isError = (flags & 0x20) != 0;
+            final boolean isRetransmitted = (flags & 0x10) != 0; // T flag (RFC 6733)
+
+            // Command Code (3 bytes)
+            final int commandCode = (byteBuffer.get() << 16) |
+                    (byteBuffer.get() << 8) |
+                    byteBuffer.get();
+
+            // Application-Id (4 bytes)
+            final int applicationId = byteBuffer.getInt();
+
+            // Hop-by-Hop Identifier (4 bytes)
+            final int hopByHopId = byteBuffer.getInt();
+
+            // End-to-End Identifier (4 bytes)
+            final int endToEndId = byteBuffer.getInt();
+
+            // Parse AVPs (remaining bytes)
+            final List<AVP> avps = parseAVPs(byteBuffer, messageLength - 20);
+
+            // Create appropriate message type
+            final Class<? extends Command> commandClass = isRequest
+                    ? REQUEST_TYPES.get(commandCode)
+                    : ANSWER_TYPES.get(commandCode);
+
+            final String createMethod = isRetransmitted ? "createRetransmitted" : "create";
+            final Command command = create(createMethod, commandClass, hopByHopId, endToEndId);
+
+            if (command == null) {
+                throw new DiameterException(String.format("Unsupported Diameter command code %s for app-id: %s", commandCode, applicationId));
+            }
+
+            // Add parsed AVPs
+            for (final AVP avp : avps) {
+                command.addAVP(avp);
+            }
+
+            return command;
+
+        } catch (final IOException e) {
+            throw new DiameterException("Error parsing Diameter message", e);
+        }
+    }
+
+    /**
+     * Parses AVPs from the input stream.
+     *
+     * @param byteBuffer the ByteBuffer to read from
+     * @param remainingLength the number of bytes remaining in the message after the header
+     * @return a list of parsed AVPs
+     * @throws IOException if an I/O error occurs while reading the AVPs
+     */
+    private static List<AVP> parseAVPs(final ByteBuffer byteBuffer, final int remainingLength)
+            throws IOException {
+        final List<AVP> avps = new ArrayList<>();
+        int bytesRead = 0;
+
+        while (bytesRead < remainingLength) {
+            final AVP avp = AVP.readFrom(byteBuffer);
+            avps.add(avp);
+            // Account for padding to 4-byte boundary
+            final int padding = (4 - (avp.getLength() % 4)) % 4;
+            bytesRead += avp.getLength() + padding;
+        }
+
+        return avps;
+    }
+
+    private static Command create(final String methodName, final Class<? extends Command> requestClass, final int hopByHopId, final int endToEndId) {
+        try {
+            return (Command) requestClass.getMethod(methodName, int.class, int.class)
+                    .invoke(null, hopByHopId, endToEndId);
+        } catch (final Exception e) {
+            return null;
+        }
+    }
 }
+

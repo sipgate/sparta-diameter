@@ -1,8 +1,8 @@
 package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.*;
-import com.sipgate.sparta.diameter.core.avp.AVP;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
+import com.sipgate.sparta.diameter.core.annotations.DiameterResponse;
 import com.sipgate.sparta.diameter.core.avp.mixins.*;
 
 /**
@@ -13,6 +13,7 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
  * The ASA message is used to respond to an ASR message for session abort requests.
  * </p>
  */
+@DiameterResponse(DiameterConstants.CMD_ABORT_SESSION)
 public final class AbortSessionAnswer extends Answer<AbortSessionAnswer> implements
         HasSessionIdAVP<AbortSessionAnswer>,
         HasUserNameAVP<AbortSessionAnswer>,

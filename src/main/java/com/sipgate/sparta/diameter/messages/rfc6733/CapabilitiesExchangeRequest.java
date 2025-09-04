@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.*;
+import com.sipgate.sparta.diameter.core.annotations.DiameterRequest;
 import com.sipgate.sparta.diameter.core.avp.mixins.*;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
 
@@ -12,6 +13,7 @@ import com.sipgate.sparta.diameter.core.DiameterConstants;
  * The CER message is used to exchange capabilities between Diameter peers during connection establishment.
  * </p>
  */
+@DiameterRequest(DiameterConstants.CMD_CAPABILITIES_EXCHANGE)
 public final class CapabilitiesExchangeRequest extends Request<CapabilitiesExchangeRequest, CapabilitiesExchangeAnswer> implements
         HasVendorIdAVP<CapabilitiesExchangeRequest>,
         HasProductNameAVP<CapabilitiesExchangeRequest>,

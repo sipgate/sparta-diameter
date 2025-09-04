@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.*;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
+import com.sipgate.sparta.diameter.core.annotations.DiameterRequest;
 import com.sipgate.sparta.diameter.core.avp.mixins.*;
 
 /**
@@ -12,6 +13,7 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
  * The ACR message is used to send accounting information for a user session.
  * </p>
  */
+@DiameterRequest(DiameterConstants.CMD_ACCOUNTING)
 public final class AccountingRequest extends Request<AccountingRequest, AccountingAnswer> implements
         HasSessionIdAVP<AccountingRequest>,
         HasAccountingRecordTypeAVP<AccountingRequest>,

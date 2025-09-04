@@ -1,7 +1,7 @@
 package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.*;
-import com.sipgate.sparta.diameter.core.avp.AVP;
+import com.sipgate.sparta.diameter.core.annotations.DiameterResponse;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
 import com.sipgate.sparta.diameter.core.avp.mixins.HasErrorMessageAVP;
 import com.sipgate.sparta.diameter.core.avp.mixins.HasFailedAVP;
@@ -14,6 +14,7 @@ import com.sipgate.sparta.diameter.core.avp.mixins.HasFailedAVP;
  * The DPA message is used to respond to a DPR message when gracefully disconnecting a Diameter peer connection.
  * </p>
  */
+@DiameterResponse(DiameterConstants.CMD_DISCONNECT_PEER)
 public final class DisconnectPeerAnswer extends Answer<DisconnectPeerAnswer> implements
         HasErrorMessageAVP<DisconnectPeerAnswer>,
         HasFailedAVP<DisconnectPeerAnswer> {

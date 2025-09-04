@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.*;
+import com.sipgate.sparta.diameter.core.annotations.DiameterRequest;
 import com.sipgate.sparta.diameter.core.avp.mixins.HasOriginStateIdAVP;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
 
@@ -12,6 +13,7 @@ import com.sipgate.sparta.diameter.core.DiameterConstants;
  * The DWR message is used to monitor the health of the transport connection between Diameter peers.
  * </p>
  */
+@DiameterRequest(DiameterConstants.CMD_DEVICE_WATCHDOG)
 public class DeviceWatchdogRequest extends Request<DeviceWatchdogRequest, DeviceWatchdogAnswer> implements HasOriginStateIdAVP<DeviceWatchdogRequest> {
 
     /**
