@@ -30,6 +30,7 @@ node = Node("relay1.test.realm", "test.realm",
 # not send DWRs simultaneously
 node.idle_timeout = 20
 
+peer = node.add_peer("aaa://myapp.test.realm", "test.realm")
 
 
 

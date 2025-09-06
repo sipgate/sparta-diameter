@@ -21,13 +21,13 @@ public class TestApp {
         socket.connect(new InetSocketAddress("localhost", 3868), 5000);
 
         final CapabilitiesExchangeRequest cer = CapabilitiesExchangeRequest.create(1, 1);
-        cer.setOriginHost("myapp.mnc003.mcc262.3gppnetwork.org");
-        cer.setOriginRealm("mnc003.mcc262.3gppnetwork.org");
-        cer.setDestinationRealm("mnc003.mcc262.3gppnetwork.org");
+        cer.setOriginHost("myapp.test.realm");
+        cer.setOriginRealm("test.realm");
+        cer.setDestinationRealm("test.realm");
         cer.setProductName("MyDiameterApp");
         cer.setFirmwareRevision(1L);
         cer.setVendorId(10415L); // 3GPP
-        cer.setAuthApplicationId(16777216L); // Diameter Credit Control Application
+        cer.setAuthApplicationId(4294967295L); // Relay
 
         final DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
         cer.writeTo(dos);
