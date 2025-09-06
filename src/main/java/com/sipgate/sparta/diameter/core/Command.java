@@ -4,6 +4,8 @@ import com.sipgate.sparta.diameter.DiameterException;
 import com.sipgate.sparta.diameter.core.annotations.DiameterRequest;
 import com.sipgate.sparta.diameter.core.annotations.DiameterResponse;
 import com.sipgate.sparta.diameter.core.avp.AVP;
+import com.sipgate.sparta.diameter.core.avp.mixins.HasDestinationHostAVP;
+import com.sipgate.sparta.diameter.core.avp.mixins.HasDestinationRealmAVP;
 import com.sipgate.sparta.diameter.core.avp.mixins.HasOriginHostAVP;
 import com.sipgate.sparta.diameter.core.avp.mixins.HasOriginRealmAVP;
 import org.reflections.Reflections;
@@ -22,7 +24,12 @@ import java.util.*;
  * </p>
  */
 @SuppressWarnings("rawtypes") // The parser cannot know ahead of time the exact type
-public abstract class Command<T extends Command<T>> implements Selfable<T>, HasOriginHostAVP<T>, HasOriginRealmAVP<T> {
+public abstract class Command<T extends Command<T>> implements
+    Selfable<T>,
+    HasOriginHostAVP<T>,
+    HasOriginRealmAVP<T>,
+    HasDestinationHostAVP<T>,
+    HasDestinationRealmAVP<T> {
 
     private static final Map<Integer, Class<? extends Request>> REQUEST_TYPES = new HashMap<>();
     private static final Map<Integer, Class<? extends Answer>> ANSWER_TYPES = new HashMap<>();
