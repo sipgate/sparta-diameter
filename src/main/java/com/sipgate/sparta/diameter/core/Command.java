@@ -436,5 +436,46 @@ public abstract class Command<T extends Command<T>> implements
             return null;
         }
     }
-}
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+
+        // Command name from class simple name
+        final String commandName = this.getClass().getSimpleName();
+
+        // Format flags
+        final StringBuilder flagsStr = new StringBuilder();
+        if (request) flagsStr.append("R");
+        if (proxiable) flagsStr.append("P");
+        if (error) flagsStr.append("E");
+        if (retransmitted) flagsStr.append("T");
+        while (flagsStr.length() < 3) flagsStr.append("-");
+
+        // Header line
+        sb.append(String.format("%s <Version: 0x%02x, Length: %d, Flags: 0x%02x (%s), Hop-by-Hop Identifier: 0x%x, End-to-End Identifier: 0x%x>",
+                commandName,
+                version,
+                getMessageLength(),
+                getFlagsValue(),
+                flagsStr,
+                hopByHopIdentifier,
+                endToEndIdentifier));
+
+        // Add AVPs
+        for (final AVP avp : avps) {
+            sb.append("\n  ").append(avp.toString());
+        }
+
+        return sb.toString();
+    }
+
+    private int getFlagsValue() {
+        int flags = 0;
+        if (request) flags |= 0x80;
+        if (proxiable) flags |= 0x40;
+        if (error) flags |= 0x20;
+        if (retransmitted) flags |= 0x10;
+        return flags;
+    }
+}

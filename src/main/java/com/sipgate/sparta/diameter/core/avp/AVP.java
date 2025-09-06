@@ -785,7 +785,7 @@ public class AVP {
         final int padding = (4 - (dataLength % 4)) % 4;
         buffer.position(buffer.position() + padding);
 
-        final AVPDefinition definition = registry.get(code);
+        final AVPDefinition definition = getDefinition(code);
         if (definition != null && definition.dataType().equals(GroupedAVP.class)) {
             // Parse grouped AVP
             final ByteBuffer dataBuffer = ByteBuffer.wrap(data);
@@ -798,5 +798,72 @@ public class AVP {
 
         return new AVP(code, vendorSpecific, mandatory, protectedAVP, vendorId, data);
     }
-}
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder();
+
+        try {
+            final AVPDefinition definition = getDefinition(this.code);
+            sb.append(definition.name());
+        } catch (final IllegalArgumentException e) {
+            sb.append("Unknown-AVP-").append(this.code);
+        }
+
+        sb.append(" <Code: 0x").append(Integer.toHexString(code).toLowerCase());
+        sb.append(", Flags: 0x").append(Integer.toHexString(getFlagsValue()).toLowerCase());
+        sb.append(" (").append(getFlagsString()).append(")");
+        sb.append(", Length: ").append(getLength());
+        sb.append(", Val: ").append(getValueString()).append(">");
+
+        return sb.toString();
+    }
+
+    private int getFlagsValue() {
+        int flags = 0;
+        if (vendorSpecific) flags |= 0x80;
+        if (mandatory) flags |= 0x40;
+        if (protectedAVP) flags |= 0x20;
+        return flags;
+    }
+
+    private String getFlagsString() {
+        final StringBuilder flagsStr = new StringBuilder();
+        flagsStr.append(vendorSpecific ? "V" : "-");
+        flagsStr.append(mandatory ? "M" : "-");
+        flagsStr.append(protectedAVP ? "P" : "-");
+        return flagsStr.toString();
+    }
+
+    private String getValueString() {
+        try {
+            final AVPDefinition definition = getDefinition(this.code);
+            final Class<?> dataType = definition.dataType();
+
+            if (dataType.equals(String.class)) {
+                return "'" + getDataAsString() + "'";
+            } else if (dataType.equals(Integer.class)) {
+                return String.valueOf(getDataAsInt());
+            } else if (dataType.equals(Long.class)) {
+                return String.valueOf(getDataAsUnsignedInt());
+            } else if (dataType.equals(InetAddress.class)) {
+                final InetAddress addr = getDataAsIPAddress();
+                final int family = addr instanceof Inet4Address ? 1 : 2;
+                return "(" + family + ", '" + addr.getHostAddress() + "')";
+            } else if (dataType.equals(byte[].class)) {
+                return "b'" + new String(data, StandardCharsets.UTF_8) + "'";
+            } else if (dataType.equals(GroupedAVP.class)) {
+                return "[Grouped AVP with " + ((GroupedAVP) this).getAVPs().size() + " AVPs]";
+            }
+        } catch (final Exception e) {
+            // Fall back to raw data representation
+        }
+
+        // Default: show as raw bytes or integer if possible
+        if (data.length == 4) {
+            return String.valueOf(getDataAsInt());
+        } else {
+            return "b'" + new String(data, StandardCharsets.UTF_8) + "'";
+        }
+    }
+}
