@@ -277,15 +277,26 @@ public class AVP {
      */
     public InetAddress getDataAsIPAddress() {
         try {
-            if (data.length == 4) {
-                // IPv4 address
-                return Inet4Address.getByAddress(data);
-            } else if (data.length == 16) {
-                // IPv6 address
-                return Inet6Address.getByAddress(data);
-            } else {
-                throw new IllegalArgumentException("AVP data must be 4 bytes (IPv4) or 16 bytes (IPv6) to read as IP address");
+            if (data.length < 6) { // Minimum length for Address AVP is 6 bytes
+                throw new IllegalArgumentException("AVP data must be at least 6 bytes to read as IP address");
             }
+
+            final int addressType = ((data[0] & 0xFF) << 8) | (data[1] & 0xFF);
+
+            if (addressType == 1) {
+                return InetAddress.getByAddress(new byte[] {data[2], data[3], data[4], data[5]});
+            }
+
+            if (addressType == 2) {
+                if (data.length < 18) { // IPv6 address requires at least 18 bytes
+                    throw new IllegalArgumentException("AVP data must be at least 18 bytes to read as IPv6 address");
+                }
+                final byte[] ipv6Bytes = new byte[16];
+                System.arraycopy(data, 2, ipv6Bytes, 0, 16);
+                return InetAddress.getByAddress(ipv6Bytes);
+            }
+
+            throw new IllegalArgumentException("Unsupported address type: " + addressType);
         } catch (final UnknownHostException e) {
             throw new IllegalArgumentException("Invalid IP address data", e);
         }
