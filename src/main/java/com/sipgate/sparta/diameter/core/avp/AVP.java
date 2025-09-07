@@ -477,7 +477,23 @@ public class AVP {
      * @return the created AVP
      */
     private static AVP createIPAddressAVP(final int code, final boolean mandatory, final InetAddress value) {
-        return new AVP(code, mandatory, ipAddressToBytes(value));
+        final int addressType = (value instanceof Inet4Address) ? 1 :
+                                (value instanceof Inet6Address) ? 2 : 0;
+
+
+        final byte[] addressBytes = ipAddressToBytes(value);
+
+        if (addressType == 0) {
+            throw new IllegalArgumentException("Unsupported InetAddress type");
+        }
+
+        final byte[] addressData = new byte[2 + addressBytes.length];
+        addressData[0] = 0x00;
+        addressData[1] = (byte) (addressType & 0xFF);
+
+        System.arraycopy(addressBytes, 0, addressData, 2, addressBytes.length);
+
+        return new AVP(code, mandatory, addressData);
     }
 
     /**
