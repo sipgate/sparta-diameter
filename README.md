@@ -82,47 +82,6 @@ if (command instanceof DeviceWatchdogRequest) {
 }
 ```
 
-## Transport Example
-
-`DiameterNode` manages TCP connections in both directions. The same `DiameterConnectionListener`
-is used regardless of which side initiated the connection. Note: no CER/CEA or DWR/DWA handling
-exists yet — that belongs to the peer state machine layer, which is not implemented.
-
-```java
-DiameterConnectionListener listener = new DiameterConnectionListener() {
-    @Override
-    public void onConnected(DiameterPeer peer) {
-        System.out.println("connected: " + peer.remoteAddress());
-        // send a message once the state machine layer exists
-    }
-
-    @Override
-    public void onMessage(DiameterPeer peer, Command<?> command) {
-        System.out.println("received: " + command);
-    }
-
-    @Override
-    public void onDisconnected(DiameterPeer peer) {
-        System.out.println("disconnected: " + peer.remoteAddress());
-    }
-};
-
-// Initiate a connection
-try (DiameterNode node = new DiameterNode()) {
-    node.connect("diameter.example.com", 3868, listener)
-        .sync()
-        .channel()
-        .closeFuture()
-        .sync();
-}
-
-// Accept connections
-try (DiameterNode node = new DiameterNode()) {
-    node.listen(3868, listener).sync();
-    // ... run until shutdown
-}
-```
-
 ## License
 
 This project is MIT licensed. See the [LICENSE](LICENSE) file for details.
