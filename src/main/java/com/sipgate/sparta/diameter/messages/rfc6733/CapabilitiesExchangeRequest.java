@@ -16,6 +16,7 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
 public final class CapabilitiesExchangeRequest extends Request<CapabilitiesExchangeRequest, CapabilitiesExchangeAnswer> implements
         HasVendorIdAVP<CapabilitiesExchangeRequest>,
         HasProductNameAVP<CapabilitiesExchangeRequest>,
+        HasHostIpAddressAVP<CapabilitiesExchangeRequest>,
         HasSupportedVendorIdAVP<CapabilitiesExchangeRequest>,
         HasAuthApplicationIdAVP<CapabilitiesExchangeRequest>,
         HasAcctApplicationIdAVP<CapabilitiesExchangeRequest>,

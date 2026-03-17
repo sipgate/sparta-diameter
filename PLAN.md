@@ -11,9 +11,9 @@ All new session/state classes go in `com.sipgate.sparta.diameter.session`.
 
 - **New instance per connection** — no persistent session objects across reconnects.
   Handlers live in the factory closure, not in the session instance.
-- **Two concrete classes**, both implementing `DiameterConnectionListener`:
-  - `DiameterServerSession` — responder (R- states), no reconnect
-  - `DiameterClientSession` — initiator (I- states), receives a `Runnable reconnect` in its constructor
+- **Two concrete classes**, both extending `DiameterSession` which implements `DiameterConnectionListener`:
+  - `DiameterResponderSession` — responder (R- states), no reconnect (RFC 6733 R-peer)
+  - `DiameterInitiatorSession` — initiator (I- states), receives a `Runnable reconnect` in its constructor (RFC 6733 I-peer)
 - **`DiameterNode.listen()`** takes `Supplier<DiameterConnectionListener>` — called once per accepted connection.
 - **`DiameterNode.connect()`** takes `Function<Runnable, DiameterConnectionListener>` — `DiameterNode`
   constructs the reconnect runnable and passes it into each new session instance.
@@ -36,20 +36,25 @@ All new session/state classes go in `com.sipgate.sparta.diameter.session`.
 
 - `PeerState` enum — all RFC 6733 §5.6 states
 - `WatchdogState` enum — all RFC 3539 Appendix A states
-- `DiameterServerSession implements DiameterConnectionListener` — skeleton with `CLOSED`/`INITIAL` init, disconnect sets `CLOSED`/`DOWN`
-- `DiameterClientSession implements DiameterConnectionListener` — skeleton, `Runnable reconnect` in constructor, same disconnect logic
+- `DiameterSession` — shared state (`config`, `peer`, `peerState`, `watchdogState`, `negotiator`) and helpers (`populateCapabilityAvps`, `extractUnsignedInts`, `onDisconnected`)
+- `DiameterResponderSession extends DiameterSession` — R- state machine, no reconnect
+- `DiameterInitiatorSession extends DiameterSession` — I- state machine, `Runnable reconnect` in constructor
 - `DiameterNode.listen()` takes `Supplier<DiameterConnectionListener>` ✓
 - `DiameterNode.connect()` takes `Function<Runnable, DiameterConnectionListener>` ✓; `doConnect()` wires the reconnect runnable
 
-### 3 — CER/CEA
+### ~~3 — CER/CEA~~ ✓ Done
 
-- On `onConnected`:
-  - initiator (`DiameterClientSession`): send CER built from `DiameterNodeConfig`
-  - responder (`DiameterServerSession`): wait for CER
-- On CER received: compute capability intersection; send CEA with result code
-  - empty intersection → `DIAMETER_NO_COMMON_APPLICATION`, close
-- On CEA received: check result code; transition to `I_OPEN` / `R_OPEN`
-- Gates everything below — nothing works without this
+- `DiameterInitiatorSession.onConnected`: builds CER from config, sends it, transitions to `WAIT_I_CEA`
+- `DiameterInitiatorSession.onMessage(CEA)`: `2001` → `I_OPEN`; other → `CLOSED` + `peer.close()`
+- `DiameterResponderSession.onMessage(CER)`: computes capability intersection via `CapabilityNegotiator`; `2001`/`R_OPEN` or `5010`/`CLOSED`/`peer.close()`
+- `HasHostIpAddressAVP` added to both `CapabilitiesExchangeRequest` and `CapabilitiesExchangeAnswer`
+- **Deferred — CEA hop-by-hop validation**: `onMessage` does not yet verify the hop-by-hop ID in the
+  CEA matches the one sent in the CER. Will be addressed in step 6 when the pending-request map is
+  introduced (CER/CEA will share the same correlation mechanism as regular requests).
+- **Deferred — disconnect reason callback**: when a session closes (capability mismatch, transport drop,
+  DPR received), the surrounding application currently has no way to learn why. A
+  `DiameterSessionListener` interface with an `onClosed(reason)` callback will be added in step 8
+  alongside DPR/DPA.
 
 ### 4 — DWR/DWA
 
