@@ -3,6 +3,7 @@ package com.sipgate.sparta.diameter.core.avp;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -116,7 +117,7 @@ public class GroupedAVP extends AVP {
 
             return baos.toByteArray();
         } catch (final IOException e) {
-            throw new RuntimeException("Failed to serialize AVPs", e);
+            throw new UncheckedIOException("Failed to serialize AVPs", e);
         }
     }
 }
