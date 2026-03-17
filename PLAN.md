@@ -48,13 +48,6 @@ All new session/state classes go in `com.sipgate.sparta.diameter.session`.
 - `DiameterInitiatorSession.onMessage(CEA)`: `2001` → `I_OPEN`; other → `CLOSED` + `peer.close()`
 - `DiameterResponderSession.onMessage(CER)`: computes capability intersection via `CapabilityNegotiator`; `2001`/`R_OPEN` or `5010`/`CLOSED`/`peer.close()`
 - `HasHostIpAddressAVP` added to both `CapabilitiesExchangeRequest` and `CapabilitiesExchangeAnswer`
-- **Deferred — CEA hop-by-hop validation**: `onMessage` does not yet verify the hop-by-hop ID in the
-  CEA matches the one sent in the CER. Will be addressed in step 6 when the pending-request map is
-  introduced (CER/CEA will share the same correlation mechanism as regular requests).
-- **Deferred — disconnect reason callback**: when a session closes (capability mismatch, transport drop,
-  DPR received), the surrounding application currently has no way to learn why. A
-  `DiameterSessionListener` interface with an `onClosed(reason)` callback will be added in step 8
-  alongside DPR/DPA.
 
 ### 4 — DWR/DWA
 
@@ -101,10 +94,49 @@ All new session/state classes go in `com.sipgate.sparta.diameter.session`.
 
 ### 9 — Reconnect
 
-- Owned by `DiameterClientSession` via the `Runnable reconnect` passed at construction
+- Owned by `DiameterInitiatorSession` via the `Runnable reconnect` passed at construction
 - Reconnect only fires when connection is lost unexpectedly (not after `stop()`)
 - RFC 3539 reconnect path: `DOWN` state → Tc timer → call `reconnect.run()`
-- `reconnect.run()` (constructed in `DiameterNode.doConnect()`): creates a new `DiameterClientSession`
+- `reconnect.run()` (constructed in `DiameterNode.doConnect()`): creates a new `DiameterInitiatorSession`
   instance via the user-supplied factory, then does a fresh `Bootstrap.connect()`
 - New instance starts in `CLOSED` / `INITIAL` — full CER/CEA handshake runs again
 - Tc timer is cancelled when `stop()` is called
+
+---
+
+## Later / deferred
+
+These are known gaps that do not block the numbered steps but must be addressed before the library
+is production-ready.
+
+### CEA hop-by-hop correlation
+
+`DiameterInitiatorSession.onMessage` accepts any inbound CEA without verifying that its
+hop-by-hop identifier matches the one sent in the CER. The fix belongs in step 6: once the
+pending-request map exists, CER/CEA will be correlated through the same mechanism as all other
+request/answer pairs.
+
+### Disconnect reason callback
+
+When a session closes — whether due to a capability mismatch, unexpected transport drop, or a
+received DPR — the surrounding application has no way to learn why. A `DiameterSessionListener`
+interface with an `onClosed(CloseReason reason)` method should be added in step 8 alongside
+DPR/DPA. `CloseReason` would enumerate at minimum: `CAPABILITY_MISMATCH`, `TRANSPORT_ERROR`,
+`PEER_DISCONNECTED` (DPR), `LOCAL_STOP` (our DPR).
+
+### Vendor-Specific-Application-Id in CER/CEA
+
+The current `DiameterNodeConfig.Capabilities` model holds `authApplicationIds` and
+`acctApplicationIds` as flat `List<Integer>` values. RFC 6733 §5.3 requires that vendor-specific
+applications (e.g. 3GPP SGd, application-id `16777313`, vendor `10415`) be advertised via the
+`Vendor-Specific-Application-Id` grouped AVP (`Auth-Application-Id` + `Vendor-Id` together), not
+as bare top-level `Auth-Application-Id` AVPs. Strict DRAs and 3GPP nodes will reject CERs that
+omit the grouping.
+
+Required changes:
+- Add `List<VendorSpecificApp> vendorSpecificApps` to `Capabilities`, where `VendorSpecificApp`
+  is a value type holding `(long vendorId, int authApplicationId)` (acct variant if needed)
+- `AbstractDiameterSession.populateCapabilityAvps` emits one `Vendor-Specific-Application-Id`
+  grouped AVP per entry
+- `CapabilityNegotiator` must also inspect `Vendor-Specific-Application-Id` AVPs from the remote
+  CER when computing the intersection
