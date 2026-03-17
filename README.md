@@ -21,7 +21,8 @@ A Java library for implementing Diameter protocol (RFC 6733) messages and commun
 - ✅ RFC 6733 message parsing and serialization
 - ✅ Base protocol messages (CER/CEA, DWR/DWA)
 - 🚧 Additional Diameter applications for the HSS (S6a, Cx)
-- 🚧 Netty-based server/client implementation
+- 🚧 State machine for Diameter
+- ✅ Netty-based transport layer (`DiameterNode`, `DiameterPeer`)
 - 🚧 Comprehensive test coverage
 
 ## Package Structure
@@ -78,6 +79,47 @@ Command command = DiameterMessageParser.parseMessage(messageData);
 if (command instanceof DeviceWatchdogRequest) {
     DeviceWatchdogRequest dwr = (DeviceWatchdogRequest) command;
     DeviceWatchdogAnswer dwa = dwr.createAnswer(DiameterConstants.DIAMETER_SUCCESS);
+}
+```
+
+## Transport Example
+
+`DiameterNode` manages TCP connections in both directions. The same `DiameterConnectionListener`
+is used regardless of which side initiated the connection. Note: no CER/CEA or DWR/DWA handling
+exists yet — that belongs to the peer state machine layer, which is not implemented.
+
+```java
+DiameterConnectionListener listener = new DiameterConnectionListener() {
+    @Override
+    public void onConnected(DiameterPeer peer) {
+        System.out.println("connected: " + peer.remoteAddress());
+        // send a message once the state machine layer exists
+    }
+
+    @Override
+    public void onMessage(DiameterPeer peer, Command<?> command) {
+        System.out.println("received: " + command);
+    }
+
+    @Override
+    public void onDisconnected(DiameterPeer peer) {
+        System.out.println("disconnected: " + peer.remoteAddress());
+    }
+};
+
+// Initiate a connection
+try (DiameterNode node = new DiameterNode()) {
+    node.connect("diameter.example.com", 3868, listener)
+        .sync()
+        .channel()
+        .closeFuture()
+        .sync();
+}
+
+// Accept connections
+try (DiameterNode node = new DiameterNode()) {
+    node.listen(3868, listener).sync();
+    // ... run until shutdown
 }
 ```
 
