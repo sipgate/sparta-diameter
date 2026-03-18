@@ -26,6 +26,12 @@ public final class DiameterNodeConfig {
      */
     public static final Duration TC_RECOMMENDED = Duration.ofSeconds(30);
 
+    /**
+     * Default request/answer timeout. No RFC-mandated value; 10 s sits below
+     * the RFC 3539 Tw (30 s) and IR.88 Tc (30 s) infrastructure timers.
+     */
+    public static final Duration REQUEST_TIMEOUT_DEFAULT = Duration.ofSeconds(10);
+
     private static final Duration TWINIT_MIN = Duration.ofSeconds(6);
 
     private final String originHost;
@@ -36,12 +42,14 @@ public final class DiameterNodeConfig {
     private final Capabilities capabilities;
     private final Duration twinit;
     private final Duration tc;
+    private final Duration requestTimeout;
 
     /**
      * Creates a config with explicit timer values.
      *
-     * @param twinit watchdog timer initial value; must be at least 6 seconds (RFC 3539 §3.4.1)
-     * @param tc reconnect timer
+     * @param twinit         watchdog timer initial value; must be at least 6 seconds (RFC 3539 §3.4.1)
+     * @param tc             reconnect timer
+     * @param requestTimeout per-request answer timeout
      */
     public DiameterNodeConfig(
             final String originHost,
@@ -51,7 +59,8 @@ public final class DiameterNodeConfig {
             final String productName,
             final Capabilities capabilities,
             final Duration twinit,
-            final Duration tc) {
+            final Duration tc,
+            final Duration requestTimeout) {
         if (originHost == null || originHost.isEmpty()) {
             throw new IllegalArgumentException("originHost is required");
         }
@@ -78,11 +87,30 @@ public final class DiameterNodeConfig {
         this.capabilities = capabilities;
         this.twinit = twinit;
         this.tc = tc;
+        this.requestTimeout = requestTimeout;
+    }
+
+    /**
+     * Creates a config with explicit Tw/Tc timers and a default request timeout (10 s).
+     *
+     * @param twinit watchdog timer initial value; must be at least 6 seconds (RFC 3539 §3.4.1)
+     * @param tc     reconnect timer
+     */
+    public DiameterNodeConfig(
+            final String originHost,
+            final String originRealm,
+            final List<InetAddress> hostIpAddresses,
+            final long vendorId,
+            final String productName,
+            final Capabilities capabilities,
+            final Duration twinit,
+            final Duration tc) {
+        this(originHost, originRealm, hostIpAddresses, vendorId, productName, capabilities, twinit, tc, REQUEST_TIMEOUT_DEFAULT);
     }
 
     /**
      * Creates a config using the RFC-recommended default timer values
-     * (TWINIT = 30s, Tc = 30s).
+     * (TWINIT = 30s, Tc = 30s, request timeout = 10s).
      */
     public DiameterNodeConfig(
             final String originHost,
@@ -130,6 +158,13 @@ public final class DiameterNodeConfig {
      */
     public Duration getTc() {
         return tc;
+    }
+
+    /**
+     * Per-request answer timeout.
+     */
+    public Duration getRequestTimeout() {
+        return requestTimeout;
     }
 
     // -------------------------------------------------------------------------

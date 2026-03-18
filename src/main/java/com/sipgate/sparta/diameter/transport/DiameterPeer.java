@@ -3,6 +3,7 @@ package com.sipgate.sparta.diameter.transport;
 import com.sipgate.sparta.diameter.core.Command;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.EventLoop;
 
 import java.net.SocketAddress;
 
@@ -37,6 +38,10 @@ public final class DiameterPeer {
      */
     public ChannelFuture close() {
         return channel.close();
+    }
+
+    public EventLoop eventLoop() {
+        return channel.eventLoop();
     }
 
     public boolean isActive() {

@@ -16,6 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Shared state and helpers for initiator- and responder-side Diameter sessions.
@@ -35,7 +38,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
     protected WatchdogState watchdogState;
     protected DiameterPeer peer;
 
-    private final ConcurrentHashMap<Integer, CompletableFuture<?>> pendingRequests =
+    private final ConcurrentHashMap<Integer, PendingRequest<?>> pendingRequests =
             new ConcurrentHashMap<>();
 
     DiameterSession(final DiameterNodeConfig config) {
@@ -67,11 +70,16 @@ abstract class DiameterSession implements DiameterConnectionListener {
 
     protected <A extends Answer<A>> CompletableFuture<A> sendAndTrack(final Request<?, A> request) {
         final CompletableFuture<A> future = new CompletableFuture<>();
-        pendingRequests.put(request.getHopByHopIdentifier(), future);
+        final int hopByHop = request.getHopByHopIdentifier();
+
+        final long timeoutMs = config.getRequestTimeout().toMillis();
+        final Future<?> timeoutTask = peer.eventLoop().schedule(
+                () -> timeout(hopByHop, timeoutMs), timeoutMs, TimeUnit.MILLISECONDS);
+        pendingRequests.put(hopByHop, new PendingRequest<>(future, timeoutTask));
+
         peer.send(request).addListener(writeResult -> {
             if (!writeResult.isSuccess()) {
-                pendingRequests.remove(request.getHopByHopIdentifier());
-                future.completeExceptionally(writeResult.cause());
+                fail(hopByHop, writeResult.cause());
             }
         });
         return future;
@@ -99,15 +107,34 @@ abstract class DiameterSession implements DiameterConnectionListener {
      *
      * @param command the incoming message
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
     protected void tryCompleteFromPendingMap(final Command<?> command) {
         if (command.isRequest()) {
             return;
         }
-        final CompletableFuture future = pendingRequests.remove(command.getHopByHopIdentifier());
-        if (future != null) {
-            future.complete(command);
+        complete(command.getHopByHopIdentifier(), command);
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void complete(final int hopByHop, final Command<?> answer) {
+        final PendingRequest pending = pendingRequests.remove(hopByHop);
+        if (pending == null) {
+            return;
         }
+        pending.timeoutTask.cancel(false);
+        pending.future.complete(answer);
+    }
+
+    private void timeout(final int hopByHop, final long timeoutMs) {
+        fail(hopByHop, new TimeoutException("Request " + hopByHop + " timed out after " + timeoutMs + " ms"));
+    }
+
+    private void fail(final int hopByHop, final Throwable cause) {
+        final PendingRequest<?> pending = pendingRequests.remove(hopByHop);
+        if (pending == null) {
+            return;
+        }
+        pending.timeoutTask.cancel(false);
+        pending.future.completeExceptionally(cause);
     }
 
     /**
@@ -164,9 +191,19 @@ abstract class DiameterSession implements DiameterConnectionListener {
     }
 
     private void failAllPending(final Throwable cause) {
-        for (final CompletableFuture<?> future : pendingRequests.values()) {
-            future.completeExceptionally(cause);
+        for (final Integer hopByHop : new ArrayList<>(pendingRequests.keySet())) {
+            fail(hopByHop, cause);
         }
-        pendingRequests.clear();
+    }
+
+    private static final class PendingRequest<A> {
+
+        final CompletableFuture<A> future;
+        final Future<?> timeoutTask;
+
+        PendingRequest(final CompletableFuture<A> future, final Future<?> timeoutTask) {
+            this.future = future;
+            this.timeoutTask = timeoutTask;
+        }
     }
 }

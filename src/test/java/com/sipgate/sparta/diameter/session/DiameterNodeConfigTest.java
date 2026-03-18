@@ -48,6 +48,15 @@ class DiameterNodeConfigTest {
     }
 
     @Test
+    void it_uses_default_request_timeout_when_not_specified() {
+        // GIVEN / WHEN
+        final DiameterNodeConfig config = minimal();
+
+        // THEN
+        assertThat(config.getRequestTimeout()).isEqualTo(Duration.ofSeconds(10));
+    }
+
+    @Test
     void it_accepts_tw_at_minimum_boundary() {
         // GIVEN / WHEN
         final DiameterNodeConfig config = new DiameterNodeConfig(

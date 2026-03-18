@@ -82,12 +82,16 @@ All new session/state classes go in `com.sipgate.sparta.diameter.session`.
 - Incoming request in OPEN state: look up handler by command code; if none → send error answer
 - Handler returns `CompletableFuture<A>`; session sends the answer when it completes
 
-### 7 — Answer timeout
+### ~~7 — Answer timeout~~ ✓ Done
 
 - On `send()`: schedule a `ScheduledFuture` via Netty's `EventLoop` for a configurable timeout
 - On timeout: remove from pending map, complete future with `TimeoutException`
 - On answer received before timeout: cancel the scheduled task
 - Timeout duration configurable in `DiameterNodeConfig` (no RFC-mandated value; pick a sensible default)
+- Standards checked: RFC 6733, RFC 3539, 3GPP TS 29.338, TS 29.272, TS 29.002, GSMA IR.88, IR.67.
+  None define a numeric request/answer timeout. RFC 3539 gives Tw = 30 s (watchdog) and IR.88 gives
+  Tc = 30 s (transport reconnect) — both are infrastructure timers, not request timeouts. Recommend
+  **10 s** as default: below both infrastructure timers, leaves headroom for agents in the path.
 
 ### 8 — DPR/DPA
 
