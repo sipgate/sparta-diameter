@@ -5,13 +5,16 @@ import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.transport.DiameterPeer;
 import io.netty.channel.ChannelFuture;
+import io.netty.util.concurrent.GenericFutureListener;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
 import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
+import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,6 +42,10 @@ class DiameterInitiatorSessionTest {
             "sparta",
             new DiameterNodeConfig.Capabilities(
                     Collections.emptyList(), Collections.emptyList(), Collections.emptyList()));
+
+    // -------------------------------------------------------------------------
+    // Initial state
+    // -------------------------------------------------------------------------
 
     @Test
     void it_starts_with_closed_peer_state() {
@@ -70,6 +77,10 @@ class DiameterInitiatorSessionTest {
         assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
         assertThat(session.getWatchdogState()).isEqualTo(WatchdogState.DOWN);
     }
+
+    // -------------------------------------------------------------------------
+    // CER/CEA
+    // -------------------------------------------------------------------------
 
     @Test
     void it_sends_a_CER_on_connected() {
@@ -167,5 +178,136 @@ class DiameterInitiatorSessionTest {
 
         // THEN
         verify(peer).close();
+    }
+
+    // -------------------------------------------------------------------------
+    // send() — pending-request map
+    // -------------------------------------------------------------------------
+
+    @Test
+    void it_returns_failed_future_when_not_in_OPEN_state() {
+        // GIVEN
+        final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
+        final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(1, 2);
+
+        // WHEN
+        final CompletableFuture<CapabilitiesExchangeAnswer> future = session.send(request);
+
+        // THEN
+        assertThat(future).isCompletedExceptionally();
+    }
+
+    @Test
+    void it_sends_request_to_peer_when_in_OPEN_state() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        final DiameterInitiatorSession session = openedSession(peer);
+        final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(42, 43);
+
+        // WHEN
+        session.send(request);
+
+        // THEN
+        verify(peer).send(request);
+    }
+
+    @Test
+    void it_completes_future_when_matching_answer_arrives() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        final DiameterInitiatorSession session = openedSession(peer);
+        final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(42, 43);
+        final CompletableFuture<CapabilitiesExchangeAnswer> future = session.send(request);
+        final CapabilitiesExchangeAnswer answer = CapabilitiesExchangeAnswer.create(42, 43);
+        answer.setResultCode(DiameterConstants.RES_DIAMETER_SUCCESS);
+
+        // WHEN
+        session.onMessage(peer, answer);
+
+        // THEN
+        assertThat(future).isCompletedWithValue(answer);
+    }
+
+    @Test
+    void it_ignores_answer_with_unknown_hop_by_hop_id() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        final DiameterInitiatorSession session = openedSession(peer);
+        final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(42, 43);
+        final CompletableFuture<CapabilitiesExchangeAnswer> future = session.send(request);
+        final CapabilitiesExchangeAnswer answer = CapabilitiesExchangeAnswer.create(99, 99);
+        answer.setResultCode(DiameterConstants.RES_DIAMETER_SUCCESS);
+
+        // WHEN
+        session.onMessage(peer, answer);
+
+        // THEN
+        assertThat(future).isNotDone();
+    }
+
+    @Test
+    void it_fails_future_when_write_fails() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        final ChannelFuture writeFail = failedWriteFuture();
+        // first call (CER) succeeds; second call (request) fails at write
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class), writeFail);
+        final DiameterInitiatorSession session = openedSession(peer);
+        final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(42, 43);
+
+        // WHEN
+        final CompletableFuture<CapabilitiesExchangeAnswer> future = session.send(request);
+
+        // THEN
+        assertThat(future).isCompletedExceptionally();
+    }
+
+    @Test
+    void it_fails_pending_futures_on_disconnect() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        final DiameterInitiatorSession session = openedSession(peer);
+        final CapabilitiesExchangeRequest request = CapabilitiesExchangeRequest.create(42, 43);
+        final CompletableFuture<CapabilitiesExchangeAnswer> future = session.send(request);
+
+        // WHEN
+        session.onDisconnected(peer);
+
+        // THEN
+        assertThat(future).isCompletedExceptionally();
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    private static DiameterInitiatorSession openedSession(final DiameterPeer peer) {
+        final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
+        session.onConnected(peer);
+        final CapabilitiesExchangeAnswer cea = CapabilitiesExchangeAnswer.create(1, 2);
+        cea.setResultCode(DiameterConstants.RES_DIAMETER_SUCCESS);
+        session.onMessage(peer, cea);
+        Mockito.clearInvocations(peer);
+        return session;
+    }
+
+    private static ChannelFuture failedWriteFuture() {
+        final ChannelFuture future = mock(ChannelFuture.class);
+        when(future.isSuccess()).thenReturn(false);
+        when(future.cause()).thenReturn(new RuntimeException("write failed"));
+        when(future.addListener(any())).thenAnswer(invocation -> {
+            final GenericFutureListener<ChannelFuture> listener = invocation.getArgument(0);
+            try {
+                listener.operationComplete(future);
+            } catch (final Exception e) {
+                throw new RuntimeException(e);
+            }
+            return future;
+        });
+        return future;
     }
 }

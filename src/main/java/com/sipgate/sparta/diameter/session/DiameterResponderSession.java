@@ -30,6 +30,8 @@ public final class DiameterResponderSession extends DiameterSession {
     public void onMessage(final DiameterPeer peer, final Command<?> command) {
         if (command instanceof CapabilitiesExchangeRequest) {
             handleCer((CapabilitiesExchangeRequest) command);
+        } else if (peerState == PeerState.R_OPEN) {
+            tryCompleteFromPendingMap(command);
         }
     }
 

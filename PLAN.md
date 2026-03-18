@@ -49,7 +49,25 @@ All new session/state classes go in `com.sipgate.sparta.diameter.session`.
 - `DiameterResponderSession.onMessage(CER)`: computes capability intersection via `CapabilityNegotiator`; `2001`/`R_OPEN` or `5010`/`CLOSED`/`peer.close()`
 - `HasHostIpAddressAVP` added to both `CapabilitiesExchangeRequest` and `CapabilitiesExchangeAnswer`
 
-### 4 — DWR/DWA
+### ~~4 — Send requests and wait for answers~~ ✓ Done
+
+- `public <A extends Answer<A>> CompletableFuture<A> send(Request<?, A> request)` on `DiameterSession` (inherited by both)
+- Not in OPEN state → return already-failed future immediately
+- `ConcurrentHashMap<Integer, CompletableFuture<?>>` keyed by hop-by-hop identifier in `DiameterSession`
+- Incoming answer: `tryCompleteFromPendingMap` looks up hop-by-hop id, removes entry, completes future
+- Channel write failure: listener removes entry and fails future
+- `onDisconnected`: `failAllPending` completes all outstanding futures exceptionally
+
+### 4b — Fix CEA hop-by-hop correlation
+
+- Use the pending-request map from step 4 to correlate CER and CEA
+- On `onConnected` (initiator): store the CER's hop-by-hop id in the map with a
+  `CompletableFuture<CapabilitiesExchangeAnswer>`
+- On `onMessage(CEA)`: look up by hop-by-hop id; if not found ignore; if found remove and
+  complete — then apply the same `I_OPEN` / `CLOSED` logic as today
+- CEAs with unrecognised hop-by-hop ids are silently discarded
+
+### 5 — DWR/DWA
 
 - On entering OPEN state: start Tw timer (TWINIT + jitter ±2 s per RFC 3539 §3.4.1)
 - Any message received: reset Tw timer
@@ -58,23 +76,15 @@ All new session/state classes go in `com.sipgate.sparta.diameter.session`.
 - Tw expires in `SUSPECT`: → `DOWN`, close connection
 - DWR received: send DWA immediately (base protocol, invisible to application)
 - DWA received: `pending = false`; if `SUSPECT` → `OKAY` (failback)
+- DWR/DWA use a separate boolean flag, not the pending-request map
 
-### 5 — Handler binding
+### 6 — Handler binding
 
 - `setHandler(Class<R extends Request>, DiameterRequestHandler<R, A>)` on both session classes
 - Stored as `Map<Integer, DiameterRequestHandler<?, ?>>` keyed by command code
 - Second registration for the same command code throws `IllegalStateException`
 - Incoming request in OPEN state: look up handler by command code; if none → send error answer
 - Handler returns `CompletableFuture<A>`; session sends the answer when it completes
-
-### 6 — Sending requests and waiting for answers
-
-- `<A extends Answer<A>> CompletableFuture<A> send(Request<?, A> request)` on both session classes
-- Not in OPEN state → return failed future immediately
-- Store `CompletableFuture` in `ConcurrentHashMap<Integer, CompletableFuture<Answer<?>>>` keyed by
-  hop-by-hop identifier
-- Incoming answer: remove from map by hop-by-hop id, complete future
-- Channel write failure: remove from map, fail future
 
 ### 7 — Answer timeout
 
@@ -112,9 +122,8 @@ is production-ready.
 ### CEA hop-by-hop correlation
 
 `DiameterInitiatorSession.onMessage` accepts any inbound CEA without verifying that its
-hop-by-hop identifier matches the one sent in the CER. The fix belongs in step 6: once the
-pending-request map exists, CER/CEA will be correlated through the same mechanism as all other
-request/answer pairs.
+hop-by-hop identifier matches the one sent in the CER. Addressed in step 4b immediately after
+the pending-request map is in place.
 
 ### Disconnect reason callback
 

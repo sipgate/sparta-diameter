@@ -38,6 +38,8 @@ public final class DiameterInitiatorSession extends DiameterSession {
     public void onMessage(final DiameterPeer peer, final Command<?> command) {
         if (peerState == PeerState.WAIT_I_CEA && command instanceof CapabilitiesExchangeAnswer) {
             handleCea((CapabilitiesExchangeAnswer) command);
+        } else if (peerState == PeerState.I_OPEN) {
+            tryCompleteFromPendingMap(command);
         }
     }
 
