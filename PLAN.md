@@ -58,14 +58,10 @@ All new session/state classes go in `com.sipgate.sparta.diameter.session`.
 - Channel write failure: listener removes entry and fails future
 - `onDisconnected`: `failAllPending` completes all outstanding futures exceptionally
 
-### 4b — Fix CEA hop-by-hop correlation
+### ~~4b — Fix CEA hop-by-hop correlation~~ ✓ Done
 
-- Use the pending-request map from step 4 to correlate CER and CEA
-- On `onConnected` (initiator): store the CER's hop-by-hop id in the map with a
-  `CompletableFuture<CapabilitiesExchangeAnswer>`
-- On `onMessage(CEA)`: look up by hop-by-hop id; if not found ignore; if found remove and
-  complete — then apply the same `I_OPEN` / `CLOSED` logic as today
-- CEAs with unrecognised hop-by-hop ids are silently discarded
+- `DiameterInitiatorSession` stores the CER's hop-by-hop id in `cerHopByHop` on `onConnected`
+- `onMessage(CEA)`: checks `cea.getHopByHopIdentifier() == cerHopByHop`; mismatches are silently discarded
 
 ### 5 — DWR/DWA
 
@@ -119,11 +115,19 @@ All new session/state classes go in `com.sipgate.sparta.diameter.session`.
 These are known gaps that do not block the numbered steps but must be addressed before the library
 is production-ready.
 
-### CEA hop-by-hop correlation
+### Hop-by-hop and end-to-end identifier generation
 
-`DiameterInitiatorSession.onMessage` accepts any inbound CEA without verifying that its
-hop-by-hop identifier matches the one sent in the CER. Addressed in step 4b immediately after
-the pending-request map is in place.
+Both identifiers are currently generated with `ThreadLocalRandom.current().nextInt()`. RFC 6733
+§3 has stricter requirements:
+
+- **Hop-by-hop**: "MUST be unique on a given connection". A per-session `AtomicInteger` counter
+  starting at a random seed satisfies this with no collisions.
+- **End-to-end**: "used to detect duplicates". RFC 6733 §3 says implementations SHOULD set the
+  high-order 12 bits to the low-order 12 bits of current time and the low-order 20 bits to a
+  random value. This survives reboots and allows duplicate detection across sessions.
+
+Centralise generation in a package-private `DiameterIdentifiers` utility and replace the
+`ThreadLocalRandom` calls in `buildCer`.
 
 ### Disconnect reason callback
 

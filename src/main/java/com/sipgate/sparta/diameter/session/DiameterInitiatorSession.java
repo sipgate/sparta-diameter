@@ -29,18 +29,23 @@ public final class DiameterInitiatorSession extends DiameterSession {
     @Override
     public void onConnected(final DiameterPeer peer) {
         this.peer = peer;
-        final CapabilitiesExchangeRequest cer = buildCer();
-        peer.send(cer);
         this.peerState = PeerState.WAIT_I_CEA;
+        sendAndTrack(buildCer()).whenComplete((cea, err) -> {
+            if (err == null) {
+                handleCea(cea);
+                return;
+            }
+
+            if (peerState == PeerState.WAIT_I_CEA) {
+                peerState = PeerState.CLOSED;
+                peer.close();
+            }
+        });
     }
 
     @Override
     public void onMessage(final DiameterPeer peer, final Command<?> command) {
-        if (peerState == PeerState.WAIT_I_CEA && command instanceof CapabilitiesExchangeAnswer) {
-            handleCea((CapabilitiesExchangeAnswer) command);
-        } else if (peerState == PeerState.I_OPEN) {
-            tryCompleteFromPendingMap(command);
-        }
+        tryCompleteFromPendingMap(command);
     }
 
     @Override

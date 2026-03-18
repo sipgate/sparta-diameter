@@ -62,17 +62,18 @@ abstract class DiameterSession implements DiameterConnectionListener {
             failed.completeExceptionally(new IllegalStateException("Cannot send in state: " + peerState));
             return failed;
         }
+        return sendAndTrack(request);
+    }
 
+    protected <A extends Answer<A>> CompletableFuture<A> sendAndTrack(final Request<?, A> request) {
         final CompletableFuture<A> future = new CompletableFuture<>();
         pendingRequests.put(request.getHopByHopIdentifier(), future);
-
         peer.send(request).addListener(writeResult -> {
             if (!writeResult.isSuccess()) {
                 pendingRequests.remove(request.getHopByHopIdentifier());
                 future.completeExceptionally(writeResult.cause());
             }
         });
-
         return future;
     }
 

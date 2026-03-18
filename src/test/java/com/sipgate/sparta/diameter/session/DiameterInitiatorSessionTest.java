@@ -128,13 +128,30 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
+    void it_transitions_to_CLOSED_when_CER_write_fails() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        final ChannelFuture writeFail = failedWriteFuture();
+        when(peer.send(any())).thenReturn(writeFail);
+        when(peer.close()).thenReturn(mock(ChannelFuture.class));
+        final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
+
+        // WHEN
+        session.onConnected(peer);
+
+        // THEN
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
+    }
+
+    @Test
     void it_transitions_to_I_OPEN_on_successful_CEA() {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
-        final CapabilitiesExchangeAnswer cea = CapabilitiesExchangeAnswer.create(1, 2);
+        final int cerHopByHop = capturedCerHopByHop(peer);
+        final CapabilitiesExchangeAnswer cea = CapabilitiesExchangeAnswer.create(cerHopByHop, 2);
         cea.setResultCode(DiameterConstants.RES_DIAMETER_SUCCESS);
 
         // WHEN
@@ -145,6 +162,24 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
+    void it_ignores_CEA_with_wrong_hop_by_hop_id() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
+        session.onConnected(peer);
+        final int cerHopByHop = capturedCerHopByHop(peer);
+        final CapabilitiesExchangeAnswer cea = CapabilitiesExchangeAnswer.create(cerHopByHop + 1, 2);
+        cea.setResultCode(DiameterConstants.RES_DIAMETER_SUCCESS);
+
+        // WHEN
+        session.onMessage(peer, cea);
+
+        // THEN: still waiting — rogue CEA had no effect
+        assertThat(session.getPeerState()).isEqualTo(PeerState.WAIT_I_CEA);
+    }
+
+    @Test
     void it_transitions_to_CLOSED_on_failed_CEA() {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
@@ -152,7 +187,8 @@ class DiameterInitiatorSessionTest {
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
-        final CapabilitiesExchangeAnswer cea = CapabilitiesExchangeAnswer.create(1, 2);
+        final int cerHopByHop = capturedCerHopByHop(peer);
+        final CapabilitiesExchangeAnswer cea = CapabilitiesExchangeAnswer.create(cerHopByHop, 2);
         cea.setResultCode(DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION);
 
         // WHEN
@@ -170,7 +206,8 @@ class DiameterInitiatorSessionTest {
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
-        final CapabilitiesExchangeAnswer cea = CapabilitiesExchangeAnswer.create(1, 2);
+        final int cerHopByHop = capturedCerHopByHop(peer);
+        final CapabilitiesExchangeAnswer cea = CapabilitiesExchangeAnswer.create(cerHopByHop, 2);
         cea.setResultCode(DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION);
 
         // WHEN
@@ -288,11 +325,20 @@ class DiameterInitiatorSessionTest {
     private static DiameterInitiatorSession openedSession(final DiameterPeer peer) {
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
-        final CapabilitiesExchangeAnswer cea = CapabilitiesExchangeAnswer.create(1, 2);
+        final int cerHopByHop = capturedCerHopByHop(peer);
+        final CapabilitiesExchangeAnswer cea = CapabilitiesExchangeAnswer.create(cerHopByHop, 2);
         cea.setResultCode(DiameterConstants.RES_DIAMETER_SUCCESS);
         session.onMessage(peer, cea);
         Mockito.clearInvocations(peer);
         return session;
+    }
+
+    private static int capturedCerHopByHop(final DiameterPeer peer) {
+        final ArgumentCaptor<CapabilitiesExchangeRequest> captor =
+                ArgumentCaptor.forClass(CapabilitiesExchangeRequest.class);
+        verify(peer).send(captor.capture());
+        Mockito.clearInvocations(peer);
+        return captor.getValue().getHopByHopIdentifier();
     }
 
     private static ChannelFuture failedWriteFuture() {
