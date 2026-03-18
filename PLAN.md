@@ -66,13 +66,33 @@ All new session/state classes go in `com.sipgate.sparta.diameter.session`.
 ### 5 — DWR/DWA
 
 - On entering OPEN state: start Tw timer (TWINIT + jitter ±2 s per RFC 3539 §3.4.1)
-- Any message received: reset Tw timer
-- Tw expires, no pending DWR: send DWR, set `pending = true`, reset timer → stay `OKAY`
-- Tw expires, pending DWR outstanding: `OKAY` → `SUSPECT`, failover signal, reset timer
+- Any message received: reset Tw timer; if a DWR is pending, cancel it — a received message
+  proves the link is alive, so a stale DWA can no longer affect watchdog state
+- Tw expires, no pending DWR: send DWR via `sendAndTrack`, store future in
+  `pendingDwr: CompletableFuture<DeviceWatchdogAnswer>`; reschedule timer → stay `OKAY`
+- Tw expires, `pendingDwr` non-null and not done: `OKAY` → `SUSPECT`, reschedule timer
 - Tw expires in `SUSPECT`: → `DOWN`, close connection
 - DWR received: send DWA immediately (base protocol, invisible to application)
-- DWA received: `pending = false`; if `SUSPECT` → `OKAY` (failback)
-- DWR/DWA use a separate boolean flag, not the pending-request map
+- DWA received: completes `pendingDwr` naturally via `tryCompleteFromPendingMap`;
+  clear `pendingDwr`; if `SUSPECT` → `OKAY` (failback)
+
+#### Key design decisions
+
+- **DWR routes through `sendAndTrack`** — hop-by-hop correlation is handled by the
+  pending-request map for free. No separate `dwrHopByHop` field needed; DWA is
+  matched the same way any answer is. The DWA is invisible to the application because
+  the future is held internally as `pendingDwr`.
+- **`sendAndTrack(request, timeout)` overload** — DWR must not use the default 10 s
+  request timeout, which would fire before the Tw cycle completes (30 s). Instead DWR
+  passes a Tw-derived timeout (or `Duration.ZERO` to disable) so the watchdog state
+  machine, not the generic timeout, controls what happens when DWA is late.
+- **`cancel(hopByHop)` on `DiameterSession`** — removes a pending entry from the map,
+  cancels its timeout task, and completes the future with `CancellationException`.
+  Used when any message arrives while a DWR is in flight (link proven alive) and when
+  the connection closes before a DWR is answered.
+- **`pendingDwr` is a `CompletableFuture<DeviceWatchdogAnswer>`**, not a boolean — the
+  done/cancelled state of the future replaces a separate `dwrPending` flag, and
+  `whenComplete` drives the SUSPECT → OKAY transition without extra fields.
 
 ### 6 — Handler binding
 
