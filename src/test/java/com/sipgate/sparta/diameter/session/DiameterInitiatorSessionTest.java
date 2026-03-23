@@ -3,6 +3,8 @@ package com.sipgate.sparta.diameter.session;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
+import com.sipgate.sparta.diameter.messages.rfc6733.DeviceWatchdogAnswer;
+import com.sipgate.sparta.diameter.messages.rfc6733.DeviceWatchdogRequest;
 import com.sipgate.sparta.diameter.messages.rfc6733.ReAuthAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.ReAuthRequest;
 import com.sipgate.sparta.diameter.transport.DiameterPeer;
@@ -17,7 +19,9 @@ import org.mockito.Mockito;
 import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
@@ -386,9 +390,10 @@ class DiameterInitiatorSessionTest {
         final EventLoop eventLoop = mock(EventLoop.class);
         when(peer.eventLoop()).thenReturn(eventLoop);
         final ScheduledFuture<?> cerTimeout = mock(ScheduledFuture.class);
+        final ScheduledFuture<?> twTimer = mock(ScheduledFuture.class);
         final ScheduledFuture<?> requestTimeout = mock(ScheduledFuture.class);
         when(eventLoop.schedule(any(Runnable.class), anyLong(), any(TimeUnit.class)))
-                .thenReturn((ScheduledFuture) cerTimeout, (ScheduledFuture) requestTimeout);
+                .thenReturn((ScheduledFuture) cerTimeout, (ScheduledFuture) twTimer, (ScheduledFuture) requestTimeout);
 
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
@@ -419,9 +424,10 @@ class DiameterInitiatorSessionTest {
         final EventLoop eventLoop = mock(EventLoop.class);
         when(peer.eventLoop()).thenReturn(eventLoop);
         final ScheduledFuture<?> cerTimeout = mock(ScheduledFuture.class);
+        final ScheduledFuture<?> twTimer = mock(ScheduledFuture.class);
         final ScheduledFuture<?> requestTimeout = mock(ScheduledFuture.class);
         when(eventLoop.schedule(any(Runnable.class), anyLong(), any(TimeUnit.class)))
-                .thenReturn((ScheduledFuture) cerTimeout, (ScheduledFuture) requestTimeout);
+                .thenReturn((ScheduledFuture) cerTimeout, (ScheduledFuture) twTimer, (ScheduledFuture) requestTimeout);
 
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
@@ -510,11 +516,239 @@ class DiameterInitiatorSessionTest {
     }
 
     // -------------------------------------------------------------------------
+    // DWR/DWA watchdog
+    // -------------------------------------------------------------------------
+
+    @Test
+    void it_transitions_watchdog_to_OKAY_on_entering_I_OPEN() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        final List<Runnable> tasks = new ArrayList<>();
+        stubEventLoop(peer, tasks);
+        final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
+        session.onConnected(peer);
+        final int cerHopByHop = capturedCerHopByHop(peer);
+        final CapabilitiesExchangeAnswer cea = CapabilitiesExchangeAnswer.create(cerHopByHop, 2);
+        cea.setResultCode(DiameterConstants.RES_DIAMETER_SUCCESS);
+
+        // WHEN
+        session.onMessage(peer, cea);
+
+        // THEN
+        assertThat(session.getWatchdogState()).isEqualTo(WatchdogState.OKAY);
+    }
+
+    @Test
+    void it_sends_DWR_when_Tw_timer_fires() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        final List<Runnable> tasks = new ArrayList<>();
+        stubEventLoop(peer, tasks);
+        openedSession(peer, tasks);
+
+        // WHEN — fire Tw timer (index 1, after the CER timeout at index 0)
+        tasks.get(1).run();
+
+        // THEN
+        final ArgumentCaptor<DeviceWatchdogRequest> captor =
+                ArgumentCaptor.forClass(DeviceWatchdogRequest.class);
+        verify(peer).send(captor.capture());
+        assertThat(captor.getValue()).isInstanceOf(DeviceWatchdogRequest.class);
+    }
+
+    @Test
+    void it_transitions_to_SUSPECT_when_Tw_fires_with_unanswered_DWR() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        final List<Runnable> tasks = new ArrayList<>();
+        stubEventLoop(peer, tasks);
+        final DiameterInitiatorSession session = openedSession(peer, tasks);
+
+        // Fire first Tw — sends DWR (pending)
+        tasks.get(1).run();
+
+        // WHEN — fire rescheduled Tw while DWR is still unanswered
+        tasks.get(2).run();
+
+        // THEN
+        assertThat(session.getWatchdogState()).isEqualTo(WatchdogState.SUSPECT);
+    }
+
+    @Test
+    void it_transitions_to_DOWN_and_closes_peer_when_Tw_fires_in_SUSPECT() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        when(peer.close()).thenReturn(mock(ChannelFuture.class));
+        final List<Runnable> tasks = new ArrayList<>();
+        stubEventLoop(peer, tasks);
+        final DiameterInitiatorSession session = openedSession(peer, tasks);
+
+        // Fire first Tw — sends DWR (pending)
+        tasks.get(1).run();
+        // Fire second Tw — transitions to SUSPECT, reschedules
+        tasks.get(2).run();
+
+        // WHEN — fire third Tw while still in SUSPECT
+        tasks.get(3).run();
+
+        // THEN
+        assertThat(session.getWatchdogState()).isEqualTo(WatchdogState.DOWN);
+        verify(peer).close();
+    }
+
+    @Test
+    void it_sends_DWA_when_DWR_received_in_I_OPEN() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        final List<Runnable> tasks = new ArrayList<>();
+        stubEventLoop(peer, tasks);
+        final DiameterInitiatorSession session = openedSession(peer, tasks);
+        final DeviceWatchdogRequest dwr = DeviceWatchdogRequest.create(77, 88);
+
+        // WHEN
+        session.onMessage(peer, dwr);
+
+        // THEN — a DWA was sent back
+        final ArgumentCaptor<DeviceWatchdogAnswer> captor =
+                ArgumentCaptor.forClass(DeviceWatchdogAnswer.class);
+        verify(peer).send(captor.capture());
+        assertThat(captor.getValue().getHopByHopIdentifier()).isEqualTo(77);
+    }
+
+    @Test
+    void it_rejects_handler_registration_for_DWR_once_watchdog_is_active() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        final List<Runnable> tasks = new ArrayList<>();
+        stubEventLoop(peer, tasks);
+        final DiameterInitiatorSession session = openedSession(peer, tasks);
+
+        // WHEN / THEN — session occupies the DWR slot internally on entering I_OPEN
+        assertThatThrownBy(() -> session.setHandler(DeviceWatchdogRequest.class, req -> new CompletableFuture<>()))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void it_transitions_from_SUSPECT_to_OKAY_when_DWA_arrives() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        final List<Runnable> tasks = new ArrayList<>();
+        stubEventLoop(peer, tasks);
+        final DiameterInitiatorSession session = openedSession(peer, tasks);
+
+        // Fire first Tw — sends DWR, store its hop-by-hop
+        tasks.get(1).run();
+        final ArgumentCaptor<DeviceWatchdogRequest> dwrCaptor =
+                ArgumentCaptor.forClass(DeviceWatchdogRequest.class);
+        verify(peer).send(dwrCaptor.capture());
+        final int dwrHopByHop = dwrCaptor.getValue().getHopByHopIdentifier();
+        Mockito.clearInvocations(peer);
+
+        // Fire second Tw — transitions to SUSPECT
+        tasks.get(2).run();
+        assertThat(session.getWatchdogState()).isEqualTo(WatchdogState.SUSPECT);
+
+        // WHEN — DWA arrives
+        final DeviceWatchdogAnswer dwa = DeviceWatchdogAnswer.create(dwrHopByHop, 88);
+        session.onMessage(peer, dwa);
+
+        // THEN
+        assertThat(session.getWatchdogState()).isEqualTo(WatchdogState.OKAY);
+    }
+
+    @Test
+    void it_transitions_from_SUSPECT_to_OKAY_when_other_message_proves_link_alive() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        final List<Runnable> tasks = new ArrayList<>();
+        stubEventLoop(peer, tasks);
+        final DiameterInitiatorSession session = openedSession(peer, tasks);
+
+        // Fire first Tw — sends DWR (pending)
+        tasks.get(1).run();
+        // Fire second Tw — transitions to SUSPECT
+        tasks.get(2).run();
+        assertThat(session.getWatchdogState()).isEqualTo(WatchdogState.SUSPECT);
+
+        // WHEN — a non-DWA message arrives, proving the link alive
+        final CapabilitiesExchangeAnswer answer = CapabilitiesExchangeAnswer.create(99, 99);
+        answer.setResultCode(DiameterConstants.RES_DIAMETER_SUCCESS);
+        session.onMessage(peer, answer);
+
+        // THEN
+        assertThat(session.getWatchdogState()).isEqualTo(WatchdogState.OKAY);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void it_cancels_Tw_timer_on_message_received() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+
+        final EventLoop eventLoop = mock(EventLoop.class);
+        when(peer.eventLoop()).thenReturn(eventLoop);
+        final ScheduledFuture<?> cerTimeout = mock(ScheduledFuture.class);
+        final ScheduledFuture<?> twTimer = mock(ScheduledFuture.class);
+        final ScheduledFuture<?> twTimer2 = mock(ScheduledFuture.class);
+        when(eventLoop.schedule(any(Runnable.class), anyLong(), any(TimeUnit.class)))
+                .thenReturn(
+                        (ScheduledFuture) cerTimeout,
+                        (ScheduledFuture) twTimer,
+                        (ScheduledFuture) twTimer2);
+
+        final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
+        session.onConnected(peer);
+        final int cerHopByHop = capturedCerHopByHop(peer);
+        final CapabilitiesExchangeAnswer cea = CapabilitiesExchangeAnswer.create(cerHopByHop, 2);
+        cea.setResultCode(DiameterConstants.RES_DIAMETER_SUCCESS);
+        session.onMessage(peer, cea);
+        Mockito.clearInvocations(peer);
+
+        // WHEN — any message arrives in I_OPEN
+        final ReAuthRequest rar = ReAuthRequest.create(10, 20);
+        session.onMessage(peer, rar);
+
+        // THEN — the Tw timer was cancelled and rescheduled
+        verify(twTimer).cancel(false);
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
     private static DiameterInitiatorSession openedSession(final DiameterPeer peer) {
         stubEventLoop(peer);
+        final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
+        session.onConnected(peer);
+        final int cerHopByHop = capturedCerHopByHop(peer);
+        final CapabilitiesExchangeAnswer cea = CapabilitiesExchangeAnswer.create(cerHopByHop, 2);
+        cea.setResultCode(DiameterConstants.RES_DIAMETER_SUCCESS);
+        session.onMessage(peer, cea);
+        Mockito.clearInvocations(peer);
+        return session;
+    }
+
+    /**
+     * Opens a session and wires a task list so each scheduled runnable can be
+     * retrieved by index:
+     * <ul>
+     *   <li>0 — CER request timeout</li>
+     *   <li>1 — first Tw timer (scheduled on entering I_OPEN)</li>
+     *   <li>2 — Tw timer rescheduled after first DWR sent</li>
+     *   <li>3 — Tw timer rescheduled after SUSPECT transition</li>
+     * </ul>
+     */
+    private static DiameterInitiatorSession openedSession(
+            final DiameterPeer peer, final List<Runnable> tasks) {
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
         final int cerHopByHop = capturedCerHopByHop(peer);
@@ -539,6 +773,17 @@ class DiameterInitiatorSessionTest {
         when(peer.eventLoop()).thenReturn(eventLoop);
         when(eventLoop.schedule(any(Runnable.class), anyLong(), any(TimeUnit.class)))
                 .thenReturn(mock(ScheduledFuture.class));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void stubEventLoop(final DiameterPeer peer, final List<Runnable> capturedTasks) {
+        final EventLoop eventLoop = mock(EventLoop.class);
+        when(peer.eventLoop()).thenReturn(eventLoop);
+        when(eventLoop.schedule(any(Runnable.class), anyLong(), any(TimeUnit.class)))
+                .thenAnswer(inv -> {
+                    capturedTasks.add(inv.getArgument(0));
+                    return mock(ScheduledFuture.class);
+                });
     }
 
     private static ChannelFuture failedWriteFuture() {

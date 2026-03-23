@@ -46,8 +46,13 @@ public final class DiameterInitiatorSession extends DiameterSession {
 
     @Override
     public void onMessage(final DiameterPeer peer, final Command<?> command) {
-        if (peerState == PeerState.I_OPEN && command.isRequest()) {
-            dispatchInboundRequest((Request<?, ?>) command);
+        if (peerState == PeerState.I_OPEN) {
+            handleWatchdog(command);
+            if (command instanceof final Request<?, ?> request) {
+                dispatchInboundRequest(request);
+            } else {
+                tryCompleteFromPendingMap(command);
+            }
         } else {
             tryCompleteFromPendingMap(command);
         }
@@ -62,6 +67,7 @@ public final class DiameterInitiatorSession extends DiameterSession {
     private void handleCea(final CapabilitiesExchangeAnswer cea) {
         if (cea.getResultCode() == DiameterConstants.RES_DIAMETER_SUCCESS) {
             peerState = PeerState.I_OPEN;
+            startWatchdog();
         } else {
             peerState = PeerState.CLOSED;
             peer.close();

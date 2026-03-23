@@ -9,17 +9,22 @@ import com.sipgate.sparta.diameter.core.avp.AVP;
 import com.sipgate.sparta.diameter.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
+import com.sipgate.sparta.diameter.messages.rfc6733.DeviceWatchdogAnswer;
+import com.sipgate.sparta.diameter.messages.rfc6733.DeviceWatchdogRequest;
 import com.sipgate.sparta.diameter.transport.DiameterConnectionListener;
 import com.sipgate.sparta.diameter.transport.DiameterPeer;
 
 import java.net.InetAddress;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -40,6 +45,11 @@ abstract class DiameterSession implements DiameterConnectionListener {
     protected PeerState peerState;
     protected WatchdogState watchdogState;
     protected DiameterPeer peer;
+
+    private Integer pendingDwrHopByHop;
+    private Future<?> twTimer;
+
+    private static final Future<Void> NO_TIMEOUT_TASK = CompletableFuture.completedFuture(null);
 
     private final ConcurrentHashMap<Integer, PendingRequest<?>> pendingRequests =
             new ConcurrentHashMap<>();
@@ -70,7 +80,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
             failed.completeExceptionally(new IllegalStateException("Cannot send in state: " + peerState));
             return failed;
         }
-        return sendAndTrack(request);
+        return sendAndTrack(request, config.getRequestTimeout());
     }
 
     /**
@@ -126,13 +136,19 @@ abstract class DiameterSession implements DiameterConnectionListener {
         });
     }
 
-    protected <A extends Answer<A>> CompletableFuture<A> sendAndTrack(final Request<?, A> request) {
+    protected <A extends Answer<A>> CompletableFuture<A> sendAndTrack(
+            final Request<?, A> request, final Duration timeout) {
         final CompletableFuture<A> future = new CompletableFuture<>();
         final int hopByHop = request.getHopByHopIdentifier();
 
-        final long timeoutMs = config.getRequestTimeout().toMillis();
-        final Future<?> timeoutTask = peer.eventLoop().schedule(
-                () -> timeout(hopByHop, timeoutMs), timeoutMs, TimeUnit.MILLISECONDS);
+        final Future<?> timeoutTask;
+        if (timeout.isZero()) {
+            timeoutTask = NO_TIMEOUT_TASK;
+        } else {
+            final long timeoutMs = timeout.toMillis();
+            timeoutTask = peer.eventLoop().schedule(
+                    () -> timeout(hopByHop, timeoutMs), timeoutMs, TimeUnit.MILLISECONDS);
+        }
         pendingRequests.put(hopByHop, new PendingRequest<>(future, timeoutTask));
 
         peer.send(request).addListener(writeResult -> {
@@ -143,8 +159,54 @@ abstract class DiameterSession implements DiameterConnectionListener {
         return future;
     }
 
+    protected <A extends Answer<A>> CompletableFuture<A> sendAndTrack(final Request<?, A> request) {
+        return sendAndTrack(request, config.getRequestTimeout());
+    }
+
+    protected void cancel(final int hopByHop) {
+        fail(hopByHop, new CancellationException());
+    }
+
+    protected void startWatchdog() {
+        watchdogState = WatchdogState.OKAY;
+        // Register the DWR handler internally. This also prevents application code
+        // from registering a competing handler via setHandler(), which would throw
+        // IllegalStateException due to the existing duplicate-check.
+        final DiameterRequestHandler<DeviceWatchdogRequest, DeviceWatchdogAnswer> dwrHandler =
+                dwr -> CompletableFuture.completedFuture(
+                        dwr.createAnswer(DiameterConstants.RES_DIAMETER_SUCCESS));
+        handlers.put(DiameterConstants.CMD_DEVICE_WATCHDOG, dwrHandler);
+        scheduleTwTimer();
+    }
+
+    protected void stopWatchdog() {
+        if (twTimer != null) {
+            twTimer.cancel(false);
+            twTimer = null;
+        }
+    }
+
+    /**
+     * Resets the Tw timer on any inbound message, and cancels a pending DWR if
+     * the message arriving is not its matching DWA (proving the link alive via a
+     * different message).
+     *
+     * @param command the inbound command
+     */
+    protected void handleWatchdog(final Command<?> command) {
+        resetTwTimer();
+        if (pendingDwrHopByHop != null && pendingRequests.containsKey(pendingDwrHopByHop)) {
+            final boolean isMatchingDwa = command instanceof DeviceWatchdogAnswer
+                    && command.getHopByHopIdentifier() == pendingDwrHopByHop;
+            if (!isMatchingDwa) {
+                cancel(pendingDwrHopByHop);
+            }
+        }
+    }
+
     @Override
     public void onDisconnected(final DiameterPeer peer) {
+        stopWatchdog();
         this.peerState = PeerState.CLOSED;
         this.watchdogState = WatchdogState.DOWN;
         failAllPending(new IllegalStateException("Connection lost"));
@@ -252,6 +314,52 @@ abstract class DiameterSession implements DiameterConnectionListener {
         for (final Integer hopByHop : new ArrayList<>(pendingRequests.keySet())) {
             fail(hopByHop, cause);
         }
+    }
+
+    private void scheduleTwTimer() {
+        final long jitter = ThreadLocalRandom.current().nextLong(-2000, 2001);
+        final long delayMs = config.getTwinit().toMillis() + jitter;
+        twTimer = peer.eventLoop().schedule(this::onTwExpiry, delayMs, TimeUnit.MILLISECONDS);
+    }
+
+    private void resetTwTimer() {
+        if (twTimer != null) {
+            twTimer.cancel(false);
+        }
+        scheduleTwTimer();
+    }
+
+    private void onTwExpiry() {
+        if (peerState != PeerState.I_OPEN && peerState != PeerState.R_OPEN) {
+            return;
+        }
+        if (pendingDwrHopByHop != null && pendingRequests.containsKey(pendingDwrHopByHop)) {
+            if (watchdogState == WatchdogState.OKAY) {
+                watchdogState = WatchdogState.SUSPECT;
+                scheduleTwTimer();
+            } else if (watchdogState == WatchdogState.SUSPECT) {
+                watchdogState = WatchdogState.DOWN;
+                peer.close();
+            }
+            return;
+        }
+        final DeviceWatchdogRequest dwr = buildDwr();
+        pendingDwrHopByHop = dwr.getHopByHopIdentifier();
+        sendAndTrack(dwr, Duration.ZERO).whenComplete((dwa, err) -> {
+            pendingDwrHopByHop = null;
+            if (err == null || err instanceof CancellationException) {
+                if (watchdogState == WatchdogState.SUSPECT) {
+                    watchdogState = WatchdogState.OKAY;
+                }
+            }
+        });
+        scheduleTwTimer();
+    }
+
+    private DeviceWatchdogRequest buildDwr() {
+        return DeviceWatchdogRequest.create(
+                ThreadLocalRandom.current().nextInt(),
+                ThreadLocalRandom.current().nextInt());
     }
 
     private static final class PendingRequest<A> {

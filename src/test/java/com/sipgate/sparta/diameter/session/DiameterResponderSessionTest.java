@@ -4,10 +4,14 @@ import com.sipgate.sparta.diameter.core.DiameterConstants;
 import com.sipgate.sparta.diameter.core.avp.AVP;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
+import com.sipgate.sparta.diameter.messages.rfc6733.DeviceWatchdogAnswer;
+import com.sipgate.sparta.diameter.messages.rfc6733.DeviceWatchdogRequest;
 import com.sipgate.sparta.diameter.messages.rfc6733.ReAuthAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.ReAuthRequest;
 import com.sipgate.sparta.diameter.transport.DiameterPeer;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.EventLoop;
+import io.netty.util.concurrent.ScheduledFuture;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -17,10 +21,12 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -91,6 +97,7 @@ class DiameterResponderSessionTest {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubEventLoop(peer);
         final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_AUTH_APP);
         session.onConnected(peer);
         final CapabilitiesExchangeRequest cer = CapabilitiesExchangeRequest.create(1, 2);
@@ -108,6 +115,7 @@ class DiameterResponderSessionTest {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubEventLoop(peer);
         final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_AUTH_APP);
         session.onConnected(peer);
         final CapabilitiesExchangeRequest cer = CapabilitiesExchangeRequest.create(1, 2);
@@ -247,11 +255,43 @@ class DiameterResponderSessionTest {
     }
 
     // -------------------------------------------------------------------------
+    // DWR/DWA watchdog
+    // -------------------------------------------------------------------------
+
+    @Test
+    void it_transitions_watchdog_to_OKAY_on_entering_R_OPEN() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        final DiameterResponderSession session = openedSession(peer);
+
+        // WHEN / THEN — watchdog is OKAY after CER exchange
+        assertThat(session.getWatchdogState()).isEqualTo(WatchdogState.OKAY);
+    }
+
+    @Test
+    void it_sends_DWA_when_DWR_received_in_R_OPEN() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        final DiameterResponderSession session = openedSession(peer);
+        final DeviceWatchdogRequest dwr = DeviceWatchdogRequest.create(77, 88);
+
+        // WHEN
+        session.onMessage(peer, dwr);
+
+        // THEN
+        final ArgumentCaptor<DeviceWatchdogAnswer> captor =
+                ArgumentCaptor.forClass(DeviceWatchdogAnswer.class);
+        verify(peer).send(captor.capture());
+        assertThat(captor.getValue().getHopByHopIdentifier()).isEqualTo(77);
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
     private static DiameterResponderSession openedSession(final DiameterPeer peer) {
         when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubEventLoop(peer);
         final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_AUTH_APP);
         session.onConnected(peer);
         final CapabilitiesExchangeRequest cer = CapabilitiesExchangeRequest.create(1, 2);
@@ -259,5 +299,13 @@ class DiameterResponderSessionTest {
         session.onMessage(peer, cer);
         Mockito.clearInvocations(peer);
         return session;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void stubEventLoop(final DiameterPeer peer) {
+        final EventLoop eventLoop = mock(EventLoop.class);
+        when(peer.eventLoop()).thenReturn(eventLoop);
+        when(eventLoop.schedule(any(Runnable.class), anyLong(), any(TimeUnit.class)))
+                .thenReturn(mock(ScheduledFuture.class));
     }
 }

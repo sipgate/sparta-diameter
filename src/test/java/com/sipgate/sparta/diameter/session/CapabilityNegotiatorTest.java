@@ -4,6 +4,7 @@ import com.sipgate.sparta.diameter.core.DiameterConstants;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -91,8 +92,8 @@ class CapabilityNegotiatorTest {
     }
 
     private static DiameterNodeConfig.Capabilities capabilities(
-            final java.util.List<Integer> authIds,
-            final java.util.List<Integer> acctIds) {
+            final List<Integer> authIds,
+            final List<Integer> acctIds) {
         return new DiameterNodeConfig.Capabilities(authIds, acctIds, Collections.emptyList());
     }
 }

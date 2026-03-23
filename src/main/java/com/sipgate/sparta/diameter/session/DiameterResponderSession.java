@@ -6,6 +6,7 @@ import com.sipgate.sparta.diameter.core.Request;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.transport.DiameterPeer;
+import java.util.List;
 
 /**
  * Diameter session for the responder (R-) side of a connection.
@@ -32,8 +33,9 @@ public final class DiameterResponderSession extends DiameterSession {
         if (command instanceof final CapabilitiesExchangeRequest cer) {
             handleCer(cer);
         } else if (peerState == PeerState.R_OPEN) {
-            if (command.isRequest()) {
-                dispatchInboundRequest((Request<?, ?>) command);
+            handleWatchdog(command);
+            if (command instanceof final Request<?, ?> request) {
+                dispatchInboundRequest(request);
             } else {
                 tryCompleteFromPendingMap(command);
             }
@@ -41,14 +43,15 @@ public final class DiameterResponderSession extends DiameterSession {
     }
 
     private void handleCer(final CapabilitiesExchangeRequest cer) {
-        final java.util.List<Long> remoteAuthIds =
+        final List<Long> remoteAuthIds =
                 extractUnsignedInts(cer.findAVPs(DiameterConstants.AVP_AUTH_APPLICATION_ID));
-        final java.util.List<Long> remoteAcctIds =
+        final List<Long> remoteAcctIds =
                 extractUnsignedInts(cer.findAVPs(DiameterConstants.AVP_ACCT_APPLICATION_ID));
 
         if (negotiator.hasCommonApplication(config.getCapabilities(), remoteAuthIds, remoteAcctIds)) {
             peer.send(buildCea(cer, DiameterConstants.RES_DIAMETER_SUCCESS));
             peerState = PeerState.R_OPEN;
+            startWatchdog();
         } else {
             peer.send(buildCea(cer, DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION));
             peerState = PeerState.CLOSED;

@@ -63,7 +63,7 @@ All new session/state classes go in `com.sipgate.sparta.diameter.session`.
 - `DiameterInitiatorSession` stores the CER's hop-by-hop id in `cerHopByHop` on `onConnected`
 - `onMessage(CEA)`: checks `cea.getHopByHopIdentifier() == cerHopByHop`; mismatches are silently discarded
 
-### 5 — DWR/DWA
+### ~~5 — DWR/DWA~~ ✓ Done
 
 - On entering OPEN state: start Tw timer (TWINIT + jitter ±2 s per RFC 3539 §3.4.1)
 - Any message received: reset Tw timer; if a DWR is pending, cancel it — a received message
