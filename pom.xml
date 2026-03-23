@@ -28,8 +28,8 @@
         <developerConnection>scm:git:ssh://github.com:sipgate/sparta-diameter.git</developerConnection>
     </scm>
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
     </properties>
 
     <dependencies>
@@ -46,8 +46,7 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <!-- can't upgrade to 6.x because they dropped support for Java 1.8, see https://github.com/junit-team/junit-framework/wiki/Upgrading-to-JUnit-6.0#new-baselines -->
-            <version>5.14.3</version>
+            <version>6.0.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -59,14 +58,7 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
-            <!-- can't upgrade to 5.x because they dropped support for Java 1.8, see https://github.com/mockito/mockito?tab=readme-ov-file#current-version-is-5x -->
-            <version>4.11.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-inline</artifactId>
-            <version>4.11.0</version>
+            <version>5.23.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

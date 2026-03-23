@@ -1,6 +1,6 @@
 # Project Conventions
 
-Java 8 codebase (`8.0.462-Zulu` via `.sdkmanrc`).
+Java 17 codebase (`17.0.18-zulu` via `.sdkmanrc`).
 
 ## Immutability
 
