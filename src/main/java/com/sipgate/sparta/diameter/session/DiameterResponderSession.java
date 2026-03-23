@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.session;
 
 import com.sipgate.sparta.diameter.core.Command;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
+import com.sipgate.sparta.diameter.core.Request;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.transport.DiameterPeer;
@@ -31,7 +32,11 @@ public final class DiameterResponderSession extends DiameterSession {
         if (command instanceof CapabilitiesExchangeRequest) {
             handleCer((CapabilitiesExchangeRequest) command);
         } else if (peerState == PeerState.R_OPEN) {
-            tryCompleteFromPendingMap(command);
+            if (command.isRequest()) {
+                dispatchInboundRequest((Request<?, ?>) command);
+            } else {
+                tryCompleteFromPendingMap(command);
+            }
         }
     }
 

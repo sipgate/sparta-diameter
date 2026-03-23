@@ -94,7 +94,7 @@ All new session/state classes go in `com.sipgate.sparta.diameter.session`.
   done/cancelled state of the future replaces a separate `dwrPending` flag, and
   `whenComplete` drives the SUSPECT → OKAY transition without extra fields.
 
-### 6 — Handler binding
+### ~~6 — Handler binding~~ ✓ Done
 
 - `setHandler(Class<R extends Request>, DiameterRequestHandler<R, A>)` on both session classes
 - Stored as `Map<Integer, DiameterRequestHandler<?, ?>>` keyed by command code

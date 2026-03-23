@@ -4,6 +4,7 @@ import com.sipgate.sparta.diameter.core.Answer;
 import com.sipgate.sparta.diameter.core.Command;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
 import com.sipgate.sparta.diameter.core.Request;
+import com.sipgate.sparta.diameter.core.annotations.DiameterRequest;
 import com.sipgate.sparta.diameter.core.avp.AVP;
 import com.sipgate.sparta.diameter.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
@@ -13,7 +14,9 @@ import com.sipgate.sparta.diameter.transport.DiameterPeer;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -41,6 +44,8 @@ abstract class DiameterSession implements DiameterConnectionListener {
     private final ConcurrentHashMap<Integer, PendingRequest<?>> pendingRequests =
             new ConcurrentHashMap<>();
 
+    private final Map<Integer, DiameterRequestHandler<?, ?>> handlers = new HashMap<>();
+
     DiameterSession(final DiameterNodeConfig config) {
         this.config = config;
         this.negotiator = new CapabilityNegotiator();
@@ -66,6 +71,59 @@ abstract class DiameterSession implements DiameterConnectionListener {
             return failed;
         }
         return sendAndTrack(request);
+    }
+
+    /**
+     * Registers a handler for inbound requests of the given type.
+     *
+     * <p>The command code is read from the {@link DiameterRequest} annotation on
+     * {@code requestClass}. A second registration for the same command code throws
+     * {@link IllegalStateException}.
+     *
+     * @param requestClass the annotated request class; must carry {@code @DiameterRequest}
+     * @param handler      the handler to invoke when a matching request arrives
+     * @param <R>          the request type
+     * @param <A>          the answer type
+     * @throws IllegalArgumentException if {@code requestClass} lacks the annotation
+     * @throws IllegalStateException    if a handler for that command code is already registered
+     */
+    public <R extends Request<R, A>, A extends Answer<A>> void setHandler(
+            final Class<R> requestClass,
+            final DiameterRequestHandler<R, A> handler) {
+        final DiameterRequest annotation = requestClass.getAnnotation(DiameterRequest.class);
+        if (annotation == null) {
+            throw new IllegalArgumentException(
+                    requestClass.getName() + " is not annotated with @DiameterRequest");
+        }
+        final int commandCode = annotation.value();
+        if (handlers.containsKey(commandCode)) {
+            throw new IllegalStateException(
+                    "Handler for command code " + commandCode + " is already registered");
+        }
+        handlers.put(commandCode, handler);
+    }
+
+    /**
+     * Dispatches an inbound request to the registered handler, or sends
+     * {@code DIAMETER_COMMAND_UNSUPPORTED} if no handler is registered.
+     * When the handler future completes exceptionally, sends
+     * {@code DIAMETER_UNABLE_TO_COMPLY}.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    protected void dispatchInboundRequest(final Request<?, ?> request) {
+        final DiameterRequestHandler handler = handlers.get(request.getCommandCode());
+        if (handler == null) {
+            peer.send(request.createAnswer(DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED));
+            return;
+        }
+        final CompletableFuture<?> future = handler.handle(request);
+        future.whenComplete((answer, err) -> {
+            if (err != null) {
+                peer.send(request.createAnswer(DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
+            } else {
+                peer.send((Command<?>) answer);
+            }
+        });
     }
 
     protected <A extends Answer<A>> CompletableFuture<A> sendAndTrack(final Request<?, A> request) {

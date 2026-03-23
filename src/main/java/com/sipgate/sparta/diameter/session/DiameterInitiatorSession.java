@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.session;
 
 import com.sipgate.sparta.diameter.core.Command;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
+import com.sipgate.sparta.diameter.core.Request;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.transport.DiameterPeer;
@@ -45,7 +46,11 @@ public final class DiameterInitiatorSession extends DiameterSession {
 
     @Override
     public void onMessage(final DiameterPeer peer, final Command<?> command) {
-        tryCompleteFromPendingMap(command);
+        if (peerState == PeerState.I_OPEN && command.isRequest()) {
+            dispatchInboundRequest((Request<?, ?>) command);
+        } else {
+            tryCompleteFromPendingMap(command);
+        }
     }
 
     @Override

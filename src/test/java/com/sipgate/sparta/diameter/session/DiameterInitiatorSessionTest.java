@@ -3,6 +3,8 @@ package com.sipgate.sparta.diameter.session;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
+import com.sipgate.sparta.diameter.messages.rfc6733.ReAuthAnswer;
+import com.sipgate.sparta.diameter.messages.rfc6733.ReAuthRequest;
 import com.sipgate.sparta.diameter.transport.DiameterPeer;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoop;
@@ -436,6 +438,75 @@ class DiameterInitiatorSessionTest {
 
         // THEN
         verify(requestTimeout).cancel(false);
+    }
+
+    // -------------------------------------------------------------------------
+    // Handler binding
+    // -------------------------------------------------------------------------
+
+    @Test
+    void it_throws_when_registering_a_second_handler_for_the_same_command_code() {
+        // GIVEN
+        final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
+        session.setHandler(ReAuthRequest.class, req -> new CompletableFuture<>());
+
+        // WHEN / THEN
+        assertThatThrownBy(() -> session.setHandler(ReAuthRequest.class, req -> new CompletableFuture<>()))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void it_dispatches_inbound_request_to_registered_handler() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        final DiameterInitiatorSession session = openedSession(peer);
+        final ReAuthAnswer answer = ReAuthAnswer.create(10, 20);
+        answer.setResultCode(DiameterConstants.RES_DIAMETER_SUCCESS);
+        session.setHandler(ReAuthRequest.class, req -> CompletableFuture.completedFuture(answer));
+
+        // WHEN
+        session.onMessage(peer, ReAuthRequest.create(10, 20));
+
+        // THEN
+        verify(peer).send(answer);
+    }
+
+    @Test
+    void it_sends_COMMAND_UNSUPPORTED_for_unhandled_request() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        final DiameterInitiatorSession session = openedSession(peer);
+
+        // WHEN
+        session.onMessage(peer, ReAuthRequest.create(10, 20));
+
+        // THEN
+        final ArgumentCaptor<ReAuthAnswer> captor = ArgumentCaptor.forClass(ReAuthAnswer.class);
+        verify(peer).send(captor.capture());
+        assertThat(captor.getValue().getResultCode())
+                .isEqualTo(DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED);
+    }
+
+    @Test
+    void it_sends_UNABLE_TO_COMPLY_when_handler_future_fails() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        final DiameterInitiatorSession session = openedSession(peer);
+        final CompletableFuture<ReAuthAnswer> failing = new CompletableFuture<>();
+        failing.completeExceptionally(new RuntimeException("handler error"));
+        session.setHandler(ReAuthRequest.class, req -> failing);
+
+        // WHEN
+        session.onMessage(peer, ReAuthRequest.create(10, 20));
+
+        // THEN
+        final ArgumentCaptor<ReAuthAnswer> captor = ArgumentCaptor.forClass(ReAuthAnswer.class);
+        verify(peer).send(captor.capture());
+        assertThat(captor.getValue().getResultCode())
+                .isEqualTo(DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY);
     }
 
     // -------------------------------------------------------------------------
