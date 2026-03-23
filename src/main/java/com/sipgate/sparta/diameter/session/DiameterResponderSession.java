@@ -29,8 +29,8 @@ public final class DiameterResponderSession extends DiameterSession {
 
     @Override
     public void onMessage(final DiameterPeer peer, final Command<?> command) {
-        if (command instanceof CapabilitiesExchangeRequest) {
-            handleCer((CapabilitiesExchangeRequest) command);
+        if (command instanceof final CapabilitiesExchangeRequest cer) {
+            handleCer(cer);
         } else if (peerState == PeerState.R_OPEN) {
             if (command.isRequest()) {
                 dispatchInboundRequest((Request<?, ?>) command);

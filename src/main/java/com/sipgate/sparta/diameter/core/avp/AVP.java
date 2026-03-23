@@ -477,8 +477,8 @@ public class AVP {
      * @return the created AVP
      */
     private static AVP createIPAddressAVP(final int code, final boolean mandatory, final InetAddress value) {
-        final int addressType = (value instanceof Inet4Address) ? 1 :
-                                (value instanceof Inet6Address) ? 2 : 0;
+        final int addressType = value instanceof Inet4Address ? 1 :
+                                value instanceof Inet6Address ? 2 : 0;
 
 
         final byte[] addressBytes = ipAddressToBytes(value);

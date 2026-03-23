@@ -31,8 +31,8 @@ class CapabilityNegotiator {
             final List<Long> remoteAuthIds,
             final List<Long> remoteAcctIds) {
 
-        final Set<Long> localAuthIds = toUnsignedLongSet(local.getAuthApplicationIds());
-        final Set<Long> localAcctIds = toUnsignedLongSet(local.getAcctApplicationIds());
+        final Set<Long> localAuthIds = toUnsignedLongSet(local.authApplicationIds());
+        final Set<Long> localAcctIds = toUnsignedLongSet(local.acctApplicationIds());
 
         if (localAuthIds.contains(RELAY_APP_ID) || remoteAuthIds.contains(RELAY_APP_ID)) {
             return true;

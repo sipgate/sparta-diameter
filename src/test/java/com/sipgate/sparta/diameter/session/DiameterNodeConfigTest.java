@@ -152,9 +152,9 @@ class DiameterNodeConfigTest {
                 0L, "sparta", capabilities);
 
         // THEN
-        assertThat(config.getCapabilities().getAuthApplicationIds()).containsExactly(16777251);
-        assertThat(config.getCapabilities().getAcctApplicationIds()).containsExactly(3);
-        assertThat(config.getCapabilities().getSupportedVendorIds()).containsExactly(10415L);
+        assertThat(config.getCapabilities().authApplicationIds()).containsExactly(16777251);
+        assertThat(config.getCapabilities().acctApplicationIds()).containsExactly(3);
+        assertThat(config.getCapabilities().supportedVendorIds()).containsExactly(10415L);
     }
 
     @Test

@@ -76,8 +76,7 @@ cer.addHostIPAddress(InetAddress.getByName("192.168.1.100"));
 // Parse incoming message
 byte[] messageData = // ... received from network
 Command command = DiameterMessageParser.parseMessage(messageData);
-if (command instanceof DeviceWatchdogRequest) {
-    DeviceWatchdogRequest dwr = (DeviceWatchdogRequest) command;
+if (command instanceof final DeviceWatchdogRequest dwr) {
     DeviceWatchdogAnswer dwa = dwr.createAnswer(DiameterConstants.DIAMETER_SUCCESS);
 }
 ```

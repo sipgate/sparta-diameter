@@ -359,6 +359,7 @@ public abstract class Command<T extends Command<T>> implements
             // Flags (1 byte)
             final int flags = byteBuffer.get();
             final boolean isRequest = (flags & 0x80) != 0;
+            // TODO: check why these variables exist but are not used
             final boolean isProxiable = (flags & 0x40) != 0;
             final boolean isError = (flags & 0x20) != 0;
             final boolean isRetransmitted = (flags & 0x10) != 0; // T flag (RFC 6733)

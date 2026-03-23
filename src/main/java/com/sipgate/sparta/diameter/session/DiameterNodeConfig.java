@@ -81,7 +81,7 @@ public final class DiameterNodeConfig {
         }
         this.originHost = originHost;
         this.originRealm = originRealm;
-        this.hostIpAddresses = Collections.unmodifiableList(new ArrayList<>(hostIpAddresses));
+        this.hostIpAddresses = List.copyOf(hostIpAddresses);
         this.vendorId = vendorId;
         this.productName = productName;
         this.capabilities = capabilities;
@@ -172,31 +172,15 @@ public final class DiameterNodeConfig {
     /**
      * The application capabilities advertised in CER/CEA.
      */
-    public static final class Capabilities {
+    public record Capabilities(
+            List<Integer> authApplicationIds,
+            List<Integer> acctApplicationIds,
+            List<Long> supportedVendorIds) {
 
-        private final List<Integer> authApplicationIds;
-        private final List<Integer> acctApplicationIds;
-        private final List<Long> supportedVendorIds;
-
-        public Capabilities(
-                final List<Integer> authApplicationIds,
-                final List<Integer> acctApplicationIds,
-                final List<Long> supportedVendorIds) {
-            this.authApplicationIds = Collections.unmodifiableList(new ArrayList<>(authApplicationIds));
-            this.acctApplicationIds = Collections.unmodifiableList(new ArrayList<>(acctApplicationIds));
-            this.supportedVendorIds = Collections.unmodifiableList(new ArrayList<>(supportedVendorIds));
-        }
-
-        public List<Integer> getAuthApplicationIds() {
-            return authApplicationIds;
-        }
-
-        public List<Integer> getAcctApplicationIds() {
-            return acctApplicationIds;
-        }
-
-        public List<Long> getSupportedVendorIds() {
-            return supportedVendorIds;
+        public Capabilities {
+            authApplicationIds = List.copyOf(authApplicationIds);
+            acctApplicationIds = List.copyOf(acctApplicationIds);
+            supportedVendorIds = List.copyOf(supportedVendorIds);
         }
     }
 }

@@ -224,15 +224,15 @@ abstract class DiameterSession implements DiameterConnectionListener {
             msg.addAVP(AVP.create(DiameterConstants.AVP_HOST_IP_ADDRESS, addr));
         }
 
-        for (final Long vendorId : config.getCapabilities().getSupportedVendorIds()) {
+        for (final Long vendorId : config.getCapabilities().supportedVendorIds()) {
             msg.addAVP(AVP.create(DiameterConstants.AVP_SUPPORTED_VENDOR_ID, vendorId));
         }
 
-        for (final Integer authId : config.getCapabilities().getAuthApplicationIds()) {
+        for (final Integer authId : config.getCapabilities().authApplicationIds()) {
             msg.addAVP(AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, Integer.toUnsignedLong(authId)));
         }
 
-        for (final Integer acctId : config.getCapabilities().getAcctApplicationIds()) {
+        for (final Integer acctId : config.getCapabilities().acctApplicationIds()) {
             msg.addAVP(AVP.create(DiameterConstants.AVP_ACCT_APPLICATION_ID, Integer.toUnsignedLong(acctId)));
         }
     }
