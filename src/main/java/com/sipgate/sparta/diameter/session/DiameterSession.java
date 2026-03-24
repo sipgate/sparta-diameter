@@ -3,6 +3,7 @@ package com.sipgate.sparta.diameter.session;
 import com.sipgate.sparta.diameter.core.Answer;
 import com.sipgate.sparta.diameter.core.Command;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
+import com.sipgate.sparta.diameter.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.core.Request;
 import com.sipgate.sparta.diameter.core.annotations.DiameterRequest;
 import com.sipgate.sparta.diameter.core.avp.AVP;
@@ -144,7 +145,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
     protected void handleInboundDpr(final DisconnectPeerRequest dpr) {
         stopWatchdog();
         peerState = PeerState.CLOSING;
-        peer.send(dpr.createAnswer(DiameterConstants.RES_DIAMETER_SUCCESS));
+        peer.send(DiameterMessageFactory.createAnswer(dpr, DiameterConstants.RES_DIAMETER_SUCCESS));
         peer.close();
     }
 
@@ -158,13 +159,13 @@ abstract class DiameterSession implements DiameterConnectionListener {
     protected void dispatchInboundRequest(final Request<?, ?> request) {
         final DiameterRequestHandler handler = handlers.get(request.getCommandCode());
         if (handler == null) {
-            peer.send(request.createAnswer(DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED));
+            peer.send(DiameterMessageFactory.createAnswer((Request) request, DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED));
             return;
         }
         final CompletableFuture<?> future = handler.handle(request);
         future.whenComplete((answer, err) -> {
             if (err != null) {
-                peer.send(request.createAnswer(DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
+                peer.send(DiameterMessageFactory.createAnswer((Request) request, DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
             } else {
                 peer.send((Command<?>) answer);
             }
@@ -209,7 +210,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
         // IllegalStateException due to the existing duplicate-check.
         final DiameterRequestHandler<DeviceWatchdogRequest, DeviceWatchdogAnswer> dwrHandler =
                 dwr -> CompletableFuture.completedFuture(
-                        dwr.createAnswer(DiameterConstants.RES_DIAMETER_SUCCESS));
+                        DiameterMessageFactory.createAnswer(dwr, DiameterConstants.RES_DIAMETER_SUCCESS));
         handlers.put(DiameterConstants.CMD_DEVICE_WATCHDOG, dwrHandler);
         scheduleTwTimer();
     }
@@ -385,13 +386,15 @@ abstract class DiameterSession implements DiameterConnectionListener {
     }
 
     private DeviceWatchdogRequest buildDwr() {
-        return DeviceWatchdogRequest.create(
+        return DiameterMessageFactory.create(
+                DeviceWatchdogRequest.class,
                 identifiers.nextHopByHop(),
                 DiameterIdentifiers.nextEndToEnd());
     }
 
     private DisconnectPeerRequest buildDpr() {
-        return DisconnectPeerRequest.create(
+        return DiameterMessageFactory.create(
+                        DisconnectPeerRequest.class,
                         identifiers.nextHopByHop(),
                         DiameterIdentifiers.nextEndToEnd())
                 .setDisconnectCause(DiameterConstants.DCC_DO_NOT_WANT_TO_TALK_TO_YOU);

@@ -3,6 +3,7 @@ package com.sipgate.sparta.diameter.session;
 import com.sipgate.sparta.diameter.core.Answer;
 import com.sipgate.sparta.diameter.core.Command;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
+import com.sipgate.sparta.diameter.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.core.Request;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
@@ -77,7 +78,7 @@ public final class DiameterResponderSession extends DiameterSession {
     }
 
     private CapabilitiesExchangeAnswer buildCea(final CapabilitiesExchangeRequest cer, final long resultCode) {
-        final CapabilitiesExchangeAnswer cea = cer.createAnswer(resultCode);
+        final CapabilitiesExchangeAnswer cea = DiameterMessageFactory.createAnswer(cer, resultCode);
         populateCapabilityAvps(cea);
         return cea;
     }

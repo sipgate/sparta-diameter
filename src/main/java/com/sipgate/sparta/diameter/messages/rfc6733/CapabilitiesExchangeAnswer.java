@@ -24,19 +24,8 @@ public final class CapabilitiesExchangeAnswer extends Answer<CapabilitiesExchang
         HasErrorMessageAVP<CapabilitiesExchangeAnswer>,
         HasFailedAVP<CapabilitiesExchangeAnswer> {
 
-    public CapabilitiesExchangeAnswer(final int commandCode, final boolean proxiable, final boolean retransmitted,
-                                      final int applicationId, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(commandCode, proxiable, retransmitted, applicationId, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    /**
-     * Creates a Capabilities Exchange Answer message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new CapabilitiesExchangeAnswer instance.
-     */
-    public static CapabilitiesExchangeAnswer create(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new CapabilitiesExchangeAnswer(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false, false, DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
+    private CapabilitiesExchangeAnswer(final int hopByHopIdentifier, final int endToEndIdentifier) {
+        super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false, false,
+              DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 }

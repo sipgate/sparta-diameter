@@ -155,8 +155,18 @@ Centralise generation in a package-private `DiameterIdentifiers` utility and rep
 
 ### Prevent misuse of hop-by-hop and end-to-end identifiers
 
-Clients (application developers) currently call `Request.create(hopByHop, endToEnd)` with
-hand-rolled values, bypassing `DiameterIdentifiers` and violating RFC 6733 §3. Options:
+`DiameterMessageFactory` in `com.sipgate.sparta.diameter.core` centralises all message
+creation. Reflection reaches each
+class's private constructor, so identifiers can no longer be supplied by constructing
+message objects directly.
+
+`createAnswer(request, resultCode)` additionally copies `Origin-Host` → `Destination-Host`
+and `Origin-Realm` → `Destination-Realm` from the request, routing the answer back to
+the originator.
+
+Note: `DiameterMessageFactory` still accepts raw `int` identifiers. The chosen design
+("private constructors + factory methods") prevents direct construction but does not yet
+enforce that callers use `DiameterIdentifiers` to generate the values. Remaining options:
 
 - **No public constructor with raw ids** — remove or package-private the `create(int, int)`
   factory; expose only a `create(DiameterIdentifiers)` variant so the caller cannot supply

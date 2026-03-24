@@ -25,23 +25,4 @@ public abstract class Request<T extends Request<T, ANSWER>, ANSWER extends Answe
         super(commandCode, true, proxiable, false, retransmitted, applicationId,
               hopByHopIdentifier, endToEndIdentifier);
     }
-
-    /**
-     * Creates an answer for this request with the same hop-by-hop and end-to-end identifiers.
-     * Subclasses should override this method to return the appropriate answer type.
-     *
-     * @param resultCode The result code to set in the answer.
-     * @return The created answer.
-     */
-    public abstract ANSWER createAnswer(long resultCode);
-
-    /**
-     * Marks this Request as retransmitted by setting the retransmission flag.
-     *
-     * @return This Request instance for method chaining.
-     */
-    public T markAsRetransmitted() {
-        setRetransmissionFlag();
-        return self();
-    }
 }

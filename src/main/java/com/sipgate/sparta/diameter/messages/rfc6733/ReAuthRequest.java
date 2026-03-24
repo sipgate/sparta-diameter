@@ -40,25 +40,4 @@ public final class ReAuthRequest extends Request<ReAuthRequest, ReAuthAnswer> im
      * @param endToEndIdentifier The end-to-end identifier.
      * @return A new ReAuthRequest instance.
      */
-    public static ReAuthRequest create(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new ReAuthRequest(false, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    /**
-     * Creates a retransmitted Re-Auth Request message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new ReAuthRequest instance with retransmitted flag set.
-     */
-    public static ReAuthRequest createRetransmitted(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new ReAuthRequest(true, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    @Override
-    public ReAuthAnswer createAnswer(final long resultCode) {
-        return ReAuthAnswer
-                .create(getHopByHopIdentifier(), getEndToEndIdentifier())
-                .setResultCode(resultCode);
-    }
 }

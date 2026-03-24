@@ -32,7 +32,7 @@ public abstract class Command<T extends Command<T>> implements
     HasDestinationRealmAVP<T> {
 
     private static final Map<Integer, Class<? extends Request>> REQUEST_TYPES = new HashMap<>();
-    private static final Map<Integer, Class<? extends Answer>> ANSWER_TYPES = new HashMap<>();
+    static final Map<Integer, Class<? extends Answer>> ANSWER_TYPES = new HashMap<>();
     private static final Set<String> PACKAGES_TO_SCAN = new HashSet<>();
 
     static {
@@ -386,12 +386,12 @@ public abstract class Command<T extends Command<T>> implements
                     ? REQUEST_TYPES.get(commandCode)
                     : ANSWER_TYPES.get(commandCode);
 
-            final String createMethod = isRetransmitted ? "createRetransmitted" : "create";
-            final Command command = create(createMethod, commandClass, hopByHopId, endToEndId);
-
-            if (command == null) {
+            if (commandClass == null) {
                 throw new DiameterException(String.format("Unsupported Diameter command code %s for app-id: %s", commandCode, applicationId));
             }
+
+            final Command command = DiameterMessageFactory.instantiateForParsing(
+                    commandClass, isRetransmitted, hopByHopId, endToEndId);
 
             // Add parsed AVPs
             for (final AVP avp : avps) {
@@ -427,15 +427,6 @@ public abstract class Command<T extends Command<T>> implements
         }
 
         return avps;
-    }
-
-    private static Command create(final String methodName, final Class<? extends Command> requestClass, final int hopByHopId, final int endToEndId) {
-        try {
-            return (Command) requestClass.getMethod(methodName, int.class, int.class)
-                    .invoke(null, hopByHopId, endToEndId);
-        } catch (final Exception e) {
-            return null;
-        }
     }
 
     @Override

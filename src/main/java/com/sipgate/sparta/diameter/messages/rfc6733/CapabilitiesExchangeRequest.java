@@ -34,33 +34,4 @@ public final class CapabilitiesExchangeRequest extends Request<CapabilitiesExcha
               DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
-    /**
-     * Creates a Capabilities Exchange Request message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new CapabilitiesExchangeRequest instance.
-     */
-    public static CapabilitiesExchangeRequest create(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new CapabilitiesExchangeRequest(false, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    /**
-     * Creates a retransmitted Capabilities Exchange Request message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new CapabilitiesExchangeRequest instance with retransmitted flag set.
-     */
-    public static CapabilitiesExchangeRequest createRetransmitted(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new CapabilitiesExchangeRequest(true, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public CapabilitiesExchangeAnswer createAnswer(final long resultCode) {
-       return CapabilitiesExchangeAnswer.create(getHopByHopIdentifier(), getEndToEndIdentifier()).setResultCode(resultCode);
-    }
 }

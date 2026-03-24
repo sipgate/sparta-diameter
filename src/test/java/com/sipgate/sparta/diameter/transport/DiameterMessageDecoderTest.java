@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.transport;
 
 import com.sipgate.sparta.diameter.core.Command;
+import com.sipgate.sparta.diameter.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.messages.rfc6733.DeviceWatchdogRequest;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -34,7 +35,7 @@ class DiameterMessageDecoderTest {
     void it_decodes_framed_bytes_to_a_command() throws Exception {
         // GIVEN
         final EmbeddedChannel decoder = newDecoder();
-        final DeviceWatchdogRequest dwr = DeviceWatchdogRequest.create(0x0000BEEF, 0x0000CAFE);
+        final DeviceWatchdogRequest dwr = DiameterMessageFactory.create(DeviceWatchdogRequest.class,0x0000BEEF, 0x0000CAFE);
         final ByteBuf wire = serialize(dwr);
 
         // WHEN
@@ -54,8 +55,8 @@ class DiameterMessageDecoderTest {
     void it_decodes_multiple_messages_from_a_single_buffer() throws Exception {
         // GIVEN
         final EmbeddedChannel decoder = newDecoder();
-        final DeviceWatchdogRequest first = DeviceWatchdogRequest.create(1, 2);
-        final DeviceWatchdogRequest second = DeviceWatchdogRequest.create(3, 4);
+        final DeviceWatchdogRequest first = DiameterMessageFactory.create(DeviceWatchdogRequest.class,1, 2);
+        final DeviceWatchdogRequest second = DiameterMessageFactory.create(DeviceWatchdogRequest.class,3, 4);
 
         final ByteBuf wire = Unpooled.buffer();
         wire.writeBytes(serialize(first));
@@ -81,7 +82,7 @@ class DiameterMessageDecoderTest {
     void it_holds_back_an_incomplete_frame_until_the_rest_arrives() throws Exception {
         // GIVEN: a single DWR split across two TCP segments
         final EmbeddedChannel decoder = newDecoder();
-        final DeviceWatchdogRequest dwr = DeviceWatchdogRequest.create(0x42, 0x43);
+        final DeviceWatchdogRequest dwr = DiameterMessageFactory.create(DeviceWatchdogRequest.class,0x42, 0x43);
         final ByteBuf serialized = serialize(dwr);
         final byte[] bytes = new byte[serialized.readableBytes()];
         serialized.readBytes(bytes);

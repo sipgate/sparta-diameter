@@ -42,33 +42,4 @@ public final class AccountingRequest extends Request<AccountingRequest, Accounti
         super(DiameterConstants.CMD_ACCOUNTING, true, retransmitted,
               DiameterConstants.APP_DIAMETER_BASE_ACCOUNTING, hopByHopIdentifier, endToEndIdentifier);
     }
-
-    /**
-     * Creates an Accounting Request message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new AccountingRequest instance.
-     */
-    public static AccountingRequest create(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new AccountingRequest(false, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    /**
-     * Creates a retransmitted Accounting Request message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new AccountingRequest instance with retransmitted flag set.
-     */
-    public static AccountingRequest createRetransmitted(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new AccountingRequest(true, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    @Override
-    public AccountingAnswer createAnswer(final long resultCode) {
-        return AccountingAnswer
-                .create(getHopByHopIdentifier(), getEndToEndIdentifier())
-                .setResultCode(resultCode);
-    }
 }

@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.transport;
 
 import com.sipgate.sparta.diameter.core.Command;
+import com.sipgate.sparta.diameter.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.messages.rfc6733.DeviceWatchdogRequest;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.embedded.EmbeddedChannel;
@@ -16,7 +17,7 @@ class DiameterMessageEncoderTest {
     void it_encodes_a_command_to_wire_format() {
         // GIVEN
         final EmbeddedChannel encoder = new EmbeddedChannel(new DiameterMessageEncoder());
-        final DeviceWatchdogRequest dwr = DeviceWatchdogRequest.create(0x0000BEEF, 0x0000CAFE);
+        final DeviceWatchdogRequest dwr = DiameterMessageFactory.create(DeviceWatchdogRequest.class,0x0000BEEF, 0x0000CAFE);
 
         // WHEN
         encoder.writeOutbound(dwr);
@@ -35,7 +36,7 @@ class DiameterMessageEncoderTest {
     void it_produces_bytes_parseable_by_the_command_layer() throws Exception {
         // GIVEN
         final EmbeddedChannel encoder = new EmbeddedChannel(new DiameterMessageEncoder());
-        final DeviceWatchdogRequest dwr = DeviceWatchdogRequest.create(0x1234, 0x5678);
+        final DeviceWatchdogRequest dwr = DiameterMessageFactory.create(DeviceWatchdogRequest.class,0x1234, 0x5678);
 
         // WHEN
         encoder.writeOutbound(dwr);

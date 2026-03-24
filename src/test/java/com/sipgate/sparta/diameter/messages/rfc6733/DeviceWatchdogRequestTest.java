@@ -1,7 +1,7 @@
 package com.sipgate.sparta.diameter.messages.rfc6733;
 
-import com.sipgate.sparta.diameter.core.Answer;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
+import com.sipgate.sparta.diameter.core.DiameterMessageFactory;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,11 +10,11 @@ class DeviceWatchdogRequestTest {
     @Test
     void it_creates_normal_answer_with_success_result_code() {
         // GIVEN
-        final DeviceWatchdogRequest request = DeviceWatchdogRequest.create(12345, 67890);
+        final DeviceWatchdogRequest request = DiameterMessageFactory.create(DeviceWatchdogRequest.class, 12345, 67890);
         final long successCode = DiameterConstants.RES_DIAMETER_SUCCESS;
 
         // WHEN
-        final DeviceWatchdogAnswer answer = request.createAnswer(successCode);
+        final DeviceWatchdogAnswer answer = DiameterMessageFactory.createAnswer(request, successCode);
 
         // THEN
         assertThat(answer.isError()).isFalse();
@@ -30,7 +30,7 @@ class DeviceWatchdogRequestTest {
         final int endToEndId = 67890;
 
         // WHEN
-        final DeviceWatchdogRequest request = DeviceWatchdogRequest.create(hopByHopId, endToEndId);
+        final DeviceWatchdogRequest request = DiameterMessageFactory.create(DeviceWatchdogRequest.class, hopByHopId, endToEndId);
 
         // THEN
         assertThat(request.getHopByHopIdentifier()).isEqualTo(hopByHopId);
@@ -47,7 +47,7 @@ class DeviceWatchdogRequestTest {
         final int endToEndId = 11111;
 
         // WHEN
-        final DeviceWatchdogRequest request = DeviceWatchdogRequest.createRetransmitted(hopByHopId, endToEndId);
+        final DeviceWatchdogRequest request = DiameterMessageFactory.createRetransmitted(DeviceWatchdogRequest.class, hopByHopId, endToEndId);
 
         // THEN
         assertThat(request.getHopByHopIdentifier()).isEqualTo(hopByHopId);

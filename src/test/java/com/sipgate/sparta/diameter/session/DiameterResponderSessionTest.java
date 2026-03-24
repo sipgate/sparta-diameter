@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.session;
 
 import com.sipgate.sparta.diameter.core.DiameterConstants;
+import com.sipgate.sparta.diameter.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.core.avp.AVP;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
@@ -102,7 +103,7 @@ class DiameterResponderSessionTest {
         stubEventLoop(peer);
         final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_AUTH_APP);
         session.onConnected(peer);
-        final CapabilitiesExchangeRequest cer = CapabilitiesExchangeRequest.create(1, 2);
+        final CapabilitiesExchangeRequest cer = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 1, 2);
         cer.addAVP(AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, 5L));
 
         // WHEN
@@ -120,7 +121,7 @@ class DiameterResponderSessionTest {
         stubEventLoop(peer);
         final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_AUTH_APP);
         session.onConnected(peer);
-        final CapabilitiesExchangeRequest cer = CapabilitiesExchangeRequest.create(1, 2);
+        final CapabilitiesExchangeRequest cer = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 1, 2);
         cer.addAVP(AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, 5L));
 
         // WHEN
@@ -141,7 +142,7 @@ class DiameterResponderSessionTest {
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_AUTH_APP);
         session.onConnected(peer);
-        final CapabilitiesExchangeRequest cer = CapabilitiesExchangeRequest.create(1, 2);
+        final CapabilitiesExchangeRequest cer = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 1, 2);
         cer.addAVP(AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, 99L));
 
         // WHEN
@@ -159,7 +160,7 @@ class DiameterResponderSessionTest {
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_AUTH_APP);
         session.onConnected(peer);
-        final CapabilitiesExchangeRequest cer = CapabilitiesExchangeRequest.create(1, 2);
+        final CapabilitiesExchangeRequest cer = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 1, 2);
         cer.addAVP(AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, 99L));
 
         // WHEN
@@ -180,7 +181,7 @@ class DiameterResponderSessionTest {
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_AUTH_APP);
         session.onConnected(peer);
-        final CapabilitiesExchangeRequest cer = CapabilitiesExchangeRequest.create(1, 2);
+        final CapabilitiesExchangeRequest cer = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 1, 2);
         cer.addAVP(AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, 99L));
 
         // WHEN
@@ -210,12 +211,12 @@ class DiameterResponderSessionTest {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         final DiameterResponderSession session = openedSession(peer);
-        final ReAuthAnswer answer = ReAuthAnswer.create(10, 20);
-        answer.setResultCode(DiameterConstants.RES_DIAMETER_SUCCESS);
+        final ReAuthRequest rar = DiameterMessageFactory.create(ReAuthRequest.class, 10, 20);
+        final ReAuthAnswer answer = DiameterMessageFactory.createAnswer(rar, DiameterConstants.RES_DIAMETER_SUCCESS);
         session.setHandler(ReAuthRequest.class, req -> CompletableFuture.completedFuture(answer));
 
         // WHEN
-        session.onMessage(peer, ReAuthRequest.create(10, 20));
+        session.onMessage(peer, rar);
 
         // THEN
         verify(peer).send(answer);
@@ -228,7 +229,7 @@ class DiameterResponderSessionTest {
         final DiameterResponderSession session = openedSession(peer);
 
         // WHEN
-        session.onMessage(peer, ReAuthRequest.create(10, 20));
+        session.onMessage(peer, DiameterMessageFactory.create(ReAuthRequest.class, 10, 20));
 
         // THEN
         final ArgumentCaptor<ReAuthAnswer> captor = ArgumentCaptor.forClass(ReAuthAnswer.class);
@@ -247,7 +248,7 @@ class DiameterResponderSessionTest {
         session.setHandler(ReAuthRequest.class, req -> failing);
 
         // WHEN
-        session.onMessage(peer, ReAuthRequest.create(10, 20));
+        session.onMessage(peer, DiameterMessageFactory.create(ReAuthRequest.class, 10, 20));
 
         // THEN
         final ArgumentCaptor<ReAuthAnswer> captor = ArgumentCaptor.forClass(ReAuthAnswer.class);
@@ -275,7 +276,7 @@ class DiameterResponderSessionTest {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         final DiameterResponderSession session = openedSession(peer);
-        final DeviceWatchdogRequest dwr = DeviceWatchdogRequest.create(77, 88);
+        final DeviceWatchdogRequest dwr = DiameterMessageFactory.create(DeviceWatchdogRequest.class, 77, 88);
 
         // WHEN
         session.onMessage(peer, dwr);
@@ -326,7 +327,7 @@ class DiameterResponderSessionTest {
 
         // WHEN
         final CompletableFuture<CapabilitiesExchangeAnswer> future =
-                session.send(CapabilitiesExchangeRequest.create(1, 2));
+                session.send(DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 1, 2));
 
         // THEN
         assertThat(future).isCompletedExceptionally();
@@ -344,8 +345,7 @@ class DiameterResponderSessionTest {
         verify(peer).send(dprCaptor.capture());
         Mockito.clearInvocations(peer);
         final DisconnectPeerAnswer dpa =
-                DisconnectPeerAnswer.create(dprCaptor.getValue().getHopByHopIdentifier(), 99);
-        dpa.setResultCode(DiameterConstants.RES_DIAMETER_SUCCESS);
+                DiameterMessageFactory.createAnswer(dprCaptor.getValue(), DiameterConstants.RES_DIAMETER_SUCCESS);
 
         // WHEN
         session.onMessage(peer, dpa);
@@ -362,7 +362,7 @@ class DiameterResponderSessionTest {
         final DiameterResponderSession session = openedSession(peer);
 
         // WHEN
-        session.onMessage(peer, DisconnectPeerRequest.create(10, 20));
+        session.onMessage(peer, DiameterMessageFactory.create(DisconnectPeerRequest.class, 10, 20));
 
         // THEN
         assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSING);
@@ -376,7 +376,7 @@ class DiameterResponderSessionTest {
         final DiameterResponderSession session = openedSession(peer);
 
         // WHEN
-        session.onMessage(peer, DisconnectPeerRequest.create(10, 20));
+        session.onMessage(peer, DiameterMessageFactory.create(DisconnectPeerRequest.class, 10, 20));
 
         // THEN
         final ArgumentCaptor<DisconnectPeerAnswer> captor =
@@ -391,7 +391,7 @@ class DiameterResponderSessionTest {
         final DiameterPeer peer = mock(DiameterPeer.class);
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final DiameterResponderSession session = openedSession(peer);
-        session.onMessage(peer, DisconnectPeerRequest.create(10, 20));
+        session.onMessage(peer, DiameterMessageFactory.create(DisconnectPeerRequest.class, 10, 20));
 
         // WHEN - channel closes after DPA was sent
         session.onDisconnected(peer);
@@ -408,7 +408,7 @@ class DiameterResponderSessionTest {
         final DiameterResponderSession session = openedSession(peer);
 
         // WHEN
-        session.onMessage(peer, DisconnectPeerRequest.create(10, 20));
+        session.onMessage(peer, DiameterMessageFactory.create(DisconnectPeerRequest.class, 10, 20));
 
         // THEN
         verify(peer).close();
@@ -423,7 +423,7 @@ class DiameterResponderSessionTest {
         stubEventLoop(peer);
         final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_AUTH_APP);
         session.onConnected(peer);
-        final CapabilitiesExchangeRequest cer = CapabilitiesExchangeRequest.create(1, 2);
+        final CapabilitiesExchangeRequest cer = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 1, 2);
         cer.addAVP(AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, 5L));
         session.onMessage(peer, cer);
         Mockito.clearInvocations(peer);

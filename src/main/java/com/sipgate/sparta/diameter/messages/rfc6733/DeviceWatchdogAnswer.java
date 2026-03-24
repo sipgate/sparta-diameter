@@ -31,14 +31,4 @@ public class DeviceWatchdogAnswer extends Answer<DeviceWatchdogAnswer> implement
               DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
-    /**
-     * Creates a Device Watchdog Answer message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new DeviceWatchdogAnswer instance.
-     */
-    public static DeviceWatchdogAnswer create(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new DeviceWatchdogAnswer(hopByHopIdentifier, endToEndIdentifier);
-    }
 }

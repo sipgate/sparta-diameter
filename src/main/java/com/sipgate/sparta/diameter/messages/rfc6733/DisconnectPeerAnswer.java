@@ -29,14 +29,4 @@ public final class DisconnectPeerAnswer extends Answer<DisconnectPeerAnswer> imp
               DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
-    /**
-     * Creates a Disconnect Peer Answer message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new DisconnectPeerAnswer instance.
-     */
-    public static DisconnectPeerAnswer create(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new DisconnectPeerAnswer(hopByHopIdentifier, endToEndIdentifier);
-    }
 }

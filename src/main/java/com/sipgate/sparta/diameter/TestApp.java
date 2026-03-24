@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter;
 
 import com.sipgate.sparta.diameter.core.Command;
+import com.sipgate.sparta.diameter.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.core.avp.AVP;
 import com.sipgate.sparta.diameter.core.avp.AVPDefinition;
 import com.sipgate.sparta.diameter.core.avp.CoreAVPProvider;
@@ -20,7 +21,7 @@ public class TestApp {
         final Socket socket = new Socket();
         socket.connect(new InetSocketAddress("localhost", 3868), 5000);
 
-        final CapabilitiesExchangeRequest cer = CapabilitiesExchangeRequest.create(1, 1);
+        final CapabilitiesExchangeRequest cer = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 1, 1);
         cer.setOriginHost("myapp.test.realm");
         cer.setOriginRealm("test.realm");
         cer.setDestinationRealm("test.realm");

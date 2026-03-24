@@ -27,35 +27,4 @@ public class DeviceWatchdogRequest extends Request<DeviceWatchdogRequest, Device
               DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
-    /**
-     * Creates a Device Watchdog Request message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new DeviceWatchdogRequest instance.
-     */
-    public static DeviceWatchdogRequest create(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new DeviceWatchdogRequest(false, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    /**
-     * Creates a retransmitted Device Watchdog Request message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new DeviceWatchdogRequest instance with retransmitted flag set.
-     */
-    public static DeviceWatchdogRequest createRetransmitted(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new DeviceWatchdogRequest(true, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DeviceWatchdogAnswer createAnswer(final long resultCode) {
-        return DeviceWatchdogAnswer
-                .create(getHopByHopIdentifier(), getEndToEndIdentifier())
-                .setResultCode(resultCode);
-    }
 }

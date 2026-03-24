@@ -28,32 +28,4 @@ public final class DisconnectPeerRequest extends Request<DisconnectPeerRequest, 
               DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
-    /**
-     * Creates a Disconnect Peer Request message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new DisconnectPeerRequest instance.
-     */
-    public static DisconnectPeerRequest create(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new DisconnectPeerRequest(false, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    /**
-     * Creates a retransmitted Disconnect Peer Request message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new DisconnectPeerRequest instance with retransmitted flag set.
-     */
-    public static DisconnectPeerRequest createRetransmitted(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new DisconnectPeerRequest(true, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    @Override
-    public DisconnectPeerAnswer createAnswer(final long resultCode) {
-        return DisconnectPeerAnswer
-                .create(getHopByHopIdentifier(), getEndToEndIdentifier())
-                .setResultCode(resultCode);
-    }
 }

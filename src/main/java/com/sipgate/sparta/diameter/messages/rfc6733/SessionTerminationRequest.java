@@ -25,33 +25,4 @@ public final class SessionTerminationRequest extends Request<SessionTerminationR
         super(DiameterConstants.CMD_SESSION_TERMINATION, true, retransmitted,
               DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
-
-    /**
-     * Creates a Session Termination Request message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new SessionTerminationRequest instance.
-     */
-    public static SessionTerminationRequest create(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new SessionTerminationRequest(false, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    /**
-     * Creates a retransmitted Session Termination Request message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new SessionTerminationRequest instance with retransmitted flag set.
-     */
-    public static SessionTerminationRequest createRetransmitted(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new SessionTerminationRequest(true, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    @Override
-    public SessionTerminationAnswer createAnswer(final long resultCode) {
-        return SessionTerminationAnswer
-                .create(getHopByHopIdentifier(), getEndToEndIdentifier())
-                .setResultCode(resultCode);
-    }
 }

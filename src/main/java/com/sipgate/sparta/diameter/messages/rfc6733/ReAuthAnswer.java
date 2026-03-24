@@ -34,15 +34,4 @@ public final class ReAuthAnswer extends Answer<ReAuthAnswer> implements
               DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
-    /**
-     * Creates a Re-Auth Answer message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new ReAuthAnswer instance.
-     */
-    public static ReAuthAnswer create(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new ReAuthAnswer(hopByHopIdentifier, endToEndIdentifier);
-    }
-
 }

@@ -32,33 +32,4 @@ public final class AbortSessionRequest extends Request<AbortSessionRequest, Abor
         super(DiameterConstants.CMD_ABORT_SESSION, true, retransmitted,
               DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
-
-    /**
-     * Creates an Abort Session Request message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new AbortSessionRequest instance.
-     */
-    public static AbortSessionRequest create(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new AbortSessionRequest(false, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    /**
-     * Creates a retransmitted Abort Session Request message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new AbortSessionRequest instance with retransmitted flag set.
-     */
-    public static AbortSessionRequest createRetransmitted(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new AbortSessionRequest(true, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    @Override
-    public AbortSessionAnswer createAnswer(final long resultCode) {
-        return AbortSessionAnswer
-                .create(getHopByHopIdentifier(), getEndToEndIdentifier())
-                .setResultCode(resultCode);
-    }
 }

@@ -33,6 +33,7 @@ The project follows the following package structure:
 - **`Command`** - Abstract base class for all Diameter messages with header handling and AVP management
 - **`Request`** - Abstract base for request messages (R-bit set)
 - **`Answer`** - Abstract base for answer messages with Result-Code support
+- **`DiameterMessageFactory`** - Central factory for creating request and answer messages
 - **`AVP`** - Attribute-Value Pair implementation with encoding/decoding
 - **`GroupedAVP`** - Support for nested AVP structures
 - **`GenericCommand`** - Fallback for unknown message types
@@ -60,24 +61,39 @@ Implementation of fundamental Diameter protocol messages:
 
 ```java
 // Create a Device Watchdog Request
-DeviceWatchdogRequest dwr = new DeviceWatchdogRequest(false, hopByHop, endToEnd);
+DeviceWatchdogRequest dwr = DiameterMessageFactory.create(
+        DeviceWatchdogRequest.class, hopByHop, endToEnd);
 dwr.setOriginHost("hss.example.com");
 dwr.setOriginRealm("example.com");
 dwr.setOriginStateId(12345);
 
+// Create a retransmitted request
+DeviceWatchdogRequest retransmit = DiameterMessageFactory.createRetransmitted(
+        DeviceWatchdogRequest.class, hopByHop, endToEnd);
+
 // Create Capabilities Exchange Request
-CapabilitiesExchangeRequest cer = new CapabilitiesExchangeRequest(false, hopByHop, endToEnd);
+CapabilitiesExchangeRequest cer = DiameterMessageFactory.create(
+        CapabilitiesExchangeRequest.class, hopByHop, endToEnd);
 cer.setOriginHost("hss.example.com");
 cer.setOriginRealm("example.com");
 cer.setVendorId(10415); // 3GPP
 cer.setProductName("Sparta HSS");
 cer.addHostIPAddress(InetAddress.getByName("192.168.1.100"));
 
+// Create an answer for a received request (echoes identifiers; copies Origin-Host/Realm
+// from the request to Destination-Host/Realm on the answer)
+DeviceWatchdogAnswer dwa = DiameterMessageFactory.createAnswer(dwr, DiameterConstants.RES_DIAMETER_SUCCESS);
+
+// Create a bare answer with explicit identifiers (for testing or peer simulation)
+CapabilitiesExchangeAnswer cea = DiameterMessageFactory.createAnswer(
+        CapabilitiesExchangeAnswer.class, hopByHop, endToEnd);
+
 // Parse incoming message
 byte[] messageData = // ... received from network
-Command command = DiameterMessageParser.parseMessage(messageData);
-if (command instanceof final DeviceWatchdogRequest dwr) {
-    DeviceWatchdogAnswer dwa = dwr.createAnswer(DiameterConstants.DIAMETER_SUCCESS);
+Command command = Command.parseMessage(ByteBuffer.wrap(messageData));
+if (command instanceof final DeviceWatchdogRequest received) {
+    DeviceWatchdogAnswer answer = DiameterMessageFactory.createAnswer(
+            received, DiameterConstants.RES_DIAMETER_SUCCESS);
 }
 ```
 

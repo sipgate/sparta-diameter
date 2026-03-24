@@ -42,14 +42,4 @@ public final class AccountingAnswer extends Answer<AccountingAnswer> implements
               DiameterConstants.APP_DIAMETER_BASE_ACCOUNTING, hopByHopIdentifier, endToEndIdentifier);
     }
 
-    /**
-     * Creates an Accounting Answer message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new AccountingAnswer instance.
-     */
-    public static AccountingAnswer create(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new AccountingAnswer(hopByHopIdentifier, endToEndIdentifier);
-    }
 }

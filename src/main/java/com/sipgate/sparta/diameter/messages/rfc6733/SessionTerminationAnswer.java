@@ -36,14 +36,4 @@ public final class SessionTerminationAnswer extends Answer<SessionTerminationAns
               DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
     }
 
-    /**
-     * Creates a Session Termination Answer message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new SessionTerminationAnswer instance.
-     */
-    public static SessionTerminationAnswer create(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        return new SessionTerminationAnswer(hopByHopIdentifier, endToEndIdentifier);
-    }
 }
