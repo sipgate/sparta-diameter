@@ -1,5 +1,6 @@
 package com.sipgate.sparta.diameter.session;
 
+import com.sipgate.sparta.diameter.core.Answer;
 import com.sipgate.sparta.diameter.core.Command;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
 import com.sipgate.sparta.diameter.core.Request;
@@ -30,11 +31,16 @@ public final class DiameterResponderSession extends DiameterSession {
 
     @Override
     public void onMessage(final DiameterPeer peer, final Command<?> command) {
+        // We must handle a CER separately from the usual setHandler pattern,
+        // because we want to process normal requests only when the
+        // state of the connection is already R_OPEN.
         if (command instanceof final CapabilitiesExchangeRequest cer) {
             handleCer(cer);
             return;
         }
 
+        // We want to handle incoming commands only when the connection is ready,
+        // so rogue commands don't interfere with an application before the CEA has been sent.
         if (peerState == PeerState.R_OPEN) {
             handleWatchdog(command);
             if (command instanceof final Request<?, ?> request) {
@@ -42,7 +48,9 @@ public final class DiameterResponderSession extends DiameterSession {
                 return;
             }
 
-            tryCompleteFromPendingMap(command);
+            if (command instanceof final Answer<?> answer) {
+                complete(answer);
+            }
         }
     }
 

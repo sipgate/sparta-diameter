@@ -1,5 +1,6 @@
 package com.sipgate.sparta.diameter.session;
 
+import com.sipgate.sparta.diameter.core.Answer;
 import com.sipgate.sparta.diameter.core.Command;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
 import com.sipgate.sparta.diameter.core.Request;
@@ -46,6 +47,8 @@ public final class DiameterInitiatorSession extends DiameterSession {
 
     @Override
     public void onMessage(final DiameterPeer peer, final Command<?> command) {
+        // We want to handle incoming commands only when the connection is ready,
+        // so rogue commands don't interfere with an application before the CER has been received.
         if (peerState == PeerState.I_OPEN) {
             handleWatchdog(command);
             if (command instanceof final Request<?, ?> request) {
@@ -54,7 +57,9 @@ public final class DiameterInitiatorSession extends DiameterSession {
             }
         }
 
-        tryCompleteFromPendingMap(command);
+        if (command instanceof final Answer<?> answer) {
+            complete(answer);
+        }
     }
 
     @Override

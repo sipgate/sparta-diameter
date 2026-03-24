@@ -222,21 +222,14 @@ abstract class DiameterSession implements DiameterConnectionListener {
 
     /**
      * Looks up the hop-by-hop identifier of an incoming answer in the pending-request
-     * map and completes the corresponding future. Does nothing for requests or answers
+     * map and completes the corresponding future. Does nothing for answers
      * with no pending entry.
      *
-     * @param command the incoming message
+     * @param answer the incoming answer
      */
-    protected void tryCompleteFromPendingMap(final Command<?> command) {
-        if (command.isRequest()) {
-            return;
-        }
-        complete(command.getHopByHopIdentifier(), command);
-    }
-
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private void complete(final int hopByHop, final Command<?> answer) {
-        final PendingRequest pending = pendingRequests.remove(hopByHop);
+    protected void complete(final Answer<?> answer) {
+        final PendingRequest pending = pendingRequests.remove(answer.getHopByHopIdentifier());
         if (pending == null) {
             return;
         }
