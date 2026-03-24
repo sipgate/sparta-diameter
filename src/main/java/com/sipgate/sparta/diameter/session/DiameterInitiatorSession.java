@@ -10,7 +10,6 @@ import com.sipgate.sparta.diameter.messages.rfc6733.DisconnectPeerRequest;
 import com.sipgate.sparta.diameter.transport.DiameterPeer;
 
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -108,9 +107,9 @@ public final class DiameterInitiatorSession extends DiameterSession {
     }
 
     private CapabilitiesExchangeRequest buildCer() {
-        final int hopByHop = ThreadLocalRandom.current().nextInt();
-        final int endToEnd = ThreadLocalRandom.current().nextInt();
-        final CapabilitiesExchangeRequest cer = CapabilitiesExchangeRequest.create(hopByHop, endToEnd);
+        final CapabilitiesExchangeRequest cer = CapabilitiesExchangeRequest.create(
+                identifiers.nextHopByHop(),
+                DiameterIdentifiers.nextEndToEnd());
         populateCapabilityAvps(cer);
         return cer;
     }

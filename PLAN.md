@@ -139,7 +139,7 @@ All new session/state classes go in `com.sipgate.sparta.diameter.session`.
 These are known gaps that do not block the numbered steps but must be addressed before the library
 is production-ready.
 
-### Hop-by-hop and end-to-end identifier generation
+### ~~Hop-by-hop and end-to-end identifier generation~~ ✓ Done
 
 Both identifiers are currently generated with `ThreadLocalRandom.current().nextInt()`. RFC 6733
 §3 has stricter requirements:

@@ -42,6 +42,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
 
     protected final DiameterNodeConfig config;
     protected final CapabilityNegotiator negotiator;
+    protected final DiameterIdentifiers identifiers;
 
     protected PeerState peerState;
     protected WatchdogState watchdogState;
@@ -62,6 +63,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
     DiameterSession(final DiameterNodeConfig config) {
         this.config = config;
         this.negotiator = new CapabilityNegotiator();
+        this.identifiers = new DiameterIdentifiers();
         this.peerState = PeerState.CLOSED;
         this.watchdogState = WatchdogState.INITIAL;
     }
@@ -384,14 +386,14 @@ abstract class DiameterSession implements DiameterConnectionListener {
 
     private DeviceWatchdogRequest buildDwr() {
         return DeviceWatchdogRequest.create(
-                ThreadLocalRandom.current().nextInt(),
-                ThreadLocalRandom.current().nextInt());
+                identifiers.nextHopByHop(),
+                DiameterIdentifiers.nextEndToEnd());
     }
 
     private DisconnectPeerRequest buildDpr() {
         return DisconnectPeerRequest.create(
-                        ThreadLocalRandom.current().nextInt(),
-                        ThreadLocalRandom.current().nextInt())
+                        identifiers.nextHopByHop(),
+                        DiameterIdentifiers.nextEndToEnd())
                 .setDisconnectCause(DiameterConstants.DCC_DO_NOT_WANT_TO_TALK_TO_YOU);
     }
 
