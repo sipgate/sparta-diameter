@@ -50,12 +50,11 @@ public final class DiameterInitiatorSession extends DiameterSession {
             handleWatchdog(command);
             if (command instanceof final Request<?, ?> request) {
                 dispatchInboundRequest(request);
-            } else {
-                tryCompleteFromPendingMap(command);
+                return;
             }
-        } else {
-            tryCompleteFromPendingMap(command);
         }
+
+        tryCompleteFromPendingMap(command);
     }
 
     @Override
