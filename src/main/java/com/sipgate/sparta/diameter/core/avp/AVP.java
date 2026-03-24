@@ -691,7 +691,7 @@ public class AVP {
      * @return The created AVP with appropriate flags
      * @throws IllegalArgumentException if AVP code is unknown or type mismatch
      */
-    public static AVP create(final int avpCode, final Integer value) {
+    public static AVP create(final int avpCode, final int value) {
         final AVPDefinition definition = getDefinition(avpCode);
         validateType(definition, Integer.class);
         return createEnumeratedAVP(avpCode, definition.mandatory(), value);
