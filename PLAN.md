@@ -113,7 +113,7 @@ All new session/state classes go in `com.sipgate.sparta.diameter.session`.
   Tc = 30 s (transport reconnect) — both are infrastructure timers, not request timeouts. Recommend
   **10 s** as default: below both infrastructure timers, leaves headroom for agents in the path.
 
-### 8 — DPR/DPA
+### ~~8 — DPR/DPA~~ ✓ Done
 
 - `stop()` method on both session classes — sets a `shuttingDown` flag, fires `Stop` event
 - `Stop` event: send DPR with appropriate `Disconnect-Cause`, transition to `CLOSING`

@@ -11,6 +11,7 @@ import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.messages.rfc6733.DeviceWatchdogAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.DeviceWatchdogRequest;
+import com.sipgate.sparta.diameter.messages.rfc6733.DisconnectPeerRequest;
 import com.sipgate.sparta.diameter.transport.DiameterConnectionListener;
 import com.sipgate.sparta.diameter.transport.DiameterPeer;
 
@@ -45,6 +46,8 @@ abstract class DiameterSession implements DiameterConnectionListener {
     protected PeerState peerState;
     protected WatchdogState watchdogState;
     protected DiameterPeer peer;
+
+    protected boolean shuttingDown = false;
 
     private Integer pendingDwrHopByHop;
     private Future<?> twTimer;
@@ -111,6 +114,36 @@ abstract class DiameterSession implements DiameterConnectionListener {
                     "Handler for command code " + commandCode + " is already registered");
         }
         handlers.put(commandCode, handler);
+    }
+
+    /**
+     * Initiates a graceful disconnection by sending a DPR with
+     * {@code DO_NOT_WANT_TO_TALK_TO_YOU} and transitioning to {@code CLOSING}.
+     * The connection is closed once the DPA is received (or the request times out).
+     * Has no effect if the session is not in an OPEN state.
+     */
+    public void stop() {
+        if (peerState != PeerState.I_OPEN && peerState != PeerState.R_OPEN) {
+            return;
+        }
+        shuttingDown = true;
+        stopWatchdog();
+        peerState = PeerState.CLOSING;
+        sendAndTrack(buildDpr()).whenComplete((dpa, err) -> {
+            peerState = PeerState.CLOSED;
+            peer.close();
+        });
+    }
+
+    /**
+     * Handles a peer-initiated DPR: sends a DPA, transitions to {@code CLOSING},
+     * and closes the channel. Invisible to the application.
+     */
+    protected void handleInboundDpr(final DisconnectPeerRequest dpr) {
+        stopWatchdog();
+        peerState = PeerState.CLOSING;
+        peer.send(dpr.createAnswer(DiameterConstants.RES_DIAMETER_SUCCESS));
+        peer.close();
     }
 
     /**
@@ -353,6 +386,13 @@ abstract class DiameterSession implements DiameterConnectionListener {
         return DeviceWatchdogRequest.create(
                 ThreadLocalRandom.current().nextInt(),
                 ThreadLocalRandom.current().nextInt());
+    }
+
+    private DisconnectPeerRequest buildDpr() {
+        return DisconnectPeerRequest.create(
+                        ThreadLocalRandom.current().nextInt(),
+                        ThreadLocalRandom.current().nextInt())
+                .setDisconnectCause(DiameterConstants.DCC_DO_NOT_WANT_TO_TALK_TO_YOU);
     }
 
     private static final class PendingRequest<A> {

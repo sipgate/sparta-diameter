@@ -6,6 +6,8 @@ import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.messages.rfc6733.DeviceWatchdogAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.DeviceWatchdogRequest;
+import com.sipgate.sparta.diameter.messages.rfc6733.DisconnectPeerAnswer;
+import com.sipgate.sparta.diameter.messages.rfc6733.DisconnectPeerRequest;
 import com.sipgate.sparta.diameter.messages.rfc6733.ReAuthAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.ReAuthRequest;
 import com.sipgate.sparta.diameter.transport.DiameterPeer;
@@ -264,7 +266,7 @@ class DiameterResponderSessionTest {
         final DiameterPeer peer = mock(DiameterPeer.class);
         final DiameterResponderSession session = openedSession(peer);
 
-        // WHEN / THEN — watchdog is OKAY after CER exchange
+        // WHEN / THEN - watchdog is OKAY after CER exchange
         assertThat(session.getWatchdogState()).isEqualTo(WatchdogState.OKAY);
     }
 
@@ -283,6 +285,133 @@ class DiameterResponderSessionTest {
                 ArgumentCaptor.forClass(DeviceWatchdogAnswer.class);
         verify(peer).send(captor.capture());
         assertThat(captor.getValue().getHopByHopIdentifier()).isEqualTo(77);
+    }
+
+    // -------------------------------------------------------------------------
+    // DPR/DPA - graceful shutdown
+    // -------------------------------------------------------------------------
+
+    @Test
+    void it_transitions_to_CLOSING_when_stop_is_called() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        final DiameterResponderSession session = openedSession(peer);
+
+        // WHEN
+        session.stop();
+
+        // THEN
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSING);
+    }
+
+    @Test
+    void it_sends_DPR_when_stop_is_called() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        final DiameterResponderSession session = openedSession(peer);
+
+        // WHEN
+        session.stop();
+
+        // THEN
+        verify(peer).send(any(DisconnectPeerRequest.class));
+    }
+
+    @Test
+    void it_rejects_send_in_CLOSING_state() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        final DiameterResponderSession session = openedSession(peer);
+        session.stop();
+
+        // WHEN
+        final CompletableFuture<CapabilitiesExchangeAnswer> future =
+                session.send(CapabilitiesExchangeRequest.create(1, 2));
+
+        // THEN
+        assertThat(future).isCompletedExceptionally();
+    }
+
+    @Test
+    void it_transitions_to_CLOSED_when_DPA_arrives_in_CLOSING() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.close()).thenReturn(mock(ChannelFuture.class));
+        final DiameterResponderSession session = openedSession(peer);
+        session.stop();
+        final ArgumentCaptor<DisconnectPeerRequest> dprCaptor =
+                ArgumentCaptor.forClass(DisconnectPeerRequest.class);
+        verify(peer).send(dprCaptor.capture());
+        Mockito.clearInvocations(peer);
+        final DisconnectPeerAnswer dpa =
+                DisconnectPeerAnswer.create(dprCaptor.getValue().getHopByHopIdentifier(), 99);
+        dpa.setResultCode(DiameterConstants.RES_DIAMETER_SUCCESS);
+
+        // WHEN
+        session.onMessage(peer, dpa);
+
+        // THEN
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
+    }
+
+    @Test
+    void it_transitions_to_CLOSING_when_DPR_received_in_R_OPEN() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.close()).thenReturn(mock(ChannelFuture.class));
+        final DiameterResponderSession session = openedSession(peer);
+
+        // WHEN
+        session.onMessage(peer, DisconnectPeerRequest.create(10, 20));
+
+        // THEN
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSING);
+    }
+
+    @Test
+    void it_sends_DPA_when_DPR_received_in_R_OPEN() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.close()).thenReturn(mock(ChannelFuture.class));
+        final DiameterResponderSession session = openedSession(peer);
+
+        // WHEN
+        session.onMessage(peer, DisconnectPeerRequest.create(10, 20));
+
+        // THEN
+        final ArgumentCaptor<DisconnectPeerAnswer> captor =
+                ArgumentCaptor.forClass(DisconnectPeerAnswer.class);
+        verify(peer).send(captor.capture());
+        assertThat(captor.getValue().getHopByHopIdentifier()).isEqualTo(10);
+    }
+
+    @Test
+    void it_transitions_to_CLOSED_on_disconnect_after_inbound_DPR() {
+        // GIVEN: peer sends DPR, we respond with DPA and close
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.close()).thenReturn(mock(ChannelFuture.class));
+        final DiameterResponderSession session = openedSession(peer);
+        session.onMessage(peer, DisconnectPeerRequest.create(10, 20));
+
+        // WHEN - channel closes after DPA was sent
+        session.onDisconnected(peer);
+
+        // THEN
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
+    }
+
+    @Test
+    void it_closes_peer_when_DPR_received_in_R_OPEN() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.close()).thenReturn(mock(ChannelFuture.class));
+        final DiameterResponderSession session = openedSession(peer);
+
+        // WHEN
+        session.onMessage(peer, DisconnectPeerRequest.create(10, 20));
+
+        // THEN
+        verify(peer).close();
     }
 
     // -------------------------------------------------------------------------

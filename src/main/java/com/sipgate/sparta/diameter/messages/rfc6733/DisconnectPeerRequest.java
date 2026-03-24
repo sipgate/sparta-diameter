@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.*;
 import com.sipgate.sparta.diameter.core.annotations.DiameterRequest;
+import com.sipgate.sparta.diameter.core.avp.mixins.HasDisconnectCauseAVP;
 
 /**
  * Disconnect Peer Request (DPR) message.
@@ -12,7 +13,8 @@ import com.sipgate.sparta.diameter.core.annotations.DiameterRequest;
  * </p>
  */
 @DiameterRequest(DiameterConstants.CMD_DISCONNECT_PEER)
-public final class DisconnectPeerRequest extends Request<DisconnectPeerRequest, DisconnectPeerAnswer> {
+public final class DisconnectPeerRequest extends Request<DisconnectPeerRequest, DisconnectPeerAnswer>
+        implements HasDisconnectCauseAVP<DisconnectPeerRequest> {
 
     /**
      * Constructs a Disconnect Peer Request message.

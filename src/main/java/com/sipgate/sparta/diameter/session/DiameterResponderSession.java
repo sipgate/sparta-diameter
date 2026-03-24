@@ -6,6 +6,7 @@ import com.sipgate.sparta.diameter.core.DiameterConstants;
 import com.sipgate.sparta.diameter.core.Request;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
+import com.sipgate.sparta.diameter.messages.rfc6733.DisconnectPeerRequest;
 import com.sipgate.sparta.diameter.transport.DiameterPeer;
 import java.util.List;
 
@@ -43,14 +44,18 @@ public final class DiameterResponderSession extends DiameterSession {
         // so rogue commands don't interfere with an application before the CEA has been sent.
         if (peerState == PeerState.R_OPEN) {
             handleWatchdog(command);
+            if (command instanceof final DisconnectPeerRequest dpr) {
+                handleInboundDpr(dpr);
+                return;
+            }
             if (command instanceof final Request<?, ?> request) {
                 dispatchInboundRequest(request);
                 return;
             }
+        }
 
-            if (command instanceof final Answer<?> answer) {
-                complete(answer);
-            }
+        if (command instanceof final Answer<?> answer) {
+            complete(answer);
         }
     }
 

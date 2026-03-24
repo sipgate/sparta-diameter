@@ -6,6 +6,7 @@ import com.sipgate.sparta.diameter.core.DiameterConstants;
 import com.sipgate.sparta.diameter.core.Request;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
+import com.sipgate.sparta.diameter.messages.rfc6733.DisconnectPeerRequest;
 import com.sipgate.sparta.diameter.transport.DiameterPeer;
 
 import java.util.concurrent.ThreadLocalRandom;
@@ -51,6 +52,10 @@ public final class DiameterInitiatorSession extends DiameterSession {
         // so rogue commands don't interfere with an application before the CER has been received.
         if (peerState == PeerState.I_OPEN) {
             handleWatchdog(command);
+            if (command instanceof final DisconnectPeerRequest dpr) {
+                handleInboundDpr(dpr);
+                return;
+            }
             if (command instanceof final Request<?, ?> request) {
                 dispatchInboundRequest(request);
                 return;
@@ -65,7 +70,9 @@ public final class DiameterInitiatorSession extends DiameterSession {
     @Override
     public void onDisconnected(final DiameterPeer peer) {
         super.onDisconnected(peer);
-        // reconnect scheduling via Tc timer — implemented in step 9
+        if (!shuttingDown) {
+            // reconnect scheduling via Tc timer — implemented in step 9
+        }
     }
 
     private void handleCea(final CapabilitiesExchangeAnswer cea) {
