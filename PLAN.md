@@ -153,6 +153,30 @@ Both identifiers are currently generated with `ThreadLocalRandom.current().nextI
 Centralise generation in a package-private `DiameterIdentifiers` utility and replace the
 `ThreadLocalRandom` calls in `buildCer`.
 
+### Prevent misuse of hop-by-hop and end-to-end identifiers
+
+Clients (application developers) currently call `Request.create(hopByHop, endToEnd)` with
+hand-rolled values, bypassing `DiameterIdentifiers` and violating RFC 6733 §3. Options:
+
+- **No public constructor with raw ids** — remove or package-private the `create(int, int)`
+  factory; expose only a `create(DiameterIdentifiers)` variant so the caller cannot supply
+  wrong values.
+- **Override in `send()`** — `DiameterSession.send()` always stamps the correct H2H/E2E onto
+  the message before transmitting, silently overwriting whatever the caller set. Simple, but
+  lets bad values exist in-flight inside the session before the stamp.
+- **Private constructors + factory methods** — all `Request` subclasses get private constructors;
+  static factory methods are the only entry point. The factory accepts `DiameterIdentifiers`
+  (or nothing and calls it internally), making it impossible to supply raw ints.
+- **Opaque type wrappers** — introduce `HopByHopId` and `EndToEndId` value types constructible
+  only by `DiameterIdentifiers`. `create(HopByHopId, EndToEndId)` compiles; `create(int, int)`
+  does not. Zero runtime cost, full compile-time safety.
+- **Two-phase message objects** — distinguish a `RequestDraft` (no ids, freely constructed by
+  the application) from a `SentRequest` (ids assigned by the session on `send()`). Application
+  code never touches a `SentRequest` directly; session code never sees a draft after dispatch.
+- **Assign ids inside the transport layer** — strip H2H/E2E from the public message API
+  entirely; the session assigns them unconditionally just before writing to the wire. Simplest
+  model: messages are pure AVP containers, identifiers are a transport concern.
+
 ### Disconnect reason callback
 
 When a session closes — whether due to a capability mismatch, unexpected transport drop, or a
