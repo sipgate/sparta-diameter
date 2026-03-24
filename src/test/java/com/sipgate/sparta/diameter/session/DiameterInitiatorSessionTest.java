@@ -847,6 +847,109 @@ class DiameterInitiatorSessionTest {
         assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
     }
 
+    // -------------------------------------------------------------------------
+    // Reconnect (Tc timer)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void it_schedules_Tc_timer_on_unexpected_disconnect() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        final List<Runnable> tasks = new ArrayList<>();
+        stubEventLoop(peer, tasks);
+        final DiameterInitiatorSession session = openedSession(peer, tasks);
+
+        // WHEN
+        session.onDisconnected(peer);
+
+        // THEN — a Tc timer task was scheduled (after the CER timeout and Tw timer)
+        assertThat(tasks).hasSizeGreaterThanOrEqualTo(3);
+    }
+
+    @Test
+    void it_calls_reconnect_when_Tc_timer_fires() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        final List<Runnable> tasks = new ArrayList<>();
+        stubEventLoop(peer, tasks);
+        openedSession(peer, tasks);
+
+        final var reconnectCalled = new java.util.concurrent.atomic.AtomicBoolean(false);
+        final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> reconnectCalled.set(true));
+        session.onConnected(peer);
+        final int cerHopByHop = capturedCerHopByHop(peer);
+        final CapabilitiesExchangeAnswer cea = CapabilitiesExchangeAnswer.create(cerHopByHop, 2);
+        cea.setResultCode(DiameterConstants.RES_DIAMETER_SUCCESS);
+        session.onMessage(peer, cea);
+        org.mockito.Mockito.clearInvocations(peer);
+
+        // trigger unexpected disconnect
+        session.onDisconnected(peer);
+        final Runnable tcTask = tasks.get(tasks.size() - 1);
+
+        // WHEN — Tc timer fires
+        tcTask.run();
+
+        // THEN
+        assertThat(reconnectCalled).isTrue();
+    }
+
+    @Test
+    void it_does_not_schedule_Tc_timer_after_graceful_shutdown() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        when(peer.close()).thenReturn(mock(ChannelFuture.class));
+        final List<Runnable> tasks = new ArrayList<>();
+        stubEventLoop(peer, tasks);
+        final DiameterInitiatorSession session = openedSession(peer, tasks);
+        session.stop();
+        final int taskCountAfterStop = tasks.size();
+
+        // WHEN — transport closes after graceful DPR
+        session.onDisconnected(peer);
+
+        // THEN — no additional Tc timer was scheduled
+        assertThat(tasks).hasSize(taskCountAfterStop);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void it_cancels_Tc_timer_when_stop_is_called_while_reconnect_is_pending() {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+
+        final EventLoop eventLoop = mock(EventLoop.class);
+        when(peer.eventLoop()).thenReturn(eventLoop);
+
+        final ScheduledFuture<?> tcTimer = mock(ScheduledFuture.class);
+        //noinspection rawtypes
+        when(eventLoop.schedule(any(Runnable.class), anyLong(), any(TimeUnit.class)))
+                .thenReturn(
+                    mock(ScheduledFuture.class),
+                    mock(ScheduledFuture.class),
+                    (ScheduledFuture) tcTimer);
+
+        final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
+        session.onConnected(peer);
+        final CapabilitiesExchangeAnswer cea = CapabilitiesExchangeAnswer.create(capturedCerHopByHop(peer), 2);
+        cea.setResultCode(DiameterConstants.RES_DIAMETER_SUCCESS);
+        session.onMessage(peer, cea);
+        org.mockito.Mockito.clearInvocations(peer);
+
+        // simulate unexpected disconnect → schedules Tc timer
+        session.onDisconnected(peer);
+
+        // WHEN — user calls stop() while Tc timer is pending
+        session.stop();
+
+        // THEN
+        verify(tcTimer).cancel(false);
+    }
+
     @Test
     void it_transitions_to_CLOSING_when_DPR_received_in_I_OPEN() {
         // GIVEN

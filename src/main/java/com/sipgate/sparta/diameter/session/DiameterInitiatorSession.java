@@ -9,7 +9,9 @@ import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.messages.rfc6733.DisconnectPeerRequest;
 import com.sipgate.sparta.diameter.transport.DiameterPeer;
 
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Diameter session for the initiator (I-) side of a connection.
@@ -23,10 +25,22 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class DiameterInitiatorSession extends DiameterSession {
 
     private final Runnable reconnect;
+    private Future<?> tcTimer;
 
     public DiameterInitiatorSession(final DiameterNodeConfig config, final Runnable reconnect) {
         super(config);
         this.reconnect = reconnect;
+    }
+
+    /**
+     * Stops the session gracefully. Also cancels any pending Tc reconnect timer,
+     * regardless of the current peer state.
+     */
+    @Override
+    public void stop() {
+        shuttingDown = true;
+        stopTcTimer();
+        super.stop();
     }
 
     @Override
@@ -70,8 +84,16 @@ public final class DiameterInitiatorSession extends DiameterSession {
     @Override
     public void onDisconnected(final DiameterPeer peer) {
         super.onDisconnected(peer);
-        if (!shuttingDown) {
-            // reconnect scheduling via Tc timer — implemented in step 9
+        if (!shuttingDown && this.peer != null) {
+            final long tcMs = config.getTc().toMillis();
+            tcTimer = this.peer.eventLoop().schedule(reconnect, tcMs, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private void stopTcTimer() {
+        if (tcTimer != null) {
+            tcTimer.cancel(false);
+            tcTimer = null;
         }
     }
 

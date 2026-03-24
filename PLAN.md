@@ -122,7 +122,7 @@ All new session/state classes go in `com.sipgate.sparta.diameter.session`.
 - In `CLOSING` / `CLOSED`: pending outbound requests fail immediately
 - `shuttingDown = true` prevents reconnect logic from firing after graceful close
 
-### 9 — Reconnect
+### ~~9 — Reconnect~~ ✓ Done
 
 - Owned by `DiameterInitiatorSession` via the `Runnable reconnect` passed at construction
 - Reconnect only fires when connection is lost unexpectedly (not after `stop()`)
