@@ -155,37 +155,93 @@ Centralise generation in a package-private `DiameterIdentifiers` utility and rep
 
 ### Prevent misuse of hop-by-hop and end-to-end identifiers
 
-`DiameterMessageFactory` in `com.sipgate.sparta.diameter.core` centralises all message
-creation. Reflection reaches each
-class's private constructor, so identifiers can no longer be supplied by constructing
-message objects directly.
+**Goal**: make it impossible for application code to supply raw identifier values.
+New requests leave the factory with `null` identifiers; the session generates and
+injects them at the point of transmission, keeping the message object immutable.
 
-`createAnswer(request, resultCode)` additionally copies `Origin-Host` → `Destination-Host`
-and `Origin-Realm` → `Destination-Realm` from the request, routing the answer back to
-the originator.
+TODO: Open Questions:
+- createRetransmitted should preserve the original end-to-end identifier.
+- orElseThrow() - That's runtime but isn't there a way to do this at compile time?
 
-Note: `DiameterMessageFactory` still accepts raw `int` identifiers. The chosen design
-("private constructors + factory methods") prevents direct construction but does not yet
-enforce that callers use `DiameterIdentifiers` to generate the values. Remaining options:
+#### Design
 
-- **No public constructor with raw ids** — remove or package-private the `create(int, int)`
-  factory; expose only a `create(DiameterIdentifiers)` variant so the caller cannot supply
-  wrong values.
-- **Override in `send()`** — `DiameterSession.send()` always stamps the correct H2H/E2E onto
-  the message before transmitting, silently overwriting whatever the caller set. Simple, but
-  lets bad values exist in-flight inside the session before the stamp.
-- **Private constructors + factory methods** — all `Request` subclasses get private constructors;
-  static factory methods are the only entry point. The factory accepts `DiameterIdentifiers`
-  (or nothing and calls it internally), making it impossible to supply raw ints.
-- **Opaque type wrappers** — introduce `HopByHopId` and `EndToEndId` value types constructible
-  only by `DiameterIdentifiers`. `create(HopByHopId, EndToEndId)` compiles; `create(int, int)`
-  does not. Zero runtime cost, full compile-time safety.
-- **Two-phase message objects** — distinguish a `RequestDraft` (no ids, freely constructed by
-  the application) from a `SentRequest` (ids assigned by the session on `send()`). Application
-  code never touches a `SentRequest` directly; session code never sees a draft after dispatch.
-- **Assign ids inside the transport layer** — strip H2H/E2E from the public message API
-  entirely; the session assigns them unconditionally just before writing to the wire. Simplest
-  model: messages are pure AVP containers, identifiers are a transport concern.
+- Identifiers are assigned by `DiameterSession.send()` — not by the factory, not by
+  the caller.
+- The encoder receives the assigned values as explicit parameters and writes them into
+  the outgoing byte buffer without touching the `Command` object.
+- Wire-parsed messages (incoming or relay-forwarded) carry their identifiers directly
+  in the `Command` fields; the encoder reads those via `.orElseThrow()`.
+
+#### Implementation steps
+
+**1 — `Command`**
+
+- Change `hopByHopIdentifier` and `endToEndIdentifier` fields from `int` to `Integer`.
+- Change both getters to return `Optional<Integer>`.
+- `GenericCommand`'s public constructor keeps the same signature but with `Integer`
+  params (it is only instantiated by the wire parser with known values).
+
+**2 — `DiameterMessageFactory`**
+
+Remove the public `create(Class<R>, int, int)` and `createRetransmitted(Class<R>, int, int)`
+overloads. Replace the public API with id-free variants and demote the id-bearing
+overloads to package-private for the wire parser:
+
+| Visibility       | Method                                          | Ids        |
+|------------------|-------------------------------------------------|------------|
+| `public`         | `create(Class<R>)`                              | `null`     |
+| `public`         | `createRetransmitted(Class<R>)`                 | `null`     |
+| package-private  | `create(Class<R>, Integer hbh, Integer ete)`    | from wire  |
+| package-private  | `createRetransmitted(Class<R>, Integer, Integer)`| from wire |
+
+`createAnswer(request, resultCode)` echoes the request's identifiers via
+`.orElseThrow()` — answers are always created from wire-parsed requests, so the
+values will be present.
+
+**3 — `DiameterMessageEncoder`**
+
+Add an overload `encode(Command command, int hopByHop, int endToEnd)` that writes
+the provided ids into the buffer instead of reading them from the object.
+The existing single-argument path (used for outgoing answers) reads
+`getHopByHopIdentifier().orElseThrow()` / `getEndToEndIdentifier().orElseThrow()`.
+
+**4 — `DiameterSession.send()` / `sendAndTrack()`**
+
+```
+int hopByHop = DiameterIdentifiers.nextHopByHop();
+int endToEnd = DiameterIdentifiers.nextEndToEnd();
+encoder.encode(request, hopByHop, endToEnd);
+pendingRequests.put(hopByHop, future);
+```
+
+The generated `hopByHop` is the map key used for answer correlation.
+The `Command` object is never modified.
+
+**5 — Caller updates**
+
+- `DiameterInitiatorSession` / `DiameterResponderSession` / `DiameterSession`:
+  replace `DiameterMessageFactory.create(XxxRequest.class, h, e)` with
+  `DiameterMessageFactory.create(XxxRequest.class)` wherever a fresh outbound
+  request is created.
+- All tests asserting on `getHopByHopIdentifier()` / `getEndToEndIdentifier()`
+  must unwrap the `Optional`.
+- `DiameterMessageFactoryTest`: the public `create` tests no longer receive dummy
+  ids — assert that `getHopByHopIdentifier()` and `getEndToEndIdentifier()` are
+  empty. The package-private id-bearing overloads are tested separately.
+
+**6 — README**
+
+Document the relay use case: a `GenericCommand` parsed from the wire already
+carries both identifiers in its fields. Pass it directly to `peer.send()` (or
+construct one from scratch) to forward it with full control over all header fields.
+No special factory method is needed.
+
+#### Known limitation
+
+`createRetransmitted` produces a new request with `null` ee-ident; `send()` assigns
+a fresh end-to-end identifier, which is not strictly RFC 6733-compliant for
+retransmission (same ee-ident as the original send). Preserving the original
+ee-ident across a retransmit is deferred — the T-bit is set correctly.
 
 ### Disconnect reason callback
 
