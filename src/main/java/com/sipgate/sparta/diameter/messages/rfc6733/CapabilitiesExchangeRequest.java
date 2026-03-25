@@ -7,31 +7,32 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
 /**
  * Capabilities Exchange Request (CER) message.
  * <p>
- * This class represents the Capabilities Exchange Request message as defined in
+ * This interface represents the Capabilities Exchange Request message as defined in
  * <a href="https://datatracker.ietf.org/doc/html/rfc6733#section-5.3.1">RFC 6733, Section 5.3.1</a>.
  * The CER message is used to exchange capabilities between Diameter peers during connection establishment.
  * </p>
  */
-@DiameterRequest(DiameterConstants.CMD_CAPABILITIES_EXCHANGE)
-public final class CapabilitiesExchangeRequest extends Request<CapabilitiesExchangeRequest, CapabilitiesExchangeAnswer> implements
-        HasVendorIdAVP<CapabilitiesExchangeRequest>,
-        HasProductNameAVP<CapabilitiesExchangeRequest>,
-        HasHostIpAddressAVP<CapabilitiesExchangeRequest>,
-        HasSupportedVendorIdAVP<CapabilitiesExchangeRequest>,
-        HasAuthApplicationIdAVP<CapabilitiesExchangeRequest>,
-        HasAcctApplicationIdAVP<CapabilitiesExchangeRequest>,
-        HasFirmwareRevisionAVP<CapabilitiesExchangeRequest> {
+public interface CapabilitiesExchangeRequest<T extends CapabilitiesExchangeRequest<T>>
+        extends HasVendorIdAVP<T>, HasProductNameAVP<T>, HasHostIpAddressAVP<T>,
+                HasSupportedVendorIdAVP<T>, HasAuthApplicationIdAVP<T>,
+                HasAcctApplicationIdAVP<T>, HasFirmwareRevisionAVP<T> {
 
-    /**
-     * Constructs a Capabilities Exchange Request message.
-     *
-     * @param retransmitted      Indicates whether the message is retransmitted.
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     */
-    private CapabilitiesExchangeRequest(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false, retransmitted,
-              DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
+    @DiameterRequest(DiameterConstants.CMD_CAPABILITIES_EXCHANGE)
+    final class In extends IncomingRequest<In, CapabilitiesExchangeAnswer.Out>
+            implements CapabilitiesExchangeRequest<In> {
+
+        private In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
+            super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false, retransmitted,
+                  DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
+        }
     }
 
+    final class Out extends OutgoingRequest<Out, CapabilitiesExchangeAnswer.In>
+            implements CapabilitiesExchangeRequest<Out> {
+
+        public Out() {
+            super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false,
+                  DiameterConstants.APP_DIAMETER_COMMON_MESSAGES);
+        }
+    }
 }

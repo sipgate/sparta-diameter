@@ -2,39 +2,44 @@ package com.sipgate.sparta.diameter.messages.rfc6733;
 
 import com.sipgate.sparta.diameter.core.DiameterConstants;
 import com.sipgate.sparta.diameter.core.DiameterMessageFactory;
+import com.sipgate.sparta.diameter.core.EndToEndId;
+import com.sipgate.sparta.diameter.core.HopByHopId;
+import com.sipgate.sparta.diameter.core.IncomingRequest;
 import org.junit.jupiter.api.Test;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CapabilitiesExchangeRequestTest {
 
+    private static final HopByHopId HBH = new HopByHopId(12345);
+    private static final EndToEndId E2E = new EndToEndId(67890);
+
     @Test
     void it_creates_normal_answer_with_success_result_code() {
         // GIVEN
-        final CapabilitiesExchangeRequest request = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 12345, 67890);
+        final IncomingRequest request = (IncomingRequest)
+                DiameterMessageFactory.createForParsing(CapabilitiesExchangeRequest.In.class, HBH, E2E, false);
         final long successCode = DiameterConstants.RES_DIAMETER_SUCCESS;
 
         // WHEN
-        final CapabilitiesExchangeAnswer answer = DiameterMessageFactory.createAnswer(request, successCode);
+        final CapabilitiesExchangeAnswer.Out answer = DiameterMessageFactory.createAnswer(request, successCode);
 
         // THEN
         assertThat(answer.isError()).isFalse();
         assertThat(answer.getResultCode()).isEqualTo(successCode);
-        assertThat(answer.getHopByHopIdentifier()).isEqualTo(12345);
-        assertThat(answer.getEndToEndIdentifier()).isEqualTo(67890);
+        assertThat(answer.hopByHopId()).isEqualTo(HBH);
+        assertThat(answer.endToEndId()).isEqualTo(E2E);
     }
 
     @Test
     void it_creates_request_with_correct_identifiers() {
-        // GIVEN
-        final int hopByHopId = 12345;
-        final int endToEndId = 67890;
-
-        // WHEN
-        final CapabilitiesExchangeRequest request = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, hopByHopId, endToEndId);
+        // GIVEN / WHEN
+        final CapabilitiesExchangeRequest.In request = (CapabilitiesExchangeRequest.In)
+                DiameterMessageFactory.createForParsing(CapabilitiesExchangeRequest.In.class, HBH, E2E, false);
 
         // THEN
-        assertThat(request.getHopByHopIdentifier()).isEqualTo(hopByHopId);
-        assertThat(request.getEndToEndIdentifier()).isEqualTo(endToEndId);
+        assertThat(request.hopByHopId()).isEqualTo(HBH);
+        assertThat(request.endToEndId()).isEqualTo(E2E);
         assertThat(request.isRequest()).isTrue();
         assertThat(request.isProxiable()).isFalse();
         assertThat(request.isRetransmitted()).isFalse();
@@ -42,16 +47,13 @@ class CapabilitiesExchangeRequestTest {
 
     @Test
     void it_creates_retransmitted_request_with_correct_flags() {
-        // GIVEN
-        final int hopByHopId = 99999;
-        final int endToEndId = 11111;
-
-        // WHEN
-        final CapabilitiesExchangeRequest request = DiameterMessageFactory.createRetransmitted(CapabilitiesExchangeRequest.class, hopByHopId, endToEndId);
+        // GIVEN / WHEN
+        final CapabilitiesExchangeRequest.In request = (CapabilitiesExchangeRequest.In)
+                DiameterMessageFactory.createForParsing(CapabilitiesExchangeRequest.In.class, HBH, E2E, true);
 
         // THEN
-        assertThat(request.getHopByHopIdentifier()).isEqualTo(hopByHopId);
-        assertThat(request.getEndToEndIdentifier()).isEqualTo(endToEndId);
+        assertThat(request.hopByHopId()).isEqualTo(HBH);
+        assertThat(request.endToEndId()).isEqualTo(E2E);
         assertThat(request.isRequest()).isTrue();
         assertThat(request.isProxiable()).isFalse();
         assertThat(request.isRetransmitted()).isTrue();

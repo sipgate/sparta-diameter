@@ -12,19 +12,31 @@ import com.sipgate.sparta.diameter.core.avp.mixins.HasResultCodeAVP;
  */
 public abstract class Answer<T extends Answer<T>> extends Command<T> implements HasResultCodeAVP<T> {
 
+    private final HopByHopId hopByHop;
+    private final EndToEndId endToEnd;
+
     /**
      * Constructs a Diameter answer message.
      *
-     * @param commandCode        The command code of the answer.
-     * @param proxiable          Indicates whether the message is proxiable.
-     * @param retransmitted      Indicates whether the message is retransmitted.
-     * @param applicationId      The application ID of the answer.
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
+     * @param commandCode   The command code of the answer.
+     * @param proxiable     Indicates whether the message is proxiable.
+     * @param applicationId The application ID of the answer.
      */
-    protected Answer(final int commandCode, final boolean proxiable, final boolean retransmitted,
-                     final int applicationId, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(commandCode, false, proxiable, false, retransmitted, applicationId,
-              hopByHopIdentifier, endToEndIdentifier);
+    protected Answer(final int commandCode, final boolean proxiable, final int applicationId, final HopByHopId hopByHop, final EndToEndId endToEnd) {
+        this(commandCode, proxiable, false, applicationId, hopByHop, endToEnd);
     }
+
+    /**
+     * Constructs a Diameter answer message with explicit error flag.
+     * Use this variant for error answers where the E-bit must be set.
+     */
+    protected Answer(final int commandCode, final boolean proxiable, final boolean error,
+                     final int applicationId, final HopByHopId hopByHop, final EndToEndId endToEnd) {
+        super(commandCode, false, proxiable, error, false, applicationId);
+        this.hopByHop = hopByHop;
+        this.endToEnd = endToEnd;
+    }
+
+    public HopByHopId hopByHopId() { return hopByHop; }
+    public EndToEndId endToEndId()  { return endToEnd; }
 }

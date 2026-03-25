@@ -5,13 +5,13 @@ import java.lang.reflect.Constructor;
 /**
  * Central factory for creating Diameter request and answer messages.
  * <p>
- * All message classes carry a private constructor following a fixed convention:
+ * Constructor conventions (enforced via reflection):
  * <ul>
- *   <li>Requests: {@code (boolean retransmitted, int hopByHop, int endToEnd)}</li>
- *   <li>Answers: {@code (int hopByHop, int endToEnd)}</li>
+ *   <li>Incoming requests (parsing): {@code In(HopByHopId, EndToEndId, boolean retransmitted)}</li>
+ *   <li>Incoming answers (parsing): {@code In(HopByHopId, EndToEndId)}</li>
+ *   <li>Outgoing answers: {@code Out(HopByHopId, EndToEndId)} — identifiers copied from the
+ *       originating request.</li>
  * </ul>
- * This factory reaches those constructors via reflection, so per-class static factory
- * methods are no longer needed.
  * </p>
  */
 public final class DiameterMessageFactory {
@@ -19,65 +19,55 @@ public final class DiameterMessageFactory {
     private DiameterMessageFactory() {}
 
     /**
-     * Creates a new request of the given type.
-     *
-     * @param type               the concrete request class (must have a private {@code (boolean, int, int)} constructor)
-     * @param hopByHopIdentifier the hop-by-hop identifier
-     * @param endToEndIdentifier the end-to-end identifier
-     * @param <R>                the request type
-     * @return a new request instance with retransmitted flag cleared
+     * Creates an incoming command instance from parsed wire data.
+     * <p>
+     * Called by {@link Command#parseMessage} during normal decoding, and by tests
+     * that need to simulate inbound messages without going through a real network.
+     * </p>
      */
-    public static <R extends Request<R, ?>> R create(
-            final Class<R> type,
-            final int hopByHopIdentifier,
-            final int endToEndIdentifier) {
-        return newRequest(type, false, hopByHopIdentifier, endToEndIdentifier);
+    @SuppressWarnings({"rawtypes"})
+    public static IncomingCommand createForParsing(
+            final Class type,
+            final HopByHopId hopByHop,
+            final EndToEndId endToEnd,
+            final boolean retransmitted) {
+        if (Request.class.isAssignableFrom(type)) {
+            return instantiateInRequest(type, hopByHop, endToEnd, retransmitted);
+        }
+        return instantiateInAnswer(type, hopByHop, endToEnd);
     }
 
     /**
-     * Creates a retransmitted request of the given type.
-     *
-     * @param type               the concrete request class (must have a private {@code (boolean, int, int)} constructor)
-     * @param hopByHopIdentifier the hop-by-hop identifier
-     * @param endToEndIdentifier the end-to-end identifier
-     * @param <R>                the request type
-     * @return a new request instance with retransmitted flag set
-     */
-    public static <R extends Request<R, ?>> R createRetransmitted(
-            final Class<R> type,
-            final int hopByHopIdentifier,
-            final int endToEndIdentifier) {
-        return newRequest(type, true, hopByHopIdentifier, endToEndIdentifier);
-    }
-
-    /**
-     * Creates an answer for the given request.
+     * Creates an outgoing answer for the given incoming request.
      * <p>
      * The answer receives the same hop-by-hop and end-to-end identifiers as the
-     * request (required by RFC 6733 §3), has its Result-Code set to
-     * {@code resultCode}, and has its Destination-Host and Destination-Realm
-     * populated from the request's Origin-Host and Origin-Realm respectively
-     * so the reply is routed back to the originator.
+     * request (required by RFC 6733 §3), has its Result-Code set to {@code resultCode},
+     * and has Destination-Host / Destination-Realm populated from the request's origin.
      * </p>
      *
      * @param request    the received request to answer
      * @param resultCode the Result-Code AVP value to set on the answer
-     * @param <R>        the request type
-     * @param <A>        the answer type (inferred from the request)
+     * @param <A>        the outgoing answer type
      * @return the constructed answer
      * @throws IllegalArgumentException if no answer type is registered for the request's command code
      */
-    public static <R extends Request<R, A>, A extends Answer<A>> A createAnswer(
-            final R request,
+    @SuppressWarnings({"rawtypes"})
+    public static <A extends OutgoingAnswer<A>> A createAnswer(
+            final IncomingRequest<?, ?> request,
             final long resultCode) {
-        @SuppressWarnings("unchecked")
-        final Class<A> answerClass = (Class<A>) Command.ANSWER_TYPES.get(request.getCommandCode());
-        if (answerClass == null) {
+        final int commandCode = request.getCommandCode();
+
+        final Class<? extends Answer> inClass = Command.ANSWER_TYPES.get(commandCode);
+        if (inClass == null) {
             throw new IllegalArgumentException(
-                    "No answer type registered for command code: " + request.getCommandCode());
+                    "No answer type registered for command code: " + commandCode);
         }
-        final A answer = newAnswer(answerClass, request.getHopByHopIdentifier(), request.getEndToEndIdentifier());
+
+        final Class<A> outClass = findOutClass(inClass);
+
+        final A answer = instantiateOutAnswer(outClass, request.hopByHopId(), request.endToEndId());
         answer.setResultCode(resultCode);
+
         final String originHost = request.getOriginHost();
         if (originHost != null) {
             answer.setDestinationHost(originHost);
@@ -89,58 +79,70 @@ public final class DiameterMessageFactory {
         return answer;
     }
 
-    /**
-     * Creates a command (request or answer) for wire-parsing purposes.
-     * <p>
-     * Package-private: called only by {@link Command#parseMessage}.
-     * </p>
-     */
+    @SuppressWarnings("unchecked")
+    private static <A extends OutgoingAnswer<A>> Class<A> findOutClass(
+            final Class<?> inClass) {
+        final Class<?> enclosing = inClass.getEnclosingClass();
+        if (enclosing == null) {
+            throw new IllegalStateException(
+                    inClass.getSimpleName() + " has no enclosing class — expected In nested in XxxAnswer");
+        }
+        for (final Class<?> nested : enclosing.getDeclaredClasses()) {
+            if (OutgoingAnswer.class.isAssignableFrom(nested)) {
+                return (Class<A>) nested;
+            }
+        }
+        throw new IllegalStateException(
+                "No Out class found inside " + enclosing.getSimpleName());
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
-    static Command instantiateForParsing(
-            final Class<? extends Command> commandClass,
-            final boolean retransmitted,
-            final int hopByHopId,
-            final int endToEndId) {
-        if (Request.class.isAssignableFrom(commandClass)) {
-            final Class<Request> requestClass = (Class<Request>) commandClass;
-            return retransmitted
-                    ? createRetransmitted(requestClass, hopByHopId, endToEndId)
-                    : create(requestClass, hopByHopId, endToEndId);
-        }
-        final Class<Answer> answerClass = (Class<Answer>) commandClass;
-        return newAnswer(answerClass, hopByHopId, endToEndId);
-    }
-
-    private static <R extends Request<R, ?>> R newRequest(
-            final Class<R> type,
-            final boolean retransmitted,
-            final int hopByHopIdentifier,
-            final int endToEndIdentifier) {
+    private static IncomingCommand instantiateInRequest(
+            final Class type,
+            final HopByHopId hopByHop,
+            final EndToEndId endToEnd,
+            final boolean retransmitted) {
         try {
-            final Constructor<R> ctor = type.getDeclaredConstructor(boolean.class, int.class, int.class);
+            final var ctor = type.getDeclaredConstructor(
+                    HopByHopId.class, EndToEndId.class, boolean.class);
             ctor.setAccessible(true);
-            return ctor.newInstance(retransmitted, hopByHopIdentifier, endToEndIdentifier);
+            return (IncomingCommand) ctor.newInstance(hopByHop, endToEnd, retransmitted);
         } catch (final Exception e) {
             throw new IllegalStateException(
                     "Cannot instantiate " + type.getSimpleName()
-                            + ": expected private (boolean, int, int) constructor",
-                    e);
+                            + ": expected private (HopByHopId, EndToEndId, boolean) constructor", e);
         }
     }
 
-    private static <A extends Answer<A>> A newAnswer(
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static IncomingCommand instantiateInAnswer(
+            final Class type,
+            final HopByHopId hopByHop,
+            final EndToEndId endToEnd) {
+        try {
+            final var ctor = type.getDeclaredConstructor(HopByHopId.class, EndToEndId.class);
+            ctor.setAccessible(true);
+            return (IncomingCommand) ctor.newInstance(hopByHop, endToEnd);
+        } catch (final Exception e) {
+            throw new IllegalStateException(
+                    "Cannot instantiate " + type.getSimpleName()
+                            + ": expected private (HopByHopId, EndToEndId) constructor", e);
+        }
+    }
+
+    private static <A extends OutgoingAnswer<A>> A instantiateOutAnswer(
             final Class<A> type,
-            final int hopByHopIdentifier,
-            final int endToEndIdentifier) {
+            final HopByHopId hopByHop,
+            final EndToEndId endToEnd) {
         try {
-            final Constructor<A> ctor = type.getDeclaredConstructor(int.class, int.class);
+            final Constructor<A> ctor = type.getDeclaredConstructor(
+                    HopByHopId.class, EndToEndId.class);
             ctor.setAccessible(true);
-            return ctor.newInstance(hopByHopIdentifier, endToEndIdentifier);
+            return ctor.newInstance(hopByHop, endToEnd);
         } catch (final Exception e) {
             throw new IllegalStateException(
                     "Cannot instantiate " + type.getSimpleName()
-                            + ": expected private (int, int) constructor",
-                    e);
+                            + ": expected private (HopByHopId, EndToEndId) constructor", e);
         }
     }
 }

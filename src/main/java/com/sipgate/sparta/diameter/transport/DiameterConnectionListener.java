@@ -1,6 +1,6 @@
 package com.sipgate.sparta.diameter.transport;
 
-import com.sipgate.sparta.diameter.core.Command;
+import com.sipgate.sparta.diameter.core.IncomingCommand;
 
 /**
  * Receives lifecycle and message events for a Diameter peer connection.
@@ -11,7 +11,7 @@ public interface DiameterConnectionListener {
 
     void onConnected(DiameterPeer peer);
 
-    void onMessage(DiameterPeer peer, Command<?> command);
+    void onMessage(DiameterPeer peer, IncomingCommand command);
 
     void onDisconnected(DiameterPeer peer);
 }

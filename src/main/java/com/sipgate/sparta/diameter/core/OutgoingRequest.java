@@ -1,0 +1,21 @@
+package com.sipgate.sparta.diameter.core;
+
+import java.io.DataOutputStream;
+import java.io.IOException;
+
+/**
+ * Base class for all outgoing Diameter request messages.
+ */
+public abstract class OutgoingRequest<T extends OutgoingRequest<T, A>, A extends Answer<A>>
+        extends Request<T, A> {
+
+    protected OutgoingRequest(final int commandCode, final boolean proxiable,
+                               final int applicationId) {
+        super(commandCode, proxiable, false, applicationId);
+    }
+
+    public void writeTo(final DataOutputStream out,
+                        final HopByHopId hopByHop, final EndToEndId endToEnd) throws IOException {
+        super.writeTo(out, hopByHop, endToEnd);
+    }
+}

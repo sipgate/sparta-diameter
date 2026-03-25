@@ -6,23 +6,29 @@ import com.sipgate.sparta.diameter.core.annotations.DiameterRequest;
 /**
  * Session Termination Request (STR) message.
  * <p>
- * This class represents the Session Termination Request message as defined in
+ * This interface represents the Session Termination Request message as defined in
  * <a href="https://datatracker.ietf.org/doc/html/rfc6733#section-8.4.1">RFC 6733, Section 8.4.1</a>.
  * The STR message is used to request termination of a user session.
  * </p>
  */
-@DiameterRequest(DiameterConstants.CMD_SESSION_TERMINATION)
-public final class SessionTerminationRequest extends Request<SessionTerminationRequest, SessionTerminationAnswer> {
+public interface SessionTerminationRequest<T extends SessionTerminationRequest<T>> {
 
-    /**
-     * Constructs a Session Termination Request message.
-     *
-     * @param retransmitted      Indicates whether the message is retransmitted.
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     */
-    private SessionTerminationRequest(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(DiameterConstants.CMD_SESSION_TERMINATION, true, retransmitted,
-              DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
+    @DiameterRequest(DiameterConstants.CMD_SESSION_TERMINATION)
+    final class In extends IncomingRequest<In, SessionTerminationAnswer.Out>
+            implements SessionTerminationRequest<In> {
+
+        private In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
+            super(DiameterConstants.CMD_SESSION_TERMINATION, true, retransmitted,
+                  DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
+        }
+    }
+
+    final class Out extends OutgoingRequest<Out, SessionTerminationAnswer.In>
+            implements SessionTerminationRequest<Out> {
+
+        public Out() {
+            super(DiameterConstants.CMD_SESSION_TERMINATION, true,
+                  DiameterConstants.APP_DIAMETER_COMMON_MESSAGES);
+        }
     }
 }

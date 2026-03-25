@@ -42,11 +42,9 @@ public abstract class Command<T extends Command<T>> implements
 
     @SuppressWarnings("unchecked")
     private static void initializeCommandTypes() {
-        // Clear existing mappings
         REQUEST_TYPES.clear();
         ANSWER_TYPES.clear();
 
-        // Scan specified packages for classes annotated with @DiameterRequest and @DiameterResponse
         final Reflections reflections = new Reflections(PACKAGES_TO_SCAN);
         final Set<Class<?>> requestClasses = reflections.getTypesAnnotatedWith(DiameterRequest.class);
         for (final Class<?> cls : requestClasses) {
@@ -73,8 +71,6 @@ public abstract class Command<T extends Command<T>> implements
     private final boolean error;
     private boolean retransmitted;
     private final int applicationId;
-    private final int hopByHopIdentifier;
-    private final int endToEndIdentifier;
 
     // AVPs contained in this command
     private final List<AVP> avps;
@@ -82,18 +78,15 @@ public abstract class Command<T extends Command<T>> implements
     /**
      * Constructs a Diameter command with the specified parameters.
      *
-     * @param commandCode        The command code of the message.
-     * @param request            Indicates whether the message is a request.
-     * @param proxiable          Indicates whether the message is proxiable.
-     * @param error              Indicates whether the message is an error.
-     * @param retransmitted      Indicates whether the message is retransmitted.
-     * @param applicationId      The application ID of the message.
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
+     * @param commandCode   The command code of the message.
+     * @param request       Indicates whether the message is a request.
+     * @param proxiable     Indicates whether the message is proxiable.
+     * @param error         Indicates whether the message is an error.
+     * @param retransmitted Indicates whether the message is retransmitted.
+     * @param applicationId The application ID of the message.
      */
     protected Command(final int commandCode, final boolean request, final boolean proxiable,
-                      final boolean error, final boolean retransmitted, final int applicationId,
-                      final int hopByHopIdentifier, final int endToEndIdentifier) {
+                      final boolean error, final boolean retransmitted, final int applicationId) {
         this.version = 1; // Diameter version is always 1
         this.commandCode = commandCode;
         this.request = request;
@@ -101,8 +94,6 @@ public abstract class Command<T extends Command<T>> implements
         this.error = error;
         this.retransmitted = retransmitted;
         this.applicationId = applicationId;
-        this.hopByHopIdentifier = hopByHopIdentifier;
-        this.endToEndIdentifier = endToEndIdentifier;
         this.avps = new ArrayList<>();
     }
 
@@ -156,20 +147,6 @@ public abstract class Command<T extends Command<T>> implements
     public int getApplicationId() { return applicationId; }
 
     /**
-     * Retrieves the hop-by-hop identifier.
-     *
-     * @return The hop-by-hop identifier.
-     */
-    public int getHopByHopIdentifier() { return hopByHopIdentifier; }
-
-    /**
-     * Retrieves the end-to-end identifier.
-     *
-     * @return The end-to-end identifier.
-     */
-    public int getEndToEndIdentifier() { return endToEndIdentifier; }
-
-    /**
      * Retrieves the list of AVPs contained in this command.
      *
      * @return A copy of the list of AVPs.
@@ -183,6 +160,9 @@ public abstract class Command<T extends Command<T>> implements
      */
     @Override
     public void addAVP(final AVP avp) {
+        if (this instanceof IncomingCommand) {
+            throw new UnsupportedOperationException("Cannot mutate a wire-parsed incoming command");
+        }
         avps.add(avp);
     }
 
@@ -195,9 +175,10 @@ public abstract class Command<T extends Command<T>> implements
      */
     @Override
     public void setAVP(final AVP avp) {
-        // Find and remove existing AVP with the same code
+        if (this instanceof IncomingCommand) {
+            throw new UnsupportedOperationException("Cannot mutate a wire-parsed incoming command");
+        }
         avps.removeIf(existingAvp -> existingAvp.getCode() == avp.getCode());
-        // Add the new AVP
         avps.add(avp);
     }
 
@@ -242,7 +223,6 @@ public abstract class Command<T extends Command<T>> implements
         int length = 20; // Diameter header is 20 bytes
         for (final AVP avp : avps) {
             length += avp.getLength();
-            // Add padding to 4-byte boundary
             final int padding = (4 - (avp.getLength() % 4)) % 4;
             length += padding;
         }
@@ -254,23 +234,18 @@ public abstract class Command<T extends Command<T>> implements
     }
 
     /**
-     * Writes this command to the given DataOutputStream.
-     * This method serializes the Diameter header followed by all AVPs.
-     *
-     * @param outputStream The DataOutputStream to write to.
-     * @throws IOException If an I/O error occurs while writing.
+     * Writes the 20-byte Diameter header with the supplied hop-by-hop and end-to-end identifiers.
+     * Subclasses call this from their {@code writeTo} implementations to serialize outgoing messages.
      */
-    public void writeTo(final DataOutputStream outputStream) throws IOException {
-        // Version (1 byte)
+    protected void writeTo(final DataOutputStream outputStream,
+                           final HopByHopId hopByHop, final EndToEndId endToEnd) throws IOException {
         outputStream.writeByte(version);
 
-        // Message Length (3 bytes)
         final int messageLength = getMessageLength();
         outputStream.writeByte((messageLength >> 16) & 0xFF);
         outputStream.writeByte((messageLength >> 8) & 0xFF);
         outputStream.writeByte(messageLength & 0xFF);
 
-        // Flags (1 byte)
         int flags = 0;
         if (request) flags |= 0x80;
         if (proxiable) flags |= 0x40;
@@ -278,58 +253,41 @@ public abstract class Command<T extends Command<T>> implements
         if (retransmitted) flags |= 0x10; // T flag (RFC 6733)
         outputStream.writeByte(flags);
 
-        // Command Code (3 bytes)
         outputStream.writeByte((commandCode >> 16) & 0xFF);
         outputStream.writeByte((commandCode >> 8) & 0xFF);
         outputStream.writeByte(commandCode & 0xFF);
 
-        // Application-Id (4 bytes)
         outputStream.writeInt(applicationId);
+        outputStream.writeInt(hopByHop.value());
+        outputStream.writeInt(endToEnd.value());
 
-        // Hop-by-Hop Identifier (4 bytes)
-        outputStream.writeInt(hopByHopIdentifier);
-
-        // End-to-End Identifier (4 bytes)
-        outputStream.writeInt(endToEndIdentifier);
-
-        // Write all AVPs
         for (final AVP avp : avps) {
             avp.writeTo(outputStream);
         }
     }
 
     /**
-     * Extracts the message length from a ByteBuffer.
-     * Does not modify the buffer position.
-     *
-     * @param buffer the ByteBuffer containing the Diameter message
-     * @return the length of the Diameter message
-     * @throws DiameterException if the buffer does not contain enough data to read the length
+     * Extracts the message length from a ByteBuffer without changing the buffer position.
      */
     public static int getMessageLength(final ByteBuffer buffer) throws DiameterException {
         if (buffer.remaining() < 4) {
             throw new DiameterException("Need at least 4 bytes to read message length");
         }
 
-        // Read length without changing buffer position
         final int position = buffer.position();
-        buffer.get(); // Skip version
+        buffer.get(); // skip version
         final int length = ((buffer.get() & 0xFF) << 16) |
                 ((buffer.get() & 0xFF) << 8) |
                 (buffer.get() & 0xFF);
-        buffer.position(position); // Reset position
+        buffer.position(position);
 
         return length;
     }
 
     /**
-     * Parses a Diameter message from a ByteBuffer (useful for Netty integration).
-     *
-     * @param buffer the ByteBuffer containing the Diameter message
-     * @return the parsed Command object representing the Diameter message
-     * @throws DiameterException if the buffer does not contain the number of bytes required for a valid Diameter message
+     * Parses a Diameter message from a ByteBuffer and returns it as an {@link IncomingCommand}.
      */
-    public static Command parseMessage(final ByteBuffer buffer) throws DiameterException {
+    public static IncomingCommand parseMessage(final ByteBuffer buffer) throws DiameterException {
         final int messageLength = getMessageLength(buffer);
         if (buffer.remaining() < messageLength) {
             throw new DiameterException("Invalid Diameter message: too short");
@@ -338,64 +296,45 @@ public abstract class Command<T extends Command<T>> implements
         return parseMessage(buffer, messageLength);
     }
 
-    /**
-     * Parses a Diameter message from a DataInputStream.
-     *
-     * @param byteBuffer the DataInputStream containing the Diameter message
-     * @param messageLength the length of the Diameter message
-     * @return the parsed Command object representing the Diameter message
-     * @throws DiameterException if an error occurs while parsing the message
-     */
-    private static Command parseMessage(final ByteBuffer byteBuffer, final int messageLength) throws DiameterException {
+    @SuppressWarnings({"rawtypes"})
+    private static IncomingCommand parseMessage(final ByteBuffer byteBuffer,
+                                                final int messageLength) throws DiameterException {
         try {
-            // Read Diameter header (20 bytes)
             final int version = byteBuffer.get();
             if (version != DiameterConstants.DIAMETER_VERSION) {
                 throw new DiameterException("Unsupported Diameter version: " + version);
             }
-            // Skip already-read messageLength
-            byteBuffer.position(byteBuffer.position() + 3);
+            byteBuffer.position(byteBuffer.position() + 3); // skip already-read messageLength
 
-            // Flags (1 byte)
             final int flags = byteBuffer.get();
             final boolean isRequest = (flags & 0x80) != 0;
-            // TODO: check why these variables exist but are not used
-            final boolean isProxiable = (flags & 0x40) != 0;
-            final boolean isError = (flags & 0x20) != 0;
-            final boolean isRetransmitted = (flags & 0x10) != 0; // T flag (RFC 6733)
+            final boolean isRetransmitted = (flags & 0x10) != 0;
 
-            // Command Code (3 bytes)
             final int commandCode = (byteBuffer.get() << 16) |
                     (byteBuffer.get() << 8) |
                     byteBuffer.get();
 
-            // Application-Id (4 bytes)
-            final int applicationId = byteBuffer.getInt();
+            byteBuffer.getInt(); // applicationId — ignored here; constructor sets it
 
-            // Hop-by-Hop Identifier (4 bytes)
-            final int hopByHopId = byteBuffer.getInt();
+            final HopByHopId hopByHop = new HopByHopId(byteBuffer.getInt());
+            final EndToEndId endToEnd = new EndToEndId(byteBuffer.getInt());
 
-            // End-to-End Identifier (4 bytes)
-            final int endToEndId = byteBuffer.getInt();
-
-            // Parse AVPs (remaining bytes)
             final List<AVP> avps = parseAVPs(byteBuffer, messageLength - 20);
 
-            // Create appropriate message type
             final Class<? extends Command> commandClass = isRequest
                     ? REQUEST_TYPES.get(commandCode)
                     : ANSWER_TYPES.get(commandCode);
 
             if (commandClass == null) {
-                throw new DiameterException(String.format("Unsupported Diameter command code %s for app-id: %s", commandCode, applicationId));
+                throw new DiameterException(String.format(
+                        "Unsupported Diameter command code %s", commandCode));
             }
 
-            final Command command = DiameterMessageFactory.instantiateForParsing(
-                    commandClass, isRetransmitted, hopByHopId, endToEndId);
+            final IncomingCommand command = DiameterMessageFactory.createForParsing(
+                    commandClass, hopByHop, endToEnd, isRetransmitted);
 
-            // Add parsed AVPs
             for (final AVP avp : avps) {
-                command.addAVP(avp);
+                ((Command<?>) command).avps.add(avp);
             }
 
             return command;
@@ -421,7 +360,6 @@ public abstract class Command<T extends Command<T>> implements
         while (bytesRead < remainingLength) {
             final AVP avp = AVP.readFrom(byteBuffer);
             avps.add(avp);
-            // Account for padding to 4-byte boundary
             final int padding = (4 - (avp.getLength() % 4)) % 4;
             bytesRead += avp.getLength() + padding;
         }
@@ -429,45 +367,4 @@ public abstract class Command<T extends Command<T>> implements
         return avps;
     }
 
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder();
-
-        // Command name from class simple name
-        final String commandName = this.getClass().getSimpleName();
-
-        // Format flags
-        final StringBuilder flagsStr = new StringBuilder();
-        if (request) flagsStr.append("R");
-        if (proxiable) flagsStr.append("P");
-        if (error) flagsStr.append("E");
-        if (retransmitted) flagsStr.append("T");
-        while (flagsStr.length() < 3) flagsStr.append("-");
-
-        // Header line
-        sb.append(String.format("%s <Version: 0x%02x, Length: %d, Flags: 0x%02x (%s), Hop-by-Hop Identifier: 0x%x, End-to-End Identifier: 0x%x>",
-                commandName,
-                version,
-                getMessageLength(),
-                getFlagsValue(),
-                flagsStr,
-                hopByHopIdentifier,
-                endToEndIdentifier));
-
-        // Add AVPs
-        for (final AVP avp : avps) {
-            sb.append("\n  ").append(avp.toString());
-        }
-
-        return sb.toString();
-    }
-
-    private int getFlagsValue() {
-        int flags = 0;
-        if (request) flags |= 0x80;
-        if (proxiable) flags |= 0x40;
-        if (error) flags |= 0x20;
-        if (retransmitted) flags |= 0x10;
-        return flags;
-    }
 }

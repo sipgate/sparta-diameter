@@ -1,10 +1,10 @@
 package com.sipgate.sparta.diameter.session;
 
-import com.sipgate.sparta.diameter.core.Answer;
-import com.sipgate.sparta.diameter.core.Command;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
 import com.sipgate.sparta.diameter.core.DiameterMessageFactory;
-import com.sipgate.sparta.diameter.core.Request;
+import com.sipgate.sparta.diameter.core.IncomingAnswer;
+import com.sipgate.sparta.diameter.core.IncomingCommand;
+import com.sipgate.sparta.diameter.core.IncomingRequest;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.messages.rfc6733.DisconnectPeerRequest;
@@ -15,12 +15,6 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Diameter session for the initiator (I-) side of a connection.
- * <p>
- * Created fresh for each connection attempt. Handles the RFC 6733 I-Open
- * state machine and RFC 3539 watchdog. Calls the provided {@code reconnect}
- * runnable when the transport drops unexpectedly, which creates a new instance
- * for the next attempt.
- * </p>
  */
 public final class DiameterInitiatorSession extends DiameterSession {
 
@@ -32,10 +26,6 @@ public final class DiameterInitiatorSession extends DiameterSession {
         this.reconnect = reconnect;
     }
 
-    /**
-     * Stops the session gracefully. Also cancels any pending Tc reconnect timer,
-     * regardless of the current peer state.
-     */
     @Override
     public void stop() {
         shuttingDown = true;
@@ -61,22 +51,20 @@ public final class DiameterInitiatorSession extends DiameterSession {
     }
 
     @Override
-    public void onMessage(final DiameterPeer peer, final Command<?> command) {
-        // We want to handle incoming commands only when the connection is ready,
-        // so rogue commands don't interfere with an application before the CER has been received.
+    public void onMessage(final DiameterPeer peer, final IncomingCommand command) {
         if (peerState == PeerState.I_OPEN) {
             handleWatchdog(command);
-            if (command instanceof final DisconnectPeerRequest dpr) {
+            if (command instanceof final DisconnectPeerRequest.In dpr) {
                 handleInboundDpr(dpr);
                 return;
             }
-            if (command instanceof final Request<?, ?> request) {
+            if (command instanceof final IncomingRequest request) {
                 dispatchInboundRequest(request);
                 return;
             }
         }
 
-        if (command instanceof final Answer<?> answer) {
+        if (command instanceof final IncomingAnswer answer) {
             complete(answer);
         }
     }
@@ -97,7 +85,7 @@ public final class DiameterInitiatorSession extends DiameterSession {
         }
     }
 
-    private void handleCea(final CapabilitiesExchangeAnswer cea) {
+    private void handleCea(final CapabilitiesExchangeAnswer.In cea) {
         if (cea.getResultCode() == DiameterConstants.RES_DIAMETER_SUCCESS) {
             peerState = PeerState.I_OPEN;
             startWatchdog();
@@ -107,11 +95,9 @@ public final class DiameterInitiatorSession extends DiameterSession {
         }
     }
 
-    private CapabilitiesExchangeRequest buildCer() {
-        final CapabilitiesExchangeRequest cer = DiameterMessageFactory.create(
-                CapabilitiesExchangeRequest.class,
-                identifiers.nextHopByHop(),
-                DiameterIdentifiers.nextEndToEnd());
+    private CapabilitiesExchangeRequest.Out buildCer() {
+        final CapabilitiesExchangeRequest.Out cer =
+                new CapabilitiesExchangeRequest.Out();
         populateCapabilityAvps(cer);
         return cer;
     }

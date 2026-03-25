@@ -7,39 +7,35 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
 /**
  * Accounting Answer (ACA) message.
  * <p>
- * This class represents the Accounting Answer message as defined in
+ * This interface represents the Accounting Answer message as defined in
  * <a href="https://datatracker.ietf.org/doc/html/rfc6733#section-9.7.2">RFC 6733, Section 9.7.2</a>.
  * The ACA message is used to respond to an ACR message for accounting requests.
  * </p>
  */
-@DiameterResponse(DiameterConstants.CMD_ACCOUNTING)
-public final class AccountingAnswer extends Answer<AccountingAnswer> implements
-        HasSessionIdAVP<AccountingAnswer>,
-        HasAccountingRecordTypeAVP<AccountingAnswer>,
-        HasAccountingRecordNumberAVP<AccountingAnswer>,
-        HasAcctApplicationIdAVP<AccountingAnswer>,
-        HasVendorSpecificApplicationIdAVP<AccountingAnswer>,
-        HasUserNameAVP<AccountingAnswer>,
-        HasAccountingSubSessionIdAVP<AccountingAnswer>,
-        HasAcctMultiSessionIdAVP<AccountingAnswer>,
-        HasErrorMessageAVP<AccountingAnswer>,
-        HasErrorReportingHostAVP<AccountingAnswer>,
-        HasFailedAVP<AccountingAnswer>,
-        HasAcctInterimIntervalAVP<AccountingAnswer>,
-        HasAccountingRealtimeRequiredAVP<AccountingAnswer>,
-        HasOriginStateIdAVP<AccountingAnswer>,
-        HasEventTimestampAVP<AccountingAnswer>,
-        HasProxyInfoAVP<AccountingAnswer> {
+public interface AccountingAnswer<T extends AccountingAnswer<T>>
+        extends HasSessionIdAVP<T>, HasAccountingRecordTypeAVP<T>, HasAccountingRecordNumberAVP<T>,
+                HasAcctApplicationIdAVP<T>, HasVendorSpecificApplicationIdAVP<T>, HasUserNameAVP<T>,
+                HasAccountingSubSessionIdAVP<T>, HasAcctMultiSessionIdAVP<T>,
+                HasErrorMessageAVP<T>, HasErrorReportingHostAVP<T>, HasFailedAVP<T>,
+                HasAcctInterimIntervalAVP<T>, HasAccountingRealtimeRequiredAVP<T>,
+                HasOriginStateIdAVP<T>, HasEventTimestampAVP<T>, HasProxyInfoAVP<T> {
 
-    /**
-     * Constructs an Accounting Answer message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     */
-    private AccountingAnswer(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(DiameterConstants.CMD_ACCOUNTING, true, false,
-              DiameterConstants.APP_DIAMETER_BASE_ACCOUNTING, hopByHopIdentifier, endToEndIdentifier);
+    @DiameterResponse(DiameterConstants.CMD_ACCOUNTING)
+    final class In extends IncomingAnswer<In>
+            implements AccountingAnswer<In> {
+
+        private In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
+            super(DiameterConstants.CMD_ACCOUNTING, true,
+                  DiameterConstants.APP_DIAMETER_BASE_ACCOUNTING, hopByHop, endToEnd);
+        }
     }
 
+    final class Out extends OutgoingAnswer<Out>
+            implements AccountingAnswer<Out> {
+
+        private Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
+            super(DiameterConstants.CMD_ACCOUNTING, true,
+                  DiameterConstants.APP_DIAMETER_BASE_ACCOUNTING, hopByHop, endToEnd);
+        }
+    }
 }

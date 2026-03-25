@@ -10,19 +10,8 @@ package com.sipgate.sparta.diameter.core;
  */
 public abstract class Request<T extends Request<T, ANSWER>, ANSWER extends Answer<ANSWER>> extends Command<T> {
 
-    /**
-     * Constructs a Diameter request message.
-     *
-     * @param commandCode        The command code of the request.
-     * @param proxiable          Indicates whether the message is proxiable.
-     * @param retransmitted      Indicates whether the message is retransmitted.
-     * @param applicationId      The application ID of the request.
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     */
     protected Request(final int commandCode, final boolean proxiable, final boolean retransmitted,
-                      final int applicationId, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(commandCode, true, proxiable, false, retransmitted, applicationId,
-              hopByHopIdentifier, endToEndIdentifier);
+                      final int applicationId) {
+        super(commandCode, true, proxiable, false, retransmitted, applicationId);
     }
 }

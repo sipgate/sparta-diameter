@@ -1,7 +1,13 @@
 package com.sipgate.sparta.diameter.session;
 
+import com.sipgate.sparta.diameter.core.Command;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
 import com.sipgate.sparta.diameter.core.DiameterMessageFactory;
+import com.sipgate.sparta.diameter.core.EndToEndId;
+import com.sipgate.sparta.diameter.core.HopByHopId;
+import com.sipgate.sparta.diameter.core.IncomingAnswer;
+import com.sipgate.sparta.diameter.core.OutgoingAnswer;
+import com.sipgate.sparta.diameter.core.OutgoingRequest;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.messages.rfc6733.DeviceWatchdogAnswer;
@@ -19,9 +25,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,6 +44,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -103,7 +113,7 @@ class DiameterInitiatorSessionTest {
     void it_sends_a_CER_on_connected() {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         stubEventLoop(peer);
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
 
@@ -111,14 +121,14 @@ class DiameterInitiatorSessionTest {
         session.onConnected(peer);
 
         // THEN
-        verify(peer).send(any(CapabilitiesExchangeRequest.class));
+        verify(peer).send(any(CapabilitiesExchangeRequest.Out.class), any(HopByHopId.class), any(EndToEndId.class));
     }
 
     @Test
     void it_sets_origin_host_in_the_CER() {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         stubEventLoop(peer);
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
 
@@ -126,9 +136,9 @@ class DiameterInitiatorSessionTest {
         session.onConnected(peer);
 
         // THEN
-        final ArgumentCaptor<CapabilitiesExchangeRequest> captor =
-                ArgumentCaptor.forClass(CapabilitiesExchangeRequest.class);
-        verify(peer).send(captor.capture());
+        final ArgumentCaptor<CapabilitiesExchangeRequest.Out> captor =
+                ArgumentCaptor.forClass(CapabilitiesExchangeRequest.Out.class);
+        verify(peer).send(captor.capture(), any(HopByHopId.class), any(EndToEndId.class));
         assertThat(captor.getValue().getOriginHost()).isEqualTo("hss.example.com");
     }
 
@@ -136,7 +146,7 @@ class DiameterInitiatorSessionTest {
     void it_transitions_to_WAIT_I_CEA_on_connected() {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         stubEventLoop(peer);
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
 
@@ -152,7 +162,9 @@ class DiameterInitiatorSessionTest {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         final ChannelFuture writeFail = failedWriteFuture();
-        when(peer.send(any())).thenReturn(writeFail);
+        when(peer.send(any(OutgoingAnswer.class))).thenReturn(mock(ChannelFuture.class));
+        when(peer.send(any(OutgoingRequest.class), any(HopByHopId.class), any(EndToEndId.class)))
+                .thenReturn(writeFail);
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         stubEventLoop(peer);
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
@@ -165,14 +177,14 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
-    void it_transitions_to_I_OPEN_on_successful_CEA() {
+    void it_transitions_to_I_OPEN_on_successful_CEA() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         stubEventLoop(peer);
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
-        final CapabilitiesExchangeAnswer cea = DiameterMessageFactory.createAnswer(capturedCer(peer), DiameterConstants.RES_DIAMETER_SUCCESS);
+        final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
 
         // WHEN
         session.onMessage(peer, cea);
@@ -182,35 +194,36 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
-    void it_ignores_CEA_with_wrong_hop_by_hop_id() {
+    void it_ignores_CEA_with_wrong_hop_by_hop_id() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         stubEventLoop(peer);
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
-        final int cerHopByHop = capturedCerHopByHop(peer);
-        final CapabilitiesExchangeRequest wrongCer =
-                DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, cerHopByHop + 1, 2);
-        final CapabilitiesExchangeAnswer cea = DiameterMessageFactory.createAnswer(wrongCer, DiameterConstants.RES_DIAMETER_SUCCESS);
+        final HopByHopId cerHbH = capturedCerHopByHop(peer);
+        final CapabilitiesExchangeAnswer.In wrongCea = (CapabilitiesExchangeAnswer.In)
+                DiameterMessageFactory.createForParsing(CapabilitiesExchangeAnswer.In.class,
+                        new HopByHopId(cerHbH.value() + 1), new EndToEndId(2), false);
 
         // WHEN
-        session.onMessage(peer, cea);
+        session.onMessage(peer, wrongCea);
 
         // THEN: still waiting — rogue CEA had no effect
         assertThat(session.getPeerState()).isEqualTo(PeerState.WAIT_I_CEA);
     }
 
     @Test
-    void it_transitions_to_CLOSED_on_failed_CEA() {
+    void it_transitions_to_CLOSED_on_failed_CEA() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         stubEventLoop(peer);
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
-        final CapabilitiesExchangeAnswer cea = DiameterMessageFactory.createAnswer(capturedCer(peer), DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION);
+        final CapabilitiesExchangeAnswer.In cea =
+                captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION);
 
         // WHEN
         session.onMessage(peer, cea);
@@ -220,15 +233,16 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
-    void it_closes_peer_on_failed_CEA() {
+    void it_closes_peer_on_failed_CEA() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         stubEventLoop(peer);
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
-        final CapabilitiesExchangeAnswer cea = DiameterMessageFactory.createAnswer(capturedCer(peer), DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION);
+        final CapabilitiesExchangeAnswer.In cea =
+                captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION);
 
         // WHEN
         session.onMessage(peer, cea);
@@ -245,39 +259,42 @@ class DiameterInitiatorSessionTest {
     void it_returns_failed_future_when_not_in_OPEN_state() {
         // GIVEN
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
-        final CapabilitiesExchangeRequest request = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 1, 2);
+        final CapabilitiesExchangeRequest.Out request =
+                new CapabilitiesExchangeRequest.Out();
 
         // WHEN
-        final CompletableFuture<CapabilitiesExchangeAnswer> future = session.send(request);
+        final CompletableFuture<CapabilitiesExchangeAnswer.In> future = session.send(request);
 
         // THEN
         assertThat(future).isCompletedExceptionally();
     }
 
     @Test
-    void it_sends_request_to_peer_when_in_OPEN_state() {
+    void it_sends_request_to_peer_when_in_OPEN_state() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final DiameterInitiatorSession session = openedSession(peer);
-        final CapabilitiesExchangeRequest request = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 42, 43);
+        final CapabilitiesExchangeRequest.Out request =
+                new CapabilitiesExchangeRequest.Out();
 
         // WHEN
         session.send(request);
 
         // THEN
-        verify(peer).send(request);
+        verify(peer).send(eq(request), any(HopByHopId.class), any(EndToEndId.class));
     }
 
     @Test
-    void it_completes_future_when_matching_answer_arrives() {
+    void it_completes_future_when_matching_answer_arrives() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final DiameterInitiatorSession session = openedSession(peer);
-        final CapabilitiesExchangeRequest request = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 42, 43);
-        final CompletableFuture<CapabilitiesExchangeAnswer> future = session.send(request);
-        final CapabilitiesExchangeAnswer answer = DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_SUCCESS);
+        final CapabilitiesExchangeRequest.Out request =
+                new CapabilitiesExchangeRequest.Out();
+        final CompletableFuture<CapabilitiesExchangeAnswer.In> future = session.send(request);
+        final CapabilitiesExchangeAnswer.In answer = captureAndBuildCeaForRequest(peer);
 
         // WHEN
         session.onMessage(peer, answer);
@@ -287,50 +304,55 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
-    void it_ignores_answer_with_unknown_hop_by_hop_id() {
+    void it_ignores_answer_with_unknown_hop_by_hop_id() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final DiameterInitiatorSession session = openedSession(peer);
-        final CapabilitiesExchangeRequest request = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 42, 43);
-        final CompletableFuture<CapabilitiesExchangeAnswer> future = session.send(request);
-        final CapabilitiesExchangeRequest fakeCer =
-                DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 99, 99);
-        final CapabilitiesExchangeAnswer answer = DiameterMessageFactory.createAnswer(fakeCer, DiameterConstants.RES_DIAMETER_SUCCESS);
+        final CapabilitiesExchangeRequest.Out request =
+                new CapabilitiesExchangeRequest.Out();
+        final CompletableFuture<CapabilitiesExchangeAnswer.In> future = session.send(request);
+        final CapabilitiesExchangeAnswer.In wrongAnswer = (CapabilitiesExchangeAnswer.In)
+                DiameterMessageFactory.createForParsing(CapabilitiesExchangeAnswer.In.class,
+                        new HopByHopId(99), new EndToEndId(99), false);
 
         // WHEN
-        session.onMessage(peer, answer);
+        session.onMessage(peer, wrongAnswer);
 
         // THEN
         assertThat(future).isNotDone();
     }
 
     @Test
-    void it_fails_future_when_write_fails() {
+    void it_fails_future_when_write_fails() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         final ChannelFuture writeFail = failedWriteFuture();
         // first call (CER) succeeds; second call (request) fails at write
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class), writeFail);
+        when(peer.send(any(OutgoingAnswer.class))).thenReturn(mock(ChannelFuture.class));
+        when(peer.send(any(OutgoingRequest.class), any(HopByHopId.class), any(EndToEndId.class)))
+                .thenReturn(mock(ChannelFuture.class), writeFail);
         stubEventLoop(peer);
         final DiameterInitiatorSession session = openedSession(peer);
-        final CapabilitiesExchangeRequest request = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 42, 43);
+        final CapabilitiesExchangeRequest.Out request =
+                new CapabilitiesExchangeRequest.Out();
 
         // WHEN
-        final CompletableFuture<CapabilitiesExchangeAnswer> future = session.send(request);
+        final CompletableFuture<CapabilitiesExchangeAnswer.In> future = session.send(request);
 
         // THEN
         assertThat(future).isCompletedExceptionally();
     }
 
     @Test
-    void it_fails_pending_futures_on_disconnect() {
+    void it_fails_pending_futures_on_disconnect() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final DiameterInitiatorSession session = openedSession(peer);
-        final CapabilitiesExchangeRequest request = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 42, 43);
-        final CompletableFuture<CapabilitiesExchangeAnswer> future = session.send(request);
+        final CapabilitiesExchangeRequest.Out request =
+                new CapabilitiesExchangeRequest.Out();
+        final CompletableFuture<CapabilitiesExchangeAnswer.In> future = session.send(request);
 
         // WHEN
         session.onDisconnected(peer);
@@ -345,10 +367,10 @@ class DiameterInitiatorSessionTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void it_fails_future_with_TimeoutException_after_request_timeout() {
+    void it_fails_future_with_TimeoutException_after_request_timeout() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
 
         final EventLoop eventLoop = mock(EventLoop.class);
         when(peer.eventLoop()).thenReturn(eventLoop);
@@ -361,12 +383,13 @@ class DiameterInitiatorSessionTest {
 
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
-        final CapabilitiesExchangeAnswer cea = DiameterMessageFactory.createAnswer(capturedCer(peer), DiameterConstants.RES_DIAMETER_SUCCESS);
+        final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
         session.onMessage(peer, cea);
         Mockito.clearInvocations(peer);
 
-        final CapabilitiesExchangeRequest request = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 42, 43);
-        final CompletableFuture<CapabilitiesExchangeAnswer> future = session.send(request);
+        final CapabilitiesExchangeRequest.Out request =
+                new CapabilitiesExchangeRequest.Out();
+        final CompletableFuture<CapabilitiesExchangeAnswer.In> future = session.send(request);
 
         // WHEN — simulate the timeout task firing
         capturedTask.get().run();
@@ -379,10 +402,10 @@ class DiameterInitiatorSessionTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void it_cancels_timeout_when_answer_arrives() {
+    void it_cancels_timeout_when_answer_arrives() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
 
         final EventLoop eventLoop = mock(EventLoop.class);
         when(peer.eventLoop()).thenReturn(eventLoop);
@@ -394,13 +417,14 @@ class DiameterInitiatorSessionTest {
 
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
-        final CapabilitiesExchangeAnswer cea = DiameterMessageFactory.createAnswer(capturedCer(peer), DiameterConstants.RES_DIAMETER_SUCCESS);
+        final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
         session.onMessage(peer, cea);
         Mockito.clearInvocations(peer);
 
-        final CapabilitiesExchangeRequest request = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 42, 43);
+        final CapabilitiesExchangeRequest.Out request =
+                new CapabilitiesExchangeRequest.Out();
         session.send(request);
-        final CapabilitiesExchangeAnswer answer = DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_SUCCESS);
+        final CapabilitiesExchangeAnswer.In answer = captureAndBuildCeaForRequest(peer);
 
         // WHEN
         session.onMessage(peer, answer);
@@ -411,10 +435,10 @@ class DiameterInitiatorSessionTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void it_cancels_all_timeouts_on_disconnect() {
+    void it_cancels_all_timeouts_on_disconnect() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
 
         final EventLoop eventLoop = mock(EventLoop.class);
         when(peer.eventLoop()).thenReturn(eventLoop);
@@ -426,11 +450,12 @@ class DiameterInitiatorSessionTest {
 
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
-        final CapabilitiesExchangeAnswer cea = DiameterMessageFactory.createAnswer(capturedCer(peer), DiameterConstants.RES_DIAMETER_SUCCESS);
+        final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
         session.onMessage(peer, cea);
         Mockito.clearInvocations(peer);
 
-        final CapabilitiesExchangeRequest request = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 42, 43);
+        final CapabilitiesExchangeRequest.Out request =
+                new CapabilitiesExchangeRequest.Out();
         session.send(request);
 
         // WHEN
@@ -448,22 +473,23 @@ class DiameterInitiatorSessionTest {
     void it_throws_when_registering_a_second_handler_for_the_same_command_code() {
         // GIVEN
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
-        session.setHandler(ReAuthRequest.class, req -> new CompletableFuture<>());
+        session.setHandler(ReAuthRequest.In.class, req -> new CompletableFuture<ReAuthAnswer.Out>());
 
         // WHEN / THEN
-        assertThatThrownBy(() -> session.setHandler(ReAuthRequest.class, req -> new CompletableFuture<>()))
+        assertThatThrownBy(() -> session.setHandler(ReAuthRequest.In.class, req -> new CompletableFuture<ReAuthAnswer.Out>()))
                 .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    void it_dispatches_inbound_request_to_registered_handler() {
+    void it_dispatches_inbound_request_to_registered_handler() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final DiameterInitiatorSession session = openedSession(peer);
-        final ReAuthRequest rar = DiameterMessageFactory.create(ReAuthRequest.class, 10, 20);
-        final ReAuthAnswer answer = DiameterMessageFactory.createAnswer(rar, DiameterConstants.RES_DIAMETER_SUCCESS);
-        session.setHandler(ReAuthRequest.class, req -> CompletableFuture.completedFuture(answer));
+        final ReAuthRequest.In rar = (ReAuthRequest.In)
+                DiameterMessageFactory.createForParsing(ReAuthRequest.In.class, new HopByHopId(10), new EndToEndId(20), false);
+        final ReAuthAnswer.Out answer = DiameterMessageFactory.createAnswer(rar, DiameterConstants.RES_DIAMETER_SUCCESS);
+        session.setHandler(ReAuthRequest.In.class, req -> CompletableFuture.completedFuture(answer));
 
         // WHEN
         session.onMessage(peer, rar);
@@ -473,37 +499,41 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
-    void it_sends_COMMAND_UNSUPPORTED_for_unhandled_request() {
+    void it_sends_COMMAND_UNSUPPORTED_for_unhandled_request() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final DiameterInitiatorSession session = openedSession(peer);
+        final ReAuthRequest.In rar = (ReAuthRequest.In)
+                DiameterMessageFactory.createForParsing(ReAuthRequest.In.class, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
-        session.onMessage(peer, DiameterMessageFactory.create(ReAuthRequest.class, 10, 20));
+        session.onMessage(peer, rar);
 
         // THEN
-        final ArgumentCaptor<ReAuthAnswer> captor = ArgumentCaptor.forClass(ReAuthAnswer.class);
+        final ArgumentCaptor<ReAuthAnswer.Out> captor = ArgumentCaptor.forClass(ReAuthAnswer.Out.class);
         verify(peer).send(captor.capture());
         assertThat(captor.getValue().getResultCode())
                 .isEqualTo(DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED);
     }
 
     @Test
-    void it_sends_UNABLE_TO_COMPLY_when_handler_future_fails() {
+    void it_sends_UNABLE_TO_COMPLY_when_handler_future_fails() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final DiameterInitiatorSession session = openedSession(peer);
-        final CompletableFuture<ReAuthAnswer> failing = new CompletableFuture<>();
+        final CompletableFuture<ReAuthAnswer.Out> failing = new CompletableFuture<>();
         failing.completeExceptionally(new RuntimeException("handler error"));
-        session.setHandler(ReAuthRequest.class, req -> failing);
+        session.setHandler(ReAuthRequest.In.class, req -> failing);
+        final ReAuthRequest.In rar = (ReAuthRequest.In)
+                DiameterMessageFactory.createForParsing(ReAuthRequest.In.class, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
-        session.onMessage(peer, DiameterMessageFactory.create(ReAuthRequest.class, 10, 20));
+        session.onMessage(peer, rar);
 
         // THEN
-        final ArgumentCaptor<ReAuthAnswer> captor = ArgumentCaptor.forClass(ReAuthAnswer.class);
+        final ArgumentCaptor<ReAuthAnswer.Out> captor = ArgumentCaptor.forClass(ReAuthAnswer.Out.class);
         verify(peer).send(captor.capture());
         assertThat(captor.getValue().getResultCode())
                 .isEqualTo(DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY);
@@ -514,15 +544,15 @@ class DiameterInitiatorSessionTest {
     // -------------------------------------------------------------------------
 
     @Test
-    void it_transitions_watchdog_to_OKAY_on_entering_I_OPEN() {
+    void it_transitions_watchdog_to_OKAY_on_entering_I_OPEN() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final List<Runnable> tasks = new ArrayList<>();
         stubEventLoop(peer, tasks);
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
-        final CapabilitiesExchangeAnswer cea = DiameterMessageFactory.createAnswer(capturedCer(peer), DiameterConstants.RES_DIAMETER_SUCCESS);
+        final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
 
         // WHEN
         session.onMessage(peer, cea);
@@ -532,10 +562,10 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
-    void it_sends_DWR_when_Tw_timer_fires() {
+    void it_sends_DWR_when_Tw_timer_fires() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final List<Runnable> tasks = new ArrayList<>();
         stubEventLoop(peer, tasks);
         openedSession(peer, tasks);
@@ -544,17 +574,17 @@ class DiameterInitiatorSessionTest {
         tasks.get(1).run();
 
         // THEN
-        final ArgumentCaptor<DeviceWatchdogRequest> captor =
-                ArgumentCaptor.forClass(DeviceWatchdogRequest.class);
-        verify(peer).send(captor.capture());
-        assertThat(captor.getValue()).isInstanceOf(DeviceWatchdogRequest.class);
+        final ArgumentCaptor<DeviceWatchdogRequest.Out> captor =
+                ArgumentCaptor.forClass(DeviceWatchdogRequest.Out.class);
+        verify(peer).send(captor.capture(), any(HopByHopId.class), any(EndToEndId.class));
+        assertThat(captor.getValue()).isInstanceOf(DeviceWatchdogRequest.Out.class);
     }
 
     @Test
-    void it_transitions_to_SUSPECT_when_Tw_fires_with_unanswered_DWR() {
+    void it_transitions_to_SUSPECT_when_Tw_fires_with_unanswered_DWR() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final List<Runnable> tasks = new ArrayList<>();
         stubEventLoop(peer, tasks);
         final DiameterInitiatorSession session = openedSession(peer, tasks);
@@ -570,10 +600,10 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
-    void it_transitions_to_DOWN_and_closes_peer_when_Tw_fires_in_SUSPECT() {
+    void it_transitions_to_DOWN_and_closes_peer_when_Tw_fires_in_SUSPECT() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final List<Runnable> tasks = new ArrayList<>();
         stubEventLoop(peer, tasks);
@@ -593,62 +623,62 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
-    void it_sends_DWA_when_DWR_received_in_I_OPEN() {
+    void it_sends_DWA_when_DWR_received_in_I_OPEN() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final List<Runnable> tasks = new ArrayList<>();
         stubEventLoop(peer, tasks);
         final DiameterInitiatorSession session = openedSession(peer, tasks);
-        final DeviceWatchdogRequest dwr = DiameterMessageFactory.create(DeviceWatchdogRequest.class, 77, 88);
+        final DeviceWatchdogRequest.In dwr = (DeviceWatchdogRequest.In)
+                DiameterMessageFactory.createForParsing(DeviceWatchdogRequest.In.class, new HopByHopId(77), new EndToEndId(88), false);
 
         // WHEN
         session.onMessage(peer, dwr);
 
         // THEN — a DWA was sent back
-        final ArgumentCaptor<DeviceWatchdogAnswer> captor =
-                ArgumentCaptor.forClass(DeviceWatchdogAnswer.class);
+        final ArgumentCaptor<DeviceWatchdogAnswer.Out> captor =
+                ArgumentCaptor.forClass(DeviceWatchdogAnswer.Out.class);
         verify(peer).send(captor.capture());
-        assertThat(captor.getValue().getHopByHopIdentifier()).isEqualTo(77);
+        assertThat(captor.getValue().hopByHopId()).isEqualTo(new HopByHopId(77));
     }
 
     @Test
-    void it_rejects_handler_registration_for_DWR_once_watchdog_is_active() {
+    void it_rejects_handler_registration_for_DWR_once_watchdog_is_active() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final List<Runnable> tasks = new ArrayList<>();
         stubEventLoop(peer, tasks);
         final DiameterInitiatorSession session = openedSession(peer, tasks);
 
         // WHEN / THEN — session occupies the DWR slot internally on entering I_OPEN
-        assertThatThrownBy(() -> session.setHandler(DeviceWatchdogRequest.class, req -> new CompletableFuture<>()))
+        assertThatThrownBy(() -> session.setHandler(DeviceWatchdogRequest.In.class, req -> new CompletableFuture<DeviceWatchdogAnswer.Out>()))
                 .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    void it_transitions_from_SUSPECT_to_OKAY_when_DWA_arrives() {
+    void it_transitions_from_SUSPECT_to_OKAY_when_DWA_arrives() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final List<Runnable> tasks = new ArrayList<>();
         stubEventLoop(peer, tasks);
         final DiameterInitiatorSession session = openedSession(peer, tasks);
 
-        // Fire first Tw — sends DWR, store its hop-by-hop
+        // Fire first Tw — sends DWR, capture its hop-by-hop
         tasks.get(1).run();
-        final ArgumentCaptor<DeviceWatchdogRequest> dwrCaptor =
-                ArgumentCaptor.forClass(DeviceWatchdogRequest.class);
-        verify(peer).send(dwrCaptor.capture());
-        final DeviceWatchdogRequest capturedDwr = dwrCaptor.getValue();
+        final ArgumentCaptor<HopByHopId> dwrHbH = ArgumentCaptor.forClass(HopByHopId.class);
+        final ArgumentCaptor<EndToEndId> dwrE2E = ArgumentCaptor.forClass(EndToEndId.class);
+        verify(peer).send(any(DeviceWatchdogRequest.Out.class), dwrHbH.capture(), dwrE2E.capture());
         Mockito.clearInvocations(peer);
 
         // Fire second Tw — transitions to SUSPECT
         tasks.get(2).run();
         assertThat(session.getWatchdogState()).isEqualTo(WatchdogState.SUSPECT);
 
-        // WHEN — DWA arrives
-        final DeviceWatchdogAnswer dwa = DiameterMessageFactory.createAnswer(capturedDwr, DiameterConstants.RES_DIAMETER_SUCCESS);
+        // WHEN — DWA arrives with matching hop-by-hop
+        final DeviceWatchdogAnswer.In dwa = buildMatchingDwa(dwrHbH.getValue(), dwrE2E.getValue());
         session.onMessage(peer, dwa);
 
         // THEN
@@ -656,10 +686,10 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
-    void it_transitions_from_SUSPECT_to_OKAY_when_other_message_proves_link_alive() {
+    void it_transitions_from_SUSPECT_to_OKAY_when_other_message_proves_link_alive() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final List<Runnable> tasks = new ArrayList<>();
         stubEventLoop(peer, tasks);
         final DiameterInitiatorSession session = openedSession(peer, tasks);
@@ -670,11 +700,11 @@ class DiameterInitiatorSessionTest {
         tasks.get(2).run();
         assertThat(session.getWatchdogState()).isEqualTo(WatchdogState.SUSPECT);
 
-        // WHEN — a non-DWA message arrives, proving the link alive
-        final CapabilitiesExchangeRequest fakeCer =
-                DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 99, 99);
-        final CapabilitiesExchangeAnswer answer = DiameterMessageFactory.createAnswer(fakeCer, DiameterConstants.RES_DIAMETER_SUCCESS);
-        session.onMessage(peer, answer);
+        // WHEN — an unrelated answer proves the link alive (cancels pending DWR → OKAY)
+        final CapabilitiesExchangeAnswer.In unrelatedAnswer = (CapabilitiesExchangeAnswer.In)
+                DiameterMessageFactory.createForParsing(CapabilitiesExchangeAnswer.In.class,
+                        new HopByHopId(99), new EndToEndId(99), false);
+        session.onMessage(peer, unrelatedAnswer);
 
         // THEN
         assertThat(session.getWatchdogState()).isEqualTo(WatchdogState.OKAY);
@@ -682,10 +712,10 @@ class DiameterInitiatorSessionTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void it_cancels_Tw_timer_on_message_received() {
+    void it_cancels_Tw_timer_on_message_received() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
 
         final EventLoop eventLoop = mock(EventLoop.class);
         when(peer.eventLoop()).thenReturn(eventLoop);
@@ -700,12 +730,13 @@ class DiameterInitiatorSessionTest {
 
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
-        final CapabilitiesExchangeAnswer cea = DiameterMessageFactory.createAnswer(capturedCer(peer), DiameterConstants.RES_DIAMETER_SUCCESS);
+        final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
         session.onMessage(peer, cea);
         Mockito.clearInvocations(peer);
 
         // WHEN — any message arrives in I_OPEN
-        final ReAuthRequest rar = DiameterMessageFactory.create(ReAuthRequest.class, 10, 20);
+        final ReAuthRequest.In rar = (ReAuthRequest.In)
+                DiameterMessageFactory.createForParsing(ReAuthRequest.In.class, new HopByHopId(10), new EndToEndId(20), false);
         session.onMessage(peer, rar);
 
         // THEN — the Tw timer was cancelled and rescheduled
@@ -717,10 +748,10 @@ class DiameterInitiatorSessionTest {
     // -------------------------------------------------------------------------
 
     @Test
-    void it_transitions_to_CLOSING_when_stop_is_called() {
+    void it_transitions_to_CLOSING_when_stop_is_called() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final DiameterInitiatorSession session = openedSession(peer);
 
         // WHEN
@@ -731,67 +762,63 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
-    void it_sends_DPR_when_stop_is_called() {
+    void it_sends_DPR_when_stop_is_called() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final DiameterInitiatorSession session = openedSession(peer);
 
         // WHEN
         session.stop();
 
         // THEN
-        verify(peer).send(any(DisconnectPeerRequest.class));
+        verify(peer).send(any(DisconnectPeerRequest.Out.class), any(HopByHopId.class), any(EndToEndId.class));
     }
 
     @Test
-    void it_sets_disconnect_cause_in_DPR() {
+    void it_sets_disconnect_cause_in_DPR() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final DiameterInitiatorSession session = openedSession(peer);
 
         // WHEN
         session.stop();
 
         // THEN
-        final ArgumentCaptor<DisconnectPeerRequest> captor =
-                ArgumentCaptor.forClass(DisconnectPeerRequest.class);
-        verify(peer).send(captor.capture());
+        final ArgumentCaptor<DisconnectPeerRequest.Out> captor =
+                ArgumentCaptor.forClass(DisconnectPeerRequest.Out.class);
+        verify(peer).send(captor.capture(), any(HopByHopId.class), any(EndToEndId.class));
         assertThat(captor.getValue().getDisconnectCause())
                 .isEqualTo(DiameterConstants.DCC_DO_NOT_WANT_TO_TALK_TO_YOU);
     }
 
     @Test
-    void it_rejects_send_in_CLOSING_state() {
+    void it_rejects_send_in_CLOSING_state() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final DiameterInitiatorSession session = openedSession(peer);
         session.stop();
 
         // WHEN
-        final CompletableFuture<CapabilitiesExchangeAnswer> future =
-                session.send(DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 1, 2));
+        final CapabilitiesExchangeRequest.Out req =
+                new CapabilitiesExchangeRequest.Out();
+        final CompletableFuture<CapabilitiesExchangeAnswer.In> future = session.send(req);
 
         // THEN
         assertThat(future).isCompletedExceptionally();
     }
 
     @Test
-    void it_transitions_to_CLOSED_when_DPA_arrives_in_CLOSING() {
+    void it_transitions_to_CLOSED_when_DPA_arrives_in_CLOSING() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final DiameterInitiatorSession session = openedSession(peer);
         session.stop();
-        final ArgumentCaptor<DisconnectPeerRequest> dprCaptor =
-                ArgumentCaptor.forClass(DisconnectPeerRequest.class);
-        verify(peer).send(dprCaptor.capture());
-        Mockito.clearInvocations(peer);
-        final DisconnectPeerAnswer dpa =
-                DiameterMessageFactory.createAnswer(dprCaptor.getValue(), DiameterConstants.RES_DIAMETER_SUCCESS);
+        final DisconnectPeerAnswer.In dpa = captureAndBuildDpa(peer);
 
         // WHEN
         session.onMessage(peer, dpa);
@@ -801,19 +828,14 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
-    void it_closes_peer_when_DPA_arrives_in_CLOSING() {
+    void it_closes_peer_when_DPA_arrives_in_CLOSING() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final DiameterInitiatorSession session = openedSession(peer);
         session.stop();
-        final ArgumentCaptor<DisconnectPeerRequest> dprCaptor =
-                ArgumentCaptor.forClass(DisconnectPeerRequest.class);
-        verify(peer).send(dprCaptor.capture());
-        Mockito.clearInvocations(peer);
-        final DisconnectPeerAnswer dpa =
-                DiameterMessageFactory.createAnswer(dprCaptor.getValue(), DiameterConstants.RES_DIAMETER_SUCCESS);
+        final DisconnectPeerAnswer.In dpa = captureAndBuildDpa(peer);
 
         // WHEN
         session.onMessage(peer, dpa);
@@ -839,10 +861,10 @@ class DiameterInitiatorSessionTest {
     // -------------------------------------------------------------------------
 
     @Test
-    void it_schedules_Tc_timer_on_unexpected_disconnect() {
+    void it_schedules_Tc_timer_on_unexpected_disconnect() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final List<Runnable> tasks = new ArrayList<>();
         stubEventLoop(peer, tasks);
         final DiameterInitiatorSession session = openedSession(peer, tasks);
@@ -855,10 +877,10 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
-    void it_calls_reconnect_when_Tc_timer_fires() {
+    void it_calls_reconnect_when_Tc_timer_fires() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         final List<Runnable> tasks = new ArrayList<>();
         stubEventLoop(peer, tasks);
         openedSession(peer, tasks);
@@ -866,7 +888,7 @@ class DiameterInitiatorSessionTest {
         final var reconnectCalled = new java.util.concurrent.atomic.AtomicBoolean(false);
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> reconnectCalled.set(true));
         session.onConnected(peer);
-        final CapabilitiesExchangeAnswer cea = DiameterMessageFactory.createAnswer(capturedCer(peer), DiameterConstants.RES_DIAMETER_SUCCESS);
+        final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
         session.onMessage(peer, cea);
         org.mockito.Mockito.clearInvocations(peer);
 
@@ -882,10 +904,10 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
-    void it_does_not_schedule_Tc_timer_after_graceful_shutdown() {
+    void it_does_not_schedule_Tc_timer_after_graceful_shutdown() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final List<Runnable> tasks = new ArrayList<>();
         stubEventLoop(peer, tasks);
@@ -902,10 +924,10 @@ class DiameterInitiatorSessionTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void it_cancels_Tc_timer_when_stop_is_called_while_reconnect_is_pending() {
+    void it_cancels_Tc_timer_when_stop_is_called_while_reconnect_is_pending() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
 
         final EventLoop eventLoop = mock(EventLoop.class);
         when(peer.eventLoop()).thenReturn(eventLoop);
@@ -920,7 +942,7 @@ class DiameterInitiatorSessionTest {
 
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
-        final CapabilitiesExchangeAnswer cea = DiameterMessageFactory.createAnswer(capturedCer(peer), DiameterConstants.RES_DIAMETER_SUCCESS);
+        final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
         session.onMessage(peer, cea);
         org.mockito.Mockito.clearInvocations(peer);
 
@@ -935,48 +957,54 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
-    void it_transitions_to_CLOSING_when_DPR_received_in_I_OPEN() {
+    void it_transitions_to_CLOSING_when_DPR_received_in_I_OPEN() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final DiameterInitiatorSession session = openedSession(peer);
+        final DisconnectPeerRequest.In dpr = (DisconnectPeerRequest.In)
+                DiameterMessageFactory.createForParsing(DisconnectPeerRequest.In.class, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
-        session.onMessage(peer, DiameterMessageFactory.create(DisconnectPeerRequest.class, 10, 20));
+        session.onMessage(peer, dpr);
 
         // THEN
         assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSING);
     }
 
     @Test
-    void it_sends_DPA_when_DPR_received_in_I_OPEN() {
+    void it_sends_DPA_when_DPR_received_in_I_OPEN() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final DiameterInitiatorSession session = openedSession(peer);
+        final DisconnectPeerRequest.In dpr = (DisconnectPeerRequest.In)
+                DiameterMessageFactory.createForParsing(DisconnectPeerRequest.In.class, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
-        session.onMessage(peer, DiameterMessageFactory.create(DisconnectPeerRequest.class, 10, 20));
+        session.onMessage(peer, dpr);
 
         // THEN
-        final ArgumentCaptor<DisconnectPeerAnswer> captor =
-                ArgumentCaptor.forClass(DisconnectPeerAnswer.class);
+        final ArgumentCaptor<DisconnectPeerAnswer.Out> captor =
+                ArgumentCaptor.forClass(DisconnectPeerAnswer.Out.class);
         verify(peer).send(captor.capture());
-        assertThat(captor.getValue().getHopByHopIdentifier()).isEqualTo(10);
+        assertThat(captor.getValue().hopByHopId()).isEqualTo(new HopByHopId(10));
     }
 
     @Test
-    void it_closes_peer_when_DPR_received_in_I_OPEN() {
+    void it_closes_peer_when_DPR_received_in_I_OPEN() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
-        when(peer.send(any())).thenReturn(mock(ChannelFuture.class));
+        stubSend(peer);
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final DiameterInitiatorSession session = openedSession(peer);
+        final DisconnectPeerRequest.In dpr = (DisconnectPeerRequest.In)
+                DiameterMessageFactory.createForParsing(DisconnectPeerRequest.In.class, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
-        session.onMessage(peer, DiameterMessageFactory.create(DisconnectPeerRequest.class, 10, 20));
+        session.onMessage(peer, dpr);
 
         // THEN
         verify(peer).close();
@@ -986,11 +1014,11 @@ class DiameterInitiatorSessionTest {
     // Helpers
     // -------------------------------------------------------------------------
 
-    private static DiameterInitiatorSession openedSession(final DiameterPeer peer) {
+    private static DiameterInitiatorSession openedSession(final DiameterPeer peer) throws Exception {
         stubEventLoop(peer);
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
-        final CapabilitiesExchangeAnswer cea = DiameterMessageFactory.createAnswer(capturedCer(peer), DiameterConstants.RES_DIAMETER_SUCCESS);
+        final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
         session.onMessage(peer, cea);
         Mockito.clearInvocations(peer);
         return session;
@@ -1007,29 +1035,112 @@ class DiameterInitiatorSessionTest {
      * </ul>
      */
     private static DiameterInitiatorSession openedSession(
-            final DiameterPeer peer, final List<Runnable> tasks) {
+            final DiameterPeer peer, final List<Runnable> tasks) throws Exception {
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
-        final CapabilitiesExchangeAnswer cea = DiameterMessageFactory.createAnswer(capturedCer(peer), DiameterConstants.RES_DIAMETER_SUCCESS);
+        final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
         session.onMessage(peer, cea);
         Mockito.clearInvocations(peer);
         return session;
     }
 
-    private static CapabilitiesExchangeRequest capturedCer(final DiameterPeer peer) {
-        final ArgumentCaptor<CapabilitiesExchangeRequest> cerCaptor =
-                ArgumentCaptor.forClass(CapabilitiesExchangeRequest.class);
-        verify(peer).send(cerCaptor.capture());
+    /**
+     * Captures the HopByHopId used for the CER (does NOT clear mock invocations).
+     * Use when you only need the hop-by-hop value.
+     */
+    private static HopByHopId capturedCerHopByHop(final DiameterPeer peer) {
+        final ArgumentCaptor<HopByHopId> hbh = ArgumentCaptor.forClass(HopByHopId.class);
+        verify(peer).send(any(CapabilitiesExchangeRequest.Out.class), hbh.capture(), any(EndToEndId.class));
         Mockito.clearInvocations(peer);
-        return cerCaptor.getValue();
+        return hbh.getValue();
     }
 
-    private static int capturedCerHopByHop(final DiameterPeer peer) {
-        final ArgumentCaptor<CapabilitiesExchangeRequest> captor =
-                ArgumentCaptor.forClass(CapabilitiesExchangeRequest.class);
-        verify(peer).send(captor.capture());
+    /**
+     * After the session sends a CER, captures its identifiers, creates a matching
+     * {@code CapabilitiesExchangeAnswer.In} with the given result code, and clears
+     * mock invocations on the peer.
+     */
+    @SuppressWarnings("unchecked")
+    private static CapabilitiesExchangeAnswer.In captureAndBuildCea(
+            final DiameterPeer peer, final long resultCode) throws Exception {
+        final ArgumentCaptor<HopByHopId> hbh = ArgumentCaptor.forClass(HopByHopId.class);
+        final ArgumentCaptor<EndToEndId> e2e = ArgumentCaptor.forClass(EndToEndId.class);
+        verify(peer).send(any(CapabilitiesExchangeRequest.Out.class), hbh.capture(), e2e.capture());
         Mockito.clearInvocations(peer);
-        return captor.getValue().getHopByHopIdentifier();
+
+        final CapabilitiesExchangeRequest.In fakeCer = (CapabilitiesExchangeRequest.In)
+                DiameterMessageFactory.createForParsing(CapabilitiesExchangeRequest.In.class,
+                        hbh.getValue(), e2e.getValue(), false);
+        final CapabilitiesExchangeAnswer.Out ceaOut = DiameterMessageFactory.createAnswer(fakeCer, resultCode);
+        return toIncomingAnswer(ceaOut);
+    }
+
+    /**
+     * After the session sends a CER (application request, not the capability exchange one),
+     * captures identifiers and builds a matching incoming CEA.
+     * Expects the most recently sent OutgoingRequest to be a CapabilitiesExchangeRequest.Out.
+     */
+    @SuppressWarnings("unchecked")
+    private static CapabilitiesExchangeAnswer.In captureAndBuildCeaForRequest(
+            final DiameterPeer peer) throws Exception {
+        final ArgumentCaptor<HopByHopId> hbh = ArgumentCaptor.forClass(HopByHopId.class);
+        final ArgumentCaptor<EndToEndId> e2e = ArgumentCaptor.forClass(EndToEndId.class);
+        verify(peer).send(any(CapabilitiesExchangeRequest.Out.class), hbh.capture(), e2e.capture());
+        Mockito.clearInvocations(peer);
+
+        final CapabilitiesExchangeRequest.In fakeCer = (CapabilitiesExchangeRequest.In)
+                DiameterMessageFactory.createForParsing(CapabilitiesExchangeRequest.In.class,
+                        hbh.getValue(), e2e.getValue(), false);
+        final CapabilitiesExchangeAnswer.Out ceaOut =
+                DiameterMessageFactory.createAnswer(fakeCer, DiameterConstants.RES_DIAMETER_SUCCESS);
+        return toIncomingAnswer(ceaOut);
+    }
+
+    /**
+     * After the session sends a DPR, captures its identifiers and builds a matching
+     * incoming DPA.
+     */
+    @SuppressWarnings("unchecked")
+    private static DisconnectPeerAnswer.In captureAndBuildDpa(final DiameterPeer peer) throws Exception {
+        final ArgumentCaptor<HopByHopId> hbh = ArgumentCaptor.forClass(HopByHopId.class);
+        final ArgumentCaptor<EndToEndId> e2e = ArgumentCaptor.forClass(EndToEndId.class);
+        verify(peer).send(any(DisconnectPeerRequest.Out.class), hbh.capture(), e2e.capture());
+        Mockito.clearInvocations(peer);
+
+        final DisconnectPeerRequest.In fakeDpr = (DisconnectPeerRequest.In)
+                DiameterMessageFactory.createForParsing(DisconnectPeerRequest.In.class,
+                        hbh.getValue(), e2e.getValue(), false);
+        final DisconnectPeerAnswer.Out dpaOut =
+                DiameterMessageFactory.createAnswer(fakeDpr, DiameterConstants.RES_DIAMETER_SUCCESS);
+        return toIncomingAnswer(dpaOut);
+    }
+
+    /**
+     * Builds a {@code DeviceWatchdogAnswer.In} with the given identifiers by
+     * creating an Out, serializing it, and parsing back.
+     */
+    @SuppressWarnings("unchecked")
+    private static DeviceWatchdogAnswer.In buildMatchingDwa(
+            final HopByHopId hbh, final EndToEndId e2e) throws Exception {
+        final DeviceWatchdogRequest.In fakeDwr = (DeviceWatchdogRequest.In)
+                DiameterMessageFactory.createForParsing(DeviceWatchdogRequest.In.class, hbh, e2e, false);
+        final DeviceWatchdogAnswer.Out dwaOut =
+                DiameterMessageFactory.createAnswer(fakeDwr, DiameterConstants.RES_DIAMETER_SUCCESS);
+        return toIncomingAnswer(dwaOut);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <A extends IncomingAnswer> A toIncomingAnswer(final OutgoingAnswer answer) throws Exception {
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        answer.writeTo(new DataOutputStream(baos));
+        return (A) Command.parseMessage(ByteBuffer.wrap(baos.toByteArray()));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void stubSend(final DiameterPeer peer) {
+        when(peer.send(any(OutgoingAnswer.class))).thenReturn(mock(ChannelFuture.class));
+        when(peer.send(any(OutgoingRequest.class), any(HopByHopId.class), any(EndToEndId.class)))
+                .thenReturn(mock(ChannelFuture.class));
     }
 
     @SuppressWarnings("unchecked")

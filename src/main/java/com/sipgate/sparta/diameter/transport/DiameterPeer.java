@@ -1,6 +1,9 @@
 package com.sipgate.sparta.diameter.transport;
 
-import com.sipgate.sparta.diameter.core.Command;
+import com.sipgate.sparta.diameter.core.EndToEndId;
+import com.sipgate.sparta.diameter.core.HopByHopId;
+import com.sipgate.sparta.diameter.core.OutgoingAnswer;
+import com.sipgate.sparta.diameter.core.OutgoingRequest;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoop;
@@ -22,13 +25,28 @@ public final class DiameterPeer {
     }
 
     /**
-     * Writes a Diameter command to the peer and flushes immediately.
+     * Sends an outgoing answer to the peer.
+     * The answer carries its own hop-by-hop and end-to-end identifiers.
      *
-     * @param command the command to send
+     * @param answer the answer to send
      * @return a {@link ChannelFuture} that completes when the write is done
      */
-    public ChannelFuture send(final Command<?> command) {
-        return channel.writeAndFlush(command);
+    public ChannelFuture send(final OutgoingAnswer<?> answer) {
+        return channel.writeAndFlush(answer);
+    }
+
+    /**
+     * Sends an outgoing request to the peer, injecting the supplied identifiers
+     * into the Diameter header at encode time.
+     *
+     * @param request  the request to send
+     * @param hopByHop the hop-by-hop identifier for this transmission
+     * @param endToEnd the end-to-end identifier for this transmission
+     * @return a {@link ChannelFuture} that completes when the write is done
+     */
+    public ChannelFuture send(final OutgoingRequest<?, ?> request,
+                              final HopByHopId hopByHop, final EndToEndId endToEnd) {
+        return channel.writeAndFlush(new OutgoingRequestEnvelope(request, hopByHop, endToEnd));
     }
 
     /**

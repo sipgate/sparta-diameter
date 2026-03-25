@@ -2,11 +2,14 @@ package com.sipgate.sparta.diameter.transport;
 
 import com.sipgate.sparta.diameter.core.Command;
 import com.sipgate.sparta.diameter.core.DiameterMessageFactory;
+import com.sipgate.sparta.diameter.core.EndToEndId;
+import com.sipgate.sparta.diameter.core.HopByHopId;
+import com.sipgate.sparta.diameter.core.IncomingCommand;
 import com.sipgate.sparta.diameter.messages.rfc6733.DeviceWatchdogRequest;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.embedded.EmbeddedChannel;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,44 +17,34 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DiameterMessageEncoderTest {
 
     @Test
-    void it_encodes_a_command_to_wire_format() {
+    void it_encodes_a_request_to_wire_format() throws Exception {
         // GIVEN
-        final EmbeddedChannel encoder = new EmbeddedChannel(new DiameterMessageEncoder());
-        final DeviceWatchdogRequest dwr = DiameterMessageFactory.create(DeviceWatchdogRequest.class,0x0000BEEF, 0x0000CAFE);
+        final DeviceWatchdogRequest.Out dwr = new DeviceWatchdogRequest.Out();
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         // WHEN
-        encoder.writeOutbound(dwr);
-        final ByteBuf encoded = encoder.readOutbound();
+        dwr.writeTo(new DataOutputStream(baos), new HopByHopId(0x0000BEEF), new EndToEndId(0x0000CAFE));
+        final byte[] encoded = baos.toByteArray();
 
         // THEN
-        assertThat(encoded).isNotNull();
-        assertThat(encoded.readableBytes()).isGreaterThanOrEqualTo(20); // at minimum the 20-byte header
-        assertThat(encoded.getByte(0)).isEqualTo((byte) 0x01); // Diameter version
-
-        encoded.release();
-        encoder.finish();
+        assertThat(encoded.length).isGreaterThanOrEqualTo(20); // at minimum the 20-byte header
+        assertThat(encoded[0]).isEqualTo((byte) 0x01); // Diameter version
     }
 
     @Test
     void it_produces_bytes_parseable_by_the_command_layer() throws Exception {
         // GIVEN
-        final EmbeddedChannel encoder = new EmbeddedChannel(new DiameterMessageEncoder());
-        final DeviceWatchdogRequest dwr = DiameterMessageFactory.create(DeviceWatchdogRequest.class,0x1234, 0x5678);
+        final DeviceWatchdogRequest.Out dwr = new DeviceWatchdogRequest.Out();
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         // WHEN
-        encoder.writeOutbound(dwr);
-        final ByteBuf encoded = encoder.readOutbound();
-        final byte[] bytes = new byte[encoded.readableBytes()];
-        encoded.readBytes(bytes);
-        final Command<?> parsed = (Command<?>) Command.parseMessage(ByteBuffer.wrap(bytes));
+        dwr.writeTo(new DataOutputStream(baos), new HopByHopId(0x1234), new EndToEndId(0x5678));
+        final IncomingCommand parsed = Command.parseMessage(ByteBuffer.wrap(baos.toByteArray()));
 
         // THEN
-        assertThat(parsed).isInstanceOf(DeviceWatchdogRequest.class);
-        assertThat(parsed.getHopByHopIdentifier()).isEqualTo(0x1234);
-        assertThat(parsed.getEndToEndIdentifier()).isEqualTo(0x5678);
-        assertThat(parsed.isRequest()).isTrue();
-
-        encoded.release();
-        encoder.finish();
+        assertThat(parsed).isInstanceOf(DeviceWatchdogRequest.In.class);
+        assertThat(parsed.hopByHopId()).isEqualTo(new HopByHopId(0x1234));
+        assertThat(parsed.endToEndId()).isEqualTo(new EndToEndId(0x5678));
+        assertThat(((Command<?>) parsed).isRequest()).isTrue();
     }
 }

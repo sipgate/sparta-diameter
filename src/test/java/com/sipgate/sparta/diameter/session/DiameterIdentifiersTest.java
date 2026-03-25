@@ -1,5 +1,7 @@
 package com.sipgate.sparta.diameter.session;
 
+import com.sipgate.sparta.diameter.core.EndToEndId;
+import com.sipgate.sparta.diameter.core.HopByHopId;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -17,23 +19,23 @@ class DiameterIdentifiersTest {
     @Test
     void it_returns_sequential_hop_by_hop_identifiers() {
         // GIVEN
-        final DiameterIdentifiers identifiers = new DiameterIdentifiers();
-        final int first = identifiers.nextHopByHop();
+        final var identifiers = new DiameterIdentifiers();
+        final var first = identifiers.nextHopByHop();
 
         // WHEN
-        final int second = identifiers.nextHopByHop();
-        final int third = identifiers.nextHopByHop();
+        final var second = identifiers.nextHopByHop();
+        final var third = identifiers.nextHopByHop();
 
         // THEN
-        assertThat(second).isEqualTo(first + 1);
-        assertThat(third).isEqualTo(first + 2);
+        assertThat(second.value()).isEqualTo(first.value() + 1);
+        assertThat(third.value()).isEqualTo(first.value() + 2);
     }
 
     @Test
     void it_produces_unique_hop_by_hop_identifiers_within_a_session() {
         // GIVEN
-        final DiameterIdentifiers identifiers = new DiameterIdentifiers();
-        final Set<Integer> seen = new HashSet<>();
+        final var identifiers = new DiameterIdentifiers();
+        final Set<HopByHopId> seen = new HashSet<>();
 
         // WHEN
         for (int i = 0; i < 1000; i++) {
@@ -47,16 +49,16 @@ class DiameterIdentifiersTest {
     @Test
     void it_uses_independent_counters_per_instance() {
         // GIVEN
-        final DiameterIdentifiers a = new DiameterIdentifiers();
-        final DiameterIdentifiers b = new DiameterIdentifiers();
+        final var a = new DiameterIdentifiers();
+        final var b = new DiameterIdentifiers();
 
         // WHEN
-        final int aFirst = a.nextHopByHop();
-        final int aSecond = a.nextHopByHop();
-        final int bFirst = b.nextHopByHop();
+        final var aFirst = a.nextHopByHop();
+        final var aSecond = a.nextHopByHop();
+        final var bFirst = b.nextHopByHop();
 
         // THEN — b's counter is independent; a increments without affecting b
-        assertThat(aSecond).isEqualTo(aFirst + 1);
+        assertThat(aSecond.value()).isEqualTo(aFirst.value() + 1);
         assertThat(bFirst).isNotEqualTo(aSecond);
     }
 
@@ -72,26 +74,26 @@ class DiameterIdentifiersTest {
         final int expectedTimePart = (int) (ntpSeconds & 0xFFFL);
 
         // WHEN
-        final int endToEnd = DiameterIdentifiers.nextEndToEnd();
+        final EndToEndId endToEnd = DiameterIdentifiers.nextEndToEnd();
 
         // THEN — high-order 12 bits match (allow ±1 for clock tick between calls)
-        final int actualTimePart = (endToEnd >>> 20) & 0xFFF;
+        final int actualTimePart = (endToEnd.value() >>> 20) & 0xFFF;
         assertThat(actualTimePart).isBetween(expectedTimePart - 1, expectedTimePart + 1);
     }
 
     @Test
     void it_fits_random_value_in_low_order_20_bits() {
         // GIVEN / WHEN
-        final int endToEnd = DiameterIdentifiers.nextEndToEnd();
+        final EndToEndId endToEnd = DiameterIdentifiers.nextEndToEnd();
 
         // THEN — bits 31..20 carry time, bits 19..0 carry random; the full value is 32 bits
-        assertThat(endToEnd & ~0xFFF00000).isGreaterThanOrEqualTo(0);
+        assertThat(endToEnd.value() & ~0xFFF00000).isGreaterThanOrEqualTo(0);
     }
 
     @Test
     void it_produces_non_identical_end_to_end_identifiers() {
         // GIVEN / WHEN
-        final Set<Integer> seen = new HashSet<>();
+        final Set<EndToEndId> seen = new HashSet<>();
         for (int i = 0; i < 100; i++) {
             seen.add(DiameterIdentifiers.nextEndToEnd());
         }

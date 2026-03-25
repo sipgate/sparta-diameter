@@ -1,10 +1,15 @@
 package com.sipgate.sparta.diameter.session;
 
 import com.sipgate.sparta.diameter.core.Answer;
-import com.sipgate.sparta.diameter.core.Command;
 import com.sipgate.sparta.diameter.core.DiameterConstants;
 import com.sipgate.sparta.diameter.core.DiameterMessageFactory;
-import com.sipgate.sparta.diameter.core.Request;
+import com.sipgate.sparta.diameter.core.EndToEndId;
+import com.sipgate.sparta.diameter.core.HopByHopId;
+import com.sipgate.sparta.diameter.core.IncomingAnswer;
+import com.sipgate.sparta.diameter.core.IncomingCommand;
+import com.sipgate.sparta.diameter.core.IncomingRequest;
+import com.sipgate.sparta.diameter.core.OutgoingAnswer;
+import com.sipgate.sparta.diameter.core.OutgoingRequest;
 import com.sipgate.sparta.diameter.core.annotations.DiameterRequest;
 import com.sipgate.sparta.diameter.core.avp.AVP;
 import com.sipgate.sparta.diameter.core.avp.AVPContainer;
@@ -32,12 +37,6 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * Shared state and helpers for initiator- and responder-side Diameter sessions.
- * <p>
- * Holds the fields common to both sides (config, peer, peer state, watchdog state,
- * capability negotiator) and provides the public {@link #send} API backed by a
- * hop-by-hop-keyed pending-request map. Concrete subclasses implement the
- * side-specific connection lifecycle.
- * </p>
  */
 abstract class DiameterSession implements DiameterConnectionListener {
 
@@ -51,12 +50,12 @@ abstract class DiameterSession implements DiameterConnectionListener {
 
     protected boolean shuttingDown = false;
 
-    private Integer pendingDwrHopByHop;
+    private HopByHopId pendingDwrHopByHop;
     private Future<?> twTimer;
 
     private static final Future<Void> NO_TIMEOUT_TASK = CompletableFuture.completedFuture(null);
 
-    private final ConcurrentHashMap<Integer, PendingRequest<?>> pendingRequests =
+    private final ConcurrentHashMap<HopByHopId, PendingRequest<?>> pendingRequests =
             new ConcurrentHashMap<>();
 
     private final Map<Integer, DiameterRequestHandler<?, ?>> handlers = new HashMap<>();
@@ -70,40 +69,26 @@ abstract class DiameterSession implements DiameterConnectionListener {
     }
 
     /**
-     * Sends a Diameter request and returns a future that completes when the
-     * matching answer arrives (correlated by hop-by-hop identifier).
-     *
-     * <p>Returns an already-failed future if the session is not in an OPEN state.
-     * Fails the future if the underlying channel write fails.
-     *
-     * @param request the request to send
-     * @param <A>     the answer type
-     * @return a future completed with the answer, or completed exceptionally on error
+     * Sends an outgoing request and returns a future that completes when the matching
+     * answer arrives (correlated by hop-by-hop identifier).
      */
-    public <A extends Answer<A>> CompletableFuture<A> send(final Request<?, A> request) {
+    public <R extends OutgoingRequest<R, A>, A extends Answer<A>> CompletableFuture<A> send(
+            final R request) {
         if (peerState != PeerState.I_OPEN && peerState != PeerState.R_OPEN) {
             final CompletableFuture<A> failed = new CompletableFuture<>();
-            failed.completeExceptionally(new IllegalStateException("Cannot send in state: " + peerState));
+            failed.completeExceptionally(
+                    new IllegalStateException("Cannot send in state: " + peerState));
             return failed;
         }
-        return sendAndTrack(request, config.getRequestTimeout());
+        final HopByHopId hopByHop = identifiers.nextHopByHop();
+        final EndToEndId endToEnd = DiameterIdentifiers.nextEndToEnd();
+        return sendAndTrack(request, hopByHop, endToEnd, config.getRequestTimeout());
     }
 
     /**
      * Registers a handler for inbound requests of the given type.
-     *
-     * <p>The command code is read from the {@link DiameterRequest} annotation on
-     * {@code requestClass}. A second registration for the same command code throws
-     * {@link IllegalStateException}.
-     *
-     * @param requestClass the annotated request class; must carry {@code @DiameterRequest}
-     * @param handler      the handler to invoke when a matching request arrives
-     * @param <R>          the request type
-     * @param <A>          the answer type
-     * @throws IllegalArgumentException if {@code requestClass} lacks the annotation
-     * @throws IllegalStateException    if a handler for that command code is already registered
      */
-    public <R extends Request<R, A>, A extends Answer<A>> void setHandler(
+    public <R extends IncomingRequest<R, A>, A extends OutgoingAnswer<A>> void setHandler(
             final Class<R> requestClass,
             final DiameterRequestHandler<R, A> handler) {
         final DiameterRequest annotation = requestClass.getAnnotation(DiameterRequest.class);
@@ -120,10 +105,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
     }
 
     /**
-     * Initiates a graceful disconnection by sending a DPR with
-     * {@code DO_NOT_WANT_TO_TALK_TO_YOU} and transitioning to {@code CLOSING}.
-     * The connection is closed once the DPA is received (or the request times out).
-     * Has no effect if the session is not in an OPEN state.
+     * Initiates a graceful disconnection by sending a DPR.
      */
     public void stop() {
         if (peerState != PeerState.I_OPEN && peerState != PeerState.R_OPEN) {
@@ -139,10 +121,9 @@ abstract class DiameterSession implements DiameterConnectionListener {
     }
 
     /**
-     * Handles a peer-initiated DPR: sends a DPA, transitions to {@code CLOSING},
-     * and closes the channel. Invisible to the application.
+     * Handles a peer-initiated DPR: sends a DPA and closes the channel.
      */
-    protected void handleInboundDpr(final DisconnectPeerRequest dpr) {
+    protected void handleInboundDpr(final DisconnectPeerRequest.In dpr) {
         stopWatchdog();
         peerState = PeerState.CLOSING;
         peer.send(DiameterMessageFactory.createAnswer(dpr, DiameterConstants.RES_DIAMETER_SUCCESS));
@@ -152,30 +133,38 @@ abstract class DiameterSession implements DiameterConnectionListener {
     /**
      * Dispatches an inbound request to the registered handler, or sends
      * {@code DIAMETER_COMMAND_UNSUPPORTED} if no handler is registered.
-     * When the handler future completes exceptionally, sends
-     * {@code DIAMETER_UNABLE_TO_COMPLY}.
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    protected void dispatchInboundRequest(final Request<?, ?> request) {
-        final DiameterRequestHandler handler = handlers.get(request.getCommandCode());
+    protected void dispatchInboundRequest(final IncomingRequest<?, ?> request) {
+        final int commandCode = request.getCommandCode();
+        final DiameterRequestHandler handler = handlers.get(commandCode);
         if (handler == null) {
-            peer.send(DiameterMessageFactory.createAnswer((Request) request, DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED));
+            peer.send(DiameterMessageFactory.createAnswer(request,
+                    DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED));
             return;
         }
         final CompletableFuture<?> future = handler.handle(request);
         future.whenComplete((answer, err) -> {
             if (err != null) {
-                peer.send(DiameterMessageFactory.createAnswer((Request) request, DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
+                peer.send(DiameterMessageFactory.createAnswer(request,
+                        DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
             } else {
-                peer.send((Command<?>) answer);
+                peer.send((OutgoingAnswer) answer);
             }
         });
     }
 
-    protected <A extends Answer<A>> CompletableFuture<A> sendAndTrack(
-            final Request<?, A> request, final Duration timeout) {
+    protected <R extends OutgoingRequest<R, A>, A extends Answer<A>> CompletableFuture<A> sendAndTrack(
+            final R request) {
+        final HopByHopId hopByHop = identifiers.nextHopByHop();
+        final EndToEndId endToEnd = DiameterIdentifiers.nextEndToEnd();
+        return sendAndTrack(request, hopByHop, endToEnd, config.getRequestTimeout());
+    }
+
+    protected <R extends OutgoingRequest<R, A>, A extends Answer<A>> CompletableFuture<A> sendAndTrack(
+            final R request, final HopByHopId hopByHop, final EndToEndId endToEnd,
+            final Duration timeout) {
         final CompletableFuture<A> future = new CompletableFuture<>();
-        final int hopByHop = request.getHopByHopIdentifier();
 
         final Future<?> timeoutTask;
         if (timeout.isZero()) {
@@ -187,7 +176,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
         }
         pendingRequests.put(hopByHop, new PendingRequest<>(future, timeoutTask));
 
-        peer.send(request).addListener(writeResult -> {
+        peer.send(request, hopByHop, endToEnd).addListener(writeResult -> {
             if (!writeResult.isSuccess()) {
                 fail(hopByHop, writeResult.cause());
             }
@@ -195,20 +184,13 @@ abstract class DiameterSession implements DiameterConnectionListener {
         return future;
     }
 
-    protected <A extends Answer<A>> CompletableFuture<A> sendAndTrack(final Request<?, A> request) {
-        return sendAndTrack(request, config.getRequestTimeout());
-    }
-
-    protected void cancel(final int hopByHop) {
+    protected void cancel(final HopByHopId hopByHop) {
         fail(hopByHop, new CancellationException());
     }
 
     protected void startWatchdog() {
         watchdogState = WatchdogState.OKAY;
-        // Register the DWR handler internally. This also prevents application code
-        // from registering a competing handler via setHandler(), which would throw
-        // IllegalStateException due to the existing duplicate-check.
-        final DiameterRequestHandler<DeviceWatchdogRequest, DeviceWatchdogAnswer> dwrHandler =
+        final DiameterRequestHandler<DeviceWatchdogRequest.In, DeviceWatchdogAnswer.Out> dwrHandler =
                 dwr -> CompletableFuture.completedFuture(
                         DiameterMessageFactory.createAnswer(dwr, DiameterConstants.RES_DIAMETER_SUCCESS));
         handlers.put(DiameterConstants.CMD_DEVICE_WATCHDOG, dwrHandler);
@@ -224,16 +206,13 @@ abstract class DiameterSession implements DiameterConnectionListener {
 
     /**
      * Resets the Tw timer on any inbound message, and cancels a pending DWR if
-     * the message arriving is not its matching DWA (proving the link alive via a
-     * different message).
-     *
-     * @param command the inbound command
+     * a different message proves the link alive.
      */
-    protected void handleWatchdog(final Command<?> command) {
+    protected void handleWatchdog(final IncomingCommand command) {
         resetTwTimer();
         if (pendingDwrHopByHop != null && pendingRequests.containsKey(pendingDwrHopByHop)) {
-            final boolean isMatchingDwa = command instanceof DeviceWatchdogAnswer
-                    && command.getHopByHopIdentifier() == pendingDwrHopByHop;
+            final boolean isMatchingDwa = command instanceof final DeviceWatchdogAnswer.In dwa
+                    && dwa.hopByHopId().equals(pendingDwrHopByHop);
             if (!isMatchingDwa) {
                 cancel(pendingDwrHopByHop);
             }
@@ -257,15 +236,12 @@ abstract class DiameterSession implements DiameterConnectionListener {
     }
 
     /**
-     * Looks up the hop-by-hop identifier of an incoming answer in the pending-request
-     * map and completes the corresponding future. Does nothing for answers
-     * with no pending entry.
-     *
-     * @param answer the incoming answer
+     * Matches an incoming answer to a pending request by hop-by-hop identifier
+     * and completes the corresponding future.
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    protected void complete(final Answer<?> answer) {
-        final PendingRequest pending = pendingRequests.remove(answer.getHopByHopIdentifier());
+    protected void complete(final IncomingAnswer answer) {
+        final PendingRequest pending = pendingRequests.remove(answer.hopByHopId());
         if (pending == null) {
             return;
         }
@@ -273,11 +249,12 @@ abstract class DiameterSession implements DiameterConnectionListener {
         pending.future.complete(answer);
     }
 
-    private void timeout(final int hopByHop, final long timeoutMs) {
-        fail(hopByHop, new TimeoutException("Request " + hopByHop + " timed out after " + timeoutMs + " ms"));
+    private void timeout(final HopByHopId hopByHop, final long timeoutMs) {
+        fail(hopByHop, new TimeoutException(
+                "Request " + hopByHop.value() + " timed out after " + timeoutMs + " ms"));
     }
 
-    private void fail(final int hopByHop, final Throwable cause) {
+    private void fail(final HopByHopId hopByHop, final Throwable cause) {
         final PendingRequest<?> pending = pendingRequests.remove(hopByHop);
         if (pending == null) {
             return;
@@ -287,10 +264,9 @@ abstract class DiameterSession implements DiameterConnectionListener {
     }
 
     /**
-     * Populates origin, host IP, vendor, product, and application AVPs on a CER
-     * from the local node config.
+     * Populates origin, host IP, vendor, product, and application AVPs on a CER.
      */
-    protected void populateCapabilityAvps(final CapabilitiesExchangeRequest cer) {
+    protected void populateCapabilityAvps(final CapabilitiesExchangeRequest.Out cer) {
         cer.setOriginHost(config.getOriginHost());
         cer.setOriginRealm(config.getOriginRealm());
         cer.setVendorId(config.getVendorId());
@@ -299,10 +275,9 @@ abstract class DiameterSession implements DiameterConnectionListener {
     }
 
     /**
-     * Populates origin, host IP, vendor, product, and application AVPs on a CEA
-     * from the local node config.
+     * Populates origin, host IP, vendor, product, and application AVPs on a CEA.
      */
-    protected void populateCapabilityAvps(final CapabilitiesExchangeAnswer cea) {
+    protected void populateCapabilityAvps(final CapabilitiesExchangeAnswer.Out cea) {
         cea.setOriginHost(config.getOriginHost());
         cea.setOriginRealm(config.getOriginRealm());
         cea.setVendorId(config.getVendorId());
@@ -320,17 +295,16 @@ abstract class DiameterSession implements DiameterConnectionListener {
         }
 
         for (final Integer authId : config.getCapabilities().authApplicationIds()) {
-            msg.addAVP(AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, Integer.toUnsignedLong(authId)));
+            msg.addAVP(AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID,
+                    Integer.toUnsignedLong(authId)));
         }
 
         for (final Integer acctId : config.getCapabilities().acctApplicationIds()) {
-            msg.addAVP(AVP.create(DiameterConstants.AVP_ACCT_APPLICATION_ID, Integer.toUnsignedLong(acctId)));
+            msg.addAVP(AVP.create(DiameterConstants.AVP_ACCT_APPLICATION_ID,
+                    Integer.toUnsignedLong(acctId)));
         }
     }
 
-    /**
-     * Reads all AVPs with the given code and returns their values as unsigned 32-bit integers.
-     */
     protected static List<Long> extractUnsignedInts(final List<AVP> avps) {
         final List<Long> result = new ArrayList<>();
         for (final AVP avp : avps) {
@@ -340,7 +314,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
     }
 
     private void failAllPending(final Throwable cause) {
-        for (final Integer hopByHop : new ArrayList<>(pendingRequests.keySet())) {
+        for (final HopByHopId hopByHop : new ArrayList<>(pendingRequests.keySet())) {
             fail(hopByHop, cause);
         }
     }
@@ -372,9 +346,10 @@ abstract class DiameterSession implements DiameterConnectionListener {
             }
             return;
         }
-        final DeviceWatchdogRequest dwr = buildDwr();
-        pendingDwrHopByHop = dwr.getHopByHopIdentifier();
-        sendAndTrack(dwr, Duration.ZERO).whenComplete((dwa, err) -> {
+        final HopByHopId hopByHop = identifiers.nextHopByHop();
+        final EndToEndId endToEnd = DiameterIdentifiers.nextEndToEnd();
+        pendingDwrHopByHop = hopByHop;
+        sendAndTrack(buildDwr(), hopByHop, endToEnd, Duration.ZERO).whenComplete((dwa, err) -> {
             pendingDwrHopByHop = null;
             if (err == null || err instanceof CancellationException) {
                 if (watchdogState == WatchdogState.SUSPECT) {
@@ -385,18 +360,12 @@ abstract class DiameterSession implements DiameterConnectionListener {
         scheduleTwTimer();
     }
 
-    private DeviceWatchdogRequest buildDwr() {
-        return DiameterMessageFactory.create(
-                DeviceWatchdogRequest.class,
-                identifiers.nextHopByHop(),
-                DiameterIdentifiers.nextEndToEnd());
+    private DeviceWatchdogRequest.Out buildDwr() {
+        return new DeviceWatchdogRequest.Out();
     }
 
-    private DisconnectPeerRequest buildDpr() {
-        return DiameterMessageFactory.create(
-                        DisconnectPeerRequest.class,
-                        identifiers.nextHopByHop(),
-                        DiameterIdentifiers.nextEndToEnd())
+    private DisconnectPeerRequest.Out buildDpr() {
+        return new DisconnectPeerRequest.Out()
                 .setDisconnectCause(DiameterConstants.DCC_DO_NOT_WANT_TO_TALK_TO_YOU);
     }
 

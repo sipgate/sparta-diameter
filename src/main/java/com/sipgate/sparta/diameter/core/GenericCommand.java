@@ -1,32 +1,61 @@
 package com.sipgate.sparta.diameter.core;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 /**
- * Generic command implementation for unknown or unsupported command codes.
+ * Generic command for unknown or unsupported command codes.
  * <p>
- * This class represents a generic Diameter command as defined in
- * <a href="https://datatracker.ietf.org/doc/html/rfc6733#section-3">RFC 6733, Section 3</a>.
- * It is used by the parser when encountering command codes that do not have specific implementations.
+ * {@code In} is used when an unrecognised command arrives from the wire.
+ * {@code Out} is used for relay or forwarding use cases where the caller
+ * supplies the full header context explicitly.
  * </p>
  */
-@SuppressWarnings("rawtypes")
-public class GenericCommand extends Command {
+public abstract class GenericCommand<T extends GenericCommand<T>> extends Command<T> {
+
+    protected GenericCommand(final int commandCode, final boolean request, final boolean proxiable,
+                             final boolean error, final boolean retransmitted,
+                             final int applicationId) {
+        super(commandCode, request, proxiable, error, retransmitted, applicationId);
+    }
+
+    public static final class In extends GenericCommand<In> implements IncomingCommand {
+
+        private final HopByHopId hopByHop;
+        private final EndToEndId endToEnd;
+
+        public In(final int commandCode, final boolean request, final boolean proxiable,
+                  final boolean error, final boolean retransmitted, final int applicationId,
+                  final HopByHopId hopByHop, final EndToEndId endToEnd) {
+            super(commandCode, request, proxiable, error, retransmitted, applicationId);
+            this.hopByHop = hopByHop;
+            this.endToEnd = endToEnd;
+        }
+
+        @Override public HopByHopId hopByHopId() { return hopByHop; }
+        @Override public EndToEndId endToEndId()  { return endToEnd; }
+    }
 
     /**
-     * Constructs a GenericCommand with the specified parameters.
-     *
-     * @param commandCode        The command code of the message.
-     * @param request            Indicates whether the message is a request.
-     * @param proxiable          Indicates whether the message is proxiable.
-     * @param error              Indicates whether the message is an error.
-     * @param retransmitted      Indicates whether the message is retransmitted.
-     * @param applicationId      The application ID of the message.
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
+     * Relay / forwarding frame: carries its own identifiers and can be written
+     * directly to the wire. Not an {@link OutgoingAnswer} or {@link OutgoingRequest}
+     * in the standard sense; use {@link #writeTo} directly.
      */
-    public GenericCommand(final int commandCode, final boolean request, final boolean proxiable,
-                         final boolean error, final boolean retransmitted, final int applicationId,
-                         final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(commandCode, request, proxiable, error, retransmitted, applicationId,
-              hopByHopIdentifier, endToEndIdentifier);
+    public static final class Out extends GenericCommand<Out> {
+
+        private final HopByHopId storedHopByHop;
+        private final EndToEndId storedEndToEnd;
+
+        public Out(final int commandCode, final boolean request, final boolean proxiable,
+                   final boolean error, final boolean retransmitted, final int applicationId,
+                   final HopByHopId hopByHop, final EndToEndId endToEnd) {
+            super(commandCode, request, proxiable, error, retransmitted, applicationId);
+            this.storedHopByHop = hopByHop;
+            this.storedEndToEnd = endToEnd;
+        }
+
+        public void writeTo(final DataOutputStream out) throws IOException {
+            writeTo(out, storedHopByHop, storedEndToEnd);
+        }
     }
 }

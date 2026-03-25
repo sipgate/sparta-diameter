@@ -1,6 +1,6 @@
 package com.sipgate.sparta.diameter.transport;
 
-import com.sipgate.sparta.diameter.core.Command;
+import com.sipgate.sparta.diameter.core.IncomingCommand;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
@@ -8,7 +8,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
  * Application-level inbound handler. One instance per channel.
  * Bridges Netty channel lifecycle events to {@link DiameterConnectionListener}.
  */
-final class DiameterPeerHandler extends SimpleChannelInboundHandler<Command<?>> {
+final class DiameterPeerHandler extends SimpleChannelInboundHandler<IncomingCommand> {
 
     private final DiameterConnectionListener listener;
     private DiameterPeer peer;
@@ -24,7 +24,7 @@ final class DiameterPeerHandler extends SimpleChannelInboundHandler<Command<?>> 
     }
 
     @Override
-    protected void channelRead0(final ChannelHandlerContext ctx, final Command<?> msg) {
+    protected void channelRead0(final ChannelHandlerContext ctx, final IncomingCommand msg) {
         listener.onMessage(peer, msg);
     }
 

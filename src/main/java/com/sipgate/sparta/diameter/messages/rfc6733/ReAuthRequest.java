@@ -7,37 +7,31 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
 /**
  * Re-Auth Request (RAR) message.
  * <p>
- * This class represents the Re-Auth Request message as defined in
+ * This interface represents the Re-Auth Request message as defined in
  * <a href="https://datatracker.ietf.org/doc/html/rfc6733#section-8.3.1">RFC 6733, Section 8.3.1</a>.
  * The RAR message is used to request re-authentication of a user session.
  * </p>
  */
-@DiameterRequest(DiameterConstants.CMD_RE_AUTH)
-public final class ReAuthRequest extends Request<ReAuthRequest, ReAuthAnswer> implements
-        HasAuthApplicationIdAVP<ReAuthRequest>,
-        HasReAuthRequestTypeAVP<ReAuthRequest>,
-        HasUserNameAVP<ReAuthRequest>,
-        HasOriginStateIdAVP<ReAuthRequest>,
-        HasProxyInfoAVP<ReAuthRequest>,
-        HasRouteRecordAVP<ReAuthRequest> {
+public interface ReAuthRequest<T extends ReAuthRequest<T>>
+        extends HasAuthApplicationIdAVP<T>, HasReAuthRequestTypeAVP<T>, HasUserNameAVP<T>,
+                HasOriginStateIdAVP<T>, HasProxyInfoAVP<T>, HasRouteRecordAVP<T> {
 
-    /**
-     * Constructs a Re-Auth Request message.
-     *
-     * @param retransmitted      Indicates whether the message is retransmitted.
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     */
-    private ReAuthRequest(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(DiameterConstants.CMD_RE_AUTH, true, retransmitted,
-              DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
+    @DiameterRequest(DiameterConstants.CMD_RE_AUTH)
+    final class In extends IncomingRequest<In, ReAuthAnswer.Out>
+            implements ReAuthRequest<In> {
+
+        private In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
+            super(DiameterConstants.CMD_RE_AUTH, true, retransmitted,
+                  DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
+        }
     }
 
-    /**
-     * Creates a Re-Auth Request message.
-     *
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     * @return A new ReAuthRequest instance.
-     */
+    final class Out extends OutgoingRequest<Out, ReAuthAnswer.In>
+            implements ReAuthRequest<Out> {
+
+        public Out() {
+            super(DiameterConstants.CMD_RE_AUTH, true,
+                  DiameterConstants.APP_DIAMETER_COMMON_MESSAGES);
+        }
+    }
 }

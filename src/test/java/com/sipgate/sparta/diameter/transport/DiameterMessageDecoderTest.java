@@ -2,6 +2,10 @@ package com.sipgate.sparta.diameter.transport;
 
 import com.sipgate.sparta.diameter.core.Command;
 import com.sipgate.sparta.diameter.core.DiameterMessageFactory;
+import com.sipgate.sparta.diameter.core.EndToEndId;
+import com.sipgate.sparta.diameter.core.HopByHopId;
+import com.sipgate.sparta.diameter.core.IncomingCommand;
+import com.sipgate.sparta.diameter.core.OutgoingRequest;
 import com.sipgate.sparta.diameter.messages.rfc6733.DeviceWatchdogRequest;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -25,9 +29,11 @@ class DiameterMessageDecoderTest {
         );
     }
 
-    private static ByteBuf serialize(final Command<?> command) throws Exception {
+    private static ByteBuf serialize(final OutgoingRequest request,
+                                     final HopByHopId hopByHop,
+                                     final EndToEndId endToEnd) throws Exception {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        command.writeTo(new DataOutputStream(baos));
+        request.writeTo(new DataOutputStream(baos), hopByHop, endToEnd);
         return Unpooled.wrappedBuffer(baos.toByteArray());
     }
 
@@ -35,18 +41,18 @@ class DiameterMessageDecoderTest {
     void it_decodes_framed_bytes_to_a_command() throws Exception {
         // GIVEN
         final EmbeddedChannel decoder = newDecoder();
-        final DeviceWatchdogRequest dwr = DiameterMessageFactory.create(DeviceWatchdogRequest.class,0x0000BEEF, 0x0000CAFE);
-        final ByteBuf wire = serialize(dwr);
+        final DeviceWatchdogRequest.Out dwr = new DeviceWatchdogRequest.Out();
+        final ByteBuf wire = serialize(dwr, new HopByHopId(0x0000BEEF), new EndToEndId(0x0000CAFE));
 
         // WHEN
         decoder.writeInbound(wire);
-        final Command<?> decoded = decoder.readInbound();
+        final IncomingCommand decoded = decoder.readInbound();
 
         // THEN
-        assertThat(decoded).isInstanceOf(DeviceWatchdogRequest.class);
-        assertThat(decoded.getHopByHopIdentifier()).isEqualTo(0x0000BEEF);
-        assertThat(decoded.getEndToEndIdentifier()).isEqualTo(0x0000CAFE);
-        assertThat(decoded.isRequest()).isTrue();
+        assertThat(decoded).isInstanceOf(DeviceWatchdogRequest.In.class);
+        assertThat(decoded.hopByHopId()).isEqualTo(new HopByHopId(0x0000BEEF));
+        assertThat(decoded.endToEndId()).isEqualTo(new EndToEndId(0x0000CAFE));
+        assertThat(((Command<?>) decoded).isRequest()).isTrue();
 
         decoder.finish();
     }
@@ -55,25 +61,25 @@ class DiameterMessageDecoderTest {
     void it_decodes_multiple_messages_from_a_single_buffer() throws Exception {
         // GIVEN
         final EmbeddedChannel decoder = newDecoder();
-        final DeviceWatchdogRequest first = DiameterMessageFactory.create(DeviceWatchdogRequest.class,1, 2);
-        final DeviceWatchdogRequest second = DiameterMessageFactory.create(DeviceWatchdogRequest.class,3, 4);
+        final DeviceWatchdogRequest.Out first = new DeviceWatchdogRequest.Out();
+        final DeviceWatchdogRequest.Out second = new DeviceWatchdogRequest.Out();
 
         final ByteBuf wire = Unpooled.buffer();
-        wire.writeBytes(serialize(first));
-        wire.writeBytes(serialize(second));
+        wire.writeBytes(serialize(first, new HopByHopId(1), new EndToEndId(2)));
+        wire.writeBytes(serialize(second, new HopByHopId(3), new EndToEndId(4)));
 
         // WHEN
         decoder.writeInbound(wire);
 
         // THEN
-        final Command<?> decodedFirst = decoder.readInbound();
-        final Command<?> decodedSecond = decoder.readInbound();
+        final IncomingCommand decodedFirst = decoder.readInbound();
+        final IncomingCommand decodedSecond = decoder.readInbound();
 
-        assertThat(decodedFirst).isInstanceOf(DeviceWatchdogRequest.class);
-        assertThat(decodedFirst.getHopByHopIdentifier()).isEqualTo(1);
+        assertThat(decodedFirst).isInstanceOf(DeviceWatchdogRequest.In.class);
+        assertThat(decodedFirst.hopByHopId()).isEqualTo(new HopByHopId(1));
 
-        assertThat(decodedSecond).isInstanceOf(DeviceWatchdogRequest.class);
-        assertThat(decodedSecond.getHopByHopIdentifier()).isEqualTo(3);
+        assertThat(decodedSecond).isInstanceOf(DeviceWatchdogRequest.In.class);
+        assertThat(decodedSecond.hopByHopId()).isEqualTo(new HopByHopId(3));
 
         decoder.finish();
     }
@@ -82,8 +88,8 @@ class DiameterMessageDecoderTest {
     void it_holds_back_an_incomplete_frame_until_the_rest_arrives() throws Exception {
         // GIVEN: a single DWR split across two TCP segments
         final EmbeddedChannel decoder = newDecoder();
-        final DeviceWatchdogRequest dwr = DiameterMessageFactory.create(DeviceWatchdogRequest.class,0x42, 0x43);
-        final ByteBuf serialized = serialize(dwr);
+        final DeviceWatchdogRequest.Out dwr = new DeviceWatchdogRequest.Out();
+        final ByteBuf serialized = serialize(dwr, new HopByHopId(0x42), new EndToEndId(0x43));
         final byte[] bytes = new byte[serialized.readableBytes()];
         serialized.readBytes(bytes);
 
@@ -96,12 +102,12 @@ class DiameterMessageDecoderTest {
         final Object afterFirstSegment = decoder.readInbound();
 
         decoder.writeInbound(secondSegment);
-        final Command<?> decoded = decoder.readInbound();
+        final IncomingCommand decoded = decoder.readInbound();
 
         // THEN
         assertThat(afterFirstSegment).isNull(); // framer held back the incomplete message
-        assertThat(decoded).isInstanceOf(DeviceWatchdogRequest.class);
-        assertThat(decoded.getHopByHopIdentifier()).isEqualTo(0x42);
+        assertThat(decoded).isInstanceOf(DeviceWatchdogRequest.In.class);
+        assertThat(decoded.hopByHopId()).isEqualTo(new HopByHopId(0x42));
 
         decoder.finish();
     }

@@ -1,5 +1,8 @@
 package com.sipgate.sparta.diameter.session;
 
+import com.sipgate.sparta.diameter.core.EndToEndId;
+import com.sipgate.sparta.diameter.core.HopByHopId;
+
 import java.time.Instant;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -19,7 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 final class DiameterIdentifiers {
 
-    // RFC says "use NTP timestamp", this is the offset from Unix timestamp to NTP timestamp
     private static final long NTP_OFFSET_SECONDS = 2208988800L;
 
     private final AtomicInteger hopByHop;
@@ -28,14 +30,14 @@ final class DiameterIdentifiers {
         hopByHop = new AtomicInteger(ThreadLocalRandom.current().nextInt());
     }
 
-    int nextHopByHop() {
-        return hopByHop.getAndIncrement();
+    HopByHopId nextHopByHop() {
+        return new HopByHopId(hopByHop.getAndIncrement());
     }
 
-    static int nextEndToEnd() {
+    static EndToEndId nextEndToEnd() {
         final long ntpSeconds = Instant.now().getEpochSecond() + NTP_OFFSET_SECONDS;
         final int timePart = (int) (ntpSeconds & 0xFFFL) << 20;
         final int randPart = ThreadLocalRandom.current().nextInt() & 0xFFFFF;
-        return timePart | randPart;
+        return new EndToEndId(timePart | randPart);
     }
 }

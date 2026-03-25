@@ -1,31 +1,39 @@
 package com.sipgate.sparta.diameter.messages.rfc6733;
 
-import com.sipgate.sparta.diameter.core.Answer;
-import com.sipgate.sparta.diameter.core.DiameterConstants;
+import com.sipgate.sparta.diameter.core.*;
 import com.sipgate.sparta.diameter.core.annotations.DiameterResponse;
 import com.sipgate.sparta.diameter.core.avp.mixins.*;
 
 /**
  * Capabilities Exchange Answer (CEA) message.
  * <p>
- * This class represents the Capabilities Exchange Answer message as defined in
+ * This interface represents the Capabilities Exchange Answer message as defined in
  * <a href="https://datatracker.ietf.org/doc/html/rfc6733#section-5.3.2">RFC 6733, Section 5.3.2</a>.
  * The CEA message is used to respond to a CER message and exchange capabilities between Diameter peers.
  * </p>
  */
-@DiameterResponse(DiameterConstants.CMD_CAPABILITIES_EXCHANGE)
-public final class CapabilitiesExchangeAnswer extends Answer<CapabilitiesExchangeAnswer> implements HasVendorIdAVP<CapabilitiesExchangeAnswer>,
-        HasProductNameAVP<CapabilitiesExchangeAnswer>,
-        HasHostIpAddressAVP<CapabilitiesExchangeAnswer>,
-        HasSupportedVendorIdAVP<CapabilitiesExchangeAnswer>,
-        HasAuthApplicationIdAVP<CapabilitiesExchangeAnswer>,
-        HasAcctApplicationIdAVP<CapabilitiesExchangeAnswer>,
-        HasFirmwareRevisionAVP<CapabilitiesExchangeAnswer>,
-        HasErrorMessageAVP<CapabilitiesExchangeAnswer>,
-        HasFailedAVP<CapabilitiesExchangeAnswer> {
+public interface CapabilitiesExchangeAnswer<T extends CapabilitiesExchangeAnswer<T>>
+        extends HasVendorIdAVP<T>, HasProductNameAVP<T>, HasHostIpAddressAVP<T>,
+                HasSupportedVendorIdAVP<T>, HasAuthApplicationIdAVP<T>,
+                HasAcctApplicationIdAVP<T>, HasFirmwareRevisionAVP<T>,
+                HasErrorMessageAVP<T>, HasFailedAVP<T> {
 
-    private CapabilitiesExchangeAnswer(final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false, false,
-              DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
+    @DiameterResponse(DiameterConstants.CMD_CAPABILITIES_EXCHANGE)
+    final class In extends IncomingAnswer<In>
+            implements CapabilitiesExchangeAnswer<In> {
+
+        private In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
+            super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false,
+                  DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
+        }
+    }
+
+    final class Out extends OutgoingAnswer<Out>
+            implements CapabilitiesExchangeAnswer<Out> {
+
+        private Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
+            super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false,
+                  DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
+        }
     }
 }

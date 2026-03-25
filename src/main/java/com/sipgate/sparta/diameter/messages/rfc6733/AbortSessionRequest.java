@@ -7,29 +7,31 @@ import com.sipgate.sparta.diameter.core.avp.mixins.*;
 /**
  * Abort Session Request (ASR) message.
  * <p>
- * This class represents the Abort Session Request message as defined in
+ * This interface represents the Abort Session Request message as defined in
  * <a href="https://datatracker.ietf.org/doc/html/rfc6733#section-8.5.1">RFC 6733, Section 8.5.1</a>.
  * The ASR message is used to request immediate termination of a user session.
  * </p>
  */
-@DiameterRequest(DiameterConstants.CMD_ABORT_SESSION)
-public final class AbortSessionRequest extends Request<AbortSessionRequest, AbortSessionAnswer> implements
-        HasSessionIdAVP<AbortSessionRequest>,
-        HasAuthApplicationIdAVP<AbortSessionRequest>,
-        HasUserNameAVP<AbortSessionRequest>,
-        HasOriginStateIdAVP<AbortSessionRequest>,
-        HasProxyInfoAVP<AbortSessionRequest>,
-        HasRouteRecordAVP<AbortSessionRequest> {
+public interface AbortSessionRequest<T extends AbortSessionRequest<T>>
+        extends HasSessionIdAVP<T>, HasAuthApplicationIdAVP<T>, HasUserNameAVP<T>,
+                HasOriginStateIdAVP<T>, HasProxyInfoAVP<T>, HasRouteRecordAVP<T> {
 
-    /**
-     * Constructs an Abort Session Request message.
-     *
-     * @param retransmitted      Indicates whether the message is retransmitted.
-     * @param hopByHopIdentifier The hop-by-hop identifier.
-     * @param endToEndIdentifier The end-to-end identifier.
-     */
-    private AbortSessionRequest(final boolean retransmitted, final int hopByHopIdentifier, final int endToEndIdentifier) {
-        super(DiameterConstants.CMD_ABORT_SESSION, true, retransmitted,
-              DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHopIdentifier, endToEndIdentifier);
+    @DiameterRequest(DiameterConstants.CMD_ABORT_SESSION)
+    final class In extends IncomingRequest<In, AbortSessionAnswer.Out>
+            implements AbortSessionRequest<In> {
+
+        private In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
+            super(DiameterConstants.CMD_ABORT_SESSION, true, retransmitted,
+                  DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
+        }
+    }
+
+    final class Out extends OutgoingRequest<Out, AbortSessionAnswer.In>
+            implements AbortSessionRequest<Out> {
+
+        public Out() {
+            super(DiameterConstants.CMD_ABORT_SESSION, true,
+                  DiameterConstants.APP_DIAMETER_COMMON_MESSAGES);
+        }
     }
 }

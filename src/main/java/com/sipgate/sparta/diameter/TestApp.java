@@ -2,9 +2,9 @@ package com.sipgate.sparta.diameter;
 
 import com.sipgate.sparta.diameter.core.Command;
 import com.sipgate.sparta.diameter.core.DiameterMessageFactory;
-import com.sipgate.sparta.diameter.core.avp.AVP;
-import com.sipgate.sparta.diameter.core.avp.AVPDefinition;
-import com.sipgate.sparta.diameter.core.avp.CoreAVPProvider;
+import com.sipgate.sparta.diameter.core.EndToEndId;
+import com.sipgate.sparta.diameter.core.HopByHopId;
+import com.sipgate.sparta.diameter.core.IncomingCommand;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.messages.rfc6733.CapabilitiesExchangeRequest;
 
@@ -21,7 +21,8 @@ public class TestApp {
         final Socket socket = new Socket();
         socket.connect(new InetSocketAddress("localhost", 3868), 5000);
 
-        final CapabilitiesExchangeRequest cer = DiameterMessageFactory.create(CapabilitiesExchangeRequest.class, 1, 1);
+        final CapabilitiesExchangeRequest.Out cer =
+                new CapabilitiesExchangeRequest.Out();
         cer.setOriginHost("myapp.test.realm");
         cer.setOriginRealm("test.realm");
         cer.setDestinationRealm("test.realm");
@@ -30,8 +31,11 @@ public class TestApp {
         cer.setVendorId(10415L); // 3GPP
         cer.setAuthApplicationId(4294967295L); // Relay
 
+        final HopByHopId hopByHop = new HopByHopId(1);
+        final EndToEndId endToEnd = new EndToEndId(1);
+
         final DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-        cer.writeTo(dos);
+        cer.writeTo(dos, hopByHop, endToEnd);
 
         System.out.println("Sent CER " + cer);
 
@@ -42,13 +46,10 @@ public class TestApp {
         if (read > 0) {
             buffer.put(temp, 0, read);
             buffer.flip();
-            final CapabilitiesExchangeAnswer cea = (CapabilitiesExchangeAnswer) Command.parseMessage(buffer);
-            System.out.println("Received CEA " + cea);
+            final IncomingCommand msg = Command.parseMessage(buffer);
+            System.out.println("Received CEA " + msg);
         }
 
         socket.close();
     }
-
 }
-
-
