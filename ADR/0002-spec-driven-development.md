@@ -13,7 +13,7 @@ created: "2026-03-25"
 
 ## Context
 
-`PLAN.md` grew to mix three distinct concerns:
+A single planning markdown file grew to mix three distinct concerns:
 
 1. **Completed work** — implementation steps with strikethrough, kept as a historical record
 2. **Architectural decisions** — type hierarchies, rejected alternatives, design rationale
@@ -39,12 +39,12 @@ Not every feature needs all three files. Small, well-understood features may hav
 
 > **Guardrail:** `specs/` is for implementation specifications. Architectural decisions — those that document a trade-off made at a crossroads, with rejected alternatives — go in `ADR/` per ADR-0001. When in doubt: if it has a "Rejected alternatives" section, it is an ADR.
 
-`PLAN.md` is reduced to a lightweight index: project context and a status table linking to `specs/` and `ADR/` entries. Completed work is removed — git history is the authoritative record.
+The previous planning file is retired. Project context and a status table linking to `specs/` and `ADR/` entries live in a lightweight index file. Completed work is removed — git history is the authoritative record.
 
 ## Consequences
 
 - Each feature specification is independently scoped; an agent working on one feature loads only what is relevant
-- `PLAN.md` stays short enough to be useful as a session context file
+- The index file stays short enough to be useful as a session context file
 - The distinction between decision records (immutable, in `ADR/`) and specs (mutable, in `specs/`) is explicit and enforced by location
 - Completed specs must be explicitly archived or deleted — they do not disappear automatically
 
