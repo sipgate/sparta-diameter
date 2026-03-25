@@ -87,6 +87,8 @@ ADRs may reference each other:
 
 Linking is optional but recommended when a meaningful relationship exists.
 
+Forward references — linking to an ADR with a higher number — are best avoided. If an ADR needs to reference a decision that hasn't been made yet, the current ADR is likely premature or structurally incomplete. This is not a guardrail, but a forward reference is usually a signal to pause and reconsider the scope.
+
 ### Guardrails
 
 Non-negotiable rules are highlighted as blockquotes with a **Guardrail:** prefix:
