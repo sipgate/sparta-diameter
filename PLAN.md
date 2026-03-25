@@ -155,93 +155,66 @@ Centralise generation in a package-private `DiameterIdentifiers` utility and rep
 
 ### Prevent misuse of hop-by-hop and end-to-end identifiers
 
-**Goal**: make it impossible for application code to supply raw identifier values.
-New requests leave the factory with `null` identifiers; the session generates and
-injects them at the point of transmission, keeping the message object immutable.
+**Goals**:
+- Prevent accidental re-use of the same identifiers across sends
+- Prevent cross-session identifier collisions (e.g. passing a hop-by-hop id from session A to session B)
+- Allow diameter relays (forward with original identifiers)
+- Prefer compile-time over runtime enforcement
 
-TODO: Open Questions:
-- createRetransmitted should preserve the original end-to-end identifier.
-- orElseThrow() - That's runtime but isn't there a way to do this at compile time?
+#### Type hierarchy
 
-#### Design
-
-- Identifiers are assigned by `DiameterSession.send()` — not by the factory, not by
-  the caller.
-- The encoder receives the assigned values as explicit parameters and writes them into
-  the outgoing byte buffer without touching the `Command` object.
-- Wire-parsed messages (incoming or relay-forwarded) carry their identifiers directly
-  in the `Command` fields; the encoder reads those via `.orElseThrow()`.
-
-#### Implementation steps
-
-**1 — `Command`**
-
-- Change `hopByHopIdentifier` and `endToEndIdentifier` fields from `int` to `Integer`.
-- Change both getters to return `Optional<Integer>`.
-- `GenericCommand`'s public constructor keeps the same signature but with `Integer`
-  params (it is only instantiated by the wire parser with known values).
-
-**2 — `DiameterMessageFactory`**
-
-Remove the public `create(Class<R>, int, int)` and `createRetransmitted(Class<R>, int, int)`
-overloads. Replace the public API with id-free variants and demote the id-bearing
-overloads to package-private for the wire parser:
-
-| Visibility       | Method                                          | Ids        |
-|------------------|-------------------------------------------------|------------|
-| `public`         | `create(Class<R>)`                              | `null`     |
-| `public`         | `createRetransmitted(Class<R>)`                 | `null`     |
-| package-private  | `create(Class<R>, Integer hbh, Integer ete)`    | from wire  |
-| package-private  | `createRetransmitted(Class<R>, Integer, Integer)`| from wire |
-
-`createAnswer(request, resultCode)` echoes the request's identifiers via
-`.orElseThrow()` — answers are always created from wire-parsed requests, so the
-values will be present.
-
-**3 — `DiameterMessageEncoder`**
-
-Add an overload `encode(Command command, int hopByHop, int endToEnd)` that writes
-the provided ids into the buffer instead of reading them from the object.
-The existing single-argument path (used for outgoing answers) reads
-`getHopByHopIdentifier().orElseThrow()` / `getEndToEndIdentifier().orElseThrow()`.
-
-**4 — `DiameterSession.send()` / `sendAndTrack()`**
+Every command type is split into `In` (wire-parsed, incoming) and `Out` (application-created,
+outgoing) as **static nested classes** of the enclosing command class. The enclosing class is
+never instantiated directly — it exists only to hold the shared generic signature and AVP mixins.
 
 ```
-int hopByHop = DiameterIdentifiers.nextHopByHop();
-int endToEnd = DiameterIdentifiers.nextEndToEnd();
-encoder.encode(request, hopByHop, endToEnd);
-pendingRequests.put(hopByHop, future);
+OFR<T extends OFR<T, A>, A extends Answer<A>>   ← abstract, holds mixins HasSmRpUi<T> etc.
+  OFR.In  extends OFR<OFR.In,  OFA.Out>  implements IncomingRequest
+  OFR.Out extends OFR<OFR.Out, OFA.In>   implements OutgoingRequest
 ```
 
-The generated `hopByHop` is the map key used for answer correlation.
-The `Command` object is never modified.
+The F-bounded type parameter `T` flows into every AVP mixin (`HasSmRpUi<T>`, etc.), so
+`setSmRpUi()` returns `OFR.In` when called on `In` and `OFR.Out` when called on `Out` —
+no overrides needed. Each nested class also declares its answer type, so:
 
-**5 — Caller updates**
+- `Session.send(OFR.Out)` returns `CompletableFuture<OFA.In>` — correct at compile time
+- `Handler<OFR.In, OFA.Out>` — correct at compile time
 
-- `DiameterInitiatorSession` / `DiameterResponderSession` / `DiameterSession`:
-  replace `DiameterMessageFactory.create(XxxRequest.class, h, e)` with
-  `DiameterMessageFactory.create(XxxRequest.class)` wherever a fresh outbound
-  request is created.
-- All tests asserting on `getHopByHopIdentifier()` / `getEndToEndIdentifier()`
-  must unwrap the `Optional`.
-- `DiameterMessageFactoryTest`: the public `create` tests no longer receive dummy
-  ids — assert that `getHopByHopIdentifier()` and `getEndToEndIdentifier()` are
-  empty. The package-private id-bearing overloads are tested separately.
+**Identifiers**:
+- Represented as two separate records `HopByHopId` and `EndToEndId`, each wrapping a
+  single `int`. Rationale:
+  - Swapping them is impossible anywhere — `encode(cmd, EndToEndId, HopByHopId)` is a
+    compile error; raw `int`/`int` or a combined `Identifiers` record both still allow
+    the swap at construction.
+  - The pending-requests map key becomes `HopByHopId` — self-documenting without comments
+    or relying on parameter names.
+  - They are often used individually: hop-by-hop alone as the map key, end-to-end alone
+    when echoing into an answer.
+  - `new HopByHopId(msg.readInt())` is more verbose than a bare `int`, but that verbosity
+    is clarity — it tells the reader what the value is without inspecting the call target.
+- `IncomingCommand` carries `final Identifiers` set by the wire parser.
+- `OutgoingAnswer` carries `final Identifiers` set at construction, copied from the
+  `IncomingRequest` by `DiameterMessageFactory.createAnswer()`.
+- `OutgoingRequest` carries no identifiers; `Session.send()` generates them and passes
+  them to the encoder as explicit parameters — the `Command` object is never modified.
 
-**6 — README**
+**AVP setters on `In`**: `In` inherits all mixin setters from the enclosing class. Compile-time
+prevention would require splitting every mixin into read/write halves — too cumbersome.
+A runtime guard in `Command.setAVP` throwing `UnsupportedOperationException` (matching the
+Java unmodifiable-collections contract) is sufficient and cheap.
 
-Document the relay use case: a `GenericCommand` parsed from the wire already
-carries both identifiers in its fields. Pass it directly to `peer.send()` (or
-construct one from scratch) to forward it with full control over all header fields.
-No special factory method is needed.
+#### Rejected alternatives
 
-#### Known limitation
+- **Composition (`DeviceWatchdog* has a Request`)** — the wrapper still exposes setters or
+  throws `UnsupportedOperationException` at runtime. Runtime check in disguise.
+- **`Identifiers` as a separate handler parameter** — users could construct or pass arbitrary
+  `Identifiers` values, defeating cross-session safety.
+- **Single class with direction marker interface** — a class implementing both
+  `IncomingRequest` and `OutgoingRequest` satisfies both; `Session.send(OutgoingRequest)`
+  would accept a wire-parsed message. Direction enforcement evaporates.
 
-`createRetransmitted` produces a new request with `null` ee-ident; `send()` assigns
-a fresh end-to-end identifier, which is not strictly RFC 6733-compliant for
-retransmission (same ee-ident as the original send). Preserving the original
-ee-ident across a retransmit is deferred — the T-bit is set correctly.
+See "Retransmit after link failure" for the full design, including end-to-end identifier
+preservation and the required changes to the pending-requests map.
 
 ### Disconnect reason callback
 
@@ -267,3 +240,57 @@ Required changes:
   grouped AVP per entry
 - `CapabilityNegotiator` must also inspect `Vendor-Specific-Application-Id` AVPs from the remote
   CER when computing the intersection
+
+### Relay support
+
+RFC 6733 §6.1.9: a relay agent forwards a request to the next hop with minimal mutation:
+
+- **Route-Record AVP**: the relay appends its own identity. Required. The application is
+  responsible for adding this AVP to the outgoing request before calling `relay()`.
+- **Hop-by-hop identifier**: replaced with a fresh `HopByHopId` generated by the session
+  (identical to normal `send()`).
+- **End-to-end identifier**: must not be modified (RFC 6733 §3). The caller provides the
+  original `EndToEndId` from the incoming request explicitly.
+- **All other AVPs**: must not be modified by a relay agent.
+
+On the answer path the session must restore the original hop-by-hop identifier before
+forwarding the answer back to the requester (RFC 6733 §6.2.2).
+
+#### API
+
+```java
+CompletableFuture<A> relay(OutgoingRequest<A> outgoing, EndToEndId endToEnd);
+```
+
+The caller builds `outgoing` (copies AVPs, adds Route-Record), then passes
+`incoming.getEndToEndId()` as the second argument. The session generates a new
+`HopByHopId` and encodes both into the wire buffer; the `OutgoingRequest` object is
+never modified.
+
+### Retransmit after link failure
+
+RFC 6733 §1.7: when a request has not been acknowledged and is resent after a link
+failure, the sender **MUST** set the T (potentially retransmitted) flag and **MUST**
+preserve the original end-to-end identifier. The hop-by-hop identifier is freshly
+generated (new connection). The RFC does not mandate that an implementation retransmit
+— failing pending requests on disconnect is also conformant — but if it does retransmit
+it must follow these rules.
+
+#### Requirement: store pending requests
+
+The current pending-requests map stores `HopByHopId → CompletableFuture<?>`. To
+retransmit after reconnect, the session must also retain the original request object
+and its `EndToEndId`. The map entry becomes a record:
+
+```java
+record PendingRequest<A>(OutgoingRequest<A> request, EndToEndId endToEnd, CompletableFuture<A> future) {}
+ConcurrentHashMap<HopByHopId, PendingRequest<?>> pendingRequests;
+```
+
+#### Reconnect path
+
+After the Tc timer fires and a new `DiameterInitiatorSession` is created (step 9),
+the old session's pending requests are passed to the new session. The new session
+retransmits each one: sets the T flag, preserves the original `EndToEndId`, generates
+a new `HopByHopId`. The original `CompletableFuture` is reused — the caller's future
+eventually completes when the answer arrives on the new connection.
