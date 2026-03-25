@@ -2,16 +2,21 @@
 
 - [ ] Define `HopByHopId` and `EndToEndId` records
 - [ ] Define `IncomingRequest`, `OutgoingRequest`, `IncomingAnswer`, `OutgoingAnswer` marker interfaces
-- [ ] Refactor each command class to `In` / `Out` static nested structure
+- [ ] Refactor each command class to `In` / `Out` static nested structure; move `@DiameterRequest` / `@DiameterResponse` annotations to the `In` nested class
+- [ ] Refactor `GenericCommand` to `In` / `Out`; `Out` optionally holds identifiers and overrides `writeTo` to prefer them over the injected ones
+- [ ] Refactor `ErrorAnswer` to implement `OutgoingAnswer` and gain `writeTo(DataOutputStream)`
 - [ ] Add runtime guard to `Command.setAVP`: throw `UnsupportedOperationException` when `this instanceof IncomingCommand`
-- [ ] Update wire parser to construct `In` instances with `HopByHopId` and `EndToEndId` from the parsed header
-- [ ] Update `DiameterMessageFactory.createAnswer()` to copy `HopByHopId` and `EndToEndId` from `IncomingRequest` into `OutgoingAnswer`
+- [ ] Replace `DiameterMessageFactory.create` / `createRetransmitted` / `instantiateForParsing` with `createForParsing(Class, HopByHopId, EndToEndId, boolean)` (package-private) and `createRequest(Class)` (public)
+- [ ] Update `DiameterMessageFactory.createAnswer()` to derive `Out` class from the registered `In` class by convention, and copy `HopByHopId` / `EndToEndId` from `IncomingRequest` into the `OutgoingAnswer`
+- [ ] Update wire parser (`Command.parseMessage`) to pass `HopByHopId` and `EndToEndId` to `createForParsing`
 - [ ] Remove `Command.writeTo(DataOutputStream)`
 - [ ] Add `writeTo(DataOutputStream)` to `OutgoingAnswer`
 - [ ] Add `writeTo(DataOutputStream, HopByHopId, EndToEndId)` to `OutgoingRequest`
 - [ ] Implement `OutgoingAnswerEncoder`
 - [ ] Implement `OutgoingRequestEncoder`
-- [ ] Update `Session.send()` to generate `HopByHopId` and `EndToEndId`, pass to encoder
+- [ ] Remove `DiameterMessageEncoder` (Netty); wire in `OutgoingAnswerEncoder` and `OutgoingRequestEncoder` at the transport layer
+- [ ] Update `DiameterRequestHandler` interface to `handle(IncomingRequest)` → `OutgoingAnswer`
+- [ ] Update `Session.send()` to generate `HopByHopId` and `EndToEndId`, pass to `OutgoingRequestEncoder`
 - [ ] Update `DiameterInitiatorSession.cerHopByHop` from `int` to `HopByHopId`
 - [ ] Update pending-requests map key from `int` to `HopByHopId`
 - [ ] Update all call sites for `tryCompleteFromPendingMap`, `cancel()`, and `failAllPending()`

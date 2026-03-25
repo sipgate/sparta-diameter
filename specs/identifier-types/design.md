@@ -39,6 +39,18 @@ abstract class MoForwardShortMessageRequest<T extends MoForwardShortMessageReque
 }
 ```
 
+## Annotation placement
+
+`@DiameterRequest` and `@DiameterResponse` are placed on the `In` nested class — not on the
+enclosing abstract class. The reflection scan in `Command.initializeCommandTypes()` discovers
+nested static classes (e.g. `XxxRequest$In`) and the existing
+`Request.class.isAssignableFrom(cls)` / `Answer.class.isAssignableFrom(cls)` filters still
+apply, since `In` inherits from `Request` / `Answer` through the enclosing class.
+
+`createAnswer()` needs the `Out` class for the answer type. It derives it by convention from the
+registered `In` class: given `XxxAnswer$In`, look up the enclosing class (`XxxAnswer`), then
+find the nested `Out` class via reflection. No second annotation is needed.
+
 ## Identifier ownership
 
 | Object | Identifiers | Set by |
@@ -46,6 +58,26 @@ abstract class MoForwardShortMessageRequest<T extends MoForwardShortMessageReque
 | `In` (incoming request or answer) | `final HopByHopId`, `final EndToEndId` | Wire parser |
 | `OutgoingAnswer` | `final HopByHopId`, `final EndToEndId` | `DiameterMessageFactory.createAnswer()`, copied from `IncomingRequest` |
 | `OutgoingRequest` | none | `Session.send()` generates them, passes to encoder |
+
+## DiameterMessageFactory
+
+Two distinct factory entry points, one per usage context:
+
+```java
+// Package-private — called only by Command.parseMessage (wire parsing → always In)
+// The compound bound rejects any Out class at compile time.
+static <C extends Command<C> & IncomingCommand> C createForParsing(
+        Class<C> type,
+        HopByHopId hopByHop,
+        EndToEndId endToEnd,
+        boolean retransmitted);
+
+// Public — called by application code to create an outgoing request (Out)
+public static <R extends OutgoingRequest & Command<?>> R createRequest(Class<R> type);
+```
+
+`createRequest` invokes the no-argument private constructor on `Out`. Identifiers are not set
+here; `Session.send()` generates them and passes them to the encoder at send time.
 
 ## Pending-requests map
 
@@ -57,8 +89,9 @@ The key changes from `int` to `HopByHopId`.
 
 ## Encoders
 
-`Command.writeTo(DataOutputStream)` is removed. Serialization is required on the two outgoing
-types only, with signatures that match their identifier ownership:
+`Command.writeTo(DataOutputStream)` is removed. The Netty `DiameterMessageEncoder` is removed.
+Serialization is required on the two outgoing types only, with signatures that match their
+identifier ownership:
 
 ```java
 // OutgoingAnswer already holds HopByHopId and EndToEndId as final fields
@@ -72,7 +105,7 @@ interface OutgoingRequest {
 }
 ```
 
-Two encoder classes wrap these, one per direction:
+Two encoder classes replace the old single encoder, one per direction:
 
 ```java
 class OutgoingAnswerEncoder {
@@ -86,6 +119,27 @@ class OutgoingRequestEncoder {
 
 `IncomingRequest` and `IncomingAnswer` have no `writeTo` — wire-parsed objects are never
 re-serialized by the session layer.
+
+## GenericCommand
+
+`GenericCommand` follows the same `In` / `Out` split. `GenericCommand.Out` may optionally hold
+its own `HopByHopId` and `EndToEndId` (e.g. when relaying a received message with the original
+identifiers preserved). If they are set, `writeTo` uses them and ignores the identifiers injected
+by the encoder:
+
+```java
+@Override
+void writeTo(DataOutputStream out, HopByHopId hopByHop, EndToEndId endToEnd) throws IOException {
+    final HopByHopId effectiveHopByHop = this.hopByHop != null ? this.hopByHop : hopByHop;
+    final EndToEndId effectiveEndToEnd  = this.endToEnd  != null ? this.endToEnd  : endToEnd;
+    // ... serialize with effective ids
+}
+```
+
+## ErrorAnswer
+
+`ErrorAnswer` is application-created (sent by the session layer) and implements `OutgoingAnswer`.
+It gains `writeTo(DataOutputStream)` like any other `OutgoingAnswer`.
 
 ## Runtime guard on `In` setters
 
