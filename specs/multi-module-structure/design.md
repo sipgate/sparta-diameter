@@ -7,16 +7,18 @@ sparta-diameter/                    ← root aggregator POM (packaging = pom)
 ├── sparta-diameter-base/           ← RFC 6733 base protocol
 ├── sparta-diameter-3gpp-common/    ← shared 3GPP AVPs (empty initially)
 ├── sparta-diameter-3gpp-s6c/       ← TS 29.338 §5, S6c (empty initially)
-└── sparta-diameter-3gpp-sgdgdd/    ← TS 29.338 §6, SGd/Gdd (empty initially)
+├── sparta-diameter-3gpp-sgdgdd/    ← TS 29.338 §6, SGd/Gdd (empty initially)
+├── sparta-diameter-3gpp-s6a/       ← TS 29.272, S6a/S6d (empty initially)
+└── sparta-diameter-3gpp-cxdx/      ← TS 29.228/29.229, Cx/Dx (empty initially)
 ```
 
 ## Root POM
 
 The root POM becomes an aggregator (no source, `<packaging>pom</packaging>`). It:
 
-- Declares all four modules in `<modules>`.
-- Moves to group ID `com.sipgate.sparta` (currently `com.sipgate`).
-- Keeps the artifact ID `sparta-diameter` (the root itself is not a deployable artifact).
+- Declares all six modules in `<modules>`.
+- Keeps the group ID `com.sipgate` and artifact ID `sparta-diameter` unchanged.
+- Sub-modules declare no `<version>` — they inherit it from the parent block.
 - Centralises shared dependency versions in `<dependencyManagement>` and shared plugin
   config in `<pluginManagement>` so sub-module POMs stay thin.
 
@@ -32,6 +34,8 @@ the full roots are:
 | `sparta-diameter-3gpp-common` | — | `com.sipgate.sparta.diameter._3gpp.common` |
 | `sparta-diameter-3gpp-s6c` | — | `com.sipgate.sparta.diameter._3gpp.s6c` |
 | `sparta-diameter-3gpp-sgdgdd` | — | `com.sipgate.sparta.diameter._3gpp.sgdgdd` |
+| `sparta-diameter-3gpp-s6a` | — | `com.sipgate.sparta.diameter._3gpp.s6a` |
+| `sparta-diameter-3gpp-cxdx` | — | `com.sipgate.sparta.diameter._3gpp.cxdx` |
 
 This means existing classes move from e.g. `com.sipgate.sparta.diameter.core` to
 `com.sipgate.sparta.diameter.base.core`. This is a **breaking API change**; it is
@@ -52,17 +56,15 @@ unchanged (only their package declaration and any cross-package imports are upda
 | `com.sipgate.sparta.diameter.core.annotations` | `com.sipgate.sparta.diameter.base.core.annotations` |
 | `com.sipgate.sparta.diameter.core.avp` | `com.sipgate.sparta.diameter.base.core.avp` |
 | `com.sipgate.sparta.diameter.core.avp.mixins` | `com.sipgate.sparta.diameter.base.core.avp.mixins` |
-| `com.sipgate.sparta.diameter.messages.rfc6733` | `com.sipgate.sparta.diameter.base.messages.rfc6733` |
+| `com.sipgate.sparta.diameter.messages.rfc6733` | `com.sipgate.sparta.diameter.base.messages` |
 | `com.sipgate.sparta.diameter.session` | `com.sipgate.sparta.diameter.base.session` |
 | `com.sipgate.sparta.diameter.transport` | `com.sipgate.sparta.diameter.base.transport` |
 
 ## Empty 3GPP module scaffolding
 
-Each of the three 3GPP modules needs only:
-- A `pom.xml` with the correct coordinates and a single `<dependency>` on its parent.
-- An empty `src/main/java` tree — no source files yet.
-
-A `.gitkeep` in `src/main/java` is sufficient to track the directory in git.
+Each of the five 3GPP modules needs only a `pom.xml` with the correct coordinates and a
+single `<dependency>` on its upstream module. No source directories are created — Maven
+does not require them to exist when there are no sources to compile.
 
 ## Dependency versions
 

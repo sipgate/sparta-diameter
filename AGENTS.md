@@ -27,11 +27,16 @@ void it_parses_a_DWR_from_binary_input() { ... }
 
 ## Package Structure
 
-Organized by protocol domain:
+Organized by protocol domain within each module:
 
 ```
-com.sipgate.sparta.diameter.core
-com.sipgate.sparta.diameter.core.avp
-com.sipgate.sparta.diameter.messages.rfc6733
-com.sipgate.sparta.diameter.transport
+com.sipgate.sparta.diameter.base.core
+com.sipgate.sparta.diameter.base.core.avp
+com.sipgate.sparta.diameter.base.messages
+com.sipgate.sparta.diameter.base.transport
+com.sipgate.sparta.diameter._3gpp.common
+com.sipgate.sparta.diameter._3gpp.s6c
+com.sipgate.sparta.diameter._3gpp.sgdgdd
+com.sipgate.sparta.diameter._3gpp.s6a
+com.sipgate.sparta.diameter._3gpp.cxdx
 ```

@@ -1,0 +1,20 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.sipgate</groupId>
+        <artifactId>sparta-diameter</artifactId>
+        <version>${revision}</version>
+    </parent>
+    <artifactId>sparta-diameter-3gpp-s6a</artifactId>
+    <name>sparta-diameter-3gpp-s6a</name>
+    <description>TS 29.272 — S6a/S6d (MME/SGSN to HSS)</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.sipgate</groupId>
+            <artifactId>sparta-diameter-3gpp-common</artifactId>
+        </dependency>
+    </dependencies>
+</project>

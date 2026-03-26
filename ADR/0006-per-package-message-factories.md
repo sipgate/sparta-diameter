@@ -62,8 +62,8 @@ public interface DiameterPackageFactory {
 The implementation uses `switch` expressions mapping command codes to direct constructor calls:
 
 ```java
-// com.sipgate.sparta.diameter.messages.rfc6733
-final class Rfc6733MessageFactory implements DiameterPackageFactory {
+// com.sipgate.sparta.diameter.base.messages
+final class BaseMessageFactory implements DiameterPackageFactory {
 
     @Override
     public IncomingCommand createForParsing(final int commandCode, final int applicationId,
