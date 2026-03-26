@@ -2,7 +2,7 @@
 title: "ADR-0004: Session Layer Architecture"
 description: "New instance per connection, two concrete session classes, factory-based lifecycle wiring"
 owner: "sipgate-uhlig"
-status: draft
+status: accepted
 tags:
   - adr
   - session

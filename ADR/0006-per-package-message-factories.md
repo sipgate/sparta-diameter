@@ -2,7 +2,7 @@
 title: "ADR-0006: Per-Package Message Factories"
 description: "Replace classpath-wide annotation scanning and reflection access bypasses with per-package factory classes"
 owner: "sipgate-uhlig"
-status: draft
+status: accepted
 tags:
   - adr
   - factory

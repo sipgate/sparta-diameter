@@ -2,7 +2,7 @@
 title: "ADR-0003: Multi-Module Maven Structure"
 description: "Split the project into focused Maven modules aligned with protocol standards and consumer boundaries"
 owner: "sipgate-uhlig"
-status: draft
+status: accepted
 tags:
   - adr
   - maven

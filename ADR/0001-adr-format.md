@@ -2,7 +2,7 @@
 title: "ADR-0001: ADR Format"
 description: "Architecture Decision Records in Markdown as the standard for documenting technical decisions"
 owner: "sipgate-uhlig"
-status: draft
+status: accepted
 tags:
   - adr
   - format

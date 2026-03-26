@@ -2,7 +2,7 @@
 title: "ADR-0001: Spec-Driven Development"
 description: "Feature specifications live in specs/<feature>/ with requirements, design, and tasks files"
 owner: "sipgate-uhlig"
-status: draft
+status: accepted
 tags:
   - adr
   - process

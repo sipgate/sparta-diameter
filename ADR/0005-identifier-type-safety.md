@@ -2,7 +2,7 @@
 title: "ADR-0005: Identifier Type Safety"
 description: "HopByHopId and EndToEndId as distinct records; per-command In/Out nested classes for direction enforcement"
 owner: "sipgate-uhlig"
-status: draft
+status: accepted
 tags:
   - adr
   - session
