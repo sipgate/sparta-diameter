@@ -1,7 +1,6 @@
 package com.sipgate.sparta.diameter.base.messages;
 
 import com.sipgate.sparta.diameter.base.core.*;
-import com.sipgate.sparta.diameter.base.core.annotations.DiameterResponse;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasErrorMessageAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasFailedAVP;
 
@@ -16,11 +15,10 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.HasFailedAVP;
 public interface DisconnectPeerAnswer<T extends DisconnectPeerAnswer<T>>
         extends HasErrorMessageAVP<T>, HasFailedAVP<T> {
 
-    @DiameterResponse(DiameterConstants.CMD_DISCONNECT_PEER)
     final class In extends IncomingAnswer<In>
             implements DisconnectPeerAnswer<In> {
 
-        private In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
+        In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_DISCONNECT_PEER, false,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }
@@ -29,7 +27,7 @@ public interface DisconnectPeerAnswer<T extends DisconnectPeerAnswer<T>>
     final class Out extends OutgoingAnswer<Out>
             implements DisconnectPeerAnswer<Out> {
 
-        private Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
+        Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_DISCONNECT_PEER, false,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }

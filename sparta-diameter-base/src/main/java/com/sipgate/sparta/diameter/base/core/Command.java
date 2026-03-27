@@ -1,19 +1,17 @@
 package com.sipgate.sparta.diameter.base.core;
 
 import com.sipgate.sparta.diameter.base.DiameterException;
-import com.sipgate.sparta.diameter.base.core.annotations.DiameterRequest;
-import com.sipgate.sparta.diameter.base.core.annotations.DiameterResponse;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasDestinationHostAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasDestinationRealmAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginHostAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginRealmAVP;
-import org.reflections.Reflections;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Base class for all Diameter commands (messages).
@@ -23,45 +21,12 @@ import java.util.*;
  * It provides common functionality for handling the Diameter header and AVPs.
  * </p>
  */
-@SuppressWarnings("rawtypes") // The parser cannot know ahead of time the exact type
 public abstract class Command<T extends Command<T>> implements
     Selfable<T>,
     HasOriginHostAVP<T>,
     HasOriginRealmAVP<T>,
     HasDestinationHostAVP<T>,
     HasDestinationRealmAVP<T> {
-
-    private static final Map<Integer, Class<? extends Request>> REQUEST_TYPES = new HashMap<>();
-    static final Map<Integer, Class<? extends Answer>> ANSWER_TYPES = new HashMap<>();
-    private static final Set<String> PACKAGES_TO_SCAN = new HashSet<>();
-
-    static {
-        PACKAGES_TO_SCAN.add("com.sipgate.sparta.diameter.base.messages");
-        initializeCommandTypes();
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void initializeCommandTypes() {
-        REQUEST_TYPES.clear();
-        ANSWER_TYPES.clear();
-
-        final Reflections reflections = new Reflections(PACKAGES_TO_SCAN);
-        final Set<Class<?>> requestClasses = reflections.getTypesAnnotatedWith(DiameterRequest.class);
-        for (final Class<?> cls : requestClasses) {
-            if (Request.class.isAssignableFrom(cls)) {
-                final DiameterRequest annotation = cls.getAnnotation(DiameterRequest.class);
-                REQUEST_TYPES.put(annotation.value(), (Class<? extends Request>) cls);
-            }
-        }
-
-        final Set<Class<?>> answerClasses = reflections.getTypesAnnotatedWith(DiameterResponse.class);
-        for (final Class<?> cls : answerClasses) {
-            if (Answer.class.isAssignableFrom(cls)) {
-                final DiameterResponse annotation = cls.getAnnotation(DiameterResponse.class);
-                ANSWER_TYPES.put(annotation.value(), (Class<? extends Answer>) cls);
-            }
-        }
-    }
 
     // Diameter header fields
     private final int version;
@@ -296,7 +261,6 @@ public abstract class Command<T extends Command<T>> implements
         return parseMessage(buffer, messageLength);
     }
 
-    @SuppressWarnings({"rawtypes"})
     private static IncomingCommand parseMessage(final ByteBuffer byteBuffer,
                                                 final int messageLength) throws DiameterException {
         try {
@@ -314,24 +278,15 @@ public abstract class Command<T extends Command<T>> implements
                     (byteBuffer.get() << 8) |
                     byteBuffer.get();
 
-            byteBuffer.getInt(); // applicationId — ignored here; constructor sets it
+            final int applicationId = byteBuffer.getInt();
 
             final HopByHopId hopByHop = new HopByHopId(byteBuffer.getInt());
             final EndToEndId endToEnd = new EndToEndId(byteBuffer.getInt());
 
             final List<AVP> avps = parseAVPs(byteBuffer, messageLength - 20);
 
-            final Class<? extends Command> commandClass = isRequest
-                    ? REQUEST_TYPES.get(commandCode)
-                    : ANSWER_TYPES.get(commandCode);
-
-            if (commandClass == null) {
-                throw new DiameterException(String.format(
-                        "Unsupported Diameter command code %s", commandCode));
-            }
-
             final IncomingCommand command = DiameterMessageFactory.createForParsing(
-                    commandClass, hopByHop, endToEnd, isRetransmitted);
+                    commandCode, applicationId, isRequest, hopByHop, endToEnd, isRetransmitted);
 
             for (final AVP avp : avps) {
                 ((Command<?>) command).avps.add(avp);

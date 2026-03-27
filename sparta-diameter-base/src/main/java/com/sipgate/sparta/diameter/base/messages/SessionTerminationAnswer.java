@@ -1,7 +1,6 @@
 package com.sipgate.sparta.diameter.base.messages;
 
 import com.sipgate.sparta.diameter.base.core.*;
-import com.sipgate.sparta.diameter.base.core.annotations.DiameterResponse;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
 
 /**
@@ -18,11 +17,10 @@ public interface SessionTerminationAnswer<T extends SessionTerminationAnswer<T>>
                 HasOriginStateIdAVP<T>, HasRedirectHostAVP<T>,
                 HasRedirectHostUsageAVP<T>, HasProxyInfoAVP<T> {
 
-    @DiameterResponse(DiameterConstants.CMD_SESSION_TERMINATION)
     final class In extends IncomingAnswer<In>
             implements SessionTerminationAnswer<In> {
 
-        private In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
+        In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_SESSION_TERMINATION, true,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }
@@ -31,7 +29,7 @@ public interface SessionTerminationAnswer<T extends SessionTerminationAnswer<T>>
     final class Out extends OutgoingAnswer<Out>
             implements SessionTerminationAnswer<Out> {
 
-        private Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
+        Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_SESSION_TERMINATION, true,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }

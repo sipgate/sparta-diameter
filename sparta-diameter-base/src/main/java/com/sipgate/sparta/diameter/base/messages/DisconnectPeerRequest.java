@@ -1,7 +1,6 @@
 package com.sipgate.sparta.diameter.base.messages;
 
 import com.sipgate.sparta.diameter.base.core.*;
-import com.sipgate.sparta.diameter.base.core.annotations.DiameterRequest;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasDisconnectCauseAVP;
 
 /**
@@ -15,11 +14,10 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.HasDisconnectCauseAVP;
 public interface DisconnectPeerRequest<T extends DisconnectPeerRequest<T>>
         extends HasDisconnectCauseAVP<T> {
 
-    @DiameterRequest(DiameterConstants.CMD_DISCONNECT_PEER)
     final class In extends IncomingRequest<In, DisconnectPeerAnswer.Out>
             implements DisconnectPeerRequest<In> {
 
-        private In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
+        In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(DiameterConstants.CMD_DISCONNECT_PEER, false, retransmitted,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }

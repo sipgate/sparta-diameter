@@ -18,7 +18,7 @@ class CapabilitiesExchangeRequestTest {
     void it_creates_normal_answer_with_success_result_code() {
         // GIVEN
         final IncomingRequest request = (IncomingRequest)
-                DiameterMessageFactory.createForParsing(CapabilitiesExchangeRequest.In.class, HBH, E2E, false);
+                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, 0, true, HBH, E2E, false);
         final long successCode = DiameterConstants.RES_DIAMETER_SUCCESS;
 
         // WHEN
@@ -35,7 +35,7 @@ class CapabilitiesExchangeRequestTest {
     void it_creates_request_with_correct_identifiers() {
         // GIVEN / WHEN
         final CapabilitiesExchangeRequest.In request = (CapabilitiesExchangeRequest.In)
-                DiameterMessageFactory.createForParsing(CapabilitiesExchangeRequest.In.class, HBH, E2E, false);
+                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, 0, true, HBH, E2E, false);
 
         // THEN
         assertThat(request.hopByHopId()).isEqualTo(HBH);
@@ -49,7 +49,7 @@ class CapabilitiesExchangeRequestTest {
     void it_creates_retransmitted_request_with_correct_flags() {
         // GIVEN / WHEN
         final CapabilitiesExchangeRequest.In request = (CapabilitiesExchangeRequest.In)
-                DiameterMessageFactory.createForParsing(CapabilitiesExchangeRequest.In.class, HBH, E2E, true);
+                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, 0, true, HBH, E2E, true);
 
         // THEN
         assertThat(request.hopByHopId()).isEqualTo(HBH);

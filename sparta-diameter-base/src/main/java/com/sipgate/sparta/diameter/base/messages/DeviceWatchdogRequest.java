@@ -1,7 +1,6 @@
 package com.sipgate.sparta.diameter.base.messages;
 
 import com.sipgate.sparta.diameter.base.core.*;
-import com.sipgate.sparta.diameter.base.core.annotations.DiameterRequest;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginStateIdAVP;
 
 /**
@@ -15,11 +14,10 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginStateIdAVP;
 public interface DeviceWatchdogRequest<T extends DeviceWatchdogRequest<T>>
         extends HasOriginStateIdAVP<T> {
 
-    @DiameterRequest(DiameterConstants.CMD_DEVICE_WATCHDOG)
     final class In extends IncomingRequest<In, DeviceWatchdogAnswer.Out>
             implements DeviceWatchdogRequest<In> {
 
-        private In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
+        In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(DiameterConstants.CMD_DEVICE_WATCHDOG, false, retransmitted,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }

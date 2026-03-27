@@ -1,7 +1,6 @@
 package com.sipgate.sparta.diameter.base.messages;
 
 import com.sipgate.sparta.diameter.base.core.*;
-import com.sipgate.sparta.diameter.base.core.annotations.DiameterResponse;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
 
 /**
@@ -17,11 +16,10 @@ public interface AbortSessionAnswer<T extends AbortSessionAnswer<T>>
                 HasErrorReportingHostAVP<T>, HasFailedAVP<T>, HasRedirectHostAVP<T>,
                 HasRedirectHostUsageAVP<T>, HasRedirectMaxCacheTimeAVP<T>, HasProxyInfoAVP<T> {
 
-    @DiameterResponse(DiameterConstants.CMD_ABORT_SESSION)
     final class In extends IncomingAnswer<In>
             implements AbortSessionAnswer<In> {
 
-        private In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
+        In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_ABORT_SESSION, true,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }
@@ -30,7 +28,7 @@ public interface AbortSessionAnswer<T extends AbortSessionAnswer<T>>
     final class Out extends OutgoingAnswer<Out>
             implements AbortSessionAnswer<Out> {
 
-        private Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
+        Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_ABORT_SESSION, true,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }

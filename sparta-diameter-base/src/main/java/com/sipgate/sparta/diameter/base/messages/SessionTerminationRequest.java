@@ -1,7 +1,6 @@
 package com.sipgate.sparta.diameter.base.messages;
 
 import com.sipgate.sparta.diameter.base.core.*;
-import com.sipgate.sparta.diameter.base.core.annotations.DiameterRequest;
 
 /**
  * Session Termination Request (STR) message.
@@ -13,11 +12,10 @@ import com.sipgate.sparta.diameter.base.core.annotations.DiameterRequest;
  */
 public interface SessionTerminationRequest<T extends SessionTerminationRequest<T>> {
 
-    @DiameterRequest(DiameterConstants.CMD_SESSION_TERMINATION)
     final class In extends IncomingRequest<In, SessionTerminationAnswer.Out>
             implements SessionTerminationRequest<In> {
 
-        private In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
+        In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(DiameterConstants.CMD_SESSION_TERMINATION, true, retransmitted,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }

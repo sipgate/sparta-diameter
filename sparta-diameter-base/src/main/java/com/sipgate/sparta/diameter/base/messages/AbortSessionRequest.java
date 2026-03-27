@@ -1,7 +1,6 @@
 package com.sipgate.sparta.diameter.base.messages;
 
 import com.sipgate.sparta.diameter.base.core.*;
-import com.sipgate.sparta.diameter.base.core.annotations.DiameterRequest;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
 
 /**
@@ -16,11 +15,10 @@ public interface AbortSessionRequest<T extends AbortSessionRequest<T>>
         extends HasSessionIdAVP<T>, HasAuthApplicationIdAVP<T>, HasUserNameAVP<T>,
                 HasOriginStateIdAVP<T>, HasProxyInfoAVP<T>, HasRouteRecordAVP<T> {
 
-    @DiameterRequest(DiameterConstants.CMD_ABORT_SESSION)
     final class In extends IncomingRequest<In, AbortSessionAnswer.Out>
             implements AbortSessionRequest<In> {
 
-        private In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
+        In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(DiameterConstants.CMD_ABORT_SESSION, true, retransmitted,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }

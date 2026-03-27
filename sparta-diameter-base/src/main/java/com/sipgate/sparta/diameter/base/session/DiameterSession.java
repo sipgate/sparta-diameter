@@ -10,7 +10,6 @@ import com.sipgate.sparta.diameter.base.core.IncomingCommand;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
 import com.sipgate.sparta.diameter.base.core.OutgoingRequest;
-import com.sipgate.sparta.diameter.base.core.annotations.DiameterRequest;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
@@ -58,7 +57,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
     private final ConcurrentHashMap<HopByHopId, PendingRequest<?>> pendingRequests =
             new ConcurrentHashMap<>();
 
-    private final Map<Integer, DiameterRequestHandler<?, ?>> handlers = new HashMap<>();
+    private final Map<Class<? extends IncomingCommand>, DiameterRequestHandler<?, ?>> handlers = new HashMap<>();
 
     DiameterSession(final DiameterNodeConfig config) {
         this.config = config;
@@ -91,17 +90,11 @@ abstract class DiameterSession implements DiameterConnectionListener {
     public <R extends IncomingRequest<R, A>, A extends OutgoingAnswer<A>> void setHandler(
             final Class<R> requestClass,
             final DiameterRequestHandler<R, A> handler) {
-        final DiameterRequest annotation = requestClass.getAnnotation(DiameterRequest.class);
-        if (annotation == null) {
-            throw new IllegalArgumentException(
-                    requestClass.getName() + " is not annotated with @DiameterRequest");
-        }
-        final int commandCode = annotation.value();
-        if (handlers.containsKey(commandCode)) {
+        if (handlers.containsKey(requestClass)) {
             throw new IllegalStateException(
-                    "Handler for command code " + commandCode + " is already registered");
+                    "Handler for " + requestClass.getSimpleName() + " is already registered");
         }
-        handlers.put(commandCode, handler);
+        handlers.put(requestClass, handler);
     }
 
     /**
@@ -136,8 +129,8 @@ abstract class DiameterSession implements DiameterConnectionListener {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected void dispatchInboundRequest(final IncomingRequest<?, ?> request) {
-        final int commandCode = request.getCommandCode();
-        final DiameterRequestHandler handler = handlers.get(commandCode);
+        final DiameterRequestHandler handler = handlers.get(
+                (Class<? extends IncomingCommand>) request.getClass());
         if (handler == null) {
             peer.send(DiameterMessageFactory.createAnswer(request,
                     DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED));
@@ -193,7 +186,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
         final DiameterRequestHandler<DeviceWatchdogRequest.In, DeviceWatchdogAnswer.Out> dwrHandler =
                 dwr -> CompletableFuture.completedFuture(
                         DiameterMessageFactory.createAnswer(dwr, DiameterConstants.RES_DIAMETER_SUCCESS));
-        handlers.put(DiameterConstants.CMD_DEVICE_WATCHDOG, dwrHandler);
+        handlers.put(DeviceWatchdogRequest.In.class, dwrHandler);
         scheduleTwTimer();
     }
 

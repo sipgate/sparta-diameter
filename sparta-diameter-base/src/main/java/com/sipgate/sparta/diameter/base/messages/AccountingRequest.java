@@ -1,7 +1,6 @@
 package com.sipgate.sparta.diameter.base.messages;
 
 import com.sipgate.sparta.diameter.base.core.*;
-import com.sipgate.sparta.diameter.base.core.annotations.DiameterRequest;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
 
 /**
@@ -20,11 +19,10 @@ public interface AccountingRequest<T extends AccountingRequest<T>>
                 HasOriginStateIdAVP<T>, HasEventTimestampAVP<T>,
                 HasProxyInfoAVP<T>, HasRouteRecordAVP<T> {
 
-    @DiameterRequest(DiameterConstants.CMD_ACCOUNTING)
     final class In extends IncomingRequest<In, AccountingAnswer.Out>
             implements AccountingRequest<In> {
 
-        private In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
+        In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(DiameterConstants.CMD_ACCOUNTING, true, retransmitted,
                   DiameterConstants.APP_DIAMETER_BASE_ACCOUNTING, hopByHop, endToEnd);
         }
