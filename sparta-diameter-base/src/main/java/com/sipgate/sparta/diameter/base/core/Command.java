@@ -116,7 +116,7 @@ public abstract class Command<T extends Command<T>> implements
      *
      * @return A copy of the list of AVPs.
      */
-    public List<AVP> getAVPs() { return new ArrayList<>(avps); }
+    protected List<AVP> getAVPs() { return new ArrayList<>(avps); }
 
     /**
      * Adds an AVP to this command.
