@@ -10,6 +10,7 @@ import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
 import com.sipgate.sparta.diameter.base.core.OutgoingRequest;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogAnswer;
@@ -34,6 +35,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -64,7 +66,7 @@ class DiameterResponderSessionTest {
             0L,
             "sparta",
             new DiameterNodeConfig.Capabilities(
-                    Collections.emptyList(), Collections.emptyList(), Collections.emptyList()));
+                    Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList()));
 
     private static final DiameterNodeConfig CONFIG_WITH_AUTH_APP = new DiameterNodeConfig(
             "hss.example.com",
@@ -73,7 +75,23 @@ class DiameterResponderSessionTest {
             0L,
             "sparta",
             new DiameterNodeConfig.Capabilities(
-                    Collections.singletonList(5L), Collections.emptyList(), Collections.emptyList()));
+                    Collections.singletonList(5L), Collections.emptyList(), Collections.emptyList(), Collections.emptyList()));
+
+    // 3GPP SGd: appId 16777313, vendor 10415
+    private static final long SGD_APP_ID = 16777313L;
+    private static final long VENDOR_3GPP = 10415L;
+
+    private static final DiameterNodeConfig CONFIG_WITH_VENDOR_SPECIFIC_APP = new DiameterNodeConfig(
+            "hss.example.com",
+            "example.com",
+            Collections.singletonList(LOCALHOST),
+            0L,
+            "sparta",
+            new DiameterNodeConfig.Capabilities(
+                    Collections.emptyList(),
+                    Collections.emptyList(),
+                    Collections.singletonList(VENDOR_3GPP),
+                    Collections.singletonList(new DiameterNodeConfig.VendorSpecificApp(VENDOR_3GPP, SGD_APP_ID))));
 
     @Test
     void it_starts_with_closed_peer_state() {
@@ -195,6 +213,103 @@ class DiameterResponderSessionTest {
 
         // THEN
         verify(peer).close();
+    }
+
+    @Test
+    void it_transitions_to_R_OPEN_on_CER_with_matching_vendor_specific_app() throws Exception {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        stubEventLoop(peer);
+        final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_VENDOR_SPECIFIC_APP);
+        session.onConnected(peer);
+        final CapabilitiesExchangeRequest.In cer = buildIncomingCerWithVendorSpecificAppId(VENDOR_3GPP, SGD_APP_ID);
+
+        // WHEN
+        session.onMessage(peer, cer);
+
+        // THEN
+        assertThat(session.getPeerState()).isEqualTo(PeerState.R_OPEN);
+    }
+
+    @Test
+    void it_sends_CEA_success_on_CER_with_matching_vendor_specific_app() throws Exception {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        stubEventLoop(peer);
+        final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_VENDOR_SPECIFIC_APP);
+        session.onConnected(peer);
+        final CapabilitiesExchangeRequest.In cer = buildIncomingCerWithVendorSpecificAppId(VENDOR_3GPP, SGD_APP_ID);
+
+        // WHEN
+        session.onMessage(peer, cer);
+
+        // THEN
+        final ArgumentCaptor<CapabilitiesExchangeAnswer.Out> captor =
+                ArgumentCaptor.forClass(CapabilitiesExchangeAnswer.Out.class);
+        verify(peer).send(captor.capture());
+        assertThat(captor.getValue().getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_SUCCESS);
+    }
+
+    @Test
+    void it_ignores_vendor_id_in_vendor_specific_app_during_negotiation() throws Exception {
+        // GIVEN: local configured with vendor 10415, remote sends same app ID but different vendor ID
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        stubEventLoop(peer);
+        final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_VENDOR_SPECIFIC_APP);
+        session.onConnected(peer);
+        final long differentVendorId = 99999L;
+        final CapabilitiesExchangeRequest.In cer = buildIncomingCerWithVendorSpecificAppId(differentVendorId, SGD_APP_ID);
+
+        // WHEN
+        session.onMessage(peer, cer);
+
+        // THEN: vendor ID is irrelevant per RFC 6733 §5.3 — still a match
+        assertThat(session.getPeerState()).isEqualTo(PeerState.R_OPEN);
+    }
+
+    @Test
+    void it_sends_no_common_application_when_only_vendor_specific_app_and_no_remote_match() throws Exception {
+        // GIVEN: local has only a vendor-specific app, remote sends no matching app
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        when(peer.close()).thenReturn(mock(ChannelFuture.class));
+        final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_VENDOR_SPECIFIC_APP);
+        session.onConnected(peer);
+        final CapabilitiesExchangeRequest.In cer = buildIncomingCer(99L);
+
+        // WHEN
+        session.onMessage(peer, cer);
+
+        // THEN
+        final ArgumentCaptor<CapabilitiesExchangeAnswer.Out> captor =
+                ArgumentCaptor.forClass(CapabilitiesExchangeAnswer.Out.class);
+        verify(peer).send(captor.capture());
+        assertThat(captor.getValue().getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION);
+    }
+
+    @Test
+    void it_emits_vendor_specific_app_id_avp_in_cer() throws Exception {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        stubEventLoop(peer);
+        final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_VENDOR_SPECIFIC_APP);
+        session.onConnected(peer);
+        final CapabilitiesExchangeRequest.In cer = buildIncomingCerWithVendorSpecificAppId(VENDOR_3GPP, SGD_APP_ID);
+        session.onMessage(peer, cer);
+
+        // THEN: the CEA sent back contains one Vendor-Specific-Application-Id grouped AVP
+        final ArgumentCaptor<CapabilitiesExchangeAnswer.Out> captor =
+                ArgumentCaptor.forClass(CapabilitiesExchangeAnswer.Out.class);
+        verify(peer).send(captor.capture());
+        final List<GroupedAVP> vsAppIds = captor.getValue().getVendorSpecificApplicationIds();
+        assertThat(vsAppIds).hasSize(1);
+        final GroupedAVP grouped = vsAppIds.get(0);
+        assertThat(grouped.findAVP(DiameterConstants.AVP_VENDOR_ID).getDataAsUnsignedInt()).isEqualTo(VENDOR_3GPP);
+        assertThat(grouped.findAVP(DiameterConstants.AVP_AUTH_APPLICATION_ID).getDataAsUnsignedInt()).isEqualTo(SGD_APP_ID);
     }
 
     // -------------------------------------------------------------------------
@@ -461,6 +576,19 @@ class DiameterResponderSessionTest {
         final CapabilitiesExchangeRequest.Out cerOut =
                 new CapabilitiesExchangeRequest.Out();
         cerOut.addAuthApplicationId(authAppId);
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        cerOut.writeTo(new DataOutputStream(baos), new HopByHopId(1), new EndToEndId(2));
+        return (CapabilitiesExchangeRequest.In) Command.parseMessage(ByteBuffer.wrap(baos.toByteArray()));
+    }
+
+    private static CapabilitiesExchangeRequest.In buildIncomingCerWithVendorSpecificAppId(
+            final long vendorId, final long authAppId) throws Exception {
+        final CapabilitiesExchangeRequest.Out cerOut = new CapabilitiesExchangeRequest.Out();
+        cerOut.addVendorSpecificApplicationId(
+                (GroupedAVP) AVP.create(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, List.of(
+                        AVP.create(DiameterConstants.AVP_VENDOR_ID, vendorId),
+                        AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, authAppId)
+                )));
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         cerOut.writeTo(new DataOutputStream(baos), new HopByHopId(1), new EndToEndId(2));
         return (CapabilitiesExchangeRequest.In) Command.parseMessage(ByteBuffer.wrap(baos.toByteArray()));

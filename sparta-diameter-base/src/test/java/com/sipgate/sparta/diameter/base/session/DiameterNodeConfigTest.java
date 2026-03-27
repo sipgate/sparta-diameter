@@ -17,7 +17,7 @@ class DiameterNodeConfigTest {
     private static final InetAddress LOCALHOST;
     private static final DiameterNodeConfig.Capabilities EMPTY_CAPABILITIES =
             new DiameterNodeConfig.Capabilities(
-                    Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+                    Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
 
     static {
         try {
@@ -144,7 +144,8 @@ class DiameterNodeConfigTest {
         final DiameterNodeConfig.Capabilities capabilities = new DiameterNodeConfig.Capabilities(
             Collections.singletonList(16777251L),
             Collections.singletonList(3L),
-            Collections.singletonList(10415L));
+            Collections.singletonList(10415L),
+            Collections.emptyList());
 
         // WHEN
         final DiameterNodeConfig config = new DiameterNodeConfig(

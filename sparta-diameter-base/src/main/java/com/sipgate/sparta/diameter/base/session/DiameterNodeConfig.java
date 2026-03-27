@@ -170,17 +170,34 @@ public final class DiameterNodeConfig {
     // -------------------------------------------------------------------------
 
     /**
+     * A single vendor-specific application entry as defined in RFC 6733 §6.11.
+     * <p>
+     * Carries the IANA-assigned vendor identifier and the vendor-specific
+     * Diameter application identifier, advertised together inside a
+     * {@code Vendor-Specific-Application-Id} grouped AVP (AVP code 260).
+     * The {@code vendorId} is informational only and MUST NOT be used when
+     * computing the capability intersection (RFC 6733 §5.3).
+     * </p>
+     *
+     * @param vendorId          the IANA-assigned vendor identifier (e.g. 10415 for 3GPP)
+     * @param authApplicationId the vendor-specific Diameter application identifier
+     */
+    public record VendorSpecificApp(long vendorId, long authApplicationId) {}
+
+    /**
      * The application capabilities advertised in CER/CEA.
      */
     public record Capabilities(
             List<Long> authApplicationIds,
             List<Long> acctApplicationIds,
-            List<Long> supportedVendorIds) {
+            List<Long> supportedVendorIds,
+            List<VendorSpecificApp> vendorSpecificApplications) {
 
         public Capabilities {
             authApplicationIds = List.copyOf(authApplicationIds);
             acctApplicationIds = List.copyOf(acctApplicationIds);
             supportedVendorIds = List.copyOf(supportedVendorIds);
+            vendorSpecificApplications = List.copyOf(vendorSpecificApplications);
         }
     }
 }

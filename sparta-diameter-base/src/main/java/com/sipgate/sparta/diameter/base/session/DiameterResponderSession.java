@@ -5,11 +5,14 @@ import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
+import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.base.messages.DisconnectPeerRequest;
 import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
 
+import java.util.ArrayList;
 import java.util.List;
 /**
  * Diameter session for the responder (R-) side of a connection.
@@ -52,8 +55,9 @@ public final class DiameterResponderSession extends DiameterSession {
     private void handleCer(final CapabilitiesExchangeRequest.In cer) {
         final List<Long> remoteAuthIds = cer.getAuthApplicationIds();
         final List<Long> remoteAcctIds = cer.getAcctApplicationIds();
+        final List<Long> remoteVendorSpecificAppIds = extractVendorSpecificAppIds(cer);
 
-        if (negotiator.hasCommonApplication(config.getCapabilities(), remoteAuthIds, remoteAcctIds)) {
+        if (negotiator.hasCommonApplication(config.getCapabilities(), remoteAuthIds, remoteAcctIds, remoteVendorSpecificAppIds)) {
             peer.send(buildCea(cer, DiameterConstants.RES_DIAMETER_SUCCESS));
             peerState = PeerState.R_OPEN;
             startWatchdog();
@@ -62,6 +66,21 @@ public final class DiameterResponderSession extends DiameterSession {
             peerState = PeerState.CLOSED;
             peer.close();
         }
+    }
+
+    private static List<Long> extractVendorSpecificAppIds(final CapabilitiesExchangeRequest.In cer) {
+        final List<Long> appIds = new ArrayList<>();
+        for (final GroupedAVP grouped : cer.getVendorSpecificApplicationIds()) {
+            final AVP authAppAvp = grouped.findAVP(DiameterConstants.AVP_AUTH_APPLICATION_ID);
+            if (authAppAvp != null) {
+                appIds.add(authAppAvp.getDataAsUnsignedInt());
+            }
+            final AVP acctAppAvp = grouped.findAVP(DiameterConstants.AVP_ACCT_APPLICATION_ID);
+            if (acctAppAvp != null) {
+                appIds.add(acctAppAvp.getDataAsUnsignedInt());
+            }
+        }
+        return appIds;
     }
 
     private CapabilitiesExchangeAnswer.Out buildCea(final CapabilitiesExchangeRequest.In cer,

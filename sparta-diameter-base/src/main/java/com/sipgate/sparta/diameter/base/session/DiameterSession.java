@@ -2,6 +2,8 @@ package com.sipgate.sparta.diameter.base.session;
 
 import com.sipgate.sparta.diameter.base.core.Answer;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
+import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
@@ -265,6 +267,9 @@ abstract class DiameterSession implements DiameterConnectionListener {
         cer.addAllSupportedVendorIds(config.getCapabilities().supportedVendorIds());
         cer.addAllAuthApplicationIds(config.getCapabilities().authApplicationIds());
         cer.addAllAcctApplicationIds(config.getCapabilities().acctApplicationIds());
+        for (final DiameterNodeConfig.VendorSpecificApp app : config.getCapabilities().vendorSpecificApplications()) {
+            cer.addVendorSpecificApplicationId(buildVendorSpecificAppIdAVP(app));
+        }
     }
 
     /**
@@ -279,6 +284,16 @@ abstract class DiameterSession implements DiameterConnectionListener {
         cea.addAllSupportedVendorIds(config.getCapabilities().supportedVendorIds());
         cea.addAllAuthApplicationIds(config.getCapabilities().authApplicationIds());
         cea.addAllAcctApplicationIds(config.getCapabilities().acctApplicationIds());
+        for (final DiameterNodeConfig.VendorSpecificApp app : config.getCapabilities().vendorSpecificApplications()) {
+            cea.addVendorSpecificApplicationId(buildVendorSpecificAppIdAVP(app));
+        }
+    }
+
+    private static GroupedAVP buildVendorSpecificAppIdAVP(final DiameterNodeConfig.VendorSpecificApp app) {
+        return (GroupedAVP) AVP.create(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, List.of(
+                AVP.create(DiameterConstants.AVP_VENDOR_ID, app.vendorId()),
+                AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, app.authApplicationId())
+        ));
     }
 
     private void failAllPending(final Throwable cause) {

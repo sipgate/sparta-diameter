@@ -68,7 +68,7 @@ class DiameterInitiatorSessionTest {
             0L,
             "sparta",
             new DiameterNodeConfig.Capabilities(
-                    Collections.emptyList(), Collections.emptyList(), Collections.emptyList()));
+                    Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList()));
 
     // -------------------------------------------------------------------------
     // Initial state
