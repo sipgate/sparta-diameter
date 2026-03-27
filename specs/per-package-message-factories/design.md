@@ -112,11 +112,11 @@ All 21 constructors below are widened from `private` to package-private (remove 
 | `SessionTerminationAnswer.In` | `(HopByHopId, EndToEndId)` |
 | `SessionTerminationAnswer.Out` | `(HopByHopId, EndToEndId)` |
 
-## Command — factory discovery
+## DiameterMessageFactory — factory discovery
 
-`Command` replaces the `REQUEST_TYPES` / `ANSWER_TYPES` maps and annotation scan with a
-mutable list of factories. The list is populated at startup via a reflections scan, and
-can be extended at runtime via a static `register` method.
+`DiameterMessageFactory` owns the mutable list of factories. The list is populated at
+startup via a reflections scan, and can be extended at runtime via a static `register`
+method.
 
 ```java
 static final List<DiameterPackageFactory> FACTORIES;
@@ -141,21 +141,21 @@ public static void register(final DiameterPackageFactory factory) {
 }
 ```
 
+`createForParsing` (public, used by tests and `Command`) iterates `FACTORIES` and
+delegates to the first factory returning non-null, throwing `IllegalArgumentException`
+if none handles the combination.
+
+`createAnswer` iterates `FACTORIES` for a non-null `createAnswer` result, then applies
+the existing identifier-copy and result-code logic.
+
+## Command — parseMessage
+
 `PACKAGES_TO_SCAN`, `REQUEST_TYPES`, `ANSWER_TYPES`, and `initializeCommandTypes()` are
-deleted. The reflections scan now targets `DiameterPackageFactory` subtypes across the
-base package, which naturally extends to any 3GPP module jar on the classpath.
+deleted.
 
-`parseMessage` iterates `FACTORIES`, takes the first non-null result from
-`createForParsing`, and throws `DiameterException` if none match.
-
-## DiameterMessageFactory
-
-`createForParsing` (public, used by tests) iterates `Command.FACTORIES` and delegates
-to the first factory returning non-null, throwing `IllegalArgumentException` if none
-handles the combination.
-
-`createAnswer` iterates `Command.FACTORIES` for a non-null `createAnswer` result, then
-applies the existing identifier-copy and result-code logic.
+`parseMessage` calls `DiameterMessageFactory.createForParsing` and uses the returned
+value directly — no null check needed, because `DiameterMessageFactory` already throws
+`IllegalArgumentException` when no factory matches.
 
 The three private `instantiateIn*` / `instantiateOutAnswer` methods and the
 `findOutClass` helper are deleted — construction is now handled entirely by the factories

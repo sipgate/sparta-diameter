@@ -18,19 +18,19 @@ Add `public final class BaseMessageFactory implements DiameterPackageFactory` in
 
 Add `BaseMessageFactoryTest` in `com.sipgate.sparta.diameter.base.messages`. Uses `Reflections` to discover all concrete `IncomingRequest` and `IncomingAnswer` subtypes; instantiates each via its package-private constructor (no `setAccessible`); asserts factory returns non-null for every discovered command code. Write this test first — it must be red before task 3 is complete.
 
-## 5. Replace annotation scan in `Command` with factory discovery
+## 5. Update `DiameterMessageFactory` with factory discovery
 
-- Delete `PACKAGES_TO_SCAN`, `REQUEST_TYPES`, `ANSWER_TYPES`, and `initializeCommandTypes()`.
 - Add `static final List<DiameterPackageFactory> FACTORIES` populated by a Reflections scan for `DiameterPackageFactory` subtypes under `"com.sipgate.sparta.diameter"`.
 - Add `public static void register(DiameterPackageFactory factory)` that appends to `FACTORIES`.
-- Update `parseMessage` to iterate `FACTORIES`, take the first non-null result from `createForParsing`, and throw `DiameterException` if none match.
-
-## 6. Update `DiameterMessageFactory` to delegate to factories
-
-- `createForParsing`: iterate `Command.FACTORIES`, return first non-null result, throw `IllegalArgumentException` if none matches.
-- `createAnswer`: iterate `Command.FACTORIES` for first non-null `createAnswer` result, then apply the existing identifier-copy and result-code logic.
+- `createForParsing`: iterate `FACTORIES`, return first non-null result, throw `IllegalArgumentException` if none matches.
+- `createAnswer`: iterate `FACTORIES` for first non-null `createAnswer` result, then apply the existing identifier-copy and result-code logic.
 - Delete `instantiateInRequest`, `instantiateInAnswer`, `instantiateOutAnswer`, and `findOutClass`.
 - No `setAccessible(true)` calls must remain.
+
+## 6. Replace annotation scan in `Command` with delegation to `DiameterMessageFactory`
+
+- Delete `PACKAGES_TO_SCAN`, `REQUEST_TYPES`, `ANSWER_TYPES`, and `initializeCommandTypes()`.
+- Update `parseMessage` to call `DiameterMessageFactory.createForParsing` and use the result directly — no null check, as `DiameterMessageFactory` throws on no match.
 
 ## 7. Remove annotations and delete annotation types
 
