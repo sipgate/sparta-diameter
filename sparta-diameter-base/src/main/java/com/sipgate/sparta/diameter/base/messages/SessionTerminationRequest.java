@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.messages;
 
 import com.sipgate.sparta.diameter.base.core.*;
+import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
 
 /**
  * Session Termination Request (STR) message.
@@ -10,7 +11,10 @@ import com.sipgate.sparta.diameter.base.core.*;
  * The STR message is used to request termination of a user session.
  * </p>
  */
-public interface SessionTerminationRequest<T extends SessionTerminationRequest<T>> {
+public interface SessionTerminationRequest<T extends SessionTerminationRequest<T>>
+        extends HasSessionIdAVP<T>, HasAuthApplicationIdAVP<T>, HasTerminationCauseAVP<T>,
+                HasUserNameAVP<T>, HasOriginStateIdAVP<T>,
+                HasClassAVPs<T>, HasProxyInfoAVPs<T>, HasRouteRecordAVPs<T> {
 
     final class In extends IncomingRequest<In, SessionTerminationAnswer.Out>
             implements SessionTerminationRequest<In> {

@@ -10,8 +10,6 @@ import com.sipgate.sparta.diameter.base.core.IncomingCommand;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
 import com.sipgate.sparta.diameter.base.core.OutgoingRequest;
-import com.sipgate.sparta.diameter.base.core.avp.AVP;
-import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogAnswer;
@@ -20,7 +18,6 @@ import com.sipgate.sparta.diameter.base.messages.DisconnectPeerRequest;
 import com.sipgate.sparta.diameter.base.transport.DiameterConnectionListener;
 import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
 
-import java.net.InetAddress;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -264,7 +261,10 @@ abstract class DiameterSession implements DiameterConnectionListener {
         cer.setOriginRealm(config.getOriginRealm());
         cer.setVendorId(config.getVendorId());
         cer.setProductName(config.getProductName());
-        addMultiValueAvps(cer);
+        cer.addAllHostIpAddresses(config.getHostIpAddresses());
+        cer.addAllSupportedVendorIds(config.getCapabilities().supportedVendorIds());
+        cer.addAllAuthApplicationIds(config.getCapabilities().authApplicationIds());
+        cer.addAllAcctApplicationIds(config.getCapabilities().acctApplicationIds());
     }
 
     /**
@@ -275,35 +275,10 @@ abstract class DiameterSession implements DiameterConnectionListener {
         cea.setOriginRealm(config.getOriginRealm());
         cea.setVendorId(config.getVendorId());
         cea.setProductName(config.getProductName());
-        addMultiValueAvps(cea);
-    }
-
-    private void addMultiValueAvps(final AVPContainer<?> msg) {
-        for (final InetAddress addr : config.getHostIpAddresses()) {
-            msg.addAVP(AVP.create(DiameterConstants.AVP_HOST_IP_ADDRESS, addr));
-        }
-
-        for (final Long vendorId : config.getCapabilities().supportedVendorIds()) {
-            msg.addAVP(AVP.create(DiameterConstants.AVP_SUPPORTED_VENDOR_ID, vendorId));
-        }
-
-        for (final Integer authId : config.getCapabilities().authApplicationIds()) {
-            msg.addAVP(AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID,
-                    Integer.toUnsignedLong(authId)));
-        }
-
-        for (final Integer acctId : config.getCapabilities().acctApplicationIds()) {
-            msg.addAVP(AVP.create(DiameterConstants.AVP_ACCT_APPLICATION_ID,
-                    Integer.toUnsignedLong(acctId)));
-        }
-    }
-
-    protected static List<Long> extractUnsignedInts(final List<AVP> avps) {
-        final List<Long> result = new ArrayList<>();
-        for (final AVP avp : avps) {
-            result.add(avp.getDataAsUnsignedInt());
-        }
-        return result;
+        cea.addAllHostIpAddresses(config.getHostIpAddresses());
+        cea.addAllSupportedVendorIds(config.getCapabilities().supportedVendorIds());
+        cea.addAllAuthApplicationIds(config.getCapabilities().authApplicationIds());
+        cea.addAllAcctApplicationIds(config.getCapabilities().acctApplicationIds());
     }
 
     private void failAllPending(final Throwable cause) {

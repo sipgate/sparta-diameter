@@ -1,5 +1,8 @@
 package com.sipgate.sparta.diameter.base.core;
 
+import com.sipgate.sparta.diameter.base.core.avp.mixins.HasDestinationHostAVP;
+import com.sipgate.sparta.diameter.base.core.avp.mixins.HasDestinationRealmAVP;
+
 /**
  * Base class for all Diameter request messages.
  * <p>
@@ -8,7 +11,8 @@ package com.sipgate.sparta.diameter.base.core;
  * Request messages have the R-bit set in the Diameter header flags.
  * </p>
  */
-public abstract class Request<T extends Request<T, ANSWER>, ANSWER extends Answer<ANSWER>> extends Command<T> {
+public abstract class Request<T extends Request<T, ANSWER>, ANSWER extends Answer<ANSWER>> extends Command<T>
+        implements HasDestinationHostAVP<T>, HasDestinationRealmAVP<T> {
 
     protected Request(final int commandCode, final boolean proxiable, final boolean retransmitted,
                       final int applicationId) {

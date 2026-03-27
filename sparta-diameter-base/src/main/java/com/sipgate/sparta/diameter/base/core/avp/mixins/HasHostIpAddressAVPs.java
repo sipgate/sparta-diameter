@@ -1,0 +1,46 @@
+package com.sipgate.sparta.diameter.base.core.avp.mixins;
+
+import com.sipgate.sparta.diameter.base.core.DiameterConstants;
+import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
+
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+/**
+ * Mixin for Diameter messages carrying one or more Host-IP-Address AVPs.
+ * <p>
+ * RFC 6733 mandates {@code 1*} Host-IP-Address in CER/CEA, meaning at least one
+ * occurrence is required. This interface models the repeatable (0..n) access
+ * pattern; callers are responsible for ensuring at least one value is present.
+ * </p>
+ */
+public interface HasHostIpAddressAVPs<T extends HasHostIpAddressAVPs<T>> extends AVPContainer<T> {
+
+    default T addHostIpAddress(final InetAddress hostIpAddress) {
+        addAVP(AVP.create(DiameterConstants.AVP_HOST_IP_ADDRESS, hostIpAddress));
+        return self();
+    }
+
+    default List<InetAddress> getHostIpAddresses() {
+        final List<InetAddress> result = new ArrayList<>();
+        for (final AVP avp : findAVPs(DiameterConstants.AVP_HOST_IP_ADDRESS)) {
+            result.add(avp.getDataAsIPAddress());
+        }
+        return result;
+    }
+
+    default InetAddress getFirstHostIpAddress() {
+        final List<InetAddress> all = getHostIpAddresses();
+        return all.isEmpty() ? null : all.get(0);
+    }
+
+    default T addAllHostIpAddresses(final Collection<InetAddress> hostIpAddresses) {
+        for (final InetAddress addr : hostIpAddresses) {
+            addHostIpAddress(addr);
+        }
+        return self();
+    }
+}

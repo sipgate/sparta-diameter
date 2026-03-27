@@ -11,7 +11,6 @@ import com.sipgate.sparta.diameter.base.messages.DisconnectPeerRequest;
 import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
 
 import java.util.List;
-
 /**
  * Diameter session for the responder (R-) side of a connection.
  */
@@ -51,10 +50,8 @@ public final class DiameterResponderSession extends DiameterSession {
     }
 
     private void handleCer(final CapabilitiesExchangeRequest.In cer) {
-        final List<Long> remoteAuthIds =
-                extractUnsignedInts(cer.findAVPs(DiameterConstants.AVP_AUTH_APPLICATION_ID));
-        final List<Long> remoteAcctIds =
-                extractUnsignedInts(cer.findAVPs(DiameterConstants.AVP_ACCT_APPLICATION_ID));
+        final List<Long> remoteAuthIds = cer.getAuthApplicationIds();
+        final List<Long> remoteAcctIds = cer.getAcctApplicationIds();
 
         if (negotiator.hasCommonApplication(config.getCapabilities(), remoteAuthIds, remoteAcctIds)) {
             peer.send(buildCea(cer, DiameterConstants.RES_DIAMETER_SUCCESS));

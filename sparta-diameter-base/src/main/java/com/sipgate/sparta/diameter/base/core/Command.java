@@ -2,8 +2,6 @@ package com.sipgate.sparta.diameter.base.core;
 
 import com.sipgate.sparta.diameter.base.DiameterException;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
-import com.sipgate.sparta.diameter.base.core.avp.mixins.HasDestinationHostAVP;
-import com.sipgate.sparta.diameter.base.core.avp.mixins.HasDestinationRealmAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginHostAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginRealmAVP;
 
@@ -24,9 +22,7 @@ import java.util.List;
 public abstract class Command<T extends Command<T>> implements
     Selfable<T>,
     HasOriginHostAVP<T>,
-    HasOriginRealmAVP<T>,
-    HasDestinationHostAVP<T>,
-    HasDestinationRealmAVP<T> {
+    HasOriginRealmAVP<T> {
 
     // Diameter header fields
     private final int version;
@@ -169,6 +165,7 @@ public abstract class Command<T extends Command<T>> implements
      * @param code The AVP code to search for.
      * @return A list of AVPs with the given code.
      */
+    @Override
     public List<AVP> findAVPs(final int code) {
         final List<AVP> result = new ArrayList<>();
         for (final AVP avp : avps) {

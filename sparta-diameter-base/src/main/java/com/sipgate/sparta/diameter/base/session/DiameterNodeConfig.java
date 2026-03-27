@@ -173,8 +173,8 @@ public final class DiameterNodeConfig {
      * The application capabilities advertised in CER/CEA.
      */
     public record Capabilities(
-            List<Integer> authApplicationIds,
-            List<Integer> acctApplicationIds,
+            List<Long> authApplicationIds,
+            List<Long> acctApplicationIds,
             List<Long> supportedVendorIds) {
 
         public Capabilities {

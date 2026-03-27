@@ -17,7 +17,7 @@ public interface AccountingRequest<T extends AccountingRequest<T>>
                 HasAccountingSubSessionIdAVP<T>, HasAcctSessionIdAVP<T>, HasAcctMultiSessionIdAVP<T>,
                 HasAcctInterimIntervalAVP<T>, HasAccountingRealtimeRequiredAVP<T>,
                 HasOriginStateIdAVP<T>, HasEventTimestampAVP<T>,
-                HasProxyInfoAVP<T>, HasRouteRecordAVP<T> {
+                HasProxyInfoAVPs<T>, HasRouteRecordAVPs<T> {
 
     final class In extends IncomingRequest<In, AccountingAnswer.Out>
             implements AccountingRequest<In> {

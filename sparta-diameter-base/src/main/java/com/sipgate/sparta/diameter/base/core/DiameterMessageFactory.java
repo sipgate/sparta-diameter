@@ -104,15 +104,6 @@ public final class DiameterMessageFactory {
         @SuppressWarnings("unchecked")
         final A typedAnswer = (A) answer;
         typedAnswer.setResultCode(resultCode);
-
-        final var originHost = request.getOriginHost();
-        if (originHost != null) {
-            typedAnswer.setDestinationHost(originHost);
-        }
-        final var originRealm = request.getOriginRealm();
-        if (originRealm != null) {
-            typedAnswer.setDestinationRealm(originRealm);
-        }
         return typedAnswer;
     }
 

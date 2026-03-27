@@ -12,9 +12,10 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
  * </p>
  */
 public interface CapabilitiesExchangeAnswer<T extends CapabilitiesExchangeAnswer<T>>
-        extends HasVendorIdAVP<T>, HasProductNameAVP<T>, HasHostIpAddressAVP<T>,
-                HasSupportedVendorIdAVP<T>, HasAuthApplicationIdAVP<T>,
-                HasAcctApplicationIdAVP<T>, HasFirmwareRevisionAVP<T>,
+        extends HasVendorIdAVP<T>, HasProductNameAVP<T>, HasOriginStateIdAVP<T>,
+                HasHostIpAddressAVPs<T>, HasSupportedVendorIdAVPs<T>, HasAuthApplicationIdAVPs<T>,
+                HasInbandSecurityIdAVPs<T>, HasAcctApplicationIdAVPs<T>,
+                HasVendorSpecificApplicationIdAVPs<T>, HasFirmwareRevisionAVP<T>,
                 HasErrorMessageAVP<T>, HasFailedAVP<T> {
 
     final class In extends IncomingAnswer<In>

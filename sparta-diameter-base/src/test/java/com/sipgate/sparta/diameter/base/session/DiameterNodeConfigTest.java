@@ -142,8 +142,8 @@ class DiameterNodeConfigTest {
     void it_stores_capabilities() {
         // GIVEN
         final DiameterNodeConfig.Capabilities capabilities = new DiameterNodeConfig.Capabilities(
-            Collections.singletonList(16777251),
-            Collections.singletonList(3),
+            Collections.singletonList(16777251L),
+            Collections.singletonList(3L),
             Collections.singletonList(10415L));
 
         // WHEN
@@ -152,8 +152,8 @@ class DiameterNodeConfigTest {
                 0L, "sparta", capabilities);
 
         // THEN
-        assertThat(config.getCapabilities().authApplicationIds()).containsExactly(16777251);
-        assertThat(config.getCapabilities().acctApplicationIds()).containsExactly(3);
+        assertThat(config.getCapabilities().authApplicationIds()).containsExactly(16777251L);
+        assertThat(config.getCapabilities().acctApplicationIds()).containsExactly(3L);
         assertThat(config.getCapabilities().supportedVendorIds()).containsExactly(10415L);
     }
 

@@ -2,6 +2,8 @@ package com.sipgate.sparta.diameter.base.core.avp;
 
 import com.sipgate.sparta.diameter.base.core.Selfable;
 
+import java.util.List;
+
 /**
  * Base interface for Diameter messages that need AVP operations.
  * <p>
@@ -33,4 +35,12 @@ public interface AVPContainer<T extends AVPContainer<T>> extends Selfable<T> {
      * @return The matching AVP, or null if not found.
      */
     AVP findAVP(int code);
+
+    /**
+     * Finds all AVPs with the given code.
+     *
+     * @param code The AVP code to search for.
+     * @return All matching AVPs in insertion order, never null, possibly empty.
+     */
+    List<AVP> findAVPs(int code);
 }

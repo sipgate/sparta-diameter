@@ -29,7 +29,7 @@ public class TestApp {
         cer.setProductName("MyDiameterApp");
         cer.setFirmwareRevision(1L);
         cer.setVendorId(10415L); // 3GPP
-        cer.setAuthApplicationId(4294967295L); // Relay
+        cer.addAuthApplicationId(4294967295L); // Relay
 
         final HopByHopId hopByHop = new HopByHopId(1);
         final EndToEndId endToEnd = new EndToEndId(1);

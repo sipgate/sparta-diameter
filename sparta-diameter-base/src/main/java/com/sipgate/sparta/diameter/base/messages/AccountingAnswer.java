@@ -14,10 +14,10 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
 public interface AccountingAnswer<T extends AccountingAnswer<T>>
         extends HasSessionIdAVP<T>, HasAccountingRecordTypeAVP<T>, HasAccountingRecordNumberAVP<T>,
                 HasAcctApplicationIdAVP<T>, HasVendorSpecificApplicationIdAVP<T>, HasUserNameAVP<T>,
-                HasAccountingSubSessionIdAVP<T>, HasAcctMultiSessionIdAVP<T>,
+                HasAccountingSubSessionIdAVP<T>, HasAcctSessionIdAVP<T>, HasAcctMultiSessionIdAVP<T>,
                 HasErrorMessageAVP<T>, HasErrorReportingHostAVP<T>, HasFailedAVP<T>,
                 HasAcctInterimIntervalAVP<T>, HasAccountingRealtimeRequiredAVP<T>,
-                HasOriginStateIdAVP<T>, HasEventTimestampAVP<T>, HasProxyInfoAVP<T> {
+                HasOriginStateIdAVP<T>, HasEventTimestampAVP<T>, HasProxyInfoAVPs<T> {
 
     final class In extends IncomingAnswer<In>
             implements AccountingAnswer<In> {

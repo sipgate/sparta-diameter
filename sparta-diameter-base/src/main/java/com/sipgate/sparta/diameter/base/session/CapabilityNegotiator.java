@@ -2,7 +2,6 @@ package com.sipgate.sparta.diameter.base.session;
 
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -31,8 +30,8 @@ class CapabilityNegotiator {
             final List<Long> remoteAuthIds,
             final List<Long> remoteAcctIds) {
 
-        final Set<Long> localAuthIds = toUnsignedLongSet(local.authApplicationIds());
-        final Set<Long> localAcctIds = toUnsignedLongSet(local.acctApplicationIds());
+        final Set<Long> localAuthIds = Set.copyOf(local.authApplicationIds());
+        final Set<Long> localAcctIds = Set.copyOf(local.acctApplicationIds());
 
         if (localAuthIds.contains(RELAY_APP_ID) || remoteAuthIds.contains(RELAY_APP_ID)) {
             return true;
@@ -53,11 +52,4 @@ class CapabilityNegotiator {
         return false;
     }
 
-    private static Set<Long> toUnsignedLongSet(final List<Integer> ids) {
-        final Set<Long> result = new HashSet<>();
-        for (final Integer id : ids) {
-            result.add(Integer.toUnsignedLong(id));
-        }
-        return result;
-    }
 }

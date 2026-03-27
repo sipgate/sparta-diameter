@@ -1,8 +1,7 @@
 package com.sipgate.sparta.diameter.base.messages;
 
 import com.sipgate.sparta.diameter.base.core.*;
-import com.sipgate.sparta.diameter.base.core.avp.mixins.HasErrorMessageAVP;
-import com.sipgate.sparta.diameter.base.core.avp.mixins.HasFailedAVP;
+import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
 
 /**
  * Disconnect Peer Answer (DPA) message.

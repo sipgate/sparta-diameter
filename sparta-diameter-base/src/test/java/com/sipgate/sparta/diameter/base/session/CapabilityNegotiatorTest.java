@@ -16,7 +16,7 @@ class CapabilityNegotiatorTest {
     void it_finds_common_auth_application_id() {
         // GIVEN
         final DiameterNodeConfig.Capabilities local = capabilities(
-            Collections.singletonList(5), Collections.emptyList());
+            Collections.singletonList(5L), Collections.emptyList());
 
         // WHEN
         final boolean result = negotiator.hasCommonApplication(local, Collections.singletonList(5L), Collections.emptyList());
@@ -29,7 +29,7 @@ class CapabilityNegotiatorTest {
     void it_finds_common_acct_application_id() {
         // GIVEN
         final DiameterNodeConfig.Capabilities local = capabilities(
-                Collections.emptyList(), Collections.singletonList(3));
+                Collections.emptyList(), Collections.singletonList(3L));
 
         // WHEN
         final boolean result = negotiator.hasCommonApplication(local, Collections.emptyList(), Collections.singletonList(3L));
@@ -42,7 +42,7 @@ class CapabilityNegotiatorTest {
     void it_returns_false_when_no_common_applications() {
         // GIVEN
         final DiameterNodeConfig.Capabilities local = capabilities(
-            Collections.singletonList(1), Collections.emptyList());
+            Collections.singletonList(1L), Collections.emptyList());
 
         // WHEN
         final boolean result = negotiator.hasCommonApplication(local, Collections.singletonList(2L), Collections.emptyList());
@@ -68,7 +68,7 @@ class CapabilityNegotiatorTest {
     void it_accepts_relay_application_id_on_local_side() {
         // GIVEN
         final DiameterNodeConfig.Capabilities local = capabilities(
-            Collections.singletonList(DiameterConstants.APP_DIAMETER_RELAY), Collections.emptyList());
+            Collections.singletonList(Integer.toUnsignedLong(DiameterConstants.APP_DIAMETER_RELAY)), Collections.emptyList());
 
         // WHEN: remote advertises no common application
         final boolean result = negotiator.hasCommonApplication(local, Collections.singletonList(99L), Collections.emptyList());
@@ -81,7 +81,7 @@ class CapabilityNegotiatorTest {
     void it_accepts_relay_application_id_on_remote_side() {
         // GIVEN
         final DiameterNodeConfig.Capabilities local = capabilities(
-            Collections.singletonList(5), Collections.emptyList());
+            Collections.singletonList(5L), Collections.emptyList());
         final long remoteRelay = Integer.toUnsignedLong(DiameterConstants.APP_DIAMETER_RELAY);
 
         // WHEN
@@ -92,8 +92,8 @@ class CapabilityNegotiatorTest {
     }
 
     private static DiameterNodeConfig.Capabilities capabilities(
-            final List<Integer> authIds,
-            final List<Integer> acctIds) {
+            final List<Long> authIds,
+            final List<Long> acctIds) {
         return new DiameterNodeConfig.Capabilities(authIds, acctIds, Collections.emptyList());
     }
 }

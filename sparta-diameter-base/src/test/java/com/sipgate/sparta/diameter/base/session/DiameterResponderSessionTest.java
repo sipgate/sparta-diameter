@@ -73,7 +73,7 @@ class DiameterResponderSessionTest {
             0L,
             "sparta",
             new DiameterNodeConfig.Capabilities(
-                    Collections.singletonList(5), Collections.emptyList(), Collections.emptyList()));
+                    Collections.singletonList(5L), Collections.emptyList(), Collections.emptyList()));
 
     @Test
     void it_starts_with_closed_peer_state() {
@@ -460,7 +460,7 @@ class DiameterResponderSessionTest {
     private static CapabilitiesExchangeRequest.In buildIncomingCer(final long authAppId) throws Exception {
         final CapabilitiesExchangeRequest.Out cerOut =
                 new CapabilitiesExchangeRequest.Out();
-        cerOut.addAVP(AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, authAppId));
+        cerOut.addAuthApplicationId(authAppId);
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         cerOut.writeTo(new DataOutputStream(baos), new HopByHopId(1), new EndToEndId(2));
         return (CapabilitiesExchangeRequest.In) Command.parseMessage(ByteBuffer.wrap(baos.toByteArray()));
