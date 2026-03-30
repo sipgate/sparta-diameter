@@ -147,7 +147,7 @@ Incremented in `DiameterPeerHandler.channelInactive()`. Same `direction` tag as 
 
 ---
 
-### `diameter.connections.active` — Gauge
+### `diameter.connections.active` — Gauge (global)
 
 Currently open connections. Backed by an `AtomicInteger` held in `DiameterTransportMeters`, incremented on `channelActive` and decremented on `channelInactive`. Registered once when `DiameterNode` is constructed.
 
@@ -155,9 +155,23 @@ No tags — a single global count across all directions.
 
 ---
 
-## Scope
+### `diameter.connections.active` — Gauge (per application ID)
 
-Base protocol messages — CER/CEA, DWR/DWA, DPR/DPA — do not flow through `sendAndTrack()` / `dispatchInboundRequest()`. They are out of scope for this iteration; instrumentation can be added in a follow-up.
+Same metric name, but with an `application_id` tag. One `AtomicInteger` per application ID, held in a `ConcurrentHashMap<String, AtomicInteger>` in `DiameterTransportMeters`. Gauges are registered lazily on first encounter of a given application ID.
+
+Updated after the CER/CEA handshake, once the negotiated application IDs are known. A connection that supports multiple application IDs increments each corresponding counter independently, so it appears in multiple series.
+
+`DiameterPeerHandler` stores the negotiated application IDs in a field (populated on successful CEA). On `channelInactive()`, it passes that set to `DiameterTransportMeters` to decrement the corresponding counters. The peer handler holds the IDs; the meters class owns the gauge objects.
+
+| Tag | Value |
+|---|---|
+| `application_id` | `String.valueOf(appId)` for each negotiated application ID |
+
+---
+
+## Base protocol messages
+
+CER/CEA (257), DWR/DWA (280), and DPR/DPA (282) are handled by `DiameterPeerHandler`, not the session layer. `DiameterTransportMeters` exposes `recordSent(commandCode, messageType)` and `recordReceived(commandCode, messageType)` methods that write to the same `diameter.messages.sent` / `diameter.messages.received` counters with the same tag schema. Micrometer resolves them to the same series as the session-layer counters because the meter name and tag keys are identical.
 
 ## PendingRequest — changes
 
@@ -227,9 +241,13 @@ final class DiameterTransportMeters {
 
     private static final String PREFIX = "diameter.";
     private static final String TAG_DIRECTION = "direction";
+    private static final String TAG_APPLICATION_ID = "application_id";
+    private static final String TAG_COMMAND_CODE = "command_code";
+    private static final String TAG_MESSAGE_TYPE = "message_type";
 
     private final MeterRegistry registry;
     private final AtomicInteger activeConnections = new AtomicInteger(0);
+    private final ConcurrentHashMap<String, AtomicInteger> activeConnectionsByAppId = new ConcurrentHashMap<>();
 
     DiameterTransportMeters(final MeterRegistry registry) {
         this.registry = registry;
@@ -244,6 +262,38 @@ final class DiameterTransportMeters {
     void recordDisconnected(final String direction) {
         activeConnections.decrementAndGet();
         registry.counter(PREFIX + "disconnections", TAG_DIRECTION, direction).increment();
+    }
+
+    void recordActiveApplicationIds(final Collection<String> applicationIds) {
+        for (final var appId : applicationIds) {
+            activeConnectionsByAppId
+                .computeIfAbsent(appId, id -> {
+                    final var counter = new AtomicInteger(0);
+                    registry.gauge(PREFIX + "connections.active",
+                        List.of(Tag.of(TAG_APPLICATION_ID, id)), counter);
+                    return counter;
+                })
+                .incrementAndGet();
+        }
+    }
+
+    void recordInactiveApplicationIds(final Collection<String> applicationIds) {
+        for (final var appId : applicationIds) {
+            final var counter = activeConnectionsByAppId.get(appId);
+            if (counter != null) {
+                counter.decrementAndGet();
+            }
+        }
+    }
+
+    void recordSent(final String commandCode, final String messageType) {
+        registry.counter(PREFIX + "messages.sent",
+            TAG_COMMAND_CODE, commandCode, TAG_MESSAGE_TYPE, messageType).increment();
+    }
+
+    void recordReceived(final String commandCode, final String messageType) {
+        registry.counter(PREFIX + "messages.received",
+            TAG_COMMAND_CODE, commandCode, TAG_MESSAGE_TYPE, messageType).increment();
     }
 
     void recordDecodeError() {

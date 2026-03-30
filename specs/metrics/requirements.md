@@ -49,7 +49,8 @@ The library has no metrics instrumentation today. ADR-0010 documents the decisio
 
 - Each new inbound or outbound TCP connection that reaches the application layer MUST increment a connections counter tagged by direction (`inbound` / `outbound`).
 - Each connection close MUST increment a disconnections counter tagged by direction.
-- The number of currently open connections MUST be exposed as a Gauge.
+- The number of currently open connections MUST be exposed as a Gauge (global, no tags).
+- The number of currently open connections MUST also be exposed as a per-application-id Gauge, tagged with `application_id`. A connection that supports multiple application IDs contributes to each corresponding gauge independently. This gauge is updated after the CER/CEA handshake, once the negotiated application IDs are known.
 
 ## Naming
 
@@ -63,10 +64,16 @@ All meter names use the `diameter.` prefix and follow the [Micrometer naming con
 | `message_type` | `request`, `answer` | Direction at the protocol level |
 | `error_type` | `timeout`, `write_failure`, `error_answer` | Applied to the request error counter only |
 | `direction` | `inbound`, `outbound` | Applied to connection counters and gauge |
+| `application_id` | numeric Diameter application ID, e.g. `16777251` | Applied to the per-application-id active connections gauge only |
 
 ## Grafana dashboard
 
 An importable Grafana dashboard JSON MAY be provided as `specs/metrics/grafana-dashboard.json`. It covers the meters defined in this spec and is suitable for import into a Grafana instance backed by a Prometheus registry.
+
+## Base protocol messages
+
+- CER/CEA (command code 257), DWR/DWA (command code 280), and DPR/DPA (command code 282) MUST be counted in `diameter.messages.sent` and `diameter.messages.received` using the same tag schema as application-layer messages.
+- These are handled by `DiameterPeerHandler`, not by the session layer, so they are recorded via `DiameterTransportMeters`.
 
 ## Acceptance criteria
 
@@ -74,4 +81,6 @@ An importable Grafana dashboard JSON MAY be provided as `specs/metrics/grafana-d
 - No concrete Micrometer registry is present in any library module's `compile` or `runtime` scope.
 - `DiameterSession`, `DiameterInitiatorSession`, `DiameterResponderSession`, and `DiameterNode` each expose a no-arg-registry convenience constructor backed by `SimpleMeterRegistry`.
 - All RED signals are recorded: rate (sent/received), errors (request path + decode), duration (round-trip + handler latency), and connection gauges/counters.
+- Base protocol messages (CER/CEA, DWR/DWA, DPR/DPA) appear in the sent/received counters.
+- The per-application-id active connections gauge is maintained correctly across connect and disconnect.
 - No `Metrics.globalRegistry` reference exists in any production source file.
