@@ -18,6 +18,6 @@ RFC 6733 §3 (line ~1926): if the E-bit is set, the answer contains a protocol e
 
 ## Acceptance criteria
 
-- `IncomingCommand` exposes `isProxiable()` and `isError()` accessors reflecting the wire values.
-- The relay path rejects (or locally processes) any message with the P-bit cleared, per RFC 6733 §3.
-- Receiving an answer with the E-bit set triggers the protocol-error handling path rather than normal answer dispatch, per RFC 6733 §7.2.
+- Receiving an answer with the E-bit set routes to `ErrorAnswer.In` rather than the command-specific answer type, and completes the sender's future exceptionally with `DiameterErrorAnswerException`.
+- A request handler can signal a protocol error by completing its future exceptionally with `DiameterErrorAnswerException(ErrorAnswer.Out)`; the session sends that error answer to the peer.
+- P-bit and relay enforcement are out of scope for this node (endpoint only); deferred indefinitely.
