@@ -9,4 +9,10 @@ public abstract class IncomingAnswer<T extends IncomingAnswer<T>>
                               final HopByHopId hopByHop, final EndToEndId endToEnd) {
         super(commandCode, proxiable, applicationId, hopByHop, endToEnd);
     }
+
+    protected IncomingAnswer(final int commandCode, final boolean proxiable, final boolean error,
+                              final int applicationId,
+                              final HopByHopId hopByHop, final EndToEndId endToEnd) {
+        super(commandCode, proxiable, error, applicationId, hopByHop, endToEnd);
+    }
 }

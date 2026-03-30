@@ -2,16 +2,17 @@ package com.sipgate.sparta.diameter.base.session;
 
 import com.sipgate.sparta.diameter.base.core.Answer;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
-import com.sipgate.sparta.diameter.base.core.avp.AVP;
-import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.base.core.EndToEndId;
+import com.sipgate.sparta.diameter.base.core.ErrorAnswer;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
 import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
 import com.sipgate.sparta.diameter.base.core.OutgoingRequest;
+import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogAnswer;
@@ -137,7 +138,10 @@ abstract class DiameterSession implements DiameterConnectionListener {
         }
         final CompletableFuture<?> future = handler.handle(request);
         future.whenComplete((answer, err) -> {
-            if (err != null) {
+            if (err instanceof final DiameterErrorAnswerException e
+                    && e.getAnswer() instanceof final ErrorAnswer.Out out) {
+                peer.send(out);
+            } else if (err != null) {
                 peer.send(DiameterMessageFactory.createAnswer(request,
                         DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
             } else {
@@ -238,7 +242,11 @@ abstract class DiameterSession implements DiameterConnectionListener {
             return;
         }
         pending.timeoutTask.cancel(false);
-        pending.future.complete(answer);
+        if (answer instanceof final ErrorAnswer.In errorAnswer) {
+            pending.future.completeExceptionally(new DiameterErrorAnswerException(errorAnswer));
+        } else {
+            pending.future.complete(answer);
+        }
     }
 
     private void timeout(final HopByHopId hopByHop, final long timeoutMs) {
