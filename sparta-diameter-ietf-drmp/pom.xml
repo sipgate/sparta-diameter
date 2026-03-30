@@ -7,18 +7,14 @@
         <artifactId>sparta-diameter</artifactId>
         <version>${revision}</version>
     </parent>
-    <artifactId>sparta-diameter-3gpp-sgdgdd</artifactId>
-    <name>sparta-diameter-3gpp-sgdgdd</name>
-    <description>TS 29.338 §6 — SGd/Gdd (MME/SGSN to SMS-SC)</description>
+    <artifactId>sparta-diameter-ietf-drmp</artifactId>
+    <name>sparta-diameter-ietf-drmp</name>
+    <description>RFC 7944 — Diameter Routing Message Priority (DRMP)</description>
 
     <dependencies>
         <dependency>
             <groupId>com.sipgate</groupId>
-            <artifactId>sparta-diameter-ietf-drmp</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.sipgate</groupId>
-            <artifactId>sparta-diameter-3gpp-common</artifactId>
+            <artifactId>sparta-diameter-base</artifactId>
         </dependency>
     </dependencies>
 </project>

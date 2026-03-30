@@ -1,0 +1,21 @@
+package com.sipgate.sparta.diameter._3gpp.common.mixins;
+
+import com.sipgate.sparta.diameter._3gpp.common._3gppConstants;
+import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
+
+/**
+ * Mixin for messages carrying the External-Identifier AVP (3GPP TS 29.336 §8.3.35).
+ */
+public interface HasExternalIdentifierAVP<T extends HasExternalIdentifierAVP<T>> extends AVPContainer<T> {
+
+    default T setExternalIdentifier(final String value) {
+        setAVP(AVP.create(_3gppConstants.AVP_EXTERNAL_IDENTIFIER, value));
+        return self();
+    }
+
+    default String getExternalIdentifier() {
+        final var avp = findAVP(_3gppConstants.AVP_EXTERNAL_IDENTIFIER);
+        return avp != null ? avp.getDataAsString() : null;
+    }
+}

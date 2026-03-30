@@ -1,0 +1,24 @@
+package com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins;
+
+import com.sipgate.sparta.diameter._3gpp.sgdgdd.SgdGddConstants;
+import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
+
+/**
+ * Mixin for messages carrying a TFR-Flags AVP (3GPP TS 29.338 §6.3.3.4, code 3302).
+ * <p>
+ * Unsigned32 bitmask — bit 0: More-Messages-To-Send. M,V flags.
+ * </p>
+ */
+public interface HasTfrFlagsAVP<T extends HasTfrFlagsAVP<T>> extends AVPContainer<T> {
+
+    default T setTfrFlags(final long value) {
+        setAVP(AVP.create(SgdGddConstants.AVP_TFR_FLAGS, value));
+        return self();
+    }
+
+    default long getTfrFlags() {
+        final var avp = findAVP(SgdGddConstants.AVP_TFR_FLAGS);
+        return avp != null ? avp.getDataAsUnsignedInt() : 0L;
+    }
+}
