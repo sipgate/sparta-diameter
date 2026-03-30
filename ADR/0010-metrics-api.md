@@ -2,7 +2,7 @@
 title: "ADR-0010: Metrics API"
 description: "Use Micrometer as the sole metrics facade; inject MeterRegistry via constructor"
 owner: "sipgate-uhlig"
-status: draft
+status: accepted
 tags:
   - metrics
   - micrometer
