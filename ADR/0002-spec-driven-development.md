@@ -4,7 +4,6 @@ description: "Feature specifications live in specs/<feature>/ with requirements,
 owner: "sipgate-uhlig"
 status: accepted
 tags:
-  - adr
   - process
   - documentation
   - specs

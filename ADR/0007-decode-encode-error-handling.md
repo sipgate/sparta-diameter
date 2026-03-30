@@ -4,7 +4,6 @@ description: "How the stack responds to unknown commands, invalid messages, and 
 owner: "sipgate-uhlig"
 status: accepted
 tags:
-  - adr
   - error-handling
   - decode
   - encode

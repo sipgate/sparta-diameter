@@ -4,7 +4,6 @@ description: "Split the project into focused Maven modules aligned with protocol
 owner: "sipgate-uhlig"
 status: accepted
 tags:
-  - adr
   - maven
   - architecture
 created: "2026-03-25"

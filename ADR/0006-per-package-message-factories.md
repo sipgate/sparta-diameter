@@ -4,7 +4,6 @@ description: "Replace classpath-wide annotation scanning and reflection access b
 owner: "sipgate-uhlig"
 status: accepted
 tags:
-  - adr
   - factory
   - reflection
   - messages

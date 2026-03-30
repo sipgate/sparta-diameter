@@ -31,8 +31,8 @@ description: "Core decision in one sentence (max 120 characters)"
 owner: "github-handle"
 status: draft
 tags:
-  - adr
-  - topic
+  - topic1
+  - topic2
 created: "YYYY-MM-DD"
 ---
 ```

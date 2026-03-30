@@ -4,7 +4,6 @@ description: "Use SLF4J as the sole logging API; bind no implementation in libra
 owner: "sipgate-uhlig"
 status: accepted
 tags:
-  - adr
   - logging
   - slf4j
 created: "2026-03-27"

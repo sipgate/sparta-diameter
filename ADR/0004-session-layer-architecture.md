@@ -4,7 +4,6 @@ description: "New instance per connection, two concrete session classes, factory
 owner: "sipgate-uhlig"
 status: accepted
 tags:
-  - adr
   - session
   - architecture
 created: "2026-03-25"

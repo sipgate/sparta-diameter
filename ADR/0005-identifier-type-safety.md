@@ -4,7 +4,6 @@ description: "HopByHopId and EndToEndId as distinct records; per-command In/Out 
 owner: "sipgate-uhlig"
 status: accepted
 tags:
-  - adr
   - session
   - identifiers
   - type-safety
