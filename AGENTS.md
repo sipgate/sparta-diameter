@@ -25,6 +25,10 @@ void it_parses_a_DWR_from_binary_input() { ... }
 
 **Assertions:** AssertJ only.
 
+## Javadoc
+
+If a method or type you change has a Javadoc comment, update it to reflect the new state.
+
 ## Architecture Decisions
 
 `ADR/` holds all architecture decision records. Read relevant ADRs before making structural changes.
