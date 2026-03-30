@@ -85,8 +85,4 @@ public final class CoreAVPProvider implements AVPProvider {
         );
     }
 
-    @Override
-    public String getProtocolName() {
-        return "Diameter Base Protocol (RFC 6733)";
-    }
 }

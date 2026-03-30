@@ -15,11 +15,4 @@ public interface AVPProvider {
      */
     Collection<AVPDefinition> getDefinitions();
 
-    /**
-     * Returns the name of the protocol this provider supports.
-     * Used for debugging and logging purposes.
-     *
-     * @return Protocol name
-     */
-    String getProtocolName();
 }
