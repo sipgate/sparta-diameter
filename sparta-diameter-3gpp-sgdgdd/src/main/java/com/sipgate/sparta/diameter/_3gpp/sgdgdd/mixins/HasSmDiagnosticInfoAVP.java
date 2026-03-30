@@ -1,0 +1,24 @@
+package com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins;
+
+import com.sipgate.sparta.diameter._3gpp.sgdgdd.SgdGddConstants;
+import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
+
+/**
+ * Mixin for messages carrying an SM-Diagnostic-Info AVP (3GPP TS 29.338 §6.3.3.7, code 3305).
+ * <p>
+ * OctetString — complementary information associated with SM Delivery Failure. M,V flags.
+ * </p>
+ */
+public interface HasSmDiagnosticInfoAVP<T extends HasSmDiagnosticInfoAVP<T>> extends AVPContainer<T> {
+
+    default T setSmDiagnosticInfo(final byte[] value) {
+        setAVP(AVP.create(SgdGddConstants.AVP_SM_DIAGNOSTIC_INFO, value));
+        return self();
+    }
+
+    default byte[] getSmDiagnosticInfo() {
+        final var avp = findAVP(SgdGddConstants.AVP_SM_DIAGNOSTIC_INFO);
+        return avp != null ? avp.getDataAsOctetString() : null;
+    }
+}

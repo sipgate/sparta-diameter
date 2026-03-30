@@ -1,0 +1,24 @@
+package com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins;
+
+import com.sipgate.sparta.diameter._3gpp.sgdgdd.SgdGddConstants;
+import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
+
+/**
+ * Mixin for messages carrying an SC-Address AVP (3GPP TS 29.338 §6.3.3.2, code 3300).
+ * <p>
+ * OctetString — E.164 number encoded as TBCD-string. M,V flags.
+ * </p>
+ */
+public interface HasScAddressAVP<T extends HasScAddressAVP<T>> extends AVPContainer<T> {
+
+    default T setScAddress(final byte[] value) {
+        setAVP(AVP.create(SgdGddConstants.AVP_SC_ADDRESS, value));
+        return self();
+    }
+
+    default byte[] getScAddress() {
+        final var avp = findAVP(SgdGddConstants.AVP_SC_ADDRESS);
+        return avp != null ? avp.getDataAsOctetString() : null;
+    }
+}

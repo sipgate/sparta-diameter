@@ -241,10 +241,6 @@ class AVPTest {
                 return Arrays.asList(new AVPDefinition(customCode, "Custom-AVP", String.class, false, true, 12345));
             }
 
-            @Override
-            public String getProtocolName() {
-                return "Test Protocol";
-            }
         };
 
         // WHEN
