@@ -40,7 +40,7 @@ Callers handle the error case via `.handle()` or `.exceptionally()` with an `ins
 ```java
 session.send(request).handle((answer, ex) -> {
     if (ex instanceof DiameterErrorAnswerException e) {
-        // protocol error — inspect e.getErrorAnswer()
+        // protocol error — inspect e.getAnswer()
     } else if (ex != null) {
         // unexpected failure
     } else {

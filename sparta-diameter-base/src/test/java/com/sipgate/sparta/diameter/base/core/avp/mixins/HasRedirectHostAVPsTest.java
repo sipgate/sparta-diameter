@@ -19,7 +19,7 @@ class HasRedirectHostAVPsTest {
 
     private ReAuthAnswer.Out raa() {
         final var rar = (ReAuthRequest.In) DiameterMessageFactory.createForParsing(
-                DiameterConstants.CMD_RE_AUTH, 0, true, HBH, E2E, false);
+                DiameterConstants.CMD_RE_AUTH, 0, true, false, HBH, E2E, false);
         return DiameterMessageFactory.createAnswer(rar, DiameterConstants.RES_DIAMETER_SUCCESS);
     }
 

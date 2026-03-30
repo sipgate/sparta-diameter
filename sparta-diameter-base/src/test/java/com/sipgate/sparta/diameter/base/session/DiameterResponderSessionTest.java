@@ -4,9 +4,9 @@ import com.sipgate.sparta.diameter.base.core.Command;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.base.core.EndToEndId;
+import com.sipgate.sparta.diameter.base.core.ErrorAnswer;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
 import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
-import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
 import com.sipgate.sparta.diameter.base.core.OutgoingRequest;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
@@ -29,7 +29,6 @@ import org.mockito.Mockito;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -334,7 +333,7 @@ class DiameterResponderSessionTest {
         stubSend(peer);
         final DiameterResponderSession session = openedSession(peer);
         final ReAuthRequest.In rar = (ReAuthRequest.In)
-                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_RE_AUTH, 0, true, new HopByHopId(10), new EndToEndId(20), false);
+                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_RE_AUTH, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
         final ReAuthAnswer.Out answer = DiameterMessageFactory.createAnswer(rar, DiameterConstants.RES_DIAMETER_SUCCESS);
         session.setHandler(ReAuthRequest.In.class, req -> CompletableFuture.completedFuture(answer));
 
@@ -352,7 +351,7 @@ class DiameterResponderSessionTest {
         stubSend(peer);
         final DiameterResponderSession session = openedSession(peer);
         final ReAuthRequest.In rar = (ReAuthRequest.In)
-                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_RE_AUTH, 0, true, new HopByHopId(10), new EndToEndId(20), false);
+                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_RE_AUTH, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
         session.onMessage(peer, rar);
@@ -374,7 +373,7 @@ class DiameterResponderSessionTest {
         failing.completeExceptionally(new RuntimeException("handler error"));
         session.setHandler(ReAuthRequest.In.class, req -> failing);
         final ReAuthRequest.In rar = (ReAuthRequest.In)
-                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_RE_AUTH, 0, true, new HopByHopId(10), new EndToEndId(20), false);
+                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_RE_AUTH, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
         session.onMessage(peer, rar);
@@ -384,6 +383,30 @@ class DiameterResponderSessionTest {
         verify(peer).send(captor.capture());
         assertThat(captor.getValue().getResultCode())
                 .isEqualTo(DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY);
+    }
+
+    @Test
+    void it_sends_error_answer_when_handler_fails_with_DiameterErrorAnswerException() throws Exception {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        final DiameterResponderSession session = openedSession(peer);
+        final ReAuthRequest.In rar = (ReAuthRequest.In)
+                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_RE_AUTH, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
+        final ErrorAnswer.Out errorOut = new ErrorAnswer.Out(
+                DiameterConstants.CMD_RE_AUTH, true, 0, rar.hopByHopId(), rar.endToEndId());
+        errorOut.setResultCode(DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY);
+        final CompletableFuture<ReAuthAnswer.Out> failing = new CompletableFuture<>();
+        failing.completeExceptionally(new DiameterErrorAnswerException(errorOut));
+        session.setHandler(ReAuthRequest.In.class, req -> failing);
+
+        // WHEN
+        session.onMessage(peer, rar);
+
+        // THEN
+        final ArgumentCaptor<ErrorAnswer.Out> captor = ArgumentCaptor.forClass(ErrorAnswer.Out.class);
+        verify(peer).send(captor.capture());
+        assertThat(captor.getValue()).isSameAs(errorOut);
     }
 
     // -------------------------------------------------------------------------
@@ -407,7 +430,7 @@ class DiameterResponderSessionTest {
         stubSend(peer);
         final DiameterResponderSession session = openedSession(peer);
         final DeviceWatchdogRequest.In dwr = (DeviceWatchdogRequest.In)
-                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DEVICE_WATCHDOG, 0, true, new HopByHopId(77), new EndToEndId(88), false);
+                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DEVICE_WATCHDOG, 0, true, false, new HopByHopId(77), new EndToEndId(88), false);
 
         // WHEN
         session.onMessage(peer, dwr);
@@ -493,7 +516,7 @@ class DiameterResponderSessionTest {
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final DiameterResponderSession session = openedSession(peer);
         final DisconnectPeerRequest.In dpr = (DisconnectPeerRequest.In)
-                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, new HopByHopId(10), new EndToEndId(20), false);
+                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
         session.onMessage(peer, dpr);
@@ -510,7 +533,7 @@ class DiameterResponderSessionTest {
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final DiameterResponderSession session = openedSession(peer);
         final DisconnectPeerRequest.In dpr = (DisconnectPeerRequest.In)
-                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, new HopByHopId(10), new EndToEndId(20), false);
+                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
         session.onMessage(peer, dpr);
@@ -530,7 +553,7 @@ class DiameterResponderSessionTest {
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final DiameterResponderSession session = openedSession(peer);
         final DisconnectPeerRequest.In dpr = (DisconnectPeerRequest.In)
-                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, new HopByHopId(10), new EndToEndId(20), false);
+                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
         session.onMessage(peer, dpr);
 
         // WHEN - channel closes after DPA was sent
@@ -548,7 +571,7 @@ class DiameterResponderSessionTest {
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final DiameterResponderSession session = openedSession(peer);
         final DisconnectPeerRequest.In dpr = (DisconnectPeerRequest.In)
-                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, new HopByHopId(10), new EndToEndId(20), false);
+                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
         session.onMessage(peer, dpr);
@@ -606,7 +629,7 @@ class DiameterResponderSessionTest {
         Mockito.clearInvocations(peer);
 
         final DisconnectPeerRequest.In fakeDpr = (DisconnectPeerRequest.In)
-                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, hbh.getValue(), e2e.getValue(), false);
+                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, false, hbh.getValue(), e2e.getValue(), false);
         final DisconnectPeerAnswer.Out dpaOut =
                 DiameterMessageFactory.createAnswer(fakeDpr, DiameterConstants.RES_DIAMETER_SUCCESS);
         return toIncomingAnswer(dpaOut);

@@ -269,6 +269,7 @@ public abstract class Command<T extends Command<T>> implements
 
             final int flags = byteBuffer.get();
             final boolean isRequest = (flags & 0x80) != 0;
+            final boolean isError = (flags & 0x20) != 0;
             final boolean isRetransmitted = (flags & 0x10) != 0;
 
             final int commandCode = (byteBuffer.get() << 16) |
@@ -283,7 +284,7 @@ public abstract class Command<T extends Command<T>> implements
             final List<AVP> avps = parseAVPs(byteBuffer, messageLength - 20);
 
             final IncomingCommand command = DiameterMessageFactory.createForParsing(
-                    commandCode, applicationId, isRequest, hopByHop, endToEnd, isRetransmitted);
+                    commandCode, applicationId, isRequest, isError, hopByHop, endToEnd, isRetransmitted);
 
             for (final AVP avp : avps) {
                 ((Command<?>) command).avps.add(avp);

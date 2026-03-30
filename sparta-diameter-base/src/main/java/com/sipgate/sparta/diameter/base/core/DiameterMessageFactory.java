@@ -52,9 +52,13 @@ public final class DiameterMessageFactory {
             final int commandCode,
             final int applicationId,
             final boolean isRequest,
+            final boolean isError,
             final HopByHopId hopByHop,
             final EndToEndId endToEnd,
             final boolean retransmitted) {
+        if (!isRequest && isError) {
+            return new ErrorAnswer.In(commandCode, applicationId, hopByHop, endToEnd);
+        }
         for (final var factory : FACTORIES) {
             final var result = factory.createForParsing(
                     commandCode, applicationId, isRequest, hopByHop, endToEnd, retransmitted);
