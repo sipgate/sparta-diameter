@@ -1,5 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp;
 
+import org.reflections.Reflections;
+
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -36,8 +38,14 @@ public class AVP {
     private static final Map<Integer, AVPDefinition> registry = new ConcurrentHashMap<>();
 
     static {
-        // Register core protocol AVPs by default
-        registerProvider(new CoreAVPProvider());
+        final var reflections = new Reflections("com.sipgate.sparta.diameter");
+        for (final var cls : reflections.getSubTypesOf(AVPProvider.class)) {
+            try {
+                registerProvider(cls.getDeclaredConstructor().newInstance());
+            } catch (final Exception e) {
+                throw new IllegalStateException("Cannot instantiate " + cls.getName(), e);
+            }
+        }
     }
 
     /**
