@@ -153,7 +153,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
         return sendAndTrack(request, hopByHop, endToEnd, config.getRequestTimeout());
     }
 
-    protected <R extends OutgoingRequest<R, A>, A extends Answer<A>> CompletableFuture<A> sendAndTrack(
+    private <R extends OutgoingRequest<R, A>, A extends Answer<A>> CompletableFuture<A> sendAndTrack(
             final R request, final HopByHopId hopByHop, final EndToEndId endToEnd,
             final Duration timeout) {
         final CompletableFuture<A> future = new CompletableFuture<>();
