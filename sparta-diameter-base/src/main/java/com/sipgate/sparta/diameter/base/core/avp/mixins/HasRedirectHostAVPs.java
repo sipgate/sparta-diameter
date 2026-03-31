@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
 import java.util.ArrayList;
@@ -17,13 +18,13 @@ import java.util.List;
 public interface HasRedirectHostAVPs<T extends HasRedirectHostAVPs<T>> extends AVPContainer<T> {
 
     default T addRedirectHost(final String redirectHost) {
-        addAVP(AVP.create(DiameterConstants.AVP_REDIRECT_HOST, redirectHost));
+        addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_REDIRECT_HOST, 0), redirectHost));
         return self();
     }
 
     default List<String> getRedirectHosts() {
         final List<String> result = new ArrayList<>();
-        for (final AVP avp : findAVPs(DiameterConstants.AVP_REDIRECT_HOST)) {
+        for (final AVP avp : findAVPs(new AVPKey(DiameterConstants.AVP_REDIRECT_HOST, 0))) {
             result.add(avp.getDataAsString());
         }
         return result;

@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasProxyHostAVP<T extends HasProxyHostAVP<T>> extends AVPContai
      * @param proxyHost The proxy host identifier to set.
      */
     default T setProxyHost(final String proxyHost) {
-        setAVP(AVP.create(DiameterConstants.AVP_PROXY_HOST, proxyHost));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_PROXY_HOST, 0), proxyHost));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasProxyHostAVP<T extends HasProxyHostAVP<T>> extends AVPContai
      * @return The proxy host identifier, or null if not found.
      */
     default String getProxyHost() {
-        final AVP proxyHostAVP = findAVP(DiameterConstants.AVP_PROXY_HOST);
+        final AVP proxyHostAVP = findAVP(new AVPKey(DiameterConstants.AVP_PROXY_HOST, 0));
         if (proxyHostAVP != null) {
             return proxyHostAVP.getDataAsString();
         }

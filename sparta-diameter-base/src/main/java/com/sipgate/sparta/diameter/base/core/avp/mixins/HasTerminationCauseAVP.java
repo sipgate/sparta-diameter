@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasTerminationCauseAVP<T extends HasTerminationCauseAVP<T>> ext
      * @param terminationCause The termination cause to set.
      */
     default T setTerminationCause(final int terminationCause) {
-        setAVP(AVP.create(DiameterConstants.AVP_TERMINATION_CAUSE, terminationCause));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_TERMINATION_CAUSE, 0), terminationCause));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasTerminationCauseAVP<T extends HasTerminationCauseAVP<T>> ext
      * @return The termination cause, or -1 if not found.
      */
     default int getTerminationCause() {
-        final AVP terminationCauseAVP = findAVP(DiameterConstants.AVP_TERMINATION_CAUSE);
+        final AVP terminationCauseAVP = findAVP(new AVPKey(DiameterConstants.AVP_TERMINATION_CAUSE, 0));
         if (terminationCauseAVP != null) {
             return terminationCauseAVP.getDataAsInt();
         }

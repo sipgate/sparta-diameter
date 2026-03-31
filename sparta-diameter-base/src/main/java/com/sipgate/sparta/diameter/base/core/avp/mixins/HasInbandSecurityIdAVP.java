@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasInbandSecurityIdAVP<T extends HasInbandSecurityIdAVP<T>> ext
      * @param inbandSecurityId The inband security identifier to set.
      */
     default T setInbandSecurityId(final long inbandSecurityId) {
-        setAVP(AVP.create(DiameterConstants.AVP_INBAND_SECURITY_ID, inbandSecurityId));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_INBAND_SECURITY_ID, 0), inbandSecurityId));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasInbandSecurityIdAVP<T extends HasInbandSecurityIdAVP<T>> ext
      * @return The inband security identifier, or -1 if not found.
      */
     default long getInbandSecurityId() {
-        final AVP inbandSecurityIdAVP = findAVP(DiameterConstants.AVP_INBAND_SECURITY_ID);
+        final AVP inbandSecurityIdAVP = findAVP(new AVPKey(DiameterConstants.AVP_INBAND_SECURITY_ID, 0));
         if (inbandSecurityIdAVP != null) {
             return inbandSecurityIdAVP.getDataAsLong();
         }

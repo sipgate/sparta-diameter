@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasProxyStateAVP<T extends HasProxyStateAVP<T>> extends AVPCont
      * @param proxyState The proxy state to set.
      */
     default T setProxyState(final byte[] proxyState) {
-        setAVP(AVP.create(DiameterConstants.AVP_PROXY_STATE, proxyState));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_PROXY_STATE, 0), proxyState));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasProxyStateAVP<T extends HasProxyStateAVP<T>> extends AVPCont
      * @return The proxy state, or null if not found.
      */
     default byte[] getProxyState() {
-        final AVP proxyStateAVP = findAVP(DiameterConstants.AVP_PROXY_STATE);
+        final AVP proxyStateAVP = findAVP(new AVPKey(DiameterConstants.AVP_PROXY_STATE, 0));
         if (proxyStateAVP != null) {
             return proxyStateAVP.getData();
         }

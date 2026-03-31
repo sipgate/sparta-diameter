@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.ietf.drmp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.ietf.drmp.DrmpConstants;
 
 /**
@@ -15,12 +16,12 @@ import com.sipgate.sparta.diameter.ietf.drmp.DrmpConstants;
 public interface HasDrmpAVP<T extends HasDrmpAVP<T>> extends AVPContainer<T> {
 
     default T setDrmp(final int priority) {
-        setAVP(AVP.create(DrmpConstants.AVP_DRMP, priority));
+        setAVP(AVP.create(new AVPKey(DrmpConstants.AVP_DRMP, 0), priority));
         return self();
     }
 
     default int getDrmp() {
-        final var avp = findAVP(DrmpConstants.AVP_DRMP);
+        final var avp = findAVP(new AVPKey(DrmpConstants.AVP_DRMP, 0));
         return avp != null ? avp.getDataAsInt() : -1;
     }
 }

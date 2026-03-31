@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
 /**
@@ -19,7 +20,7 @@ public interface HasAccountingRealtimeRequiredAVP<T extends HasAccountingRealtim
      * @param accountingRealtimeRequired The accounting realtime required value to set.
      */
     default T setAccountingRealtimeRequired(final int accountingRealtimeRequired) {
-        setAVP(AVP.create(DiameterConstants.AVP_ACCOUNTING_REALTIME_REQUIRED, accountingRealtimeRequired));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ACCOUNTING_REALTIME_REQUIRED, 0), accountingRealtimeRequired));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasAccountingRealtimeRequiredAVP<T extends HasAccountingRealtim
      * @return The accounting realtime required value, or -1 if not found.
      */
     default int getAccountingRealtimeRequired() {
-        final AVP accountingRealtimeRequiredAVP = findAVP(DiameterConstants.AVP_ACCOUNTING_REALTIME_REQUIRED);
+        final AVP accountingRealtimeRequiredAVP = findAVP(new AVPKey(DiameterConstants.AVP_ACCOUNTING_REALTIME_REQUIRED, 0));
         if (accountingRealtimeRequiredAVP != null) {
             return accountingRealtimeRequiredAVP.getDataAsInt();
         }

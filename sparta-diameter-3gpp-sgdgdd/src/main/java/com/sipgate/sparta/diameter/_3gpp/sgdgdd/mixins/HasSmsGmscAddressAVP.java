@@ -1,7 +1,9 @@
 package com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins;
 
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.SgdGddConstants;
+import com.sipgate.sparta.diameter._3gpp.common._3gppConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
 /**
@@ -13,12 +15,12 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 public interface HasSmsGmscAddressAVP<T extends HasSmsGmscAddressAVP<T>> extends AVPContainer<T> {
 
     default T setSmsGmscAddress(final byte[] value) {
-        setAVP(AVP.create(SgdGddConstants.AVP_SMS_GMSC_ADDRESS, value));
+        setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_SMS_GMSC_ADDRESS, _3gppConstants.VENDOR_ID_3GPP), value));
         return self();
     }
 
     default byte[] getSmsGmscAddress() {
-        final var avp = findAVP(SgdGddConstants.AVP_SMS_GMSC_ADDRESS);
+        final var avp = findAVP(new AVPKey(SgdGddConstants.AVP_SMS_GMSC_ADDRESS, _3gppConstants.VENDOR_ID_3GPP));
         return avp != null ? avp.getDataAsOctetString() : null;
     }
 }

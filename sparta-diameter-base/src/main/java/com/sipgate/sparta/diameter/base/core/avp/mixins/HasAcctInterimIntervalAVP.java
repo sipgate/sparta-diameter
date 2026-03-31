@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasAcctInterimIntervalAVP<T extends HasAcctInterimIntervalAVP<T
      * @param acctInterimInterval The accounting interim interval to set.
      */
     default T setAcctInterimInterval(final long acctInterimInterval) {
-        setAVP(AVP.create(DiameterConstants.AVP_ACCT_INTERIM_INTERVAL, acctInterimInterval));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ACCT_INTERIM_INTERVAL, 0), acctInterimInterval));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasAcctInterimIntervalAVP<T extends HasAcctInterimIntervalAVP<T
      * @return The accounting interim interval, or -1 if not found.
      */
     default long getAcctInterimInterval() {
-        final AVP acctInterimIntervalAVP = findAVP(DiameterConstants.AVP_ACCT_INTERIM_INTERVAL);
+        final AVP acctInterimIntervalAVP = findAVP(new AVPKey(DiameterConstants.AVP_ACCT_INTERIM_INTERVAL, 0));
         if (acctInterimIntervalAVP != null) {
             return acctInterimIntervalAVP.getDataAsLong();
         }

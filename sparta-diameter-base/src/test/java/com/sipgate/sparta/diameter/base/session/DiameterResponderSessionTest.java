@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.base.session;
 
 import com.sipgate.sparta.diameter.base.core.Command;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.ErrorAnswer;
@@ -307,8 +308,8 @@ class DiameterResponderSessionTest {
         final List<GroupedAVP> vsAppIds = captor.getValue().getVendorSpecificApplicationIds();
         assertThat(vsAppIds).hasSize(1);
         final GroupedAVP grouped = vsAppIds.get(0);
-        assertThat(grouped.findAVP(DiameterConstants.AVP_VENDOR_ID).getDataAsUnsignedInt()).isEqualTo(VENDOR_3GPP);
-        assertThat(grouped.findAVP(DiameterConstants.AVP_AUTH_APPLICATION_ID).getDataAsUnsignedInt()).isEqualTo(SGD_APP_ID);
+        assertThat(grouped.findAVP(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0)).getDataAsUnsignedInt()).isEqualTo(VENDOR_3GPP);
+        assertThat(grouped.findAVP(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0)).getDataAsUnsignedInt()).isEqualTo(SGD_APP_ID);
     }
 
     // -------------------------------------------------------------------------
@@ -608,9 +609,9 @@ class DiameterResponderSessionTest {
             final long vendorId, final long authAppId) throws Exception {
         final CapabilitiesExchangeRequest.Out cerOut = new CapabilitiesExchangeRequest.Out();
         cerOut.addVendorSpecificApplicationId(
-                (GroupedAVP) AVP.create(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, List.of(
-                        AVP.create(DiameterConstants.AVP_VENDOR_ID, vendorId),
-                        AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, authAppId)
+                (GroupedAVP) AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0), List.of(
+                        AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), vendorId),
+                        AVP.create(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0), authAppId)
                 )));
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         cerOut.writeTo(new DataOutputStream(baos), new HopByHopId(1), new EndToEndId(2));

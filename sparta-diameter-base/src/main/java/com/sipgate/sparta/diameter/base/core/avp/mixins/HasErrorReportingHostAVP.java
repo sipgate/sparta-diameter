@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasErrorReportingHostAVP<T extends HasErrorReportingHostAVP<T>>
      * @param errorReportingHost The error reporting host identifier to set.
      */
     default T setErrorReportingHost(final String errorReportingHost) {
-        setAVP(AVP.create(DiameterConstants.AVP_ERROR_REPORTING_HOST, errorReportingHost));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ERROR_REPORTING_HOST, 0), errorReportingHost));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasErrorReportingHostAVP<T extends HasErrorReportingHostAVP<T>>
      * @return The error reporting host identifier, or null if not found.
      */
     default String getErrorReportingHost() {
-        final AVP errorReportingHostAVP = findAVP(DiameterConstants.AVP_ERROR_REPORTING_HOST);
+        final AVP errorReportingHostAVP = findAVP(new AVPKey(DiameterConstants.AVP_ERROR_REPORTING_HOST, 0));
         if (errorReportingHostAVP != null) {
             return errorReportingHostAVP.getDataAsString();
         }

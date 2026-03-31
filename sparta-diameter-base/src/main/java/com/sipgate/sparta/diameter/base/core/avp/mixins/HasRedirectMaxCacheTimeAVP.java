@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasRedirectMaxCacheTimeAVP<T extends HasRedirectMaxCacheTimeAVP
      * @param redirectMaxCacheTime The redirect max cache time to set.
      */
     default T setRedirectMaxCacheTime(final long redirectMaxCacheTime) {
-        setAVP(AVP.create(DiameterConstants.AVP_REDIRECT_MAX_CACHE_TIME, redirectMaxCacheTime));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_REDIRECT_MAX_CACHE_TIME, 0), redirectMaxCacheTime));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasRedirectMaxCacheTimeAVP<T extends HasRedirectMaxCacheTimeAVP
      * @return The redirect max cache time, or -1 if not found.
      */
     default long getRedirectMaxCacheTime() {
-        final AVP redirectMaxCacheTimeAVP = findAVP(DiameterConstants.AVP_REDIRECT_MAX_CACHE_TIME);
+        final AVP redirectMaxCacheTimeAVP = findAVP(new AVPKey(DiameterConstants.AVP_REDIRECT_MAX_CACHE_TIME, 0));
         if (redirectMaxCacheTimeAVP != null) {
             return redirectMaxCacheTimeAVP.getDataAsLong();
         }

@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasErrorMessageAVP<T extends HasErrorMessageAVP<T>> extends AVP
      * @param errorMessage The error message to set.
      */
     default T setErrorMessage(final String errorMessage) {
-        setAVP(AVP.create(DiameterConstants.AVP_ERROR_MESSAGE, errorMessage));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ERROR_MESSAGE, 0), errorMessage));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasErrorMessageAVP<T extends HasErrorMessageAVP<T>> extends AVP
      * @return The error message, or null if not found.
      */
     default String getErrorMessage() {
-        final AVP errorMessageAVP = findAVP(DiameterConstants.AVP_ERROR_MESSAGE);
+        final AVP errorMessageAVP = findAVP(new AVPKey(DiameterConstants.AVP_ERROR_MESSAGE, 0));
         if (errorMessageAVP != null) {
             return errorMessageAVP.getDataAsString();
         }

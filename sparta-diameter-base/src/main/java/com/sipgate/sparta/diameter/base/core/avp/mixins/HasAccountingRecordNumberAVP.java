@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasAccountingRecordNumberAVP<T extends HasAccountingRecordNumbe
      * @param accountingRecordNumber The accounting record number to set.
      */
     default T setAccountingRecordNumber(final long accountingRecordNumber) {
-        setAVP(AVP.create(DiameterConstants.AVP_ACCOUNTING_RECORD_NUMBER, accountingRecordNumber));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ACCOUNTING_RECORD_NUMBER, 0), accountingRecordNumber));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasAccountingRecordNumberAVP<T extends HasAccountingRecordNumbe
      * @return The accounting record number, or -1 if not found.
      */
     default long getAccountingRecordNumber() {
-        final AVP accountingRecordNumberAVP = findAVP(DiameterConstants.AVP_ACCOUNTING_RECORD_NUMBER);
+        final AVP accountingRecordNumberAVP = findAVP(new AVPKey(DiameterConstants.AVP_ACCOUNTING_RECORD_NUMBER, 0));
         if (accountingRecordNumberAVP != null) {
             return accountingRecordNumberAVP.getDataAsLong();
         }

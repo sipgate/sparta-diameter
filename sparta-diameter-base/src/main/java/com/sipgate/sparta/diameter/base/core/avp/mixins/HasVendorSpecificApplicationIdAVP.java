@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
@@ -30,7 +31,7 @@ public interface HasVendorSpecificApplicationIdAVP<T extends HasVendorSpecificAp
      * @return The vendor-specific application identifier, or null if not found.
      */
     default GroupedAVP getVendorSpecificApplicationId() {
-        final AVP vendorSpecificApplicationIdAVP = findAVP(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID);
+        final AVP vendorSpecificApplicationIdAVP = findAVP(new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0));
         if (vendorSpecificApplicationIdAVP != null) {
             return (GroupedAVP) vendorSpecificApplicationIdAVP;
         }

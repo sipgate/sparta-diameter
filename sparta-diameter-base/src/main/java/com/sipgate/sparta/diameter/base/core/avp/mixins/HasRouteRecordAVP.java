@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasRouteRecordAVP<T extends HasRouteRecordAVP<T>> extends AVPCo
      * @param routeRecord The route record to set.
      */
     default T setRouteRecord(final String routeRecord) {
-        setAVP(AVP.create(DiameterConstants.AVP_ROUTE_RECORD, routeRecord));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ROUTE_RECORD, 0), routeRecord));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasRouteRecordAVP<T extends HasRouteRecordAVP<T>> extends AVPCo
      * @return The route record, or null if not found.
      */
     default String getRouteRecord() {
-        final AVP routeRecordAVP = findAVP(DiameterConstants.AVP_ROUTE_RECORD);
+        final AVP routeRecordAVP = findAVP(new AVPKey(DiameterConstants.AVP_ROUTE_RECORD, 0));
         if (routeRecordAVP != null) {
             return routeRecordAVP.getDataAsString();
         }

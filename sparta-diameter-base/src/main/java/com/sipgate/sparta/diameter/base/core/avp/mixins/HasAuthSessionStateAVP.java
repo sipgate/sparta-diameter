@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasAuthSessionStateAVP<T extends HasAuthSessionStateAVP<T>> ext
      * @param authSessionState The authentication session state to set.
      */
     default T setAuthSessionState(final int authSessionState) {
-        setAVP(AVP.create(DiameterConstants.AVP_AUTH_SESSION_STATE, authSessionState));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_AUTH_SESSION_STATE, 0), authSessionState));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasAuthSessionStateAVP<T extends HasAuthSessionStateAVP<T>> ext
      * @return The authentication session state, or -1 if not found.
      */
     default int getAuthSessionState() {
-        final AVP authSessionStateAVP = findAVP(DiameterConstants.AVP_AUTH_SESSION_STATE);
+        final AVP authSessionStateAVP = findAVP(new AVPKey(DiameterConstants.AVP_AUTH_SESSION_STATE, 0));
         if (authSessionStateAVP != null) {
             return authSessionStateAVP.getDataAsInt();
         }

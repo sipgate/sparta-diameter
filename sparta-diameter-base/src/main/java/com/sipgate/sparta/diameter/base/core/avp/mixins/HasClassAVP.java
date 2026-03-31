@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasClassAVP<T extends HasClassAVP<T>> extends AVPContainer<T> {
      * @param classValue The class value to set.
      */
     default T setClassAVP(final byte[] classValue) {
-        setAVP(AVP.create(DiameterConstants.AVP_CLASS, classValue));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_CLASS, 0), classValue));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasClassAVP<T extends HasClassAVP<T>> extends AVPContainer<T> {
      * @return The class value, or null if not found.
      */
     default byte[] getClassAVP() {
-        final AVP classAVP = findAVP(DiameterConstants.AVP_CLASS);
+        final AVP classAVP = findAVP(new AVPKey(DiameterConstants.AVP_CLASS, 0));
         if (classAVP != null) {
             return classAVP.getData();
         }

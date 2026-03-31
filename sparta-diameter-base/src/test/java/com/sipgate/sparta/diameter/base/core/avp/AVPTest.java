@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp;
 
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -30,7 +31,7 @@ class AVPTest {
         final long resultCode = DiameterConstants.RES_DIAMETER_SUCCESS; // Result-Code is Unsigned32 (Long in Java)
 
         // WHEN
-        final AVP avp = AVP.create(DiameterConstants.AVP_RESULT_CODE, resultCode);
+        final AVP avp = AVP.create(new AVPKey(DiameterConstants.AVP_RESULT_CODE, 0), resultCode);
 
         // THEN
         assertThat(avp.getCode()).isEqualTo(DiameterConstants.AVP_RESULT_CODE);
@@ -47,7 +48,7 @@ class AVPTest {
         final String hostname = "diameter.example.com";
 
         // WHEN
-        final AVP avp = AVP.create(DiameterConstants.AVP_ORIGIN_HOST, hostname);
+        final AVP avp = AVP.create(new AVPKey(DiameterConstants.AVP_ORIGIN_HOST, 0), hostname);
 
         // THEN
         assertThat(avp.getCode()).isEqualTo(DiameterConstants.AVP_ORIGIN_HOST);
@@ -63,7 +64,7 @@ class AVPTest {
         final String productName = "Sparta Diameter";
 
         // WHEN
-        final AVP avp = AVP.create(DiameterConstants.AVP_PRODUCT_NAME, productName);
+        final AVP avp = AVP.create(new AVPKey(DiameterConstants.AVP_PRODUCT_NAME, 0), productName);
 
         // THEN
         assertThat(avp.getCode()).isEqualTo(DiameterConstants.AVP_PRODUCT_NAME);
@@ -78,7 +79,7 @@ class AVPTest {
         final BigInteger subSessionId = BigInteger.valueOf(123456789L);
 
         // WHEN
-        final AVP avp = AVP.create(DiameterConstants.AVP_ACCOUNTING_SUB_SESSION_ID, subSessionId);
+        final AVP avp = AVP.create(new AVPKey(DiameterConstants.AVP_ACCOUNTING_SUB_SESSION_ID, 0), subSessionId);
 
         // THEN
         assertThat(avp.getCode()).isEqualTo(DiameterConstants.AVP_ACCOUNTING_SUB_SESSION_ID);
@@ -93,7 +94,7 @@ class AVPTest {
         final Integer disconnectCause = DiameterConstants.DCC_REBOOTING;
 
         // WHEN
-        final AVP avp = AVP.create(DiameterConstants.AVP_DISCONNECT_CAUSE, disconnectCause);
+        final AVP avp = AVP.create(new AVPKey(DiameterConstants.AVP_DISCONNECT_CAUSE, 0), disconnectCause);
 
         // THEN
         assertThat(avp.getCode()).isEqualTo(DiameterConstants.AVP_DISCONNECT_CAUSE);
@@ -108,7 +109,7 @@ class AVPTest {
         final InetAddress ipAddress = InetAddress.getByName("192.168.1.1");
 
         // WHEN
-        final AVP avp = AVP.create(DiameterConstants.AVP_HOST_IP_ADDRESS, ipAddress);
+        final AVP avp = AVP.create(new AVPKey(DiameterConstants.AVP_HOST_IP_ADDRESS, 0), ipAddress);
 
         // THEN
         assertThat(avp.getCode()).isEqualTo(DiameterConstants.AVP_HOST_IP_ADDRESS);
@@ -123,7 +124,7 @@ class AVPTest {
         final Date eventTime = new Date();
 
         // WHEN
-        final AVP avp = AVP.create(DiameterConstants.AVP_EVENT_TIMESTAMP, eventTime);
+        final AVP avp = AVP.create(new AVPKey(DiameterConstants.AVP_EVENT_TIMESTAMP, 0), eventTime);
 
         // THEN
         assertThat(avp.getCode()).isEqualTo(DiameterConstants.AVP_EVENT_TIMESTAMP);
@@ -139,7 +140,7 @@ class AVPTest {
         final InetAddress ipv6Address = InetAddress.getByName("2001:db8::1");
 
         // WHEN
-        final AVP avp = AVP.create(DiameterConstants.AVP_HOST_IP_ADDRESS, ipv6Address);
+        final AVP avp = AVP.create(new AVPKey(DiameterConstants.AVP_HOST_IP_ADDRESS, 0), ipv6Address);
 
         // THEN
         assertThat(avp.getCode()).isEqualTo(DiameterConstants.AVP_HOST_IP_ADDRESS);
@@ -152,11 +153,12 @@ class AVPTest {
     void it_throws_exception_for_unknown_avp_code() {
         // GIVEN
         final int unknownCode = 99999;
+        final var key = new AVPKey(unknownCode, 0);
 
         // WHEN & THEN
-        assertThatThrownBy(() -> AVP.create(unknownCode, "test"))
+        assertThatThrownBy(() -> AVP.create(key, "test"))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Unknown AVP code: " + unknownCode);
+            .hasMessageContaining("code=" + unknownCode);
     }
 
     @ParameterizedTest
@@ -165,28 +167,28 @@ class AVPTest {
         // GIVEN & WHEN & THEN - Test specific type mismatch scenarios
         switch (testName) {
             case "Long expected, String provided":
-                assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_RESULT_CODE, "wrong type"))
+                assertThatThrownBy(() -> AVP.create(new AVPKey(DiameterConstants.AVP_RESULT_CODE, 0), "wrong type"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessageContaining("Type mismatch")
                         .hasMessageContaining("expected " + expectedType)
                         .hasMessageContaining("got " + actualType);
                 break;
             case "String expected, Long provided":
-                assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_ORIGIN_HOST, 12345L))
+                assertThatThrownBy(() -> AVP.create(new AVPKey(DiameterConstants.AVP_ORIGIN_HOST, 0), 12345L))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessageContaining("Type mismatch")
                         .hasMessageContaining("expected " + expectedType)
                         .hasMessageContaining("got " + actualType);
                 break;
             case "BigInteger expected, String provided":
-                assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_ACCOUNTING_SUB_SESSION_ID, "wrong type"))
+                assertThatThrownBy(() -> AVP.create(new AVPKey(DiameterConstants.AVP_ACCOUNTING_SUB_SESSION_ID, 0), "wrong type"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessageContaining("Type mismatch")
                         .hasMessageContaining("expected " + expectedType)
                         .hasMessageContaining("got " + actualType);
                 break;
             case "InetAddress expected, String provided":
-                assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_HOST_IP_ADDRESS, "wrong type"))
+                assertThatThrownBy(() -> AVP.create(new AVPKey(DiameterConstants.AVP_HOST_IP_ADDRESS, 0), "wrong type"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessageContaining("Type mismatch")
                         .hasMessageContaining("expected " + expectedType)
@@ -195,21 +197,21 @@ class AVPTest {
             case "byte[] expected, Integer provided":
                 // Use explicit Integer to ensure correct method resolution
                 final Integer wrongValue = 12345;
-                assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_CLASS, wrongValue))
+                assertThatThrownBy(() -> AVP.create(new AVPKey(DiameterConstants.AVP_CLASS, 0), wrongValue))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessageContaining("Type mismatch")
                         .hasMessageContaining("expected " + expectedType)
                         .hasMessageContaining("got " + actualType);
                 break;
             case "Integer expected, Long provided":
-                assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_DISCONNECT_CAUSE, 123L))
+                assertThatThrownBy(() -> AVP.create(new AVPKey(DiameterConstants.AVP_DISCONNECT_CAUSE, 0), 123L))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessageContaining("Type mismatch")
                         .hasMessageContaining("expected " + expectedType)
                         .hasMessageContaining("got " + actualType);
                 break;
             case "Date expected, String provided":
-                assertThatThrownBy(() -> AVP.create(DiameterConstants.AVP_EVENT_TIMESTAMP, "wrong type"))
+                assertThatThrownBy(() -> AVP.create(new AVPKey(DiameterConstants.AVP_EVENT_TIMESTAMP, 0), "wrong type"))
                         .isInstanceOf(IllegalArgumentException.class)
                         .hasMessageContaining("Type mismatch")
                         .hasMessageContaining("expected " + expectedType)
@@ -235,17 +237,12 @@ class AVPTest {
         // GIVEN
         final int customCode = 10001;
         final String customValue = "custom value";
-        final AVPProvider customProvider = new AVPProvider() {
-            @Override
-            public Collection<AVPDefinition> getDefinitions() {
-                return Arrays.asList(new AVPDefinition(customCode, "Custom-AVP", String.class, false, true, 12345));
-            }
-
-        };
+        // use a lambda instead of an (anonymous) class because otherwise the reflection in AVP.class will pick it up during static initialization
+        final AVPProvider customProvider = () -> List.of(new AVPDefinition(customCode, "Custom-AVP", String.class, false, true, 12345));
 
         // WHEN
         AVP.registerProvider(customProvider);
-        final AVP avp = AVP.create(customCode, customValue);
+        final AVP avp = AVP.create(new AVPKey(customCode, 12345), customValue);
 
         // THEN
         assertThat(avp.getCode()).isEqualTo(customCode);
@@ -259,12 +256,12 @@ class AVPTest {
     void it_creates_grouped_avp_with_correct_flags() {
         // GIVEN
         final List<AVP> nestedAvps = Arrays.asList(
-            AVP.create(DiameterConstants.AVP_VENDOR_ID, 123L),
-            AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, 456L)
+            AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), 123L),
+            AVP.create(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0), 456L)
         );
 
         // WHEN
-        final AVP avp = AVP.create(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, nestedAvps);
+        final AVP avp = AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0), nestedAvps);
 
         // THEN
         assertThat(avp.getCode()).isEqualTo(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID);
@@ -272,7 +269,7 @@ class AVPTest {
         assertThat(avp.isVendorSpecific()).isFalse();
         assertThat(avp.isProtected()).isFalse();
         assertThat(avp).isInstanceOf(GroupedAVP.class);
-        
+
         final GroupedAVP groupedAVP = (GroupedAVP) avp;
         assertThat(groupedAVP.getAVPs()).hasSize(2);
     }
@@ -281,29 +278,29 @@ class AVPTest {
     void it_creates_experimental_result_grouped_avp() {
         // GIVEN
         final List<AVP> nestedAvps = Arrays.asList(
-            AVP.create(DiameterConstants.AVP_VENDOR_ID, 999L),
-            AVP.create(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE, 5000L)
+            AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), 999L),
+            AVP.create(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE, 0), 5000L)
         );
 
         // WHEN
-        final AVP avp = AVP.create(DiameterConstants.AVP_EXPERIMENTAL_RESULT, nestedAvps);
+        final AVP avp = AVP.create(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT, 0), nestedAvps);
 
         // THEN
         assertThat(avp.getCode()).isEqualTo(DiameterConstants.AVP_EXPERIMENTAL_RESULT);
         assertThat(avp.isMandatory()).isTrue(); // Experimental-Result is mandatory
         assertThat(avp.isVendorSpecific()).isFalse();
         assertThat(avp).isInstanceOf(GroupedAVP.class);
-        
+
         final GroupedAVP groupedAVP = (GroupedAVP) avp;
         assertThat(groupedAVP.getAVPs()).hasSize(2);
-        assertThat(groupedAVP.findAVP(DiameterConstants.AVP_VENDOR_ID)).isNotNull();
-        assertThat(groupedAVP.findAVP(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE)).isNotNull();
+        assertThat(groupedAVP.findAVP(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0))).isNotNull();
+        assertThat(groupedAVP.findAVP(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE, 0))).isNotNull();
     }
 
     @Test
     void it_can_parse_itself_from_bytes() throws IOException {
         // GIVEN
-        final AVP originalAvp = AVP.create(DiameterConstants.AVP_RESULT_CODE, DiameterConstants.RES_DIAMETER_SUCCESS);
+        final AVP originalAvp = AVP.create(new AVPKey(DiameterConstants.AVP_RESULT_CODE, 0), DiameterConstants.RES_DIAMETER_SUCCESS);
         final ByteArrayOutputStream out = new ByteArrayOutputStream(8);
         final DataOutputStream dos = new DataOutputStream(out);
         originalAvp.writeTo(dos);
@@ -323,10 +320,10 @@ class AVPTest {
     void it_can_parse_grouped_avps_from_bytes() throws IOException {
         // GIVEN
         final List<AVP> nestedAvps = Arrays.asList(
-            AVP.create(DiameterConstants.AVP_VENDOR_ID, 123L),
-            AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, 456L)
+            AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), 123L),
+            AVP.create(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0), 456L)
         );
-        final AVP originalAvp = AVP.create(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, nestedAvps);
+        final AVP originalAvp = AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0), nestedAvps);
         final ByteArrayOutputStream out = new ByteArrayOutputStream(64);
         final DataOutputStream dos = new DataOutputStream(out);
         originalAvp.writeTo(dos);
@@ -342,9 +339,9 @@ class AVPTest {
 
         final GroupedAVP parsedGrouped = (GroupedAVP) parsedAvp;
         assertThat(parsedGrouped.getAVPs()).hasSize(2);
-        assertThat(parsedGrouped.findAVP(DiameterConstants.AVP_VENDOR_ID)).isNotNull();
-        assertThat(parsedGrouped.findAVP(DiameterConstants.AVP_AUTH_APPLICATION_ID)).isNotNull();
-        assertThat(parsedGrouped.findAVP(DiameterConstants.AVP_VENDOR_ID).getDataAsUnsignedInt()).isEqualTo(123L);
-        assertThat(parsedGrouped.findAVP(DiameterConstants.AVP_AUTH_APPLICATION_ID).getDataAsUnsignedInt()).isEqualTo(456L);
+        assertThat(parsedGrouped.findAVP(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0))).isNotNull();
+        assertThat(parsedGrouped.findAVP(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0))).isNotNull();
+        assertThat(parsedGrouped.findAVP(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0)).getDataAsUnsignedInt()).isEqualTo(123L);
+        assertThat(parsedGrouped.findAVP(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0)).getDataAsUnsignedInt()).isEqualTo(456L);
     }
 }

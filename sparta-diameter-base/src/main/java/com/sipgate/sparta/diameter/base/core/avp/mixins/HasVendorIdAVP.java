@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasVendorIdAVP<T extends HasVendorIdAVP<T>> extends AVPContaine
      * @param vendorId The vendor identifier to set.
      */
     default T setVendorId(final long vendorId) {
-        setAVP(AVP.create(DiameterConstants.AVP_VENDOR_ID, vendorId));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), vendorId));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasVendorIdAVP<T extends HasVendorIdAVP<T>> extends AVPContaine
      * @return The vendor identifier, or -1 if not found.
      */
     default long getVendorId() {
-        final AVP vendorIdAVP = findAVP(DiameterConstants.AVP_VENDOR_ID);
+        final AVP vendorIdAVP = findAVP(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0));
         if (vendorIdAVP != null) {
             return vendorIdAVP.getDataAsLong();
         }

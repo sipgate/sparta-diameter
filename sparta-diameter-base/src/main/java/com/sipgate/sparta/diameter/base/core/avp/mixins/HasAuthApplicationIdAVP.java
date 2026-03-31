@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasAuthApplicationIdAVP<T extends HasAuthApplicationIdAVP<T>> e
      * @param authApplicationId The authentication application identifier to set.
      */
     default T setAuthApplicationId(final long authApplicationId) {
-        setAVP(AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, authApplicationId));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0), authApplicationId));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasAuthApplicationIdAVP<T extends HasAuthApplicationIdAVP<T>> e
      * @return The authentication application identifier, or -1 if not found.
      */
     default long getAuthApplicationId() {
-        final AVP authApplicationIdAVP = findAVP(DiameterConstants.AVP_AUTH_APPLICATION_ID);
+        final AVP authApplicationIdAVP = findAVP(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0));
         if (authApplicationIdAVP != null) {
             return authApplicationIdAVP.getDataAsLong();
         }

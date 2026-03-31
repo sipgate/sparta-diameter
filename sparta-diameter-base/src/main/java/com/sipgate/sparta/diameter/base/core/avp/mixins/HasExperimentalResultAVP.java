@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
@@ -30,7 +31,7 @@ public interface HasExperimentalResultAVP<T extends HasExperimentalResultAVP<T>>
      * @return The experimental result, or null if not found.
      */
     default GroupedAVP getExperimentalResult() {
-        final AVP experimentalResultAVP = findAVP(DiameterConstants.AVP_EXPERIMENTAL_RESULT);
+        final AVP experimentalResultAVP = findAVP(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT, 0));
         if (experimentalResultAVP != null) {
             return (GroupedAVP) experimentalResultAVP;
         }

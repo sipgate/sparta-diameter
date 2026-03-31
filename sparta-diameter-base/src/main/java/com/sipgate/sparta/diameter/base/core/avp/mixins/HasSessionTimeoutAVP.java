@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasSessionTimeoutAVP<T extends HasSessionTimeoutAVP<T>> extends
      * @param sessionTimeout The session timeout to set.
      */
     default T setSessionTimeout(final long sessionTimeout) {
-        setAVP(AVP.create(DiameterConstants.AVP_SESSION_TIMEOUT, sessionTimeout));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_SESSION_TIMEOUT, 0), sessionTimeout));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasSessionTimeoutAVP<T extends HasSessionTimeoutAVP<T>> extends
      * @return The session timeout, or -1 if not found.
      */
     default long getSessionTimeout() {
-        final AVP sessionTimeoutAVP = findAVP(DiameterConstants.AVP_SESSION_TIMEOUT);
+        final AVP sessionTimeoutAVP = findAVP(new AVPKey(DiameterConstants.AVP_SESSION_TIMEOUT, 0));
         if (sessionTimeoutAVP != null) {
             return sessionTimeoutAVP.getDataAsLong();
         }

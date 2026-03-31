@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasOriginHostAVP<T extends HasOriginHostAVP<T>> extends AVPCont
      * @param originHost The origin host identifier to set.
      */
     default T setOriginHost(final String originHost) {
-        setAVP(AVP.create(DiameterConstants.AVP_ORIGIN_HOST, originHost));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ORIGIN_HOST, 0), originHost));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasOriginHostAVP<T extends HasOriginHostAVP<T>> extends AVPCont
      * @return The origin host identifier, or null if not found.
      */
     default String getOriginHost() {
-        final AVP originHostAVP = findAVP(DiameterConstants.AVP_ORIGIN_HOST);
+        final AVP originHostAVP = findAVP(new AVPKey(DiameterConstants.AVP_ORIGIN_HOST, 0));
         if (originHostAVP != null) {
             return originHostAVP.getDataAsString();
         }

@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasSessionBindingAVP<T extends HasSessionBindingAVP<T>> extends
      * @param sessionBinding The session binding to set.
      */
     default T setSessionBinding(final long sessionBinding) {
-        setAVP(AVP.create(DiameterConstants.AVP_SESSION_BINDING, sessionBinding));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_SESSION_BINDING, 0), sessionBinding));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasSessionBindingAVP<T extends HasSessionBindingAVP<T>> extends
      * @return The session binding, or -1 if not found.
      */
     default long getSessionBinding() {
-        final AVP sessionBindingAVP = findAVP(DiameterConstants.AVP_SESSION_BINDING);
+        final AVP sessionBindingAVP = findAVP(new AVPKey(DiameterConstants.AVP_SESSION_BINDING, 0));
         if (sessionBindingAVP != null) {
             return sessionBindingAVP.getDataAsLong();
         }

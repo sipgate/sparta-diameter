@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasReAuthRequestTypeAVP<T extends HasReAuthRequestTypeAVP<T>> e
      * @param reAuthRequestType The re-auth request type to set.
      */
     default T setReAuthRequestType(final int reAuthRequestType) {
-        setAVP(AVP.create(DiameterConstants.AVP_RE_AUTH_REQUEST_TYPE, reAuthRequestType));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_RE_AUTH_REQUEST_TYPE, 0), reAuthRequestType));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasReAuthRequestTypeAVP<T extends HasReAuthRequestTypeAVP<T>> e
      * @return The re-auth request type, or -1 if not found.
      */
     default int getReAuthRequestType() {
-        final AVP reAuthRequestTypeAVP = findAVP(DiameterConstants.AVP_RE_AUTH_REQUEST_TYPE);
+        final AVP reAuthRequestTypeAVP = findAVP(new AVPKey(DiameterConstants.AVP_RE_AUTH_REQUEST_TYPE, 0));
         if (reAuthRequestTypeAVP != null) {
             return reAuthRequestTypeAVP.getDataAsInt();
         }

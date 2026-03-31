@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class HasVendorSpecificApplicationIdAVPsTest {
 
     private static GroupedAVP vsai(final int appId) {
-        return new GroupedAVP(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, true,
+        return new GroupedAVP(new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0), true,
                 List.of());
     }
 

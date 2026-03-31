@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasExperimentalResultCodeAVP<T extends HasExperimentalResultCod
      * @param experimentalResultCode The experimental result code to set.
      */
     default T setExperimentalResultCode(final long experimentalResultCode) {
-        setAVP(AVP.create(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE, experimentalResultCode));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE, 0), experimentalResultCode));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasExperimentalResultCodeAVP<T extends HasExperimentalResultCod
      * @return The experimental result code, or -1 if not found.
      */
     default long getExperimentalResultCode() {
-        final AVP experimentalResultCodeAVP = findAVP(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE);
+        final AVP experimentalResultCodeAVP = findAVP(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE, 0));
         if (experimentalResultCodeAVP != null) {
             return experimentalResultCodeAVP.getDataAsLong();
         }
