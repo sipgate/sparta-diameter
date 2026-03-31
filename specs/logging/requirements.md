@@ -19,6 +19,23 @@ Each class that emits log output declares a static final logger:
 private static final Logger log = LoggerFactory.getLogger(SomeClass.class);
 ```
 
+## Human-readable names for protocol identifiers
+
+Numeric identifiers — application IDs, command codes, and AVP codes — MUST NOT appear as bare magic numbers in log output. Every type that carries such an identifier MUST offer a way for logging code to retrieve a human-readable canonical name without reimplementing a lookup table.
+
+The mechanism for exposing this name (interface method, annotation, reflection on the class name, or a combination) is intentionally left open and will be decided in the implementation spec.
+
+### Scope
+
+- **Protocols** — each type representing a Diameter application must be able to provide its canonical application name (e.g. `3GPP Sg/Gd/Dd`, `Diameter Base`).
+- **Commands** — each Request, Answer, and Error type must be able to provide its canonical command name, without directional suffix (e.g. `Device-Watchdog`, `Capabilities-Exchange`).
+- **AVPs** — each AVP type must be able to provide its canonical AVP name as defined by the relevant RFC or 3GPP specification (e.g. `Origin-Host`, `Auth-Application-Id`).
+
+### Constraints
+
+- The name MUST be available without any I/O — it is derived solely from the type definition.
+- No production logging call MAY format a raw numeric code directly into a log message; it MUST use the name the type exposes.
+
 ## Deferred decisions
 
 The following are intentionally out of scope for this spec and will be addressed in a follow-up once usage patterns emerge:
