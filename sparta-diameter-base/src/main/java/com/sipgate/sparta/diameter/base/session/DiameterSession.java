@@ -129,24 +129,20 @@ abstract class DiameterSession implements DiameterConnectionListener {
      * {@code DIAMETER_COMMAND_UNSUPPORTED} if no handler is registered.
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    protected void dispatchInboundRequest(final IncomingRequest<?, ?> request) {
-        final DiameterRequestHandler handler = handlers.get(
-                (Class<? extends IncomingCommand>) request.getClass());
+    protected void dispatchInboundRequest(final IncomingRequest<?, ? extends OutgoingAnswer> request) {
+        final DiameterRequestHandler handler = handlers.get(request.getClass());
         if (handler == null) {
-            peer.send(DiameterMessageFactory.createAnswer(request,
-                    DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED));
+            peer.send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED));
             return;
         }
-        final CompletableFuture<?> future = handler.handle(request);
+        final CompletableFuture<? extends OutgoingAnswer> future = handler.handle(request);
         future.whenComplete((answer, err) -> {
-            if (err instanceof final DiameterErrorAnswerException e
-                    && e.getAnswer() instanceof final ErrorAnswer.Out out) {
+            if (err instanceof final DiameterErrorAnswerException e && e.getAnswer() instanceof final ErrorAnswer.Out out) {
                 peer.send(out);
             } else if (err != null) {
-                peer.send(DiameterMessageFactory.createAnswer(request,
-                        DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
+                peer.send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
             } else {
-                peer.send((OutgoingAnswer) answer);
+                peer.send(answer);
             }
         });
     }

@@ -5,6 +5,7 @@ import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
+import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
@@ -42,13 +43,13 @@ public final class DiameterResponderSession extends DiameterSession {
                 handleInboundDpr(dpr);
                 return;
             }
-            if (command instanceof final IncomingRequest request) {
+            if (command instanceof final IncomingRequest<?, ?> request) {
                 dispatchInboundRequest(request);
                 return;
             }
         }
 
-        if (command instanceof final IncomingAnswer answer) {
+        if (command instanceof final IncomingAnswer<?> answer) {
             complete(answer);
         }
     }

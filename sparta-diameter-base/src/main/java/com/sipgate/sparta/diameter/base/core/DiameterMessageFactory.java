@@ -1,9 +1,14 @@
 package com.sipgate.sparta.diameter.base.core;
 
+import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
+import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
+import com.sipgate.sparta.diameter.base.core.avp.mixins.HasExperimentalResultAVP;
 import org.reflections.Reflections;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Central factory for creating Diameter request and answer messages.
@@ -85,30 +90,85 @@ public final class DiameterMessageFactory {
      * @return the constructed answer
      * @throws IllegalArgumentException if no factory handles the request's command code
      */
-    @SuppressWarnings("unchecked")
     public static <A extends OutgoingAnswer<A>> A createAnswer(
+            final IncomingRequest<?, A> request,
+            final long resultCode) {
+        return createAnswer(request, answer -> answer.setResultCode(resultCode));
+    }
+
+    /**
+     * Creates an outgoing E-bit error answer for the given incoming request.
+     * <p>
+     * Use this for protocol errors (RFC 6733 §7.2). The answer has the E-bit set, carries the
+     * same hop-by-hop and end-to-end identifiers as the request, and its Result-Code is set to
+     * {@code resultCode}. Per RFC 6733, only 3xxx result codes are valid here.
+     * </p>
+     *
+     * @param request    the received request to answer
+     * @param resultCode the Result-Code AVP value to set (should be a 3xxx protocol error code)
+     * @return the constructed error answer
+     */
+    public static ErrorAnswer.Out createErrorAnswer(
             final IncomingRequest<?, ?> request,
             final long resultCode) {
+        return new ErrorAnswer.Out(
+                request.getCommandCode(),
+                request.isProxiable(),
+                request.getApplicationId(),
+                request.hopByHopId(),
+                request.endToEndId()
+        ).setResultCode(resultCode);
+    }
+
+    /**
+     * Creates an outgoing answer carrying an Experimental-Result for the given incoming request.
+     * <p>
+     * Use this for vendor-specific results (RFC 6733 §7.6). The answer is a normal typed answer
+     * (no E-bit) with the Experimental-Result grouped AVP set. Per RFC 6733, Result-Code and
+     * Experimental-Result are mutually exclusive — this method sets only Experimental-Result.
+     * </p>
+     *
+     * @param request                the received request to answer
+     * @param vendorId               the 3GPP or other vendor ID to include in Experimental-Result
+     * @param experimentalResultCode the vendor-assigned result code
+     * @param <A>                    the outgoing answer type
+     * @return the constructed answer
+     * @throws IllegalArgumentException if no factory handles the request's command code
+     */
+    public static <A extends OutgoingAnswer<A> & HasExperimentalResultAVP<A>> A createExperimentalResultAnswer(
+            final IncomingRequest<?, A> request,
+            final long vendorId,
+            final long experimentalResultCode) {
+        return createAnswer(request, answer -> {
+            final var experimentalResult = new GroupedAVP(
+                new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT, 0),
+                true,
+                List.of(
+                    AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), vendorId),
+                    AVP.create(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE, 0), experimentalResultCode)
+                ));
+
+            answer.setExperimentalResult(experimentalResult);
+        });
+    }
+
+    private static <A extends OutgoingAnswer<A>> A createAnswer(
+        final IncomingRequest<?, A> request,
+        final Consumer<A> initializer
+    ) {
         final var commandCode = request.getCommandCode();
         final var applicationId = request.getApplicationId();
 
-        OutgoingAnswer<?> answer = null;
         for (final var factory : FACTORIES) {
-            answer = factory.createAnswer(commandCode, applicationId,
-                    request.hopByHopId(), request.endToEndId());
+            @SuppressWarnings("unchecked")
+            final A answer = (A) factory.createAnswer(commandCode, applicationId, request.hopByHopId(), request.endToEndId());
             if (answer != null) {
-                break;
+                initializer.accept(answer);
+                return answer;
             }
         }
-        if (answer == null) {
-            throw new IllegalArgumentException(
-                    "No factory handles answer for command code: " + commandCode);
-        }
 
-        @SuppressWarnings("unchecked")
-        final A typedAnswer = (A) answer;
-        typedAnswer.setResultCode(resultCode);
-        return typedAnswer;
+        throw new IllegalArgumentException("No factory handles answer for command code: " + commandCode);
     }
 
 }

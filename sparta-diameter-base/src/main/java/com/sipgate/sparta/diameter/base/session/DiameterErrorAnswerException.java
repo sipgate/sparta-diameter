@@ -22,7 +22,7 @@ import com.sipgate.sparta.diameter.base.core.ErrorAnswer;
  * }</pre>
  *
  * <p>A request handler signals a protocol error by completing its future exceptionally with
- * {@code new DiameterErrorAnswerException(new ErrorAnswer.Out(...))}.
+ * {@code new DiameterErrorAnswerException(DiameterMessageFactory.createErrorAnswer(request, resultCode))}.
  */
 public final class DiameterErrorAnswerException extends Exception {
 

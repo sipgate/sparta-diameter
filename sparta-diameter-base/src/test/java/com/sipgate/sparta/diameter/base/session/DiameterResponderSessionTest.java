@@ -394,9 +394,7 @@ class DiameterResponderSessionTest {
         final DiameterResponderSession session = openedSession(peer);
         final ReAuthRequest.In rar = (ReAuthRequest.In)
                 DiameterMessageFactory.createForParsing(DiameterConstants.CMD_RE_AUTH, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
-        final ErrorAnswer.Out errorOut = new ErrorAnswer.Out(
-                DiameterConstants.CMD_RE_AUTH, true, 0, rar.hopByHopId(), rar.endToEndId());
-        errorOut.setResultCode(DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY);
+        final ErrorAnswer.Out errorOut = DiameterMessageFactory.createErrorAnswer(rar, DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY);
         final CompletableFuture<ReAuthAnswer.Out> failing = new CompletableFuture<>();
         failing.completeExceptionally(new DiameterErrorAnswerException(errorOut));
         session.setHandler(ReAuthRequest.In.class, req -> failing);

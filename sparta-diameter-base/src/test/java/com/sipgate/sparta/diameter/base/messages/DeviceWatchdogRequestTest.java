@@ -17,8 +17,9 @@ class DeviceWatchdogRequestTest {
     @Test
     void it_creates_normal_answer_with_success_result_code() {
         // GIVEN
-        final IncomingRequest request = (IncomingRequest)
-                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DEVICE_WATCHDOG, 0, true, false, HBH, E2E, false);
+        @SuppressWarnings("unchecked")
+        final IncomingRequest<?, DeviceWatchdogAnswer.Out> request =
+            (IncomingRequest<?, DeviceWatchdogAnswer.Out>) DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DEVICE_WATCHDOG, 0, true, false, HBH, E2E, false);
         final long successCode = DiameterConstants.RES_DIAMETER_SUCCESS;
 
         // WHEN

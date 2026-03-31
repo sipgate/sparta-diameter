@@ -7,6 +7,7 @@ import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.ErrorAnswer;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
 import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
+import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
 import com.sipgate.sparta.diameter.base.core.OutgoingRequest;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
@@ -335,10 +336,10 @@ class DiameterInitiatorSessionTest {
         final ArgumentCaptor<HopByHopId> hbhCaptor = ArgumentCaptor.forClass(HopByHopId.class);
         final ArgumentCaptor<EndToEndId> e2eCaptor = ArgumentCaptor.forClass(EndToEndId.class);
         verify(peer).send(any(CapabilitiesExchangeRequest.Out.class), hbhCaptor.capture(), e2eCaptor.capture());
-        final ErrorAnswer.Out errorOut = new ErrorAnswer.Out(
-                DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false, 0,
-                hbhCaptor.getValue(), e2eCaptor.getValue());
-        errorOut.setResultCode(DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY);
+        final var cer = (IncomingRequest<?, ?>) DiameterMessageFactory.createForParsing(
+                DiameterConstants.CMD_CAPABILITIES_EXCHANGE, 0, true, false,
+                hbhCaptor.getValue(), e2eCaptor.getValue(), false);
+        final var errorOut = DiameterMessageFactory.createErrorAnswer(cer, DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY);
         final ErrorAnswer.In errorIn = toIncomingAnswer(errorOut);
 
         // WHEN

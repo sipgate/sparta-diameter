@@ -40,9 +40,9 @@ public sealed interface ErrorAnswer<T extends ErrorAnswer<T>>
      */
     final class Out extends OutgoingAnswer<Out> implements ErrorAnswer<Out> {
 
-        public Out(final int commandCode, final boolean proxiable,
-                   final int applicationId,
-                   final HopByHopId hopByHop, final EndToEndId endToEnd) {
+        Out(final int commandCode, final boolean proxiable,
+            final int applicationId,
+            final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(commandCode, proxiable, true, applicationId, hopByHop, endToEnd);
         }
     }
