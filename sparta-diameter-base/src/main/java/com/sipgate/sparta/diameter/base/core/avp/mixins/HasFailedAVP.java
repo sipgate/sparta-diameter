@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
@@ -30,7 +31,7 @@ public interface HasFailedAVP<T extends HasFailedAVP<T>> extends AVPContainer<T>
      * @return The failed AVP, or null if not found.
      */
     default GroupedAVP getFailedAVP() {
-        final AVP failedAVP = findAVP(DiameterConstants.AVP_FAILED_AVP);
+        final AVP failedAVP = findAVP(new AVPKey(DiameterConstants.AVP_FAILED_AVP, 0));
         if (failedAVP != null) {
             return (GroupedAVP) failedAVP;
         }

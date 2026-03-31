@@ -20,14 +20,14 @@ public class GroupedAVP extends AVP {
     private final List<AVP> avps;
 
     /**
-     * Constructs a Grouped AVP with the specified code, mandatory flag, and list of AVPs.
+     * Constructs a Grouped AVP with the specified key, mandatory flag, and list of AVPs.
      *
-     * @param code      The AVP code.
+     * @param key       The AVP key (code + vendor ID).
      * @param mandatory Indicates whether the AVP is mandatory.
      * @param avps      The list of AVPs to include in this Grouped AVP.
      */
-    public GroupedAVP(final int code, final boolean mandatory, final List<AVP> avps) {
-        super(code, mandatory, serializeAVPs(avps));
+    public GroupedAVP(final AVPKey key, final boolean mandatory, final List<AVP> avps) {
+        super(key.code(), mandatory, serializeAVPs(avps));
         this.avps = new ArrayList<>(avps);
     }
 
@@ -66,14 +66,14 @@ public class GroupedAVP extends AVP {
     }
 
     /**
-     * Finds the first AVP with the specified code.
+     * Finds the first AVP with the specified key (code + vendor ID).
      *
-     * @param code The AVP code to search for.
+     * @param key The AVP key to search for.
      * @return The first matching AVP, or null if no match is found.
      */
-    public AVP findAVP(final int code) {
+    public AVP findAVP(final AVPKey key) {
         for (final AVP avp : avps) {
-            if (avp.getCode() == code) {
+            if (avp.getCode() == key.code() && avp.getVendorId() == key.vendorId()) {
                 return avp;
             }
         }
@@ -81,15 +81,15 @@ public class GroupedAVP extends AVP {
     }
 
     /**
-     * Finds all AVPs with the specified code.
+     * Finds all AVPs with the specified key (code + vendor ID).
      *
-     * @param code The AVP code to search for.
+     * @param key The AVP key to search for.
      * @return A list of matching AVPs, or an empty list if no matches are found.
      */
-    public List<AVP> findAVPs(final int code) {
+    public List<AVP> findAVPs(final AVPKey key) {
         final List<AVP> result = new ArrayList<>();
         for (final AVP avp : avps) {
-            if (avp.getCode() == code) {
+            if (avp.getCode() == key.code() && avp.getVendorId() == key.vendorId()) {
                 result.add(avp);
             }
         }

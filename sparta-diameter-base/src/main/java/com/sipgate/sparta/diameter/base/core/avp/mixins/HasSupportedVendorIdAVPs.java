@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
 import java.util.ArrayList;
@@ -17,13 +18,13 @@ import java.util.List;
 public interface HasSupportedVendorIdAVPs<T extends HasSupportedVendorIdAVPs<T>> extends AVPContainer<T> {
 
     default T addSupportedVendorId(final long supportedVendorId) {
-        addAVP(AVP.create(DiameterConstants.AVP_SUPPORTED_VENDOR_ID, supportedVendorId));
+        addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_SUPPORTED_VENDOR_ID, 0), supportedVendorId));
         return self();
     }
 
     default List<Long> getSupportedVendorIds() {
         final List<Long> result = new ArrayList<>();
-        for (final AVP avp : findAVPs(DiameterConstants.AVP_SUPPORTED_VENDOR_ID)) {
+        for (final AVP avp : findAVPs(new AVPKey(DiameterConstants.AVP_SUPPORTED_VENDOR_ID, 0))) {
             result.add(avp.getDataAsUnsignedInt());
         }
         return result;

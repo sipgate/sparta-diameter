@@ -35,7 +35,7 @@ public class AVP {
     private final byte[] data;
 
     // Factory functionality merged from AVPFactory
-    private static final Map<Integer, AVPDefinition> registry = new ConcurrentHashMap<>();
+    private static final Map<AVPKey, AVPDefinition> registry = new ConcurrentHashMap<>();
 
     static {
         final var reflections = new Reflections("com.sipgate.sparta.diameter");
@@ -83,16 +83,15 @@ public class AVP {
      * Creates an AVP with full manual specification. Ideally you should use one of the type-specific
      * create() methods instead, and register custom types via registerProvider() if needed.
      *
-     * @param code The AVP code.
+     * @param key The AVP key (code + vendor ID).
      * @param vendorSpecific Whether the AVP is vendor-specific.
      * @param mandatory Whether the AVP is mandatory.
      * @param protectedAVP Whether the AVP is protected.
-     * @param vendorId The vendor ID (0 if not vendor-specific).
      * @param data The AVP data.
      * @return The created AVP.
      */
-    public static AVP createRaw(final int code, final boolean vendorSpecific, final boolean mandatory, final boolean protectedAVP, final int vendorId, final byte[] data) {
-        return new AVP(code, vendorSpecific, mandatory, protectedAVP, vendorId, data);
+    public static AVP createRaw(final AVPKey key, final boolean vendorSpecific, final boolean mandatory, final boolean protectedAVP, final byte[] data) {
+        return new AVP(key.code(), vendorSpecific, mandatory, protectedAVP, key.vendorId(), data);
     }
 
     /**
@@ -102,6 +101,14 @@ public class AVP {
      */
     public int getCode() {
         return code;
+    }
+
+    public boolean isSameKey(final AVP other) {
+        return other.getCode() == this.getCode() && other.getVendorId() == this.getVendorId();
+    }
+
+    public boolean isSameKey(final AVPKey key) {
+        return key.code() == this.getCode() && key.vendorId() == this.getVendorId();
     }
 
     /**
@@ -635,24 +642,30 @@ public class AVP {
      * Registers all AVP definitions from the given provider.
      *
      * @param provider The AVP provider to register
+     * @throws IllegalStateException if a duplicate (code, vendorId) is detected
      */
     public static void registerProvider(final AVPProvider provider) {
         for (final AVPDefinition definition : provider.getDefinitions()) {
-            registry.put(definition.code(), definition);
+            final var key = new AVPKey(definition.code(), definition.vendorId());
+            final var existing = registry.putIfAbsent(key, definition);
+            if (existing != null) {
+                throw new IllegalStateException(String.format(
+                    "Duplicate AVP registration for key (code=%d, vendorId=%d): '%s' conflicts with already-registered '%s'",
+                    key.code(), key.vendorId(), definition.name(), existing.name()));
+            }
         }
     }
 
     /**
-     * Creates an AVP with a long value using automatic type deduction and flag handling.
-     * Diameter Type: Unsigned32
+     * Creates an AVP with a long value (Unsigned32) using automatic type deduction and flag handling.
      *
-     * @param avpCode The AVP code constant from DiameterConstants
-     * @param value   The long value
+     * @param key   The AVP key (code + vendor ID)
+     * @param value The long value
      * @return The created AVP with appropriate flags
-     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
+     * @throws IllegalArgumentException if the key is unknown or there is a type mismatch
      */
-    public static AVP create(final int avpCode, final long value) {
-        final AVPDefinition definition = getDefinition(avpCode);
+    public static AVP create(final AVPKey key, final long value) {
+        final var definition = getDefinition(key);
         validateType(definition, Long.class);
         return createUnsignedIntAVP(definition, value);
     }
@@ -660,57 +673,57 @@ public class AVP {
     /**
      * Creates an AVP with a string value using automatic type deduction and flag handling.
      *
-     * @param avpCode The AVP code constant from DiameterConstants
-     * @param value   The string value
+     * @param key   The AVP key (code + vendor ID)
+     * @param value The string value
      * @return The created AVP with appropriate flags
-     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
+     * @throws IllegalArgumentException if the key is unknown or there is a type mismatch
      */
-    public static AVP create(final int avpCode, final String value) {
-        final AVPDefinition definition = getDefinition(avpCode);
+    public static AVP create(final AVPKey key, final String value) {
+        final var definition = getDefinition(key);
         validateType(definition, String.class);
-        return new AVP(avpCode, definition.vendorSpecific(), definition.mandatory(),
-                      false, definition.vendorId(), value.getBytes(StandardCharsets.UTF_8));
+        return new AVP(key.code(), definition.vendorSpecific(), definition.mandatory(),
+                      false, key.vendorId(), value.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
      * Creates an AVP with a byte array value using automatic type deduction and flag handling.
      *
-     * @param avpCode The AVP code constant from DiameterConstants
-     * @param value   The byte array value
+     * @param key   The AVP key (code + vendor ID)
+     * @param value The byte array value
      * @return The created AVP with appropriate flags
-     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
+     * @throws IllegalArgumentException if the key is unknown or there is a type mismatch
      */
-    public static AVP create(final int avpCode, final byte[] value) {
-        final AVPDefinition definition = getDefinition(avpCode);
+    public static AVP create(final AVPKey key, final byte[] value) {
+        final var definition = getDefinition(key);
         validateType(definition, byte[].class);
-        return new AVP(avpCode, definition.vendorSpecific(), definition.mandatory(),
-                      false, definition.vendorId(), value);
+        return new AVP(key.code(), definition.vendorSpecific(), definition.mandatory(),
+                      false, key.vendorId(), value);
     }
 
     /**
-     * Creates an AVP with a BigInteger value using automatic type deduction and flag handling.
+     * Creates an AVP with a BigInteger value (Unsigned64) using automatic type deduction and flag handling.
      *
-     * @param avpCode The AVP code constant from DiameterConstants
-     * @param value   The BigInteger value
+     * @param key   The AVP key (code + vendor ID)
+     * @param value The BigInteger value
      * @return The created AVP with appropriate flags
-     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
+     * @throws IllegalArgumentException if the key is unknown or there is a type mismatch
      */
-    public static AVP create(final int avpCode, final BigInteger value) {
-        final AVPDefinition definition = getDefinition(avpCode);
+    public static AVP create(final AVPKey key, final BigInteger value) {
+        final var definition = getDefinition(key);
         validateType(definition, BigInteger.class);
         return createUnsignedLongAVP(definition, value);
     }
 
     /**
-     * Creates an AVP with an Integer value using automatic type deduction and flag handling.
+     * Creates an AVP with an enumerated integer value using automatic type deduction and flag handling.
      *
-     * @param avpCode The AVP code constant from DiameterConstants
-     * @param value   The Integer value (for Enumerated types)
+     * @param key   The AVP key (code + vendor ID)
+     * @param value The enumerated integer value
      * @return The created AVP with appropriate flags
-     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
+     * @throws IllegalArgumentException if the key is unknown or there is a type mismatch
      */
-    public static AVP create(final int avpCode, final int value) {
-        final AVPDefinition definition = getDefinition(avpCode);
+    public static AVP create(final AVPKey key, final int value) {
+        final var definition = getDefinition(key);
         validateType(definition, Integer.class);
         return createEnumeratedAVP(definition, value);
     }
@@ -718,59 +731,59 @@ public class AVP {
     /**
      * Creates an AVP with an InetAddress value using automatic type deduction and flag handling.
      *
-     * @param avpCode The AVP code constant from DiameterConstants
-     * @param value   The InetAddress value (for Address types)
+     * @param key   The AVP key (code + vendor ID)
+     * @param value The InetAddress value
      * @return The created AVP with appropriate flags
-     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
+     * @throws IllegalArgumentException if the key is unknown or there is a type mismatch
      */
-    public static AVP create(final int avpCode, final InetAddress value) {
-        final AVPDefinition definition = getDefinition(avpCode);
+    public static AVP create(final AVPKey key, final InetAddress value) {
+        final var definition = getDefinition(key);
         validateType(definition, InetAddress.class);
         return createIPAddressAVP(definition, value);
     }
 
     /**
-     * Creates an AVP with a Date value using automatic type deduction and flag handling.
+     * Creates an AVP with a Date value (Diameter Time) using automatic type deduction and flag handling.
      *
-     * @param avpCode The AVP code constant from DiameterConstants
-     * @param value   The Date value (for Time types)
+     * @param key   The AVP key (code + vendor ID)
+     * @param value The Date value
      * @return The created AVP with appropriate flags
-     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
+     * @throws IllegalArgumentException if the key is unknown or there is a type mismatch
      */
-    public static AVP create(final int avpCode, final Date value) {
-        final AVPDefinition definition = getDefinition(avpCode);
+    public static AVP create(final AVPKey key, final Date value) {
+        final var definition = getDefinition(key);
         validateType(definition, Date.class);
         return createTimeAVP(definition, value);
     }
 
     /**
-     * Creates an AVP with a list of nested AVPs using automatic type deduction and flag handling.
-     * This creates a GroupedAVP with the appropriate flags based on the AVP definition.
+     * Creates a grouped AVP with nested AVPs using automatic type deduction and flag handling.
      *
-     * @param avpCode The AVP code constant from DiameterConstants
-     * @param avps    The list of nested AVPs
+     * @param key  The AVP key (code + vendor ID)
+     * @param avps The list of nested AVPs
      * @return The created AVP with appropriate flags
-     * @throws IllegalArgumentException if AVP code is unknown or type mismatch
+     * @throws IllegalArgumentException if the key is unknown or there is a type mismatch
      */
-    public static AVP create(final int avpCode, final List<AVP> avps) {
-        final AVPDefinition definition = getDefinition(avpCode);
+    public static AVP create(final AVPKey key, final List<AVP> avps) {
+        final var definition = getDefinition(key);
         validateType(definition, GroupedAVP.class);
-        return new GroupedAVP(avpCode, definition.vendorSpecific(), definition.mandatory(),
-                              false, definition.vendorId(), avps);
+        return new GroupedAVP(key.code(), definition.vendorSpecific(), definition.mandatory(),
+                              false, key.vendorId(), avps);
     }
 
     /**
-     * Gets the definition for the given AVP code.
+     * Gets the definition for the given AVP key.
      *
-     * @param avpCode The AVP code
+     * @param key The AVP key (code + vendor ID)
      * @return The AVP definition
-     * @throws IllegalArgumentException if AVP code is not registered
+     * @throws IllegalArgumentException if the key is not registered
      */
-    private static AVPDefinition getDefinition(final int avpCode) {
-        final AVPDefinition definition = registry.get(avpCode);
+    private static AVPDefinition getDefinition(final AVPKey key) {
+        final var definition = registry.get(key);
         if (definition == null) {
-            throw new IllegalArgumentException("Unknown AVP code: " + avpCode +
-                ". Make sure the appropriate AVPProvider is registered.");
+            throw new IllegalArgumentException(String.format(
+                "Unknown AVP key (code=%d, vendorId=%d). Make sure the appropriate AVPProvider is registered.",
+                key.code(), key.vendorId()));
         }
         return definition;
     }
@@ -830,7 +843,8 @@ public class AVP {
         final int padding = (4 - (dataLength % 4)) % 4;
         buffer.position(buffer.position() + padding);
 
-        final AVPDefinition definition = getDefinition(code);
+        final var key = new AVPKey(code, vendorId);
+        final AVPDefinition definition = registry.get(key);
         if (definition != null && definition.dataType().equals(GroupedAVP.class)) {
             // Parse grouped AVP
             final ByteBuffer dataBuffer = ByteBuffer.wrap(data);
@@ -848,10 +862,10 @@ public class AVP {
     public String toString() {
         final StringBuilder sb = new StringBuilder();
 
-        try {
-            final AVPDefinition definition = getDefinition(this.code);
+        final AVPDefinition definition = registry.get(new AVPKey(this.code, this.vendorId));
+        if (definition != null) {
             sb.append(definition.name());
-        } catch (final IllegalArgumentException e) {
+        } else {
             sb.append("Unknown-AVP-").append(this.code);
         }
 
@@ -882,7 +896,7 @@ public class AVP {
 
     private String getValueString() {
         try {
-            final AVPDefinition definition = getDefinition(this.code);
+            final var definition = getDefinition(new AVPKey(this.code, this.vendorId));
             final Class<?> dataType = definition.dataType();
 
             if (dataType.equals(String.class)) {

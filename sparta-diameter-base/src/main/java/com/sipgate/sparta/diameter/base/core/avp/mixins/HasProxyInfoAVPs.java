@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 
@@ -25,7 +26,7 @@ public interface HasProxyInfoAVPs<T extends HasProxyInfoAVPs<T>> extends AVPCont
 
     default List<GroupedAVP> getProxyInfos() {
         final List<GroupedAVP> result = new ArrayList<>();
-        for (final AVP avp : findAVPs(DiameterConstants.AVP_PROXY_INFO)) {
+        for (final AVP avp : findAVPs(new AVPKey(DiameterConstants.AVP_PROXY_INFO, 0))) {
             result.add((GroupedAVP) avp);
         }
         return result;

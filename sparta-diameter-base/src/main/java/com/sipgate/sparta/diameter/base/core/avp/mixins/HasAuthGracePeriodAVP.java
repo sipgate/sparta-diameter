@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasAuthGracePeriodAVP<T extends HasAuthGracePeriodAVP<T>> exten
      * @param authGracePeriod The authentication grace period to set.
      */
     default T setAuthGracePeriod(final long authGracePeriod) {
-        setAVP(AVP.create(DiameterConstants.AVP_AUTH_GRACE_PERIOD, authGracePeriod));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_AUTH_GRACE_PERIOD, 0), authGracePeriod));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasAuthGracePeriodAVP<T extends HasAuthGracePeriodAVP<T>> exten
      * @return The authentication grace period, or -1 if not found.
      */
     default long getAuthGracePeriod() {
-        final AVP authGracePeriodAVP = findAVP(DiameterConstants.AVP_AUTH_GRACE_PERIOD);
+        final AVP authGracePeriodAVP = findAVP(new AVPKey(DiameterConstants.AVP_AUTH_GRACE_PERIOD, 0));
         if (authGracePeriodAVP != null) {
             return authGracePeriodAVP.getDataAsLong();
         }

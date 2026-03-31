@@ -1,7 +1,9 @@
 package com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins;
 
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.SgdGddConstants;
+import com.sipgate.sparta.diameter._3gpp.common._3gppConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
 /**
@@ -13,12 +15,12 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 public interface HasHssIdAVP<T extends HasHssIdAVP<T>> extends AVPContainer<T> {
 
     default T setHssId(final String value) {
-        setAVP(AVP.create(SgdGddConstants.AVP_HSS_ID, value));
+        setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_HSS_ID, _3gppConstants.VENDOR_ID_3GPP), value));
         return self();
     }
 
     default String getHssId() {
-        final var avp = findAVP(SgdGddConstants.AVP_HSS_ID);
+        final var avp = findAVP(new AVPKey(SgdGddConstants.AVP_HSS_ID, _3gppConstants.VENDOR_ID_3GPP));
         return avp != null ? avp.getDataAsString() : null;
     }
 }

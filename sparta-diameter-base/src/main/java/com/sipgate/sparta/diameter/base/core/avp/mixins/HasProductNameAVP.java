@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasProductNameAVP<T extends HasProductNameAVP<T>> extends AVPCo
      * @param productName The product name to set.
      */
     default T setProductName(final String productName) {
-        setAVP(AVP.create(DiameterConstants.AVP_PRODUCT_NAME, productName));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_PRODUCT_NAME, 0), productName));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasProductNameAVP<T extends HasProductNameAVP<T>> extends AVPCo
      * @return The product name, or null if not found.
      */
     default String getProductName() {
-        final AVP productNameAVP = findAVP(DiameterConstants.AVP_PRODUCT_NAME);
+        final AVP productNameAVP = findAVP(new AVPKey(DiameterConstants.AVP_PRODUCT_NAME, 0));
         if (productNameAVP != null) {
             return productNameAVP.getDataAsString();
         }

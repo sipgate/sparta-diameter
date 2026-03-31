@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasSessionServerFailoverAVP<T extends HasSessionServerFailoverA
      * @param sessionServerFailover The session server failover value to set.
      */
     default T setSessionServerFailover(final int sessionServerFailover) {
-        setAVP(AVP.create(DiameterConstants.AVP_SESSION_SERVER_FAILOVER, sessionServerFailover));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_SESSION_SERVER_FAILOVER, 0), sessionServerFailover));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasSessionServerFailoverAVP<T extends HasSessionServerFailoverA
      * @return The session server failover value, or -1 if not found.
      */
     default int getSessionServerFailover() {
-        final AVP sessionServerFailoverAVP = findAVP(DiameterConstants.AVP_SESSION_SERVER_FAILOVER);
+        final AVP sessionServerFailoverAVP = findAVP(new AVPKey(DiameterConstants.AVP_SESSION_SERVER_FAILOVER, 0));
         if (sessionServerFailoverAVP != null) {
             return sessionServerFailoverAVP.getDataAsInt();
         }

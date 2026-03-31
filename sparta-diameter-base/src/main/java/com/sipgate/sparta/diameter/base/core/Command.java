@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.base.core;
 
 import com.sipgate.sparta.diameter.base.DiameterException;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginHostAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginRealmAVP;
 
@@ -139,20 +140,20 @@ public abstract class Command<T extends Command<T>> implements
         if (this instanceof IncomingCommand) {
             throw new UnsupportedOperationException("Cannot mutate a wire-parsed incoming command");
         }
-        avps.removeIf(existingAvp -> existingAvp.getCode() == avp.getCode());
+        avps.removeIf(avp::isSameKey);
         avps.add(avp);
     }
 
     /**
-     * Find an AVP by its code.
+     * Find an AVP by its key (code + vendor ID).
      *
-     * @param code The AVP code to search for.
-     * @return The AVP with the given code, or null if not found.
+     * @param key The AVP key to search for.
+     * @return The AVP with the given key, or null if not found.
      */
     @Override
-    public AVP findAVP(final int code) {
+    public AVP findAVP(final AVPKey key) {
         for (final AVP avp : avps) {
-            if (avp.getCode() == code) {
+            if (avp.isSameKey(key)) {
                 return avp;
             }
         }
@@ -160,16 +161,16 @@ public abstract class Command<T extends Command<T>> implements
     }
 
     /**
-     * Find all AVPs with the given code.
+     * Find all AVPs with the given key (code + vendor ID).
      *
-     * @param code The AVP code to search for.
-     * @return A list of AVPs with the given code.
+     * @param key The AVP key to search for.
+     * @return A list of AVPs with the given key.
      */
     @Override
-    public List<AVP> findAVPs(final int code) {
+    public List<AVP> findAVPs(final AVPKey key) {
         final List<AVP> result = new ArrayList<>();
         for (final AVP avp : avps) {
-            if (avp.getCode() == code) {
+            if (avp.isSameKey(key)) {
                 result.add(avp);
             }
         }

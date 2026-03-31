@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasUserNameAVP<T extends HasUserNameAVP<T>> extends AVPContaine
      * @param userName The username to set.
      */
     default T setUserName(final String userName) {
-        setAVP(AVP.create(DiameterConstants.AVP_USER_NAME, userName));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_USER_NAME, 0), userName));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasUserNameAVP<T extends HasUserNameAVP<T>> extends AVPContaine
      * @return The username, or null if not found.
      */
     default String getUserName() {
-        final AVP userNameAVP = findAVP(DiameterConstants.AVP_USER_NAME);
+        final AVP userNameAVP = findAVP(new AVPKey(DiameterConstants.AVP_USER_NAME, 0));
         if (userNameAVP != null) {
             return userNameAVP.getDataAsString();
         }

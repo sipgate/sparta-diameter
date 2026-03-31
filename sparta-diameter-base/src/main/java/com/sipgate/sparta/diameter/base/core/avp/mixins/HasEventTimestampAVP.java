@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -21,7 +22,7 @@ public interface HasEventTimestampAVP<T extends HasEventTimestampAVP<T>> extends
      * @param eventTimestamp The event timestamp to set.
      */
     default T setEventTimestamp(final Date eventTimestamp) {
-        setAVP(AVP.create(DiameterConstants.AVP_EVENT_TIMESTAMP, eventTimestamp));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_EVENT_TIMESTAMP, 0), eventTimestamp));
         return self();
     }
 
@@ -31,7 +32,7 @@ public interface HasEventTimestampAVP<T extends HasEventTimestampAVP<T>> extends
      * @return The event timestamp, or null if not found.
      */
     default Date getEventTimestamp() {
-        final AVP eventTimestampAVP = findAVP(DiameterConstants.AVP_EVENT_TIMESTAMP);
+        final AVP eventTimestampAVP = findAVP(new AVPKey(DiameterConstants.AVP_EVENT_TIMESTAMP, 0));
         if (eventTimestampAVP != null) {
             return eventTimestampAVP.getDataAsTime();
         }

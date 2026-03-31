@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasDestinationRealmAVP<T extends HasDestinationRealmAVP<T>> ext
      * @param destinationRealm The destination realm identifier to set.
      */
     default T setDestinationRealm(final String destinationRealm) {
-        setAVP(AVP.create(DiameterConstants.AVP_DESTINATION_REALM, destinationRealm));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_DESTINATION_REALM, 0), destinationRealm));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasDestinationRealmAVP<T extends HasDestinationRealmAVP<T>> ext
      * @return The destination realm identifier, or null if not found.
      */
     default String getDestinationRealm() {
-        final AVP destinationRealmAVP = findAVP(DiameterConstants.AVP_DESTINATION_REALM);
+        final AVP destinationRealmAVP = findAVP(new AVPKey(DiameterConstants.AVP_DESTINATION_REALM, 0));
         if (destinationRealmAVP != null) {
             return destinationRealmAVP.getDataAsString();
         }

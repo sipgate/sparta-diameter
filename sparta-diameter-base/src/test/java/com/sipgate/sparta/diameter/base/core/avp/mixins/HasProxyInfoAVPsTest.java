@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 import com.sipgate.sparta.diameter.base.messages.ReAuthRequest;
@@ -13,8 +14,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 class HasProxyInfoAVPsTest {
 
     private static GroupedAVP proxyInfo(final String proxyHost) {
-        return new GroupedAVP(DiameterConstants.AVP_PROXY_INFO, true,
-                List.of(AVP.create(DiameterConstants.AVP_PROXY_HOST, proxyHost)));
+        return new GroupedAVP(new AVPKey(DiameterConstants.AVP_PROXY_INFO, 0), true,
+                List.of(AVP.create(new AVPKey(DiameterConstants.AVP_PROXY_HOST, 0), proxyHost)));
     }
 
     @Test

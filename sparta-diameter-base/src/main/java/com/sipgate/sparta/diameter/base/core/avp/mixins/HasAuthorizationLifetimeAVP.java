@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasAuthorizationLifetimeAVP<T extends HasAuthorizationLifetimeA
      * @param authorizationLifetime The authorization lifetime to set.
      */
     default T setAuthorizationLifetime(final long authorizationLifetime) {
-        setAVP(AVP.create(DiameterConstants.AVP_AUTHORIZATION_LIFETIME, authorizationLifetime));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_AUTHORIZATION_LIFETIME, 0), authorizationLifetime));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasAuthorizationLifetimeAVP<T extends HasAuthorizationLifetimeA
      * @return The authorization lifetime, or -1 if not found.
      */
     default long getAuthorizationLifetime() {
-        final AVP authorizationLifetimeAVP = findAVP(DiameterConstants.AVP_AUTHORIZATION_LIFETIME);
+        final AVP authorizationLifetimeAVP = findAVP(new AVPKey(DiameterConstants.AVP_AUTHORIZATION_LIFETIME, 0));
         if (authorizationLifetimeAVP != null) {
             return authorizationLifetimeAVP.getDataAsLong();
         }

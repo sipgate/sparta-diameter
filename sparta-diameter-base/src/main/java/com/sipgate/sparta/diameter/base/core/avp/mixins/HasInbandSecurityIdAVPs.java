@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
 import java.util.ArrayList;
@@ -17,13 +18,13 @@ import java.util.List;
 public interface HasInbandSecurityIdAVPs<T extends HasInbandSecurityIdAVPs<T>> extends AVPContainer<T> {
 
     default T addInbandSecurityId(final long inbandSecurityId) {
-        addAVP(AVP.create(DiameterConstants.AVP_INBAND_SECURITY_ID, inbandSecurityId));
+        addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_INBAND_SECURITY_ID, 0), inbandSecurityId));
         return self();
     }
 
     default List<Long> getInbandSecurityIds() {
         final List<Long> result = new ArrayList<>();
-        for (final AVP avp : findAVPs(DiameterConstants.AVP_INBAND_SECURITY_ID)) {
+        for (final AVP avp : findAVPs(new AVPKey(DiameterConstants.AVP_INBAND_SECURITY_ID, 0))) {
             result.add(avp.getDataAsUnsignedInt());
         }
         return result;

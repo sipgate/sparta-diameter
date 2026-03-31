@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogRequest;
 import org.junit.jupiter.api.Test;
 
@@ -41,12 +42,12 @@ public class CommandTest {
         assertThat(dwr.getOriginHost()).isEqualTo("tstccncd.ccn.intmet.ie");
         assertThat(dwr.getOriginRealm()).isEqualTo("tstccn.intmet.ie");
 
-        final AVP originHostAVP = dwr.findAVP(DiameterConstants.AVP_ORIGIN_HOST);
+        final AVP originHostAVP = dwr.findAVP(new AVPKey(DiameterConstants.AVP_ORIGIN_HOST, 0));
         assertThat(originHostAVP).isNotNull();
         assertThat(originHostAVP.isMandatory()).isTrue();
         assertThat(originHostAVP.isVendorSpecific()).isFalse();
 
-        final AVP originRealmAVP = dwr.findAVP(DiameterConstants.AVP_ORIGIN_REALM);
+        final AVP originRealmAVP = dwr.findAVP(new AVPKey(DiameterConstants.AVP_ORIGIN_REALM, 0));
         assertThat(originRealmAVP).isNotNull();
         assertThat(originRealmAVP.isMandatory()).isTrue();
         assertThat(originRealmAVP.isVendorSpecific()).isFalse();
@@ -83,7 +84,7 @@ public class CommandTest {
                 Command.parseMessage(ByteBuffer.wrap(messageData));
 
         // WHEN / THEN
-        assertThatThrownBy(() -> dwr.addAVP(AVP.create(DiameterConstants.AVP_ORIGIN_HOST, "x")))
+        assertThatThrownBy(() -> dwr.addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ORIGIN_HOST, 0), "x")))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 

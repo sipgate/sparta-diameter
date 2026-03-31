@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -21,7 +22,7 @@ public interface HasAccountingSubSessionIdAVP<T extends HasAccountingSubSessionI
      * @param accountingSubSessionId The accounting sub-session identifier to set.
      */
     default T setAccountingSubSessionId(final BigInteger accountingSubSessionId) {
-        setAVP(AVP.create(DiameterConstants.AVP_ACCOUNTING_SUB_SESSION_ID, accountingSubSessionId));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ACCOUNTING_SUB_SESSION_ID, 0), accountingSubSessionId));
         return self();
     }
 
@@ -31,7 +32,7 @@ public interface HasAccountingSubSessionIdAVP<T extends HasAccountingSubSessionI
      * @return The accounting sub-session identifier, or null if not found.
      */
     default BigInteger getAccountingSubSessionId() {
-        final AVP accountingSubSessionIdAVP = findAVP(DiameterConstants.AVP_ACCOUNTING_SUB_SESSION_ID);
+        final AVP accountingSubSessionIdAVP = findAVP(new AVPKey(DiameterConstants.AVP_ACCOUNTING_SUB_SESSION_ID, 0));
         if (accountingSubSessionIdAVP != null) {
             return accountingSubSessionIdAVP.getDataAsUnsignedLong();
         }

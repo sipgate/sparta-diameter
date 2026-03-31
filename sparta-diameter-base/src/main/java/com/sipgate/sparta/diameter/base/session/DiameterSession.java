@@ -12,6 +12,7 @@ import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
 import com.sipgate.sparta.diameter.base.core.OutgoingRequest;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
@@ -298,9 +299,9 @@ abstract class DiameterSession implements DiameterConnectionListener {
     }
 
     private static GroupedAVP buildVendorSpecificAppIdAVP(final DiameterNodeConfig.VendorSpecificApp app) {
-        return (GroupedAVP) AVP.create(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, List.of(
-                AVP.create(DiameterConstants.AVP_VENDOR_ID, app.vendorId()),
-                AVP.create(DiameterConstants.AVP_AUTH_APPLICATION_ID, app.authApplicationId())
+        return (GroupedAVP) AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0), List.of(
+                AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), app.vendorId()),
+                AVP.create(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0), app.authApplicationId())
         ));
     }
 

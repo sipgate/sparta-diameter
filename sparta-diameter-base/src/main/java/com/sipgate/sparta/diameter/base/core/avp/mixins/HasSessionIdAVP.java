@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasSessionIdAVP<T extends HasSessionIdAVP<T>> extends AVPContai
      * @param sessionId The session identifier to set.
      */
     default T setSessionId(final String sessionId) {
-        setAVP(AVP.create(DiameterConstants.AVP_SESSION_ID, sessionId));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_SESSION_ID, 0), sessionId));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasSessionIdAVP<T extends HasSessionIdAVP<T>> extends AVPContai
      * @return The session identifier, or null if not found.
      */
     default String getSessionId() {
-        final AVP sessionIdAVP = findAVP(DiameterConstants.AVP_SESSION_ID);
+        final AVP sessionIdAVP = findAVP(new AVPKey(DiameterConstants.AVP_SESSION_ID, 0));
         if (sessionIdAVP != null) {
             return sessionIdAVP.getDataAsString();
         }

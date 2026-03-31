@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasDisconnectCauseAVP<T extends HasDisconnectCauseAVP<T>> exten
      * @param disconnectCause The disconnect cause to set.
      */
     default T setDisconnectCause(final int disconnectCause) {
-        setAVP(AVP.create(DiameterConstants.AVP_DISCONNECT_CAUSE, disconnectCause));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_DISCONNECT_CAUSE, 0), disconnectCause));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasDisconnectCauseAVP<T extends HasDisconnectCauseAVP<T>> exten
      * @return The disconnect cause, or -1 if not found.
      */
     default int getDisconnectCause() {
-        final AVP disconnectCauseAVP = findAVP(DiameterConstants.AVP_DISCONNECT_CAUSE);
+        final AVP disconnectCauseAVP = findAVP(new AVPKey(DiameterConstants.AVP_DISCONNECT_CAUSE, 0));
         if (disconnectCauseAVP != null) {
             return disconnectCauseAVP.getDataAsInt();
         }

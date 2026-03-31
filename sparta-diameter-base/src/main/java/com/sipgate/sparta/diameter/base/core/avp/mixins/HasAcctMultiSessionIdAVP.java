@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasAcctMultiSessionIdAVP<T extends HasAcctMultiSessionIdAVP<T>>
      * @param acctMultiSessionId The accounting multi-session identifier to set.
      */
     default T setAcctMultiSessionId(final String acctMultiSessionId) {
-        setAVP(AVP.create(DiameterConstants.AVP_ACCOUNTING_MULTI_SESSION_ID, acctMultiSessionId));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ACCOUNTING_MULTI_SESSION_ID, 0), acctMultiSessionId));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasAcctMultiSessionIdAVP<T extends HasAcctMultiSessionIdAVP<T>>
      * @return The accounting multi-session identifier, or null if not found.
      */
     default String getAcctMultiSessionId() {
-        final AVP acctMultiSessionIdAVP = findAVP(DiameterConstants.AVP_ACCOUNTING_MULTI_SESSION_ID);
+        final AVP acctMultiSessionIdAVP = findAVP(new AVPKey(DiameterConstants.AVP_ACCOUNTING_MULTI_SESSION_ID, 0));
         if (acctMultiSessionIdAVP != null) {
             return acctMultiSessionIdAVP.getDataAsString();
         }

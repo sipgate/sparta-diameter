@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -21,7 +22,7 @@ public interface HasHostIpAddressAVP<T extends HasHostIpAddressAVP<T>> extends A
      * @param hostIpAddress The host IP address to set.
      */
     default T setHostIpAddress(final InetAddress hostIpAddress) {
-        setAVP(AVP.create(DiameterConstants.AVP_HOST_IP_ADDRESS, hostIpAddress));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_HOST_IP_ADDRESS, 0), hostIpAddress));
         return self();
     }
 
@@ -31,7 +32,7 @@ public interface HasHostIpAddressAVP<T extends HasHostIpAddressAVP<T>> extends A
      * @return The host IP address, or null if not found.
      */
     default InetAddress getHostIpAddress() {
-        final AVP hostIpAddressAVP = findAVP(DiameterConstants.AVP_HOST_IP_ADDRESS);
+        final AVP hostIpAddressAVP = findAVP(new AVPKey(DiameterConstants.AVP_HOST_IP_ADDRESS, 0));
         if (hostIpAddressAVP != null) {
             return hostIpAddressAVP.getDataAsIPAddress();
         }

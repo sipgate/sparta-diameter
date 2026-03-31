@@ -1,7 +1,9 @@
 package com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins;
 
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.SgdGddConstants;
+import com.sipgate.sparta.diameter._3gpp.common._3gppConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
 /**
@@ -13,12 +15,12 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 public interface HasTfrFlagsAVP<T extends HasTfrFlagsAVP<T>> extends AVPContainer<T> {
 
     default T setTfrFlags(final long value) {
-        setAVP(AVP.create(SgdGddConstants.AVP_TFR_FLAGS, value));
+        setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_TFR_FLAGS, _3gppConstants.VENDOR_ID_3GPP), value));
         return self();
     }
 
     default long getTfrFlags() {
-        final var avp = findAVP(SgdGddConstants.AVP_TFR_FLAGS);
+        final var avp = findAVP(new AVPKey(SgdGddConstants.AVP_TFR_FLAGS, _3gppConstants.VENDOR_ID_3GPP));
         return avp != null ? avp.getDataAsUnsignedInt() : 0L;
     }
 }

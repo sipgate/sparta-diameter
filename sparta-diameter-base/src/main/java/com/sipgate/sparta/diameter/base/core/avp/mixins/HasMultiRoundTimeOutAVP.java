@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasMultiRoundTimeOutAVP<T extends HasMultiRoundTimeOutAVP<T>> e
      * @param multiRoundTimeOut The multi-round timeout to set.
      */
     default T setMultiRoundTimeOut(final long multiRoundTimeOut) {
-        setAVP(AVP.create(DiameterConstants.AVP_MULTI_ROUND_TIME_OUT, multiRoundTimeOut));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_MULTI_ROUND_TIME_OUT, 0), multiRoundTimeOut));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasMultiRoundTimeOutAVP<T extends HasMultiRoundTimeOutAVP<T>> e
      * @return The multi-round timeout, or -1 if not found.
      */
     default long getMultiRoundTimeOut() {
-        final AVP multiRoundTimeOutAVP = findAVP(DiameterConstants.AVP_MULTI_ROUND_TIME_OUT);
+        final AVP multiRoundTimeOutAVP = findAVP(new AVPKey(DiameterConstants.AVP_MULTI_ROUND_TIME_OUT, 0));
         if (multiRoundTimeOutAVP != null) {
             return multiRoundTimeOutAVP.getDataAsLong();
         }

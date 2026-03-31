@@ -1,7 +1,9 @@
 package com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins;
 
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.SgdGddConstants;
+import com.sipgate.sparta.diameter._3gpp.common._3gppConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
 import java.util.Date;
@@ -15,12 +17,12 @@ import java.util.Date;
 public interface HasRequestedRetransmissionTimeAVP<T extends HasRequestedRetransmissionTimeAVP<T>> extends AVPContainer<T> {
 
     default T setRequestedRetransmissionTime(final Date value) {
-        setAVP(AVP.create(SgdGddConstants.AVP_REQUESTED_RETRANSMISSION_TIME, value));
+        setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_REQUESTED_RETRANSMISSION_TIME, _3gppConstants.VENDOR_ID_3GPP), value));
         return self();
     }
 
     default Date getRequestedRetransmissionTime() {
-        final var avp = findAVP(SgdGddConstants.AVP_REQUESTED_RETRANSMISSION_TIME);
+        final var avp = findAVP(new AVPKey(SgdGddConstants.AVP_REQUESTED_RETRANSMISSION_TIME, _3gppConstants.VENDOR_ID_3GPP));
         return avp != null ? avp.getDataAsTime() : null;
     }
 }

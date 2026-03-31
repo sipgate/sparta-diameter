@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
 import java.net.InetAddress;
@@ -20,13 +21,13 @@ import java.util.List;
 public interface HasHostIpAddressAVPs<T extends HasHostIpAddressAVPs<T>> extends AVPContainer<T> {
 
     default T addHostIpAddress(final InetAddress hostIpAddress) {
-        addAVP(AVP.create(DiameterConstants.AVP_HOST_IP_ADDRESS, hostIpAddress));
+        addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_HOST_IP_ADDRESS, 0), hostIpAddress));
         return self();
     }
 
     default List<InetAddress> getHostIpAddresses() {
         final List<InetAddress> result = new ArrayList<>();
-        for (final AVP avp : findAVPs(DiameterConstants.AVP_HOST_IP_ADDRESS)) {
+        for (final AVP avp : findAVPs(new AVPKey(DiameterConstants.AVP_HOST_IP_ADDRESS, 0))) {
             result.add(avp.getDataAsIPAddress());
         }
         return result;

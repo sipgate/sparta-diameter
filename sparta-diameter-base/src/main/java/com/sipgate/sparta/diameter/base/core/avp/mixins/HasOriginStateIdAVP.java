@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -20,7 +21,7 @@ public interface HasOriginStateIdAVP<T extends HasOriginStateIdAVP<T>> extends A
      * @param originStateId The origin state identifier to set.
      */
     default T setOriginStateId(final long originStateId) {
-        setAVP(AVP.create(DiameterConstants.AVP_ORIGIN_STATE_ID, originStateId));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ORIGIN_STATE_ID, 0), originStateId));
         return self();
     }
 
@@ -30,7 +31,7 @@ public interface HasOriginStateIdAVP<T extends HasOriginStateIdAVP<T>> extends A
      * @return The origin state identifier, or -1 if not found.
      */
     default int getOriginStateId() {
-        final AVP originStateIdAVP = findAVP(DiameterConstants.AVP_ORIGIN_STATE_ID);
+        final AVP originStateIdAVP = findAVP(new AVPKey(DiameterConstants.AVP_ORIGIN_STATE_ID, 0));
         if (originStateIdAVP != null && originStateIdAVP.getData().length >= 4) {
             return originStateIdAVP.getDataAsInt();
         }

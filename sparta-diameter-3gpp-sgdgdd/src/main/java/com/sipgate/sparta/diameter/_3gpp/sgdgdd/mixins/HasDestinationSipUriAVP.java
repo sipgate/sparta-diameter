@@ -1,7 +1,9 @@
 package com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins;
 
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.SgdGddConstants;
+import com.sipgate.sparta.diameter._3gpp.common._3gppConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
 /**
@@ -13,12 +15,12 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 public interface HasDestinationSipUriAVP<T extends HasDestinationSipUriAVP<T>> extends AVPContainer<T> {
 
     default T setDestinationSipUri(final String value) {
-        setAVP(AVP.create(SgdGddConstants.AVP_DESTINATION_SIP_URI, value));
+        setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_DESTINATION_SIP_URI, _3gppConstants.VENDOR_ID_3GPP), value));
         return self();
     }
 
     default String getDestinationSipUri() {
-        final var avp = findAVP(SgdGddConstants.AVP_DESTINATION_SIP_URI);
+        final var avp = findAVP(new AVPKey(SgdGddConstants.AVP_DESTINATION_SIP_URI, _3gppConstants.VENDOR_ID_3GPP));
         return avp != null ? avp.getDataAsString() : null;
     }
 }

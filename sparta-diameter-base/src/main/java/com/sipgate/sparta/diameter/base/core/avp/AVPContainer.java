@@ -29,18 +29,18 @@ public interface AVPContainer<T extends AVPContainer<T>> extends Selfable<T> {
     void setAVP(AVP avp);
 
     /**
-     * Finds an AVP by its code.
+     * Finds an AVP by its key (code + vendor ID).
      *
-     * @param code The AVP code to search for.
+     * @param key The AVP key to search for.
      * @return The matching AVP, or null if not found.
      */
-    AVP findAVP(int code);
+    AVP findAVP(AVPKey key);
 
     /**
-     * Finds all AVPs with the given code.
+     * Finds all AVPs with the given key (code + vendor ID).
      *
-     * @param code The AVP code to search for.
+     * @param key The AVP key to search for.
      * @return All matching AVPs in insertion order, never null, possibly empty.
      */
-    List<AVP> findAVPs(int code);
+    List<AVP> findAVPs(AVPKey key);
 }

@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
@@ -19,7 +20,7 @@ public interface HasAcctSessionIdAVP<T extends HasAcctSessionIdAVP<T>> extends A
      * @param acctSessionId The accounting session identifier to set.
      */
     default T setAcctSessionId(final byte[] acctSessionId) {
-        setAVP(AVP.create(DiameterConstants.AVP_ACCOUNTING_SESSION_ID, acctSessionId));
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ACCOUNTING_SESSION_ID, 0), acctSessionId));
         return self();
     }
 
@@ -29,7 +30,7 @@ public interface HasAcctSessionIdAVP<T extends HasAcctSessionIdAVP<T>> extends A
      * @return The accounting session identifier, or null if not found.
      */
     default byte[] getAcctSessionId() {
-        final AVP acctSessionIdAVP = findAVP(DiameterConstants.AVP_ACCOUNTING_SESSION_ID);
+        final AVP acctSessionIdAVP = findAVP(new AVPKey(DiameterConstants.AVP_ACCOUNTING_SESSION_ID, 0));
         if (acctSessionIdAVP != null) {
             return acctSessionIdAVP.getData();
         }
