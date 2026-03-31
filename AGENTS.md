@@ -2,6 +2,10 @@
 
 Java 17 codebase (`17.0.18-zulu` via `.sdkmanrc`).
 
+## Build
+
+Use `mvn` directly — no Maven wrapper (`mvnw`) in this project.
+
 ## Immutability
 
 `final` on every field, constructor parameter, and local variable. No exceptions.
