@@ -73,7 +73,7 @@ public class GroupedAVP extends AVP {
      */
     public AVP findAVP(final AVPKey key) {
         for (final AVP avp : avps) {
-            if (avp.getCode() == key.code() && avp.getVendorId() == key.vendorId()) {
+            if (avp.isSameKey(key)) {
                 return avp;
             }
         }
@@ -89,7 +89,7 @@ public class GroupedAVP extends AVP {
     public List<AVP> findAVPs(final AVPKey key) {
         final List<AVP> result = new ArrayList<>();
         for (final AVP avp : avps) {
-            if (avp.getCode() == key.code() && avp.getVendorId() == key.vendorId()) {
+            if (avp.isSameKey(key)) {
                 result.add(avp);
             }
         }
