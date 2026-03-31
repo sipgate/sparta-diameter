@@ -1,5 +1,7 @@
 package com.sipgate.sparta.diameter.base.transport;
 
+import com.sipgate.sparta.diameter.base.session.DiameterInitiatorSession;
+import com.sipgate.sparta.diameter.base.session.DiameterResponderSession;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -57,8 +59,12 @@ public final class DiameterNode implements Closeable {
 
     /**
      * Starts listening for incoming Diameter connections on the given port.
+     *
+     * <pre>{@code
+     * node.listen(3868, () -> new DiameterResponderSession(config));
+     * }</pre>
      */
-    public ChannelFuture listen(final int port, final Supplier<DiameterConnectionListener> factory) {
+    public ChannelFuture listen(final int port, final Supplier<DiameterResponderSession> factory) {
         return new ServerBootstrap()
                 .group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
@@ -68,14 +74,19 @@ public final class DiameterNode implements Closeable {
 
     /**
      * Initiates an outgoing Diameter connection to the given host and port.
+     *
+     * <pre>{@code
+     * node.connect("peer.example.com", 3868,
+     *     reconnect -> new DiameterInitiatorSession(config, reconnect));
+     * }</pre>
      */
     public ChannelFuture connect(final String host, final int port,
-                                 final Function<Runnable, DiameterConnectionListener> factory) {
+                                 final Function<Runnable, DiameterInitiatorSession> factory) {
         return doConnect(host, port, factory);
     }
 
     private ChannelFuture doConnect(final String host, final int port,
-                                    final Function<Runnable, DiameterConnectionListener> factory) {
+                                    final Function<Runnable, DiameterInitiatorSession> factory) {
         final Runnable reconnect = () -> doConnect(host, port, factory);
         return new Bootstrap()
                 .group(workerGroup)
@@ -85,7 +96,7 @@ public final class DiameterNode implements Closeable {
     }
 
     private ChannelInitializer<SocketChannel> newInitializer(
-            final Supplier<DiameterConnectionListener> factory) {
+            final Supplier<? extends DiameterConnectionListener> factory) {
         return new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(final SocketChannel ch) {
