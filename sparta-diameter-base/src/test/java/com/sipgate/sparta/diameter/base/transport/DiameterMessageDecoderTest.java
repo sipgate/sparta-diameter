@@ -7,6 +7,7 @@ import com.sipgate.sparta.diameter.base.core.HopByHopId;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
 import com.sipgate.sparta.diameter.base.core.OutgoingRequest;
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogRequest;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.embedded.EmbeddedChannel;
@@ -23,9 +24,10 @@ class DiameterMessageDecoderTest {
     private static final int MAX_FRAME_LENGTH = 16 * 1024 * 1024;
 
     private static EmbeddedChannel newDecoder() {
+        final var meters = new DiameterTransportMeters(new SimpleMeterRegistry());
         return new EmbeddedChannel(
             new LengthFieldBasedFrameDecoder(MAX_FRAME_LENGTH, 1, 3, -4, 0),
-            new DiameterMessageDecoder()
+            new DiameterMessageDecoder(meters)
         );
     }
 

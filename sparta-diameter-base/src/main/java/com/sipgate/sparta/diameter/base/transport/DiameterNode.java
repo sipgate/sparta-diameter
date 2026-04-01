@@ -2,6 +2,8 @@ package com.sipgate.sparta.diameter.base.transport;
 
 import com.sipgate.sparta.diameter.base.session.DiameterInitiatorSession;
 import com.sipgate.sparta.diameter.base.session.DiameterResponderSession;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -51,10 +53,16 @@ public final class DiameterNode implements Closeable {
 
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
+    private final DiameterTransportMeters transportMeters;
 
     public DiameterNode() {
+        this(new SimpleMeterRegistry());
+    }
+
+    public DiameterNode(final MeterRegistry meterRegistry) {
         this.bossGroup = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory());
         this.workerGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
+        this.transportMeters = new DiameterTransportMeters(meterRegistry);
     }
 
     /**
@@ -68,7 +76,7 @@ public final class DiameterNode implements Closeable {
         return new ServerBootstrap()
                 .group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
-                .childHandler(newInitializer(factory))
+                .childHandler(newInitializer(factory, DiameterTransportMeters.DIRECTION_INBOUND))
                 .bind(port);
     }
 
@@ -91,12 +99,12 @@ public final class DiameterNode implements Closeable {
         return new Bootstrap()
                 .group(workerGroup)
                 .channel(NioSocketChannel.class)
-                .handler(newInitializer(() -> factory.apply(reconnect)))
+                .handler(newInitializer(() -> factory.apply(reconnect), DiameterTransportMeters.DIRECTION_OUTBOUND))
                 .connect(host, port);
     }
 
     private ChannelInitializer<SocketChannel> newInitializer(
-            final Supplier<? extends DiameterConnectionListener> factory) {
+            final Supplier<? extends DiameterConnectionListener> factory, final String direction) {
         return new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(final SocketChannel ch) {
@@ -107,10 +115,10 @@ public final class DiameterNode implements Closeable {
                                 LENGTH_FIELD_LENGTH,
                                 LENGTH_ADJUSTMENT,
                                 INITIAL_BYTES_TO_STRIP))
-                        .addLast(new DiameterMessageDecoder())
+                        .addLast(new DiameterMessageDecoder(transportMeters))
                         .addLast(new OutgoingAnswerEncoder())
                         .addLast(new OutgoingRequestEncoder())
-                        .addLast(new DiameterPeerHandler(factory.get()));
+                        .addLast(new DiameterPeerHandler(factory.get(), direction, transportMeters));
             }
         };
     }

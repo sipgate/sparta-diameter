@@ -11,6 +11,9 @@ import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.base.messages.DisconnectPeerRequest;
 import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -23,7 +26,12 @@ public final class DiameterInitiatorSession extends DiameterSession {
     private Future<?> tcTimer;
 
     public DiameterInitiatorSession(final DiameterNodeConfig config, final Runnable reconnect) {
-        super(config);
+        this(config, reconnect, new SimpleMeterRegistry());
+    }
+
+    public DiameterInitiatorSession(final DiameterNodeConfig config, final Runnable reconnect,
+                                    final MeterRegistry meterRegistry) {
+        super(config, meterRegistry);
         this.reconnect = reconnect;
     }
 
