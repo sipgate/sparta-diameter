@@ -1,10 +1,10 @@
 # Sparta Diameter
 
-> ⚠️ **Initial Draft - Work in Progress**
-> 
-> This library is currently in early development and is not yet complete. The goal is to use this library in our sparta-HSS to replace YATE's TCP-XML interface with a native Java Diameter protocol implementation.
+> ⚠️ **Work in Progress**
+>
+> This library is in active development. API surfaces may change between releases.
 
-A Java library for implementing Diameter protocol (RFC 6733) messages and communication.
+A Java library for the Diameter protocol (RFC 6733): message parsing and serialization, peer lifecycle management (CER/CEA, DWR/DWA, DPR/DPA), and a Netty-based transport layer for both server and client roles.
 
 ## Java Version
 
@@ -12,95 +12,158 @@ Requires Java 17–24. **Java 25 is not supported** — compilation hangs or thr
 
 ## Project Goals
 
-- Provide RFC 6733 compliant Diameter message handling
-- Implement only the messages needed for our HSS 
-- All other messages will be interpreted as `GenericCommand` and can still be processed
-- Future server/client implementation will be provided using Netty
-- This shall serve as a framework for building Diameter applications, maybe even a DRA
-- This library shall be open sourced alongside with our sparta-HSS project
+- RFC 6733 compliant Diameter message handling
+- Implement the messages needed for our HSS and related applications
+- Unknown messages are handled as `GenericCommand` and can still be processed
+- Framework for building Diameter applications, including a potential DRA
+- Open-sourced alongside our sparta-HSS project
+
+## Modules
+
+| Module | Contents |
+|--------|----------|
+| `sparta-diameter-base` | Core protocol, transport layer, session management |
+| `sparta-diameter-3gpp-common` | Shared 3GPP constants and AVP mixins |
+| `sparta-diameter-3gpp-s6a` | S6a interface (HSS–MME) |
+| `sparta-diameter-3gpp-s6c` | S6c interface (SMS/MWD) |
+| `sparta-diameter-3gpp-cxdx` | Cx/Dx interfaces (IMS HSS) |
+| `sparta-diameter-3gpp-sgdgdd` | SGd/Gdd interfaces (SMS delivery via MO/MT) |
 
 ## Development Status
 
-- ✅ Core infrastructure and base classes
-- ✅ RFC 6733 message parsing and serialization
-- ✅ Base protocol messages (CER/CEA, DWR/DWA)
-- 🚧 Additional Diameter applications for the HSS (S6a, Cx)
-- 🚧 State machine for Diameter
-- ✅ Netty-based transport layer (`DiameterNode`, `DiameterPeer`)
+- ✅ Core infrastructure: message parsing and serialization
+- ✅ RFC 6733 base messages: CER/CEA, DWR/DWA, DPR/DPA, ACR/ACA, STR/STA, ASR/ASA, RAR/RAA
+- ✅ Netty-based transport (`DiameterNode`, `DiameterPeer`)
+- ✅ Session layer with capability negotiation, watchdog, reconnect timer (Tc)
+- ✅ SGd/Gdd: MO-Forward-Short-Message, MT-Forward-Short-Message
+- 🚧 S6a, Cx/Dx: constants and AVP definitions in progress
 - 🚧 Comprehensive test coverage
 
-## Package Structure
+## Usage
 
-The project follows the following package structure:
+### Building a Server (Responder)
 
-### Core Infrastructure (`com.sipgate.sparta.diameter.core`)
-- **`Command`** - Abstract base class for all Diameter messages with header handling and AVP management
-- **`Request`** - Abstract base for request messages (R-bit set)
-- **`Answer`** - Abstract base for answer messages with Result-Code support
-- **`DiameterMessageFactory`** - Central factory for creating request and answer messages
-- **`AVP`** - Attribute-Value Pair implementation with encoding/decoding
-- **`GroupedAVP`** - Support for nested AVP structures
-- **`GenericCommand`** - Fallback for unknown message types
-- **`DiameterConstants`** - Protocol constants (command codes, AVP codes, result codes)
-
-### Core Mixins (`com.sipgate.sparta.diameter.core.mixins`)
-- **`DiameterMessage`** - Base interface providing fundamental AVP operations
-- **`OriginStateAware`** - Mixin for messages supporting Origin-State-Id AVP
-
-### Message Implementations (`com.sipgate.sparta.diameter.messages`)
-
-#### Base Protocol Messages (`messages.base`)
-Implementation of fundamental Diameter protocol messages:
-- **`CapabilitiesExchangeRequest/Answer`** - CER/CEA for peer capability negotiation
-- **`DeviceWatchdogRequest/Answer`** - DWR/DWA for connection health monitoring
-
-#### Message-Specific Mixins (`messages.base.mixins`)
-- **`CapabilitiesExchange`** - Common functionality for CER/CEA messages
-
-### Utilities
-- **`DiameterMessageParser`** - Binary message parsing and serialization
-- **`DiameterException`** - Protocol-specific exception handling
-
-## Message Examples
+The server accepts inbound connections and handles requests. Use `DiameterNode.listen` with a `DiameterResponderSession` factory.
 
 ```java
-// Create a Device Watchdog Request
-DeviceWatchdogRequest dwr = DiameterMessageFactory.create(
-        DeviceWatchdogRequest.class, hopByHop, endToEnd);
-dwr.setOriginHost("hss.example.com");
-dwr.setOriginRealm("example.com");
-dwr.setOriginStateId(12345);
+final var config = new DiameterNodeConfig(
+    "hss.example.com",
+    "example.com",
+    List.of(InetAddress.getByName("192.168.1.100")),
+    10415L, // 3GPP vendor ID
+    "sparta-hss",
+    new DiameterNodeConfig.Capabilities(
+        List.of(),
+        List.of(),
+        List.of((long) _3gppConstants.VENDOR_ID_3GPP),
+        List.of(new DiameterNodeConfig.VendorSpecificApp(
+            _3gppConstants.VENDOR_ID_3GPP,
+            _3gppConstants.APP_ID_SGD_GDD))
+    )
+);
 
-// Create a retransmitted request
-DeviceWatchdogRequest retransmit = DiameterMessageFactory.createRetransmitted(
-        DeviceWatchdogRequest.class, hopByHop, endToEnd);
+try (final var node = new DiameterNode()) {
+    final var serverFuture = node.listen(3868, () -> {
+        final var session = new DiameterResponderSession(config);
 
-// Create Capabilities Exchange Request
-CapabilitiesExchangeRequest cer = DiameterMessageFactory.create(
-        CapabilitiesExchangeRequest.class, hopByHop, endToEnd);
-cer.setOriginHost("hss.example.com");
-cer.setOriginRealm("example.com");
-cer.setVendorId(10415); // 3GPP
-cer.setProductName("Sparta HSS");
-cer.addHostIPAddress(InetAddress.getByName("192.168.1.100"));
+        session.setHandler(MoForwardShortMessageRequest.In.class, request -> {
+            final var answer = DiameterMessageFactory.createAnswer(
+                request, DiameterConstants.RES_DIAMETER_SUCCESS);
+            // populate answer AVPs here
+            return CompletableFuture.completedFuture(answer);
+        });
 
-// Create an answer for a received request (echoes identifiers; copies Origin-Host/Realm
-// from the request to Destination-Host/Realm on the answer)
-DeviceWatchdogAnswer dwa = DiameterMessageFactory.createAnswer(dwr, DiameterConstants.RES_DIAMETER_SUCCESS);
+        return session;
+    });
 
-// Create a bare answer with explicit identifiers (for testing or peer simulation)
-CapabilitiesExchangeAnswer cea = DiameterMessageFactory.createAnswer(
-        CapabilitiesExchangeAnswer.class, hopByHop, endToEnd);
-
-// Parse incoming message
-byte[] messageData = // ... received from network
-Command command = Command.parseMessage(ByteBuffer.wrap(messageData));
-if (command instanceof final DeviceWatchdogRequest received) {
-    DeviceWatchdogAnswer answer = DiameterMessageFactory.createAnswer(
-            received, DiameterConstants.RES_DIAMETER_SUCCESS);
+    serverFuture.sync(); // wait until the port is bound
+    // keep running ...
 }
 ```
 
+### Building a Client (Initiator)
+
+The client opens an outbound connection and can send requests. Use `DiameterNode.connect` with a `DiameterInitiatorSession` factory. The session automatically reconnects after the Tc timer fires when the connection drops.
+
+```java
+final var config = new DiameterNodeConfig(
+    "smsc.example.com",
+    "example.com",
+    List.of(InetAddress.getByName("10.0.0.1")),
+    10415L,
+    "sparta-smsc",
+    new DiameterNodeConfig.Capabilities(
+        List.of(),
+        List.of(),
+        List.of((long) _3gppConstants.VENDOR_ID_3GPP),
+        List.of(new DiameterNodeConfig.VendorSpecificApp(
+            _3gppConstants.VENDOR_ID_3GPP,
+            _3gppConstants.APP_ID_SGD_GDD))
+    )
+);
+
+try (final var node = new DiameterNode()) {
+    node.connect("dra.example.com", 3868, reconnect -> {
+        final var session = new DiameterInitiatorSession(config, reconnect);
+
+        session.setHandler(MoForwardShortMessageRequest.In.class, request -> {
+            final var userIdentifier = request.getUserIdentifier();
+            final var smRpUi = request.getSmRpUi();
+            // process the inbound MO SMS ...
+
+            final var answer = DiameterMessageFactory.createAnswer(
+                request, DiameterConstants.RES_DIAMETER_SUCCESS);
+            return CompletableFuture.completedFuture(answer);
+        });
+
+        return session;
+    }).sync();
+
+    // Send a request once the session reaches I_OPEN:
+    // final var future = session.send(outgoingRequest);
+    // final var answer = future.get();
+}
+```
+
+### Sending a Request
+
+```java
+final var request = DiameterMessageFactory.createRequest(
+    MtForwardShortMessageRequest.Out.class);
+request.setDestinationHost("hss.example.com");
+request.setDestinationRealm("example.com");
+request.setSmRpUi(encodedPdu);
+
+final var answer = session.send(request).get();
+```
+
+### Working with AVPs
+
+```java
+// Typed access via message mixins
+final var smRpUi = request.getSmRpUi();           // byte[]
+final var originHost = request.getOriginHost();   // String
+final var resultCode = answer.getResultCode();    // long
+
+// Grouped AVP access
+final var userIdentifier = request.getUserIdentifier(); // GroupedAVP
+final var avp = userIdentifier.findAVP(
+    new AVPKey(_3gppConstants.AVP_MSISDN, _3gppConstants.VENDOR_ID_3GPP));
+```
+
+## Key Classes
+
+| Class | Role |
+|-------|------|
+| `DiameterNode` | Netty-based transport; `listen(port, factory)` / `connect(host, port, factory)` |
+| `DiameterPeer` | Wraps a Netty channel; `send(answer)` / `send(request, h2h, e2e)` |
+| `DiameterResponderSession` | Inbound session: handles CER, watchdog, routes requests to handlers |
+| `DiameterInitiatorSession` | Outbound session: sends CER, handles reconnect via Tc timer |
+| `DiameterNodeConfig` | Node identity, declared capabilities, protocol timers (TWINIT, Tc) |
+| `DiameterMessageFactory` | Creates requests, answers, and error answers; auto-discovers message factories |
+| `DiameterRequestHandler` | `CompletableFuture<Answer> handle(IncomingRequest)` — registered via `session.setHandler` |
+| `GenericCommand` | Fallback for unknown command codes or application IDs |
+
 ## License
 
-This project is MIT licensed. See the [LICENSE](LICENSE) file for details.
+MIT. See the [LICENSE](LICENSE) file for details.
