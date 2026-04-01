@@ -5,10 +5,10 @@
 Every class that emits log output declares a private static final field:
 
 ```java
-private static final Logger LOGGER = LoggerFactory.getLogger(SomeClass.class);
+private static final Logger LOGGER = LoggerFactory.getLogger(ContainingClass.class);
 ```
 
-The field is always named `LOGGER`. No other name is acceptable.
+The argument to `getLogger` must be the class that declares the field — never a supertype, subtype, or unrelated class. The field is always named `LOGGER`. No other name is acceptable.
 
 ## Level mapping
 
@@ -68,7 +68,10 @@ public String commandName() {
 }
 ```
 
-This is the sole permitted use of a raw numeric code in a log message, because no symbolic name exists for an unrecognized command.
+In general, prefer symbolic names over raw numeric codes in log messages — a name is always more readable and grep-able than a bare integer. Exceptions:
+
+- **Unrecognized command codes** (like `GenericCommand`): no symbolic name exists, so the raw code is the only option.
+- **`TRACE` level**: numeric values are acceptable when diagnosing decode/encode internals, where the raw wire value is the point.
 
 ### AVPs
 
