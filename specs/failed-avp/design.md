@@ -111,7 +111,7 @@ This requires a richer close API on `DiameterSession`. The current `stop()` (sen
 |---|---|---|---|---|
 | `stop()` | No | No | — | Protocol errors (5011); closes immediately without negotiation |
 | `stopGracefully()` | Yes | No | `DO_NOT_WANT_TO_TALK_TO_YOU` | Operator-initiated shutdown; current `stop()` behaviour |
-| `closeGracefully()` | Yes | Yes | `REBOOTING` | Node restart or upgrade; reconnects after DPR/DPA |
+| `closeGracefully()` | Yes | Yes | `REBOOTING` | Reconnects after closing the connection with DPR/DPA |
 
 `stop()` and `stopGracefully()` both set `shuttingDown = true` and cancel the Tc timer (initiator side). `closeGracefully()` does not set `shuttingDown`, so `onDisconnected()` schedules the Tc reconnect as normal.
 
