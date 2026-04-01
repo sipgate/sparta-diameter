@@ -15,6 +15,9 @@ public final class _3gppConstants {
     public static final int AVP_FEATURE_LIST_ID = 629;
     public static final int AVP_FEATURE_LIST = 630;
 
+    // 3GPP TS 29.329, Sh interface
+    public static final int AVP_MSISDN = 701;
+
     // 3GPP TS 29.336, S6m/S6n interfaces
     public static final int AVP_USER_IDENTIFIER = 3102;
     public static final int AVP_EXTERNAL_IDENTIFIER = 3111;

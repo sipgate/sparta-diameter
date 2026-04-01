@@ -23,6 +23,10 @@ public final class _3gppAVPProvider implements AVPProvider {
             new AVPDefinition(_3gppConstants.AVP_FEATURE_LIST, "Feature-List",
                 Long.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
 
+            // 3GPP TS 29.329, Sh interface
+            new AVPDefinition(_3gppConstants.AVP_MSISDN, "MSISDN",
+                byte[].class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+
             // 3GPP TS 29.336, S6m/S6n interfaces
             new AVPDefinition(_3gppConstants.AVP_USER_IDENTIFIER, "User-Identifier",
                 GroupedAVP.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
