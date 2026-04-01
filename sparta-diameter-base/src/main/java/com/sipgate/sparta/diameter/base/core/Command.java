@@ -3,6 +3,7 @@ package com.sipgate.sparta.diameter.base.core;
 import com.sipgate.sparta.diameter.base.DiameterException;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
+import com.sipgate.sparta.diameter.base.core.avp.AVPParseException;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginHostAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginRealmAVP;
 
@@ -262,27 +263,42 @@ public abstract class Command<T extends Command<T>> implements
     private static IncomingCommand parseMessage(final ByteBuffer byteBuffer,
                                                 final int messageLength) throws DiameterException {
         try {
-            final int version = byteBuffer.get();
-            if (version != DiameterConstants.DIAMETER_VERSION) {
-                throw new DiameterException("Unsupported Diameter version: " + version);
-            }
-            byteBuffer.position(byteBuffer.position() + 3); // skip already-read messageLength
+            // Read the complete 20-byte header before any error checks, so that
+            // DiameterResultCodeException and AVPParseException can carry all header
+            // fields needed to build the error answer.
+            final int version = byteBuffer.get();                      // byte 0
 
-            final int flags = byteBuffer.get();
-            final boolean isRequest = (flags & 0x80) != 0;
-            final boolean isError = (flags & 0x20) != 0;
-            final boolean isRetransmitted = (flags & 0x10) != 0;
+            byteBuffer.position(byteBuffer.position() + 3);           // skip bytes 1-3 (length)
 
-            final int commandCode = (byteBuffer.get() << 16) |
+            final int rawFlags = byteBuffer.get() & 0xFF;             // byte 4
+            final boolean isRequest = (rawFlags & 0x80) != 0;
+            final boolean proxiable = (rawFlags & 0x40) != 0;
+            final boolean isError = (rawFlags & 0x20) != 0;
+            final boolean isRetransmitted = (rawFlags & 0x10) != 0;
+
+            final int commandCode = (byteBuffer.get() << 16) |        // bytes 5-7
                     (byteBuffer.get() << 8) |
                     byteBuffer.get();
 
-            final int applicationId = byteBuffer.getInt();
+            final int applicationId = byteBuffer.getInt();            // bytes 8-11
+            final HopByHopId hopByHop = new HopByHopId(byteBuffer.getInt());   // bytes 12-15
+            final EndToEndId endToEnd = new EndToEndId(byteBuffer.getInt());    // bytes 16-19
 
-            final HopByHopId hopByHop = new HopByHopId(byteBuffer.getInt());
-            final EndToEndId endToEnd = new EndToEndId(byteBuffer.getInt());
+            if (version != DiameterConstants.DIAMETER_VERSION) {
+                throw new DiameterResultCodeException(
+                        DiameterConstants.RES_DIAMETER_UNSUPPORTED_VERSION,
+                        commandCode, proxiable, applicationId, hopByHop, endToEnd);
+            }
 
-            final List<AVP> avps = parseAVPs(byteBuffer, messageLength - 20);
+            final List<AVP> avps;
+            try {
+                avps = parseAVPs(byteBuffer, messageLength - 20);
+            } catch (final AVPParseException e) {
+                // the exception from parseAVPs doesn't know about the context so we must enrich it here.
+                throw new AVPParseException(e.getResultCode(),
+                        commandCode, proxiable, applicationId, hopByHop, endToEnd,
+                        e.getOffendingAvp());
+            }
 
             final IncomingCommand command = DiameterMessageFactory.createForParsing(
                     commandCode, applicationId, isRequest, isError, hopByHop, endToEnd, isRetransmitted);
@@ -301,13 +317,18 @@ public abstract class Command<T extends Command<T>> implements
     /**
      * Parses AVPs from the input stream.
      *
-     * @param byteBuffer the ByteBuffer to read from
+     * <p>The first {@link AVPParseException} thrown by {@link AVP#readFrom} propagates
+     * immediately, implementing the single-error rule from RFC 6733 §7 without any
+     * additional logic.
+     *
+     * @param byteBuffer      the ByteBuffer to read from
      * @param remainingLength the number of bytes remaining in the message after the header
      * @return a list of parsed AVPs
-     * @throws IOException if an I/O error occurs while reading the AVPs
+     * @throws IOException       if an I/O error occurs while reading the AVPs
+     * @throws AVPParseException if the first AVP in the buffer violates RFC 6733
      */
     private static List<AVP> parseAVPs(final ByteBuffer byteBuffer, final int remainingLength)
-            throws IOException {
+            throws IOException, AVPParseException {
         final List<AVP> avps = new ArrayList<>();
         int bytesRead = 0;
 

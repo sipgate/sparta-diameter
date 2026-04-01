@@ -1,8 +1,10 @@
 package com.sipgate.sparta.diameter.base.session;
 
+import com.sipgate.sparta.diameter.base.DiameterException;
 import com.sipgate.sparta.diameter.base.core.Command;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
+import com.sipgate.sparta.diameter.base.core.DiameterResultCodeException;
 import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.ErrorAnswer;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
@@ -10,6 +12,9 @@ import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
 import com.sipgate.sparta.diameter.base.core.OutgoingRequest;
+import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
+import com.sipgate.sparta.diameter.base.core.avp.AVPParseException;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogAnswer;
@@ -48,6 +53,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -776,42 +782,59 @@ class DiameterInitiatorSessionTest {
     // -------------------------------------------------------------------------
 
     @Test
-    void it_transitions_to_CLOSING_when_stop_is_called() throws Exception {
+    void it_closes_immediately_when_stop_is_called() throws Exception {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        when(peer.close()).thenReturn(mock(ChannelFuture.class));
+        final DiameterInitiatorSession session = openedSession(peer);
+
+        // WHEN
+        session.stop();
+
+        // THEN
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
+        verify(peer).close();
+        verify(peer, never()).send(any(DisconnectPeerRequest.Out.class), any(HopByHopId.class), any(EndToEndId.class));
+    }
+
+    @Test
+    void it_transitions_to_CLOSING_when_stopGracefully_is_called() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         stubSend(peer);
         final DiameterInitiatorSession session = openedSession(peer);
 
         // WHEN
-        session.stop();
+        session.stopGracefully();
 
         // THEN
         assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSING);
     }
 
     @Test
-    void it_sends_DPR_when_stop_is_called() throws Exception {
+    void it_sends_DPR_when_stopGracefully_is_called() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         stubSend(peer);
         final DiameterInitiatorSession session = openedSession(peer);
 
         // WHEN
-        session.stop();
+        session.stopGracefully();
 
         // THEN
         verify(peer).send(any(DisconnectPeerRequest.Out.class), any(HopByHopId.class), any(EndToEndId.class));
     }
 
     @Test
-    void it_sets_disconnect_cause_in_DPR() throws Exception {
+    void it_sets_disconnect_cause_DO_NOT_WANT_in_DPR_when_stopGracefully_is_called() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         stubSend(peer);
         final DiameterInitiatorSession session = openedSession(peer);
 
         // WHEN
-        session.stop();
+        session.stopGracefully();
 
         // THEN
         final ArgumentCaptor<DisconnectPeerRequest.Out> captor =
@@ -822,12 +845,30 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
+    void it_sends_DPR_with_REBOOTING_when_closeGracefully_is_called() throws Exception {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        final DiameterInitiatorSession session = openedSession(peer);
+
+        // WHEN
+        session.closeGracefully();
+
+        // THEN
+        final ArgumentCaptor<DisconnectPeerRequest.Out> captor =
+                ArgumentCaptor.forClass(DisconnectPeerRequest.Out.class);
+        verify(peer).send(captor.capture(), any(HopByHopId.class), any(EndToEndId.class));
+        assertThat(captor.getValue().getDisconnectCause())
+                .isEqualTo(DiameterConstants.DCC_REBOOTING);
+    }
+
+    @Test
     void it_rejects_send_in_CLOSING_state() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         stubSend(peer);
         final DiameterInitiatorSession session = openedSession(peer);
-        session.stop();
+        session.stopGracefully();
 
         // WHEN
         final CapabilitiesExchangeRequest.Out req =
@@ -845,7 +886,7 @@ class DiameterInitiatorSessionTest {
         stubSend(peer);
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final DiameterInitiatorSession session = openedSession(peer);
-        session.stop();
+        session.stopGracefully();
         final DisconnectPeerAnswer.In dpa = captureAndBuildDpa(peer);
 
         // WHEN
@@ -862,7 +903,7 @@ class DiameterInitiatorSessionTest {
         stubSend(peer);
         when(peer.close()).thenReturn(mock(ChannelFuture.class));
         final DiameterInitiatorSession session = openedSession(peer);
-        session.stop();
+        session.stopGracefully();
         final DisconnectPeerAnswer.In dpa = captureAndBuildDpa(peer);
 
         // WHEN
@@ -932,7 +973,7 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
-    void it_does_not_schedule_Tc_timer_after_graceful_shutdown() throws Exception {
+    void it_does_not_schedule_Tc_timer_after_stop() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         stubSend(peer);
@@ -943,11 +984,49 @@ class DiameterInitiatorSessionTest {
         session.stop();
         final int taskCountAfterStop = tasks.size();
 
+        // WHEN — transport closes
+        session.onDisconnected(peer);
+
+        // THEN — no additional Tc timer was scheduled
+        assertThat(tasks).hasSize(taskCountAfterStop);
+    }
+
+    @Test
+    void it_does_not_schedule_Tc_timer_after_graceful_shutdown() throws Exception {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        when(peer.close()).thenReturn(mock(ChannelFuture.class));
+        final List<Runnable> tasks = new ArrayList<>();
+        stubEventLoop(peer, tasks);
+        final DiameterInitiatorSession session = openedSession(peer, tasks);
+        session.stopGracefully();
+        final int taskCountAfterStop = tasks.size();
+
         // WHEN — transport closes after graceful DPR
         session.onDisconnected(peer);
 
         // THEN — no additional Tc timer was scheduled
         assertThat(tasks).hasSize(taskCountAfterStop);
+    }
+
+    @Test
+    void it_schedules_Tc_timer_after_closeGracefully() throws Exception {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        when(peer.close()).thenReturn(mock(ChannelFuture.class));
+        final List<Runnable> tasks = new ArrayList<>();
+        stubEventLoop(peer, tasks);
+        final DiameterInitiatorSession session = openedSession(peer, tasks);
+        session.closeGracefully();
+        final int taskCountAfterClose = tasks.size();
+
+        // WHEN — transport closes after DPR/DPA
+        session.onDisconnected(peer);
+
+        // THEN — Tc timer was scheduled for reconnect
+        assertThat(tasks).hasSizeGreaterThan(taskCountAfterClose);
     }
 
     @Test
@@ -1036,6 +1115,77 @@ class DiameterInitiatorSessionTest {
 
         // THEN
         verify(peer).close();
+    }
+
+    // -------------------------------------------------------------------------
+    // onParseError
+    // -------------------------------------------------------------------------
+
+    @Test
+    void it_sends_error_answer_with_Failed_AVP_on_AVPParseException() throws Exception {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        final DiameterInitiatorSession session = openedSession(peer);
+        final AVP offending = AVP.createRaw(new AVPKey(999, 0), true, true, false, new byte[0]);
+        final AVPParseException cause = new AVPParseException(
+                DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED,
+                280, true, 0, new HopByHopId(1), new EndToEndId(2), offending);
+
+        // WHEN
+        session.onParseError(peer, cause);
+
+        // THEN
+        final ArgumentCaptor<ErrorAnswer.Out> captor = ArgumentCaptor.forClass(ErrorAnswer.Out.class);
+        verify(peer).send(captor.capture());
+        assertThat(captor.getValue().getFailedAVP()).isNotNull();
+        assertThat(captor.getValue().getFailedAVP().getAVPs()).containsExactly(offending);
+        verify(peer, never()).close();
+    }
+
+    @Test
+    void it_sends_error_answer_and_does_not_schedule_Tc_timer_on_DiameterResultCodeException() throws Exception {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        when(peer.close()).thenReturn(mock(ChannelFuture.class));
+        final List<Runnable> tasks = new ArrayList<>();
+        stubEventLoop(peer, tasks);
+        final DiameterInitiatorSession session = openedSession(peer, tasks);
+        final DiameterResultCodeException cause = new DiameterResultCodeException(
+                DiameterConstants.RES_DIAMETER_UNSUPPORTED_VERSION,
+                280, false, 0, new HopByHopId(1), new EndToEndId(2));
+
+        // WHEN
+        session.onParseError(peer, cause);
+        final int taskCountAfterParseError = tasks.size();
+        session.onDisconnected(peer);
+
+        // THEN — stop() was called: no Tc timer scheduled, reconnect suppressed
+        verify(peer).send(any(ErrorAnswer.Out.class));
+        assertThat(tasks).hasSize(taskCountAfterParseError);
+    }
+
+    @Test
+    void it_closes_peer_and_schedules_Tc_timer_on_base_DiameterException() throws Exception {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        when(peer.close()).thenReturn(mock(ChannelFuture.class));
+        final List<Runnable> tasks = new ArrayList<>();
+        stubEventLoop(peer, tasks);
+        final DiameterInitiatorSession session = openedSession(peer, tasks);
+        final DiameterException cause = new DiameterException("corrupt byte stream");
+        final int taskCountBeforeError = tasks.size();
+
+        // WHEN — corrupt stream: raw close, no shuttingDown set
+        session.onParseError(peer, cause);
+        session.onDisconnected(peer);
+
+        // THEN — peer closed, Tc timer scheduled for reconnect
+        verify(peer).close();
+        verify(peer, never()).send(any(OutgoingAnswer.class));
+        assertThat(tasks).hasSizeGreaterThan(taskCountBeforeError);
     }
 
     // -------------------------------------------------------------------------

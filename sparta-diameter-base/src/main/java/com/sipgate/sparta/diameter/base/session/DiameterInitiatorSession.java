@@ -43,6 +43,19 @@ public final class DiameterInitiatorSession extends DiameterSession {
     }
 
     @Override
+    public void stopGracefully() {
+        shuttingDown = true;
+        stopTcTimer();
+        super.stopGracefully();
+    }
+
+    @Override
+    public void closeGracefully() {
+        stopTcTimer();
+        super.closeGracefully();
+    }
+
+    @Override
     public void onConnected(final DiameterPeer peer) {
         this.peer = peer;
         this.peerState = PeerState.WAIT_I_CEA;

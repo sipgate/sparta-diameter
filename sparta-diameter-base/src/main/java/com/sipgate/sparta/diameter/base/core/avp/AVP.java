@@ -1,5 +1,6 @@
 package com.sipgate.sparta.diameter.base.core.avp;
 
+import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import org.reflections.Reflections;
 
 import java.io.DataOutputStream;
@@ -92,6 +93,10 @@ public class AVP {
      */
     public static AVP createRaw(final AVPKey key, final boolean vendorSpecific, final boolean mandatory, final boolean protectedAVP, final byte[] data) {
         return new AVP(key.code(), vendorSpecific, mandatory, protectedAVP, key.vendorId(), data);
+    }
+
+    private static AVP createStub(final int code, final boolean vendorSpecific, final boolean mandatory, final boolean protectedAVP) {
+        return new AVP(code, vendorSpecific, mandatory, protectedAVP, 0, new byte[0]);
     }
 
     /**
@@ -807,11 +812,24 @@ public class AVP {
     /**
      * Reads an AVP from the given ByteBuffer.
      *
+     * <p>Detects three generic parse-time violations and throws {@link AVPParseException}:
+     * <ul>
+     *   <li>Reserved flag bits set (bits 4–0 non-zero) → result code 5016</li>
+     *   <li>AVP length field out of range → result code 5014</li>
+     *   <li>Unrecognized AVP with M-bit set → result code 5001</li>
+     * </ul>
+     *
+     * <p>The exception thrown here carries only the offending AVP; the message header
+     * context (command code, hop-by-hop, etc.) is injected by
+     * {@link com.sipgate.sparta.diameter.base.core.Command#parseMessage} before the
+     * exception reaches the session layer.
+     *
      * @param buffer The ByteBuffer to read from.
      * @return The constructed AVP.
-     * @throws EOFException If the buffer does not contain valid AVP data.
+     * @throws EOFException       If the buffer does not contain enough bytes for an AVP header.
+     * @throws AVPParseException  If the AVP violates RFC 6733 in a detectable way.
      */
-    public static AVP readFrom(final ByteBuffer buffer) throws EOFException {
+    public static AVP readFrom(final ByteBuffer buffer) throws EOFException, AVPParseException {
         if (buffer.remaining() < 8) {
             throw new EOFException("Buffer does not contain enough data for an AVP header");
         }
@@ -824,11 +842,18 @@ public class AVP {
         final boolean vendorSpecific = (flags & 0x80) != 0;
         final boolean mandatory = (flags & 0x40) != 0;
         final boolean protectedAVP = (flags & 0x20) != 0;
+        if ((flags & 0x1F) != 0) {
+            // RFC 6733 §4.1: reserved bits (4–0) MUST be zero
+            throw new AVPParseException(DiameterConstants.RES_DIAMETER_INVALID_AVP_BIT_COMBO,
+                    createStub(code, vendorSpecific, mandatory, protectedAVP));
+        }
 
         // Length (3 bytes) - read the next 3 bytes after flags
         final int length = ((buffer.get() & 0xFF) << 16) | ((buffer.get() & 0xFF) << 8) | (buffer.get() & 0xFF);
         if (length < 8 || length > buffer.remaining() + 8) {
-            throw new EOFException("Invalid AVP length");
+            // RFC 6733 §4.1: length field out of valid range
+            throw new AVPParseException(DiameterConstants.RES_DIAMETER_INVALID_AVP_LENGTH,
+                    createStub(code, vendorSpecific, mandatory, protectedAVP));
         }
 
         // Vendor-Id (4 bytes, if vendor-specific)
@@ -845,6 +870,11 @@ public class AVP {
 
         final var key = new AVPKey(code, vendorId);
         final AVPDefinition definition = registry.get(key);
+        if (definition == null && mandatory) {
+            // RFC 6733 §1.3.4: unrecognized AVP with M-bit set MUST trigger 5001
+            throw new AVPParseException(DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED,
+                    new AVP(code, vendorSpecific, mandatory, protectedAVP, vendorId, data));
+        }
         if (definition != null && definition.dataType().equals(GroupedAVP.class)) {
             // Parse grouped AVP
             final ByteBuffer dataBuffer = ByteBuffer.wrap(data);

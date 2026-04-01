@@ -298,7 +298,7 @@ class AVPTest {
     }
 
     @Test
-    void it_can_parse_itself_from_bytes() throws IOException {
+    void it_can_parse_itself_from_bytes() throws Exception {
         // GIVEN
         final AVP originalAvp = AVP.create(new AVPKey(DiameterConstants.AVP_RESULT_CODE, 0), DiameterConstants.RES_DIAMETER_SUCCESS);
         final ByteArrayOutputStream out = new ByteArrayOutputStream(8);
@@ -317,7 +317,7 @@ class AVPTest {
     }
 
     @Test
-    void it_can_parse_grouped_avps_from_bytes() throws IOException {
+    void it_can_parse_grouped_avps_from_bytes() throws Exception {
         // GIVEN
         final List<AVP> nestedAvps = Arrays.asList(
             AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), 123L),
@@ -343,5 +343,81 @@ class AVPTest {
         assertThat(parsedGrouped.findAVP(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0))).isNotNull();
         assertThat(parsedGrouped.findAVP(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0)).getDataAsUnsignedInt()).isEqualTo(123L);
         assertThat(parsedGrouped.findAVP(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0)).getDataAsUnsignedInt()).isEqualTo(456L);
+    }
+
+    // -------------------------------------------------------------------------
+    // AVP parse violation detection (RFC 6733 §4.1)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void it_throws_AVPParseException_5016_when_reserved_flag_bits_are_set() {
+        // GIVEN — an AVP with reserved flag bit 3 set (0x08 in the flags byte)
+        // Format: code(4) + flags(1) + length(3) + data
+        final byte[] bytes = {
+            0x00, 0x00, 0x01, 0x08,  // code = 264 (Origin-Host, known + mandatory)
+            0x48,                     // flags: M-bit (0x40) + reserved bit 3 (0x08)
+            0x00, 0x00, 0x08,         // length = 8 (header only, no data)
+        };
+        final ByteBuffer buffer = ByteBuffer.wrap(bytes);
+
+        // WHEN / THEN
+        assertThatThrownBy(() -> AVP.readFrom(buffer))
+                .isInstanceOf(AVPParseException.class)
+                .satisfies(e -> assertThat(((AVPParseException) e).getResultCode())
+                        .isEqualTo(DiameterConstants.RES_DIAMETER_INVALID_AVP_BIT_COMBO));
+    }
+
+    @Test
+    void it_throws_AVPParseException_5014_when_avp_length_is_invalid() {
+        // GIVEN — a well-formed AVP header (flags valid) but length < 8
+        final byte[] bytes = {
+            0x00, 0x00, 0x01, 0x08,  // code = 264
+            0x40,                     // flags: M-bit set, no reserved bits
+            0x00, 0x00, 0x07,         // length = 7, invalid (minimum is 8)
+        };
+        final ByteBuffer buffer = ByteBuffer.wrap(bytes);
+
+        // WHEN / THEN
+        assertThatThrownBy(() -> AVP.readFrom(buffer))
+                .isInstanceOf(AVPParseException.class)
+                .satisfies(e -> assertThat(((AVPParseException) e).getResultCode())
+                        .isEqualTo(DiameterConstants.RES_DIAMETER_INVALID_AVP_LENGTH));
+    }
+
+    @Test
+    void it_throws_AVPParseException_5001_when_mandatory_avp_is_unrecognized() {
+        // GIVEN — an AVP with an unknown code and M-bit set
+        final byte[] bytes = {
+            0x7F, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,  // code = 2147483647, unknown
+            0x40,                                           // flags: M-bit set
+            0x00, 0x00, 0x08,                               // length = 8
+        };
+        final ByteBuffer buffer = ByteBuffer.wrap(bytes);
+
+        // WHEN / THEN
+        assertThatThrownBy(() -> AVP.readFrom(buffer))
+                .isInstanceOf(AVPParseException.class)
+                .satisfies(e -> {
+                    final AVPParseException ex = (AVPParseException) e;
+                    assertThat(ex.getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED);
+                    assertThat(ex.getOffendingAvp().isMandatory()).isTrue();
+                });
+    }
+
+    @Test
+    void it_returns_raw_avp_when_unrecognized_avp_has_no_mandatory_bit() throws Exception {
+        // GIVEN — unknown code but M-bit NOT set → no exception, just a raw AVP
+        final byte[] bytes = {
+            0x7F, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,  // code = unknown
+            0x00,                                           // flags: none set
+            0x00, 0x00, 0x08,                               // length = 8
+        };
+        final ByteBuffer buffer = ByteBuffer.wrap(bytes);
+
+        // WHEN
+        final AVP avp = AVP.readFrom(buffer);
+
+        // THEN — raw AVP returned, not rejected
+        assertThat(avp.isMandatory()).isFalse();
     }
 }

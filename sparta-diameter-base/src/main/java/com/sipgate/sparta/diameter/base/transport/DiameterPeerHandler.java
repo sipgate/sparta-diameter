@@ -1,5 +1,6 @@
 package com.sipgate.sparta.diameter.base.transport;
 
+import com.sipgate.sparta.diameter.base.DiameterException;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
@@ -66,7 +67,11 @@ final class DiameterPeerHandler extends SimpleChannelInboundHandler<IncomingComm
 
     @Override
     public void exceptionCaught(final ChannelHandlerContext ctx, final Throwable cause) {
-        ctx.close();
+        if (cause instanceof final DiameterException e) {
+            listener.onParseError(peer, e);
+        } else {
+            ctx.close();
+        }
     }
 
     private static Set<Long> mergedAppIds(final List<Long> authIds, final List<Long> acctIds) {

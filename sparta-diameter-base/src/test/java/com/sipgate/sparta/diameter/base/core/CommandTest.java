@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.base.core;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
+import com.sipgate.sparta.diameter.base.core.avp.AVPParseException;
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogRequest;
 import org.junit.jupiter.api.Test;
 
@@ -9,6 +10,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 
+import static com.sipgate.sparta.diameter.base.core.DiameterConstants.RES_DIAMETER_INVALID_AVP_BIT_COMBO;
+import static com.sipgate.sparta.diameter.base.core.DiameterConstants.RES_DIAMETER_UNSUPPORTED_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -86,6 +89,44 @@ public class CommandTest {
         // WHEN / THEN
         assertThatThrownBy(() -> dwr.addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ORIGIN_HOST, 0), "x")))
                 .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void it_throws_DiameterResultCodeException_5011_for_unsupported_version() {
+        // GIVEN: a Diameter message header with version 2, command 280, hop-by-hop 0xABCD, end-to-end 0x1234
+        final byte[] message = hexStringToByteArray(
+                "0200001480000118000000000000ABCD00001234");
+        final ByteBuffer buffer = ByteBuffer.wrap(message);
+
+        // WHEN / THEN
+        assertThatThrownBy(() -> Command.parseMessage(buffer))
+                .isInstanceOf(DiameterResultCodeException.class)
+                .satisfies(ex -> {
+                    final DiameterResultCodeException rcEx = (DiameterResultCodeException) ex;
+                    assertThat(rcEx.getResultCode()).isEqualTo(RES_DIAMETER_UNSUPPORTED_VERSION);
+                    assertThat(rcEx.getCommandCode()).isEqualTo(280);
+                    assertThat(rcEx.getHopByHop()).isEqualTo(new HopByHopId(0x0000ABCD));
+                    assertThat(rcEx.getEndToEnd()).isEqualTo(new EndToEndId(0x00001234));
+                });
+    }
+
+    @Test
+    void it_throws_for_first_bad_avp_only_when_multiple_violations_exist() {
+        // GIVEN: a message with two AVPs that both have reserved flag bits set
+        final byte[] message = hexStringToByteArray(
+                "0100002480000118000000000000ABCD00001234" + // 20-byte header
+                "000000011F000008" +                         // first AVP: code 1, reserved bits, length 8
+                "000000021F000008");                          // second AVP: code 2, reserved bits, length 8
+        final ByteBuffer buffer = ByteBuffer.wrap(message);
+
+        // WHEN / THEN: single-error rule — only the first violation is reported
+        assertThatThrownBy(() -> Command.parseMessage(buffer))
+                .isInstanceOf(AVPParseException.class)
+                .satisfies(ex -> {
+                    final AVPParseException avpEx = (AVPParseException) ex;
+                    assertThat(avpEx.getResultCode()).isEqualTo(RES_DIAMETER_INVALID_AVP_BIT_COMBO);
+                    assertThat(avpEx.getOffendingAvp().getCode()).isEqualTo(1);
+                });
     }
 
     @Test

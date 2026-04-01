@@ -1,0 +1,70 @@
+package com.sipgate.sparta.diameter.base.core.avp;
+
+import com.sipgate.sparta.diameter.base.core.DiameterResultCodeException;
+import com.sipgate.sparta.diameter.base.core.EndToEndId;
+import com.sipgate.sparta.diameter.base.core.HopByHopId;
+
+/**
+ * Thrown when {@link AVP#readFrom} detects a parse-time AVP violation.
+ *
+ * <p>Covers the three generic violations that the library can detect without
+ * application-level knowledge:
+ * <ul>
+ *   <li>{@code DIAMETER_AVP_UNSUPPORTED (5001)} — unrecognized AVP with M-bit set</li>
+ *   <li>{@code DIAMETER_INVALID_AVP_LENGTH (5014)} — AVP length field out of range</li>
+ *   <li>{@code DIAMETER_INVALID_AVP_BIT_COMBO (5016)} — reserved flag bits set</li>
+ * </ul>
+ *
+ * <p>Instances created inside {@link AVP#readFrom} do not yet carry message header
+ * context (command code, hop-by-hop, etc.). {@link com.sipgate.sparta.diameter.base.core.Command}
+ * catches the preliminary exception and re-throws an enriched one with full header context
+ * before it reaches the session layer.
+ */
+public class AVPParseException extends DiameterResultCodeException {
+
+    private final AVP offendingAvp;
+
+    /**
+     * Preliminary constructor used inside {@link AVP#readFrom} where the message header
+     * has not yet been decoded. Header context fields are set to placeholder values and
+     * will be filled in by {@link com.sipgate.sparta.diameter.base.core.Command#parseMessage}.
+     *
+     * @param resultCode   the result code identifying the violation
+     * @param offendingAvp the offending AVP (may be a stub if the header was incomplete)
+     */
+    AVPParseException(final long resultCode, final AVP offendingAvp) {
+        this(resultCode, 0, false, 0, new HopByHopId(0), new EndToEndId(0), offendingAvp);
+    }
+
+    /**
+     * Constructs a fully enriched {@code AVPParseException} with message header context.
+     * Used by {@link com.sipgate.sparta.diameter.base.core.Command} after the header has been
+     * decoded.
+     *
+     * @param resultCode    the result code identifying the violation
+     * @param commandCode   the command code from the parsed header
+     * @param proxiable     whether the P-bit was set in the parsed header
+     * @param applicationId the application ID from the parsed header
+     * @param hopByHop      the hop-by-hop identifier from the parsed header
+     * @param endToEnd      the end-to-end identifier from the parsed header
+     * @param offendingAvp  the offending AVP
+     */
+    public AVPParseException(final long resultCode, final int commandCode,
+            final boolean proxiable, final int applicationId,
+            final HopByHopId hopByHop, final EndToEndId endToEnd,
+            final AVP offendingAvp) {
+        super(resultCode, commandCode, proxiable, applicationId, hopByHop, endToEnd);
+        this.offendingAvp = offendingAvp;
+    }
+
+    /**
+     * Returns the offending AVP that triggered the parse violation.
+     * For {@code 5014} and {@code 5016} this may be a stub with empty data when the
+     * AVP header itself was too broken to decode completely.
+     *
+     * @return the offending AVP
+     */
+    public AVP getOffendingAvp() {
+        return offendingAvp;
+    }
+}

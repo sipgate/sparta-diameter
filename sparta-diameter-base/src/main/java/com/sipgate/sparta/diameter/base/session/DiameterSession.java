@@ -1,8 +1,10 @@
 package com.sipgate.sparta.diameter.base.session;
 
+import com.sipgate.sparta.diameter.base.DiameterException;
 import com.sipgate.sparta.diameter.base.core.Answer;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
+import com.sipgate.sparta.diameter.base.core.DiameterResultCodeException;
 import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.ErrorAnswer;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
@@ -13,6 +15,7 @@ import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
 import com.sipgate.sparta.diameter.base.core.OutgoingRequest;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
+import com.sipgate.sparta.diameter.base.core.avp.AVPParseException;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
@@ -104,16 +107,59 @@ abstract class DiameterSession implements DiameterConnectionListener {
     }
 
     /**
-     * Initiates a graceful disconnection by sending a DPR.
+     * Closes the connection immediately without sending a Disconnect-Peer-Request.
+     * Sets {@code shuttingDown} to suppress reconnect on the initiator side.
+     *
+     * <p>Use for protocol errors (e.g. unsupported Diameter version) where continued
+     * communication with this peer is impossible.
      */
     public void stop() {
-        if (peerState != PeerState.I_OPEN && peerState != PeerState.R_OPEN) {
-            return;
+        if (prepareDisconnect()) {
+            shuttingDown = true;
+            peerState = PeerState.CLOSED;
+            peer.close();
         }
-        shuttingDown = true;
-        stopWatchdog();
+    }
+
+    /**
+     * Initiates a graceful disconnection by sending a Disconnect-Peer-Request with
+     * {@code Disconnect-Cause = DO_NOT_WANT_TO_TALK_TO_YOU}.
+     * Sets {@code shuttingDown} to suppress reconnect on the initiator side.
+     *
+     * <p>Use for operator-initiated shutdown where the node does not intend to reconnect.
+     */
+    public void stopGracefully() {
+        if (prepareDisconnect()) {
+            shuttingDown = true;
+            gracefulDisconnect(buildDpr(DiameterConstants.DCC_DO_NOT_WANT_TO_TALK_TO_YOU));
+        }
+    }
+
+    /**
+     * Initiates a graceful disconnection by sending a Disconnect-Peer-Request with
+     * {@code Disconnect-Cause = REBOOTING}.
+     * Does <em>not</em> set {@code shuttingDown}, so the Tc timer will schedule a
+     * reconnect after the connection closes.
+     *
+     * <p>Use when the node needs to close and reconnect (e.g. after a configuration reload).
+     */
+    public void closeGracefully() {
+        if (prepareDisconnect()) {
+            gracefulDisconnect(buildDpr(DiameterConstants.DCC_REBOOTING));
+        }
+    }
+
+    private boolean prepareDisconnect() {
+        if (peerState == PeerState.I_OPEN || peerState == PeerState.R_OPEN) {
+            stopWatchdog();
+            return true;
+        }
+        return false;
+    }
+
+    private void gracefulDisconnect(final DisconnectPeerRequest.Out dpr) {
         peerState = PeerState.CLOSING;
-        sendAndTrack(buildDpr()).whenComplete((dpa, err) -> {
+        sendAndTrack(dpr).whenComplete((dpa, err) -> {
             peerState = PeerState.CLOSED;
             peer.close();
         });
@@ -236,6 +282,44 @@ abstract class DiameterSession implements DiameterConnectionListener {
         this.peerState = PeerState.CLOSED;
         this.watchdogState = WatchdogState.DOWN;
         failAllPending(new IllegalStateException("Connection lost"));
+    }
+
+    /**
+     * Handles a parse error that occurred while decoding an inbound message.
+     *
+     * <ul>
+     *   <li>{@link AVPParseException} — sends an error answer with a
+     *       {@code Failed-AVP} wrapping the offending AVP. The connection remains open.</li>
+     *   <li>{@link DiameterResultCodeException} — sends an error answer without
+     *       {@code Failed-AVP}, then closes the connection immediately.</li>
+     *   <li>{@link DiameterException} (base) — the byte stream is corrupt and cannot be
+     *       recovered. Closes the connection; the Tc timer will schedule a reconnect on
+     *       the initiator side.</li>
+     * </ul>
+     */
+    @Override
+    public void onParseError(final DiameterPeer peer, final DiameterException cause) {
+        if (cause instanceof final AVPParseException avpEx) {
+            final ErrorAnswer.Out answer = buildParseErrorAnswer(avpEx);
+            final GroupedAVP failedAvp = new GroupedAVP(
+                    new AVPKey(DiameterConstants.AVP_FAILED_AVP, 0),
+                    true,
+                    List.of(avpEx.getOffendingAvp()));
+            answer.setFailedAVP(failedAvp);
+            peer.send(answer);
+        } else if (cause instanceof final DiameterResultCodeException rcEx) {
+            final ErrorAnswer.Out answer = buildParseErrorAnswer(rcEx);
+            peer.send(answer);
+            stop();
+        } else {
+            peer.close();
+        }
+    }
+
+    private ErrorAnswer.Out buildParseErrorAnswer(final DiameterResultCodeException e) {
+        return DiameterMessageFactory.createErrorAnswer(e)
+                .setOriginHost(config.getOriginHost())
+                .setOriginRealm(config.getOriginRealm());
     }
 
     PeerState getPeerState() {
@@ -374,9 +458,9 @@ abstract class DiameterSession implements DiameterConnectionListener {
         return new DeviceWatchdogRequest.Out();
     }
 
-    private DisconnectPeerRequest.Out buildDpr() {
+    private DisconnectPeerRequest.Out buildDpr(final int disconnectCause) {
         return new DisconnectPeerRequest.Out()
-                .setDisconnectCause(DiameterConstants.DCC_DO_NOT_WANT_TO_TALK_TO_YOU);
+                .setDisconnectCause(disconnectCause);
     }
 
     private static final class PendingRequest<A> {

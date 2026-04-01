@@ -120,6 +120,11 @@ public final class DiameterMessageFactory {
         ).setResultCode(resultCode);
     }
 
+    public static ErrorAnswer.Out createErrorAnswer(final DiameterResultCodeException cause) {
+        return new ErrorAnswer.Out(cause.getCommandCode(), cause.isProxiable(), cause.getApplicationId(), cause.getHopByHop(), cause.getEndToEnd())
+                .setResultCode(cause.getResultCode());
+    }
+
     /**
      * Creates an outgoing answer carrying an Experimental-Result for the given incoming request.
      * <p>
