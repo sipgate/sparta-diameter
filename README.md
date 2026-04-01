@@ -6,6 +6,10 @@
 
 A Java library for implementing Diameter protocol (RFC 6733) messages and communication.
 
+## Java Version
+
+Requires Java 17–24. **Java 25 is not supported** — compilation hangs or throws `OutOfMemoryError`.
+
 ## Project Goals
 
 - Provide RFC 6733 compliant Diameter message handling
