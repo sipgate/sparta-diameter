@@ -14,6 +14,9 @@ import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.base.messages.DisconnectPeerRequest;
 import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+
 import java.util.ArrayList;
 import java.util.List;
 /**
@@ -22,7 +25,11 @@ import java.util.List;
 public final class DiameterResponderSession extends DiameterSession {
 
     public DiameterResponderSession(final DiameterNodeConfig config) {
-        super(config);
+        this(config, new SimpleMeterRegistry());
+    }
+
+    public DiameterResponderSession(final DiameterNodeConfig config, final MeterRegistry meterRegistry) {
+        super(config, meterRegistry);
     }
 
     @Override
@@ -58,13 +65,17 @@ public final class DiameterResponderSession extends DiameterSession {
         final List<Long> remoteAuthIds = cer.getAuthApplicationIds();
         final List<Long> remoteAcctIds = cer.getAcctApplicationIds();
         final List<Long> remoteVendorSpecificAppIds = extractVendorSpecificAppIds(cer);
+        final int commandCode = cer.getCommandCode();
+        final int applicationId = cer.getApplicationId();
 
         if (negotiator.hasCommonApplication(config.getCapabilities(), remoteAuthIds, remoteAcctIds, remoteVendorSpecificAppIds)) {
             peer.send(buildCea(cer, DiameterConstants.RES_DIAMETER_SUCCESS));
+            meters.recordSent(commandCode, applicationId, DiameterSessionMeters.COMMAND_TYPE_ANSWER);
             peerState = PeerState.R_OPEN;
             startWatchdog();
         } else {
             peer.send(buildCea(cer, DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION));
+            meters.recordSent(commandCode, applicationId, DiameterSessionMeters.COMMAND_TYPE_ANSWER);
             peerState = PeerState.CLOSED;
             peer.close();
         }

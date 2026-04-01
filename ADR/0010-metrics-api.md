@@ -23,13 +23,19 @@ No concrete Micrometer registry implementation (`micrometer-registry-prometheus`
 
 ### Injection
 
-The `MeterRegistry` is passed via constructor injection into `DiameterSession`. Subclasses (`DiameterInitiatorSession`, `DiameterResponderSession`) forward it to `super()`. Applications that do not want metrics pass a no-op registry (e.g. `new SimpleMeterRegistry()`).
+The `MeterRegistry` is passed via constructor injection into `DiameterSession` and `DiameterNode`. Subclasses forward it to `super()`. Applications that do not want metrics pass a no-op registry via the convenience constructors, which default to `SimpleMeterRegistry`.
 
 > **Guardrail:** `Metrics.globalRegistry` (the static Micrometer global) is banned in production code. A registry must always be supplied explicitly.
 
 ### Naming
 
-Meter names follow the Micrometer [naming conventions](https://docs.micrometer.io/micrometer/reference/concepts/naming.html). All meters defined by this library use the `diameter.` prefix.
+Meter names follow the Micrometer [naming conventions](https://docs.micrometer.io/micrometer/reference/concepts/naming.html). All meters use the `diameter.` prefix and the domain term **command** rather than "message" — consistent with the library's own type hierarchy. The tag key for request/answer direction is `command_type`.
+
+### Tags
+
+Every meter tagged with `command_code` is also tagged with `application_id`. Diameter command codes are not globally unique — the same code can appear in different application contexts — so `application_id` is required for correct disambiguation. The cardinality is bounded by what the node actually handles; a focused deployment such as an HSS sees a small, stable label space.
+
+The sent counter (`diameter.commands.sent`) increments only on confirmed write success. Write failures increment the error counter instead, preserving the invariant `sent + write_failure = total attempted`.
 
 ### MeterBinder
 
@@ -40,7 +46,6 @@ Meter names follow the Micrometer [naming conventions](https://docs.micrometer.i
 - The library compiles and runs without imposing a metrics backend on consumers.
 - Consumers get Diameter protocol metrics for free by providing a `MeterRegistry` of their choice.
 - Applications that do not want metrics incur no dependency overhead; they pass a no-op registry.
-- Meters are defined and named in one place; the spec (`specs/metrics/`) governs which events are instrumented and what tags are applied.
 
 ## Related ADRs
 

@@ -22,6 +22,10 @@ import com.sipgate.sparta.diameter.base.messages.DisconnectPeerRequest;
 import com.sipgate.sparta.diameter.base.transport.DiameterConnectionListener;
 import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,6 +47,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
     protected final DiameterNodeConfig config;
     protected final CapabilityNegotiator negotiator;
     protected final DiameterIdentifiers identifiers;
+    protected final DiameterSessionMeters meters;
 
     protected PeerState peerState;
     protected WatchdogState watchdogState;
@@ -60,12 +65,13 @@ abstract class DiameterSession implements DiameterConnectionListener {
 
     private final Map<Class<? extends IncomingCommand>, DiameterRequestHandler<?, ?>> handlers = new HashMap<>();
 
-    DiameterSession(final DiameterNodeConfig config) {
+    DiameterSession(final DiameterNodeConfig config, final MeterRegistry meterRegistry) {
         this.config = config;
         this.negotiator = new CapabilityNegotiator();
         this.identifiers = new DiameterIdentifiers();
         this.peerState = PeerState.CLOSED;
         this.watchdogState = WatchdogState.INITIAL;
+        this.meters = new DiameterSessionMeters(meterRegistry);
     }
 
     /**
@@ -121,6 +127,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
         stopWatchdog();
         peerState = PeerState.CLOSING;
         peer.send(DiameterMessageFactory.createAnswer(dpr, DiameterConstants.RES_DIAMETER_SUCCESS));
+        meters.recordSent(dpr.getCommandCode(), dpr.getApplicationId(), DiameterSessionMeters.COMMAND_TYPE_ANSWER);
         peer.close();
     }
 
@@ -130,13 +137,18 @@ abstract class DiameterSession implements DiameterConnectionListener {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected void dispatchInboundRequest(final IncomingRequest<?, ? extends OutgoingAnswer> request) {
+        final int commandCode = request.getCommandCode();
+        final int applicationId = request.getApplicationId();
         final DiameterRequestHandler handler = handlers.get(request.getClass());
         if (handler == null) {
             peer.send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED));
+            meters.recordSent(commandCode, applicationId, DiameterSessionMeters.COMMAND_TYPE_ANSWER);
             return;
         }
+        final Timer.Sample handlerSample = meters.startTimer();
         final CompletableFuture<? extends OutgoingAnswer> future = handler.handle(request);
         future.whenComplete((answer, err) -> {
+            meters.stopHandlerTimer(handlerSample, commandCode, applicationId, DiameterSessionMeters.COMMAND_TYPE_REQUEST);
             if (err instanceof final DiameterErrorAnswerException e && e.getAnswer() instanceof final ErrorAnswer.Out out) {
                 peer.send(out);
             } else if (err != null) {
@@ -144,6 +156,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
             } else {
                 peer.send(answer);
             }
+            meters.recordSent(commandCode, applicationId, DiameterSessionMeters.COMMAND_TYPE_ANSWER);
         });
     }
 
@@ -158,6 +171,8 @@ abstract class DiameterSession implements DiameterConnectionListener {
             final R request, final HopByHopId hopByHop, final EndToEndId endToEnd,
             final Duration timeout) {
         final CompletableFuture<A> future = new CompletableFuture<>();
+        final int commandCode = request.getCommandCode();
+        final int applicationId = request.getApplicationId();
 
         final Future<?> timeoutTask;
         if (timeout.isZero()) {
@@ -167,11 +182,15 @@ abstract class DiameterSession implements DiameterConnectionListener {
             timeoutTask = peer.eventLoop().schedule(
                     () -> timeout(hopByHop, timeoutMs), timeoutMs, TimeUnit.MILLISECONDS);
         }
-        pendingRequests.put(hopByHop, new PendingRequest<>(future, timeoutTask));
+        final Timer.Sample timerSample = meters.startTimer();
+        pendingRequests.put(hopByHop, new PendingRequest<>(future, timeoutTask, timerSample, commandCode, applicationId));
 
         peer.send(request, hopByHop, endToEnd).addListener(writeResult -> {
             if (!writeResult.isSuccess()) {
+                meters.recordError(commandCode, applicationId, DiameterSessionMeters.ERROR_TYPE_WRITE_FAILURE);
                 fail(hopByHop, writeResult.cause());
+            } else {
+                meters.recordSent(commandCode, applicationId, DiameterSessionMeters.COMMAND_TYPE_REQUEST);
             }
         });
         return future;
@@ -239,7 +258,9 @@ abstract class DiameterSession implements DiameterConnectionListener {
             return;
         }
         pending.timeoutTask.cancel(false);
+        meters.stopRequestTimer(pending.timerSample, pending.commandCode, pending.applicationId);
         if (answer instanceof final ErrorAnswer.In errorAnswer) {
+            meters.recordError(pending.commandCode, pending.applicationId, DiameterSessionMeters.ERROR_TYPE_ERROR_ANSWER);
             pending.future.completeExceptionally(new DiameterErrorAnswerException(errorAnswer));
         } else {
             pending.future.complete(answer);
@@ -247,6 +268,10 @@ abstract class DiameterSession implements DiameterConnectionListener {
     }
 
     private void timeout(final HopByHopId hopByHop, final long timeoutMs) {
+        final PendingRequest<?> pending = pendingRequests.get(hopByHop);
+        if (pending != null) {
+            meters.recordError(pending.commandCode, pending.applicationId, DiameterSessionMeters.ERROR_TYPE_TIMEOUT);
+        }
         fail(hopByHop, new TimeoutException(
                 "Request " + hopByHop.value() + " timed out after " + timeoutMs + " ms"));
     }
@@ -361,10 +386,17 @@ abstract class DiameterSession implements DiameterConnectionListener {
 
         final CompletableFuture<A> future;
         final Future<?> timeoutTask;
+        final Timer.Sample timerSample;
+        final int commandCode;
+        final int applicationId;
 
-        PendingRequest(final CompletableFuture<A> future, final Future<?> timeoutTask) {
+        PendingRequest(final CompletableFuture<A> future, final Future<?> timeoutTask,
+                       final Timer.Sample timerSample, final int commandCode, final int applicationId) {
             this.future = future;
             this.timeoutTask = timeoutTask;
+            this.timerSample = timerSample;
+            this.commandCode = commandCode;
+            this.applicationId = applicationId;
         }
     }
 }

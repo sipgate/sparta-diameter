@@ -164,6 +164,10 @@ final var avp = userIdentifier.findAVP(
 | `DiameterRequestHandler` | `CompletableFuture<Answer> handle(IncomingRequest)` — registered via `session.setHandler` |
 | `GenericCommand` | Fallback for unknown command codes or application IDs |
 
+## Metrics
+
+See [docs/metrics.md](docs/metrics.md) for the full list of meters and their tags.
+
 ## License
 
 MIT. See the [LICENSE](LICENSE) file for details.

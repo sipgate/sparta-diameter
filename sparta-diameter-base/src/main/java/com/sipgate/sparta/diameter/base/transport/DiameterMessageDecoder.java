@@ -17,10 +17,21 @@ import java.util.List;
  */
 public final class DiameterMessageDecoder extends MessageToMessageDecoder<ByteBuf> {
 
+    private final DiameterTransportMeters transportMeters;
+
+    DiameterMessageDecoder(final DiameterTransportMeters transportMeters) {
+        this.transportMeters = transportMeters;
+    }
+
     @Override
     protected void decode(final ChannelHandlerContext ctx, final ByteBuf msg,
                           final List<Object> out) throws Exception {
         final ByteBuffer buffer = msg.nioBuffer();
-        out.add(Command.parseMessage(buffer));
+        try {
+            out.add(Command.parseMessage(buffer));
+        } catch (final Exception e) {
+            transportMeters.recordDecodeError();
+            throw e;
+        }
     }
 }
