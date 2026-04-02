@@ -829,7 +829,7 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
-    void it_sets_disconnect_cause_DO_NOT_WANT_in_DPR_when_stopGracefully_is_called() throws Exception {
+    void it_sets_disconnect_cause_DCC_DO_NOT_WANT_TO_TALK_TO_YOU_in_DPR_when_stopGracefully_is_called() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         stubSend(peer);
