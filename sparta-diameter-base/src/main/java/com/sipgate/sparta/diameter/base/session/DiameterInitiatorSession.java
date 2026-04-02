@@ -66,8 +66,7 @@ public final class DiameterInitiatorSession extends DiameterSession {
             }
 
             if (peerState == PeerState.WAIT_I_CEA) {
-                peerState = PeerState.CLOSED;
-                peer.close();
+                closePeer();
             }
         });
     }
@@ -112,8 +111,7 @@ public final class DiameterInitiatorSession extends DiameterSession {
             peerState = PeerState.I_OPEN;
             startWatchdog();
         } else {
-            peerState = PeerState.CLOSED;
-            peer.close();
+            closePeer();
         }
     }
 

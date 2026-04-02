@@ -26,6 +26,7 @@ import com.sipgate.sparta.diameter.base.messages.ReAuthRequest;
 import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoop;
+import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.ScheduledFuture;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -217,6 +218,7 @@ class DiameterResponderSessionTest {
 
         // THEN
         verify(peer).close();
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
     }
 
     @Test
@@ -529,7 +531,7 @@ class DiameterResponderSessionTest {
     }
 
     @Test
-    void it_transitions_to_CLOSING_when_DPR_received_in_R_OPEN() throws Exception {
+    void it_transitions_to_CLOSED_after_DPR_received_in_R_OPEN() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         stubSend(peer);
@@ -542,7 +544,7 @@ class DiameterResponderSessionTest {
         session.onMessage(peer, dpr);
 
         // THEN
-        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSING);
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
     }
 
     @Test
@@ -598,6 +600,7 @@ class DiameterResponderSessionTest {
 
         // THEN
         verify(peer).close();
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
     }
 
     // -------------------------------------------------------------------------
@@ -642,6 +645,7 @@ class DiameterResponderSessionTest {
         // THEN — error answer sent, then channel closed immediately (stop(), no DPR)
         verify(peer).send(any(ErrorAnswer.Out.class));
         verify(peer).close();
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
     }
 
     @Test
@@ -649,7 +653,9 @@ class DiameterResponderSessionTest {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         when(peer.close()).thenReturn(mock(io.netty.channel.ChannelFuture.class));
+        stubEventLoop(peer);
         final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_AUTH_APP);
+        session.onConnected(peer);
         final DiameterException cause = new DiameterException("corrupt byte stream");
 
         // WHEN
@@ -658,6 +664,7 @@ class DiameterResponderSessionTest {
         // THEN — raw TCP reset, no answer
         verify(peer).close();
         verify(peer, never()).send(any(OutgoingAnswer.class));
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
     }
 
     // -------------------------------------------------------------------------
@@ -724,9 +731,19 @@ class DiameterResponderSessionTest {
 
     @SuppressWarnings("unchecked")
     private static void stubSend(final DiameterPeer peer) {
-        when(peer.send(any(OutgoingAnswer.class))).thenReturn(mock(ChannelFuture.class));
+        when(peer.send(any(OutgoingAnswer.class))).thenAnswer(ignored -> immediatelyCompletedFuture());
         when(peer.send(any(OutgoingRequest.class), any(HopByHopId.class), any(EndToEndId.class)))
                 .thenReturn(mock(ChannelFuture.class));
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static ChannelFuture immediatelyCompletedFuture() {
+        final ChannelFuture future = mock(ChannelFuture.class);
+        when(future.addListener(any())).thenAnswer(inv -> {
+            ((GenericFutureListener) inv.getArgument(0)).operationComplete(future);
+            return future;
+        });
+        return future;
     }
 
     @SuppressWarnings("unchecked")

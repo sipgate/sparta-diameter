@@ -116,8 +116,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
     public void stop() {
         if (prepareDisconnect()) {
             shuttingDown = true;
-            peerState = PeerState.CLOSED;
-            peer.close();
+            closePeer();
         }
     }
 
@@ -159,10 +158,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
 
     private void gracefulDisconnect(final DisconnectPeerRequest.Out dpr) {
         peerState = PeerState.CLOSING;
-        sendAndTrack(dpr).whenComplete((dpa, err) -> {
-            peerState = PeerState.CLOSED;
-            peer.close();
-        });
+        sendAndTrack(dpr).whenComplete((dpa, err) -> closePeer());
     }
 
     /**
@@ -171,7 +167,12 @@ abstract class DiameterSession implements DiameterConnectionListener {
     protected void handleInboundDpr(final DisconnectPeerRequest.In dpr) {
         stopWatchdog();
         peerState = PeerState.CLOSING;
-        peer.send(DiameterMessageFactory.createAnswer(dpr, DiameterConstants.RES_DIAMETER_SUCCESS));
+        peer.send(DiameterMessageFactory.createAnswer(dpr, DiameterConstants.RES_DIAMETER_SUCCESS))
+            .addListener(ignored -> closePeer());
+    }
+
+    protected void closePeer() {
+        peerState = PeerState.CLOSED;
         peer.close();
     }
 
@@ -312,7 +313,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
             peer.send(answer);
             stop();
         } else {
-            peer.close();
+            closePeer();
         }
     }
 
@@ -436,7 +437,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
                 scheduleTwTimer();
             } else if (watchdogState == WatchdogState.SUSPECT) {
                 watchdogState = WatchdogState.DOWN;
-                peer.close();
+                closePeer();
             }
             return;
         }

@@ -72,8 +72,7 @@ public final class DiameterResponderSession extends DiameterSession {
             startWatchdog();
         } else {
             peer.send(buildCea(cer, DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION));
-            peerState = PeerState.CLOSED;
-            peer.close();
+            closePeer();
         }
     }
 

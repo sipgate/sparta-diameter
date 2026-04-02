@@ -257,6 +257,7 @@ class DiameterInitiatorSessionTest {
 
         // THEN
         verify(peer).close();
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
     }
 
     // -------------------------------------------------------------------------
@@ -653,6 +654,7 @@ class DiameterInitiatorSessionTest {
 
         // THEN
         assertThat(session.getWatchdogState()).isEqualTo(WatchdogState.DOWN);
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
         verify(peer).close();
     }
 
@@ -911,6 +913,7 @@ class DiameterInitiatorSessionTest {
 
         // THEN
         verify(peer).close();
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
     }
 
     @Test
@@ -1064,7 +1067,7 @@ class DiameterInitiatorSessionTest {
     }
 
     @Test
-    void it_transitions_to_CLOSING_when_DPR_received_in_I_OPEN() throws Exception {
+    void it_transitions_to_CLOSED_after_DPR_received_in_I_OPEN() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         stubSend(peer);
@@ -1077,7 +1080,7 @@ class DiameterInitiatorSessionTest {
         session.onMessage(peer, dpr);
 
         // THEN
-        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSING);
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
     }
 
     @Test
@@ -1115,6 +1118,7 @@ class DiameterInitiatorSessionTest {
 
         // THEN
         verify(peer).close();
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
     }
 
     // -------------------------------------------------------------------------
@@ -1163,6 +1167,7 @@ class DiameterInitiatorSessionTest {
 
         // THEN — stop() was called: no Tc timer scheduled, reconnect suppressed
         verify(peer).send(any(ErrorAnswer.Out.class));
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
         assertThat(tasks).hasSize(taskCountAfterParseError);
     }
 
@@ -1184,6 +1189,7 @@ class DiameterInitiatorSessionTest {
 
         // THEN — peer closed, Tc timer scheduled for reconnect
         verify(peer).close();
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
         verify(peer, never()).send(any(OutgoingAnswer.class));
         assertThat(tasks).hasSizeGreaterThan(taskCountBeforeError);
     }
@@ -1316,9 +1322,19 @@ class DiameterInitiatorSessionTest {
 
     @SuppressWarnings("unchecked")
     private static void stubSend(final DiameterPeer peer) {
-        when(peer.send(any(OutgoingAnswer.class))).thenReturn(mock(ChannelFuture.class));
+        when(peer.send(any(OutgoingAnswer.class))).thenAnswer(ignored -> immediatelyCompletedFuture());
         when(peer.send(any(OutgoingRequest.class), any(HopByHopId.class), any(EndToEndId.class)))
                 .thenReturn(mock(ChannelFuture.class));
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static ChannelFuture immediatelyCompletedFuture() {
+        final ChannelFuture future = mock(ChannelFuture.class);
+        when(future.addListener(any())).thenAnswer(inv -> {
+            ((GenericFutureListener) inv.getArgument(0)).operationComplete(future);
+            return future;
+        });
+        return future;
     }
 
     @SuppressWarnings("unchecked")
