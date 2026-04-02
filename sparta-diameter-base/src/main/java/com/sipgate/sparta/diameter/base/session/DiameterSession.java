@@ -189,12 +189,13 @@ abstract class DiameterSession implements DiameterConnectionListener {
         pendingRequests.put(hopByHop, new PendingRequest<>(future, timeoutTask, timerSample, commandCode, applicationId));
 
         peer.send(request, hopByHop, endToEnd).addListener(writeResult -> {
-            if (!writeResult.isSuccess()) {
-                meters.recordError(commandCode, applicationId, DiameterSessionMeters.ERROR_TYPE_WRITE_FAILURE);
-                fail(hopByHop, writeResult.cause());
-            } else {
+            if (writeResult.isSuccess()) {
                 meters.recordSent(commandCode, applicationId, DiameterSessionMeters.COMMAND_TYPE_REQUEST);
+                return;
             }
+
+            meters.recordError(commandCode, applicationId, DiameterSessionMeters.ERROR_TYPE_WRITE_FAILURE);
+            fail(hopByHop, writeResult.cause());
         });
         return future;
     }
