@@ -2,19 +2,17 @@
 
 All meters use the `diameter.` prefix and follow [Micrometer naming conventions](https://docs.micrometer.io/micrometer/reference/concepts/naming.html).
 
-| Meter | Type | `application_id` | `command_code` | `command_type` | `direction` | `error_type` |
-|---|---|:---:|:---:|:---:|:---:|:---:|
-| `diameter.commands.received` | Counter | ✓ | ✓ | ✓ | | |
-| `diameter.commands.sent` | Counter | ✓ | ✓ | ✓ | | |
-| `diameter.connections` | Counter | | | | ✓ | |
-| `diameter.connections.active` | Gauge | (✓) | | | | |
-| `diameter.decode.errors` | Counter | | | | | |
-| `diameter.disconnections` | Counter | | | | ✓ | |
-| `diameter.handler.duration` | Timer | ✓ | ✓ | ✓ | | |
-| `diameter.request.duration` | Timer | ✓ | ✓ | ✓ | | |
-| `diameter.requests.errors` | Counter | ✓ | ✓ | | | ✓ |
-
-`diameter.connections.active` is a global gauge (no tags) **and** a per-application-id gauge (with `application_id`).
+| Meter | Type | `application_id` | `command_code` | `command_type` | `direction` | `error_type` | Description |
+|---|---|:---:|:---:|:---:|:---:|:---:|---|
+| `diameter.commands.received` | Counter | ✓ | ✓ | ✓ | | | Incremented for every Diameter command received from the peer after successful decode. |
+| `diameter.commands.sent` | Counter | ✓ | ✓ | ✓ | | | Incremented only on confirmed write success; write failures go to `diameter.requests.errors`. |
+| `diameter.connections` | Counter | | | | ✓ | | Counts completed TCP handshakes (SYN/ACK). Does NOT indicate a successful Diameter CER/CEA exchange. |
+| `diameter.connections.active` | Gauge | (✓) | | | (✓) | | Current number of open TCP connections. Available globally (no tags), split by `direction`, and split by `application_id`. |
+| `diameter.decode.errors` | Counter | | | | | | Counts messages that could not be parsed. |
+| `diameter.disconnections` | Counter | | | | ✓ | | Counts TCP disconnections. Does NOT indicate a clean Diameter DPR/DPA exchange. |
+| `diameter.handler.duration` | Timer | ✓ | ✓ | ✓ | | | Time from receiving an inbound request to the handler future completing. |
+| `diameter.request.duration` | Timer | ✓ | ✓ | ✓ | | | Round-trip time for an outbound request, measured until the answer is received. Excludes timed-out and write-failed requests. |
+| `diameter.requests.errors` | Counter | ✓ | ✓ | | | ✓ | Error events for both outbound requests and inbound handler failures, distinguished by `error_type`. |
 
 > Malicious peers can inflate `application_id` and `command_code` values to generate high-cardinality label sets. Defending against this is the application's responsibility via Micrometer's `MeterFilter`. See also ADR-0010 for the design rationale.
 
@@ -26,4 +24,4 @@ All meters use the `diameter.` prefix and follow [Micrometer naming conventions]
 | `command_code` | numeric command code, e.g. `257`, `280` |
 | `command_type` | `request`, `answer` |
 | `direction` | `inbound`, `outbound` |
-| `error_type` | `timeout`, `write_failure`, `error_answer` |
+| `error_type` | `timeout`, `write_failure`, `error_answer`, `handler_error_answer`, `handler_exception` |

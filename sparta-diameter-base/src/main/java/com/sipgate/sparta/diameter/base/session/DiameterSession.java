@@ -151,8 +151,10 @@ abstract class DiameterSession implements DiameterConnectionListener {
             meters.stopHandlerTimer(handlerSample, commandCode, applicationId, DiameterSessionMeters.COMMAND_TYPE_REQUEST);
             if (err instanceof final DiameterErrorAnswerException e && e.getAnswer() instanceof final ErrorAnswer.Out out) {
                 peer.send(out);
+                meters.recordError(commandCode, applicationId, DiameterSessionMeters.ERROR_TYPE_HANDLER_ERROR_ANSWER);
             } else if (err != null) {
                 peer.send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
+                meters.recordError(commandCode, applicationId, DiameterSessionMeters.ERROR_TYPE_HANDLER_EXCEPTION);
             } else {
                 peer.send(answer);
             }
