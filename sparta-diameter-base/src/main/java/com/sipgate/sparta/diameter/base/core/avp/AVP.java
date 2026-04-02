@@ -95,10 +95,6 @@ public class AVP {
         return new AVP(key.code(), vendorSpecific, mandatory, protectedAVP, key.vendorId(), data);
     }
 
-    private static AVP createStub(final int code, final boolean vendorSpecific, final boolean mandatory, final boolean protectedAVP) {
-        return new AVP(code, vendorSpecific, mandatory, protectedAVP, 0, new byte[0]);
-    }
-
     /**
      * Retrieves the AVP code.
      *
@@ -846,8 +842,10 @@ public class AVP {
         final int length = ((buffer.get() & 0xFF) << 16) | ((buffer.get() & 0xFF) << 8) | (buffer.get() & 0xFF);
         if (length < 8 || length > buffer.remaining() + 8) {
             // RFC 6733 §4.1: length field out of valid range
-            throw new AVPParseException(DiameterConstants.RES_DIAMETER_INVALID_AVP_LENGTH,
-                    createStub(code, vendorSpecific, mandatory, protectedAVP));
+            // We think that this is an edge case and the RFC doesn't cover all cases.
+            // We have decided to simply answer with a stub AVP without payload.
+            final var stub = new AVP(code, vendorSpecific, mandatory, protectedAVP, 0, new byte[0]);
+            throw new AVPParseException(DiameterConstants.RES_DIAMETER_INVALID_AVP_LENGTH, stub);
         }
 
         // Vendor-Id (4 bytes, if vendor-specific)
