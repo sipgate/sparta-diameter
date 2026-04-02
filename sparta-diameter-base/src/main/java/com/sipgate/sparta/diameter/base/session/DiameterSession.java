@@ -126,7 +126,6 @@ abstract class DiameterSession implements DiameterConnectionListener {
         stopWatchdog();
         peerState = PeerState.CLOSING;
         peer.send(DiameterMessageFactory.createAnswer(dpr, DiameterConstants.RES_DIAMETER_SUCCESS));
-        meters.recordSent(dpr.getCommandCode(), dpr.getApplicationId(), DiameterSessionMeters.COMMAND_TYPE_ANSWER);
         peer.close();
     }
 
@@ -141,7 +140,6 @@ abstract class DiameterSession implements DiameterConnectionListener {
         final DiameterRequestHandler handler = handlers.get(request.getClass());
         if (handler == null) {
             peer.send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED));
-            meters.recordSent(commandCode, applicationId, DiameterSessionMeters.COMMAND_TYPE_ANSWER);
             return;
         }
         final Timer.Sample handlerSample = meters.startTimer();
@@ -157,7 +155,6 @@ abstract class DiameterSession implements DiameterConnectionListener {
             } else {
                 peer.send(answer);
             }
-            meters.recordSent(commandCode, applicationId, DiameterSessionMeters.COMMAND_TYPE_ANSWER);
         });
     }
 
@@ -189,13 +186,9 @@ abstract class DiameterSession implements DiameterConnectionListener {
         pendingRequests.put(hopByHop, new PendingRequest<>(future, timeoutTask, timerSample, commandCode, applicationId));
 
         peer.send(request, hopByHop, endToEnd).addListener(writeResult -> {
-            if (writeResult.isSuccess()) {
-                meters.recordSent(commandCode, applicationId, DiameterSessionMeters.COMMAND_TYPE_REQUEST);
-                return;
+            if (!writeResult.isSuccess()) {
+                fail(hopByHop, writeResult.cause());
             }
-
-            meters.recordError(commandCode, applicationId, DiameterSessionMeters.ERROR_TYPE_WRITE_FAILURE);
-            fail(hopByHop, writeResult.cause());
         });
         return future;
     }

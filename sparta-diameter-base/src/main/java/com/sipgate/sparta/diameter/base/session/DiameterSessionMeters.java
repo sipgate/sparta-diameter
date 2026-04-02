@@ -6,17 +6,13 @@ import io.micrometer.core.instrument.Timer;
 
 final class DiameterSessionMeters {
 
-    static final String COMMAND_TYPE_REQUEST = "request";
-    static final String COMMAND_TYPE_ANSWER = "answer";
     static final String ERROR_TYPE_TIMEOUT = "timeout";
-    static final String ERROR_TYPE_WRITE_FAILURE = "write_failure";
     static final String ERROR_TYPE_ERROR_ANSWER = "error_answer";
     static final String ERROR_TYPE_HANDLER_ERROR_ANSWER = "handler_error_answer";
     static final String ERROR_TYPE_HANDLER_EXCEPTION = "handler_exception";
 
     private static final String PREFIX = "diameter.";
     private static final String TAG_COMMAND_CODE = "command_code";
-    private static final String TAG_COMMAND_TYPE = "command_type";
     private static final String TAG_APPLICATION_ID = "application_id";
     private static final String TAG_ERROR_TYPE = "error_type";
 
@@ -29,26 +25,11 @@ final class DiameterSessionMeters {
     /**
      * @param commandCode as specified in diameter
      * @param applicationId as specified in diameter
-     * @param commandType one of the COMMAND_TYPE_* constants
-     */
-    void recordSent(final int commandCode, final int applicationId, final String commandType) {
-        Counter.builder(PREFIX + "commands.sent")
-                .description("Diameter commands sent by this node; only counted after a successful write — write failures are tracked separately under diameter.requests.errors.")
-                .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
-                .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
-                .tag(TAG_COMMAND_TYPE, commandType)
-                .register(registry)
-                .increment();
-    }
-
-    /**
-     * @param commandCode as specified in diameter
-     * @param applicationId as specified in diameter
      * @param errorType one of the ERROR_TYPE_* constants
      */
     void recordError(final int commandCode, final int applicationId, final String errorType) {
         Counter.builder(PREFIX + "requests.errors")
-                .description("Errors encountered while handling a Diameter request, tagged by error_type (timeout, write_failure, error_answer, handler_error_answer, handler_exception).")
+                .description("Errors encountered while handling a Diameter request, tagged by error_type (timeout, error_answer, handler_error_answer, handler_exception).")
                 .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
                 .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
                 .tag(TAG_ERROR_TYPE, errorType)

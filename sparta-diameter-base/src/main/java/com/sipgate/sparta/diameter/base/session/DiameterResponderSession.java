@@ -65,17 +65,13 @@ public final class DiameterResponderSession extends DiameterSession {
         final List<Long> remoteAuthIds = cer.getAuthApplicationIds();
         final List<Long> remoteAcctIds = cer.getAcctApplicationIds();
         final List<Long> remoteVendorSpecificAppIds = extractVendorSpecificAppIds(cer);
-        final int commandCode = cer.getCommandCode();
-        final int applicationId = cer.getApplicationId();
 
         if (negotiator.hasCommonApplication(config.getCapabilities(), remoteAuthIds, remoteAcctIds, remoteVendorSpecificAppIds)) {
             peer.send(buildCea(cer, DiameterConstants.RES_DIAMETER_SUCCESS));
-            meters.recordSent(commandCode, applicationId, DiameterSessionMeters.COMMAND_TYPE_ANSWER);
             peerState = PeerState.R_OPEN;
             startWatchdog();
         } else {
             peer.send(buildCea(cer, DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION));
-            meters.recordSent(commandCode, applicationId, DiameterSessionMeters.COMMAND_TYPE_ANSWER);
             peerState = PeerState.CLOSED;
             peer.close();
         }

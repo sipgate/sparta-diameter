@@ -19,9 +19,11 @@ import java.net.SocketAddress;
 public final class DiameterPeer {
 
     private final Channel channel;
+    private final DiameterTransportMeters meters;
 
-    DiameterPeer(final Channel channel) {
+    DiameterPeer(final Channel channel, final DiameterTransportMeters meters) {
         this.channel = channel;
+        this.meters = meters;
     }
 
     /**
@@ -32,7 +34,17 @@ public final class DiameterPeer {
      * @return a {@link ChannelFuture} that completes when the write is done
      */
     public ChannelFuture send(final OutgoingAnswer<?> answer) {
-        return channel.writeAndFlush(answer);
+        final int commandCode = answer.getCommandCode();
+        final int applicationId = answer.getApplicationId();
+        return channel
+            .writeAndFlush(answer)
+            .addListener(f -> {
+                if (f.isSuccess()) {
+                    meters.recordSent(commandCode, applicationId, DiameterTransportMeters.COMMAND_TYPE_ANSWER);
+                } else {
+                    meters.recordSendError(commandCode, applicationId, DiameterTransportMeters.COMMAND_TYPE_ANSWER);
+                }
+            });
     }
 
     /**
@@ -46,7 +58,17 @@ public final class DiameterPeer {
      */
     public ChannelFuture send(final OutgoingRequest<?, ?> request,
                               final HopByHopId hopByHop, final EndToEndId endToEnd) {
-        return channel.writeAndFlush(new OutgoingRequestEnvelope(request, hopByHop, endToEnd));
+        final int commandCode = request.getCommandCode();
+        final int applicationId = request.getApplicationId();
+        return channel
+            .writeAndFlush(new OutgoingRequestEnvelope(request, hopByHop, endToEnd))
+            .addListener(f -> {
+                if (f.isSuccess()) {
+                    meters.recordSent(commandCode, applicationId, DiameterTransportMeters.COMMAND_TYPE_REQUEST);
+                } else {
+                    meters.recordSendError(commandCode, applicationId, DiameterTransportMeters.COMMAND_TYPE_REQUEST);
+                }
+            });
     }
 
     /**

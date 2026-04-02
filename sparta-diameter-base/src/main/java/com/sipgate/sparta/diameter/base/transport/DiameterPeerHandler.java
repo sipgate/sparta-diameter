@@ -32,7 +32,7 @@ final class DiameterPeerHandler extends SimpleChannelInboundHandler<IncomingComm
 
     @Override
     public void channelActive(final ChannelHandlerContext ctx) {
-        peer = new DiameterPeer(ctx.channel());
+        peer = new DiameterPeer(ctx.channel(), transportMeters);
         transportMeters.recordConnected(direction);
         listener.onConnected(peer);
     }
