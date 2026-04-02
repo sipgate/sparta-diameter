@@ -12,21 +12,12 @@ import com.sipgate.sparta.diameter.base.core.HopByHopId;
  *   <li>{@code DIAMETER_AVP_UNSUPPORTED (5001)} — unrecognized AVP with M-bit set</li>
  *   <li>{@code DIAMETER_INVALID_AVP_LENGTH (5014)} — AVP length field out of range</li>
  * </ul>
- *
- * <p>Instances created inside {@link AVP#readFrom} do not yet carry message header
- * context (command code, hop-by-hop, etc.). {@link com.sipgate.sparta.diameter.base.core.Command}
- * catches the preliminary exception and re-throws an enriched one with full header context
- * before it reaches the session layer.
  */
 public class AVPParseException extends DiameterResultCodeException {
 
     private final AVP offendingAvp;
 
     /**
-     * Preliminary constructor used inside {@link AVP#readFrom} where the message header
-     * has not yet been decoded. Header context fields are set to placeholder values and
-     * will be filled in by {@link com.sipgate.sparta.diameter.base.core.Command#parseMessage}.
-     *
      * @param resultCode   the result code identifying the violation
      * @param offendingAvp the offending AVP (may be a stub if the header was incomplete)
      */
@@ -35,10 +26,6 @@ public class AVPParseException extends DiameterResultCodeException {
     }
 
     /**
-     * Constructs a fully enriched {@code AVPParseException} with message header context.
-     * Used by {@link com.sipgate.sparta.diameter.base.core.Command} after the header has been
-     * decoded.
-     *
      * @param resultCode    the result code identifying the violation
      * @param commandCode   the command code from the parsed header
      * @param proxiable     whether the P-bit was set in the parsed header
