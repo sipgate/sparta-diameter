@@ -107,7 +107,22 @@ final class DiameterTransportMeters {
      */
     void recordSent(final int commandCode, final int applicationId, final String commandType) {
         Counter.builder(PREFIX + "commands.sent")
-                .description("Diameter commands sent by this node.")
+                .description("Diameter commands sent by this node; only counted after a successful write — write failures are tracked separately under diameter.commands.send_errors.")
+                .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
+                .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
+                .tag(TAG_COMMAND_TYPE, commandType)
+                .register(registry)
+                .increment();
+    }
+
+    /**
+     * @param commandCode as specified in diameter
+     * @param applicationId  as specified in diameter
+     * @param commandType one of COMMAND_TYPE_*
+     */
+    void recordSendError(final int commandCode, final int applicationId, final String commandType) {
+        Counter.builder(PREFIX + "commands.send_errors")
+                .description("Diameter commands that failed to write to the wire.")
                 .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
                 .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
                 .tag(TAG_COMMAND_TYPE, commandType)
