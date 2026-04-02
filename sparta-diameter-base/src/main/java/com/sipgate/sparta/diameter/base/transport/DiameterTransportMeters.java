@@ -1,5 +1,7 @@
 package com.sipgate.sparta.diameter.base.transport;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 
@@ -23,26 +25,57 @@ final class DiameterTransportMeters {
 
     private final MeterRegistry registry;
     private final AtomicInteger activeConnections = new AtomicInteger(0);
+    private final AtomicInteger activeInboundConnections = new AtomicInteger(0);
+    private final AtomicInteger activeOutboundConnections = new AtomicInteger(0);
     private final ConcurrentHashMap<String, AtomicInteger> activeConnectionsByAppId = new ConcurrentHashMap<>();
 
     DiameterTransportMeters(final MeterRegistry registry) {
         this.registry = registry;
-        registry.gauge(PREFIX + "connections.active", activeConnections);
+        Gauge.builder(PREFIX + "connections.active", activeConnections, AtomicInteger::get)
+                .description("Number of currently open TCP connections.")
+                .register(registry);
+        Gauge.builder(PREFIX + "connections.active", activeInboundConnections, AtomicInteger::get)
+                .description("Number of currently open TCP connections.")
+                .tag(TAG_DIRECTION, DIRECTION_INBOUND)
+                .register(registry);
+        Gauge.builder(PREFIX + "connections.active", activeOutboundConnections, AtomicInteger::get)
+                .description("Number of currently open TCP connections.")
+                .tag(TAG_DIRECTION, DIRECTION_OUTBOUND)
+                .register(registry);
+        Counter.builder(PREFIX + "connections")
+                .description("TCP connections established; a direction=inbound/outbound tag indicates which side initiated. Does not imply a successful Diameter CER/CEA handshake — only that the TCP SYN/ACK completed.")
+                .register(registry);
+        Counter.builder(PREFIX + "disconnections")
+                .description("TCP disconnections observed; does not correlate with a clean Diameter DPR/DPA exchange.")
+                .register(registry);
+        Counter.builder(PREFIX + "decode.errors")
+                .description("Messages that could not be decoded; command_code and application_id are unavailable at decode time, so no tags are attached.")
+                .register(registry);
     }
 
     /**
-     * @param direction one of TAG_DIRECTION_*
+     * @param direction one of DIRECTION_*
      */
     void recordConnected(final String direction) {
         activeConnections.incrementAndGet();
+        if (DIRECTION_INBOUND.equals(direction)) {
+            activeInboundConnections.incrementAndGet();
+        } else {
+            activeOutboundConnections.incrementAndGet();
+        }
         registry.counter(PREFIX + "connections", TAG_DIRECTION, direction).increment();
     }
 
     /**
-     * @param direction one of TAG_DIRECTION_*
+     * @param direction one of DIRECTION_*
      */
     void recordDisconnected(final String direction) {
         activeConnections.decrementAndGet();
+        if (DIRECTION_INBOUND.equals(direction)) {
+            activeInboundConnections.decrementAndGet();
+        } else {
+            activeOutboundConnections.decrementAndGet();
+        }
         registry.counter(PREFIX + "disconnections", TAG_DIRECTION, direction).increment();
     }
 

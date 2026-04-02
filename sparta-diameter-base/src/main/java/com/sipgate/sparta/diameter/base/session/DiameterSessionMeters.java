@@ -10,6 +10,8 @@ final class DiameterSessionMeters {
     static final String ERROR_TYPE_TIMEOUT = "timeout";
     static final String ERROR_TYPE_WRITE_FAILURE = "write_failure";
     static final String ERROR_TYPE_ERROR_ANSWER = "error_answer";
+    static final String ERROR_TYPE_HANDLER_ERROR_ANSWER = "handler_error_answer";
+    static final String ERROR_TYPE_HANDLER_EXCEPTION = "handler_exception";
 
     private static final String PREFIX = "diameter.";
     private static final String TAG_COMMAND_CODE = "command_code";
