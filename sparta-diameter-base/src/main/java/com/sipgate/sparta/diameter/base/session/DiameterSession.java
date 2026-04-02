@@ -22,7 +22,6 @@ import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogAnswer;
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogRequest;
 import com.sipgate.sparta.diameter.base.messages.DisconnectPeerRequest;
-import com.sipgate.sparta.diameter.base.transport.DiameterConnectionListener;
 import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -44,7 +43,11 @@ import java.util.concurrent.TimeoutException;
 /**
  * Shared state and helpers for initiator- and responder-side Diameter sessions.
  */
-abstract class DiameterSession implements DiameterConnectionListener {
+public abstract class DiameterSession {
+
+    public abstract void onConnected(DiameterPeer peer);
+
+    public abstract void onMessage(DiameterPeer peer, IncomingCommand command);
 
     protected final DiameterNodeConfig config;
     protected final CapabilityNegotiator negotiator;
@@ -277,7 +280,6 @@ abstract class DiameterSession implements DiameterConnectionListener {
         }
     }
 
-    @Override
     public void onDisconnected(final DiameterPeer peer) {
         stopWatchdog();
         this.peerState = PeerState.CLOSED;
@@ -298,7 +300,6 @@ abstract class DiameterSession implements DiameterConnectionListener {
      *       the initiator side.</li>
      * </ul>
      */
-    @Override
     public void onParseError(final DiameterPeer peer, final DiameterException cause) {
         if (cause instanceof final AVPParseException avpEx) {
             final ErrorAnswer.Out answer = buildParseErrorAnswer(avpEx);

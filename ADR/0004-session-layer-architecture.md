@@ -32,14 +32,14 @@ is opened.
 ### Two concrete classes, one shared base
 
 `DiameterResponderSession` (R-peer, RFC 6733) and `DiameterInitiatorSession` (I-peer, RFC 6733)
-both extend `DiameterSession`, which implements `DiameterConnectionListener`. The base class owns
-shared state and helpers; the subclasses own their respective state machines.
+both extend `DiameterSession`. The base class owns shared state and helpers; the subclasses own
+their respective state machines.
 
 ### `DiameterNode` API: `Supplier` vs. `Function`
 
-- `DiameterNode.listen()` takes `Supplier<DiameterConnectionListener>` — called once per accepted
+- `DiameterNode.listen()` takes `Supplier<DiameterResponderSession>` — called once per accepted
   connection; no additional context needed.
-- `DiameterNode.connect()` takes `Function<Runnable, DiameterConnectionListener>` — `DiameterNode`
+- `DiameterNode.connect()` takes `Function<Runnable, DiameterInitiatorSession>` — `DiameterNode`
   constructs the reconnect `Runnable` and injects it into the session at construction time.
 
 Rejected alternative — passing the same `Supplier` to `connect()`: the session would have no

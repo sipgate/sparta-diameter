@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.base.transport;
 
 import com.sipgate.sparta.diameter.base.DiameterException;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
+import com.sipgate.sparta.diameter.base.session.DiameterSession;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
@@ -14,17 +15,17 @@ import java.util.Set;
 
 /**
  * Application-level inbound handler. One instance per channel.
- * Bridges Netty channel lifecycle events to {@link DiameterConnectionListener}.
+ * Bridges Netty channel lifecycle events to {@link DiameterSession}.
  */
 final class DiameterPeerHandler extends SimpleChannelInboundHandler<IncomingCommand> {
 
-    private final DiameterConnectionListener listener;
+    private final DiameterSession listener;
     private final String direction;
     private final DiameterTransportMeters transportMeters;
     private DiameterPeer peer;
     private Set<Long> negotiatedApplicationIds;
 
-    DiameterPeerHandler(final DiameterConnectionListener listener, final String direction,
+    DiameterPeerHandler(final DiameterSession listener, final String direction,
                         final DiameterTransportMeters transportMeters) {
         this.listener = listener;
         this.direction = direction;

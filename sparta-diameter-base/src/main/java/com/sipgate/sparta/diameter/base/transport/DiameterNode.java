@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.base.transport;
 
 import com.sipgate.sparta.diameter.base.session.DiameterInitiatorSession;
 import com.sipgate.sparta.diameter.base.session.DiameterResponderSession;
+import com.sipgate.sparta.diameter.base.session.DiameterSession;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.netty.bootstrap.Bootstrap;
@@ -104,7 +105,7 @@ public final class DiameterNode implements Closeable {
     }
 
     private ChannelInitializer<SocketChannel> newInitializer(
-            final Supplier<? extends DiameterConnectionListener> factory, final String direction) {
+            final Supplier<? extends DiameterSession> factory, final String direction) {
         return new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(final SocketChannel ch) {
