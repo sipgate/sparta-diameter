@@ -24,7 +24,6 @@ import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -182,8 +181,10 @@ abstract class DiameterSession implements DiameterConnectionListener {
         } else {
             final long timeoutMs = timeout.toMillis();
             timeoutTask = peer.eventLoop().schedule(
-                    () -> timeout(hopByHop, timeoutMs), timeoutMs, TimeUnit.MILLISECONDS);
+                    () -> timeout(hopByHop, timeoutMs, commandCode, applicationId),
+                    timeoutMs, TimeUnit.MILLISECONDS);
         }
+
         final Timer.Sample timerSample = meters.startTimer();
         pendingRequests.put(hopByHop, new PendingRequest<>(future, timeoutTask, timerSample, commandCode, applicationId));
 
@@ -269,11 +270,9 @@ abstract class DiameterSession implements DiameterConnectionListener {
         }
     }
 
-    private void timeout(final HopByHopId hopByHop, final long timeoutMs) {
-        final PendingRequest<?> pending = pendingRequests.get(hopByHop);
-        if (pending != null) {
-            meters.recordError(pending.commandCode, pending.applicationId, DiameterSessionMeters.ERROR_TYPE_TIMEOUT);
-        }
+    private void timeout(final HopByHopId hopByHop, final long timeoutMs,
+                         final int commandCode, final int applicationId) {
+        meters.recordError(commandCode, applicationId, DiameterSessionMeters.ERROR_TYPE_TIMEOUT);
         fail(hopByHop, new TimeoutException(
                 "Request " + hopByHop.value() + " timed out after " + timeoutMs + " ms"));
     }
