@@ -842,12 +842,6 @@ public class AVP {
         final boolean vendorSpecific = (flags & 0x80) != 0;
         final boolean mandatory = (flags & 0x40) != 0;
         final boolean protectedAVP = (flags & 0x20) != 0;
-        if ((flags & 0x1F) != 0) {
-            // RFC 6733 §4.1: reserved bits (4–0) MUST be zero
-            throw new AVPParseException(DiameterConstants.RES_DIAMETER_INVALID_AVP_BIT_COMBO,
-                    createStub(code, vendorSpecific, mandatory, protectedAVP));
-        }
-
         // Length (3 bytes) - read the next 3 bytes after flags
         final int length = ((buffer.get() & 0xFF) << 16) | ((buffer.get() & 0xFF) << 8) | (buffer.get() & 0xFF);
         if (length < 8 || length > buffer.remaining() + 8) {

@@ -7,12 +7,10 @@ import com.sipgate.sparta.diameter.base.core.HopByHopId;
 /**
  * Thrown when {@link AVP#readFrom} detects a parse-time AVP violation.
  *
- * <p>Covers the three generic violations that the library can detect without
- * application-level knowledge:
+ * <p>Covers two generic violations detectable without application-level knowledge:
  * <ul>
  *   <li>{@code DIAMETER_AVP_UNSUPPORTED (5001)} — unrecognized AVP with M-bit set</li>
  *   <li>{@code DIAMETER_INVALID_AVP_LENGTH (5014)} — AVP length field out of range</li>
- *   <li>{@code DIAMETER_INVALID_AVP_BIT_COMBO (5016)} — reserved flag bits set</li>
  * </ul>
  *
  * <p>Instances created inside {@link AVP#readFrom} do not yet carry message header
@@ -59,8 +57,7 @@ public class AVPParseException extends DiameterResultCodeException {
 
     /**
      * Returns the offending AVP that triggered the parse violation.
-     * For {@code 5014} and {@code 5016} this may be a stub with empty data when the
-     * AVP header itself was too broken to decode completely.
+     * May be a stub with empty data when the AVP header was incomplete.
      *
      * @return the offending AVP
      */

@@ -10,7 +10,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 
-import static com.sipgate.sparta.diameter.base.core.DiameterConstants.RES_DIAMETER_INVALID_AVP_BIT_COMBO;
+import static com.sipgate.sparta.diameter.base.core.DiameterConstants.RES_DIAMETER_INVALID_AVP_LENGTH;
 import static com.sipgate.sparta.diameter.base.core.DiameterConstants.RES_DIAMETER_UNSUPPORTED_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -112,11 +112,11 @@ public class CommandTest {
 
     @Test
     void it_throws_for_first_bad_avp_only_when_multiple_violations_exist() {
-        // GIVEN: a message with two AVPs that both have reserved flag bits set
+        // GIVEN: a message with two AVPs that both have invalid lengths (< 8)
         final byte[] message = hexStringToByteArray(
                 "0100002480000118000000000000ABCD00001234" + // 20-byte header
-                "000000011F000008" +                         // first AVP: code 1, reserved bits, length 8
-                "000000021F000008");                          // second AVP: code 2, reserved bits, length 8
+                "0000000140000007" +                         // first AVP: code 1, length 7 (invalid)
+                "0000000240000007");                          // second AVP: code 2, length 7 (invalid)
         final ByteBuffer buffer = ByteBuffer.wrap(message);
 
         // WHEN / THEN: single-error rule — only the first violation is reported
@@ -124,7 +124,7 @@ public class CommandTest {
                 .isInstanceOf(AVPParseException.class)
                 .satisfies(ex -> {
                     final AVPParseException avpEx = (AVPParseException) ex;
-                    assertThat(avpEx.getResultCode()).isEqualTo(RES_DIAMETER_INVALID_AVP_BIT_COMBO);
+                    assertThat(avpEx.getResultCode()).isEqualTo(RES_DIAMETER_INVALID_AVP_LENGTH);
                     assertThat(avpEx.getOffendingAvp().getCode()).isEqualTo(1);
                 });
     }

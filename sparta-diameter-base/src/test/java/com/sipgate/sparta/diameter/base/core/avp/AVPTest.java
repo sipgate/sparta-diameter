@@ -350,21 +350,21 @@ class AVPTest {
     // -------------------------------------------------------------------------
 
     @Test
-    void it_throws_AVPParseException_5016_when_reserved_flag_bits_are_set() {
-        // GIVEN — an AVP with reserved flag bit 3 set (0x08 in the flags byte)
-        // Format: code(4) + flags(1) + length(3) + data
+    void it_parses_avp_successfully_when_reserved_flag_bits_are_set() throws Exception {
+        // GIVEN — RFC 6733 §4.1: receiver SHOULD ignore reserved bits
         final byte[] bytes = {
-            0x00, 0x00, 0x01, 0x08,  // code = 264 (Origin-Host, known + mandatory)
+            0x00, 0x00, 0x01, 0x08,  // code = 264 (Origin-Host)
             0x48,                     // flags: M-bit (0x40) + reserved bit 3 (0x08)
             0x00, 0x00, 0x08,         // length = 8 (header only, no data)
         };
         final ByteBuffer buffer = ByteBuffer.wrap(bytes);
 
-        // WHEN / THEN
-        assertThatThrownBy(() -> AVP.readFrom(buffer))
-                .isInstanceOf(AVPParseException.class)
-                .satisfies(e -> assertThat(((AVPParseException) e).getResultCode())
-                        .isEqualTo(DiameterConstants.RES_DIAMETER_INVALID_AVP_BIT_COMBO));
+        // WHEN
+        final AVP actual = AVP.readFrom(buffer);
+
+        // THEN
+        assertThat(actual.getCode()).isEqualTo(264);
+        assertThat(actual.isMandatory()).isTrue();
     }
 
     @Test
