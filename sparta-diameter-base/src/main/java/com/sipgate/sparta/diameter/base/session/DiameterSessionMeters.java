@@ -1,5 +1,6 @@
 package com.sipgate.sparta.diameter.base.session;
 
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
@@ -31,10 +32,13 @@ final class DiameterSessionMeters {
      * @param commandType one of the COMMAND_TYPE_* constants
      */
     void recordSent(final int commandCode, final int applicationId, final String commandType) {
-        registry.counter(PREFIX + "commands.sent",
-                TAG_COMMAND_CODE, String.valueOf(commandCode),
-                TAG_APPLICATION_ID, String.valueOf(applicationId),
-                TAG_COMMAND_TYPE, commandType).increment();
+        Counter.builder(PREFIX + "commands.sent")
+                .description("Diameter commands sent by this node; only counted after a successful write — write failures are tracked separately under diameter.requests.errors.")
+                .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
+                .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
+                .tag(TAG_COMMAND_TYPE, commandType)
+                .register(registry)
+                .increment();
     }
 
     /**
@@ -43,10 +47,13 @@ final class DiameterSessionMeters {
      * @param errorType one of the ERROR_TYPE_* constants
      */
     void recordError(final int commandCode, final int applicationId, final String errorType) {
-        registry.counter(PREFIX + "requests.errors",
-                TAG_COMMAND_CODE, String.valueOf(commandCode),
-                TAG_APPLICATION_ID, String.valueOf(applicationId),
-                TAG_ERROR_TYPE, errorType).increment();
+        Counter.builder(PREFIX + "requests.errors")
+                .description("Errors encountered while handling a Diameter request, tagged by error_type (timeout, write_failure, error_answer, handler_error_answer, handler_exception).")
+                .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
+                .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
+                .tag(TAG_ERROR_TYPE, errorType)
+                .register(registry)
+                .increment();
     }
 
     Timer.Sample startTimer() {
@@ -61,9 +68,11 @@ final class DiameterSessionMeters {
      * @param applicationId as specified in diameter
      */
     void stopRequestTimer(final Timer.Sample sample, final int commandCode, final int applicationId) {
-        sample.stop(registry.timer(PREFIX + "request.duration",
-                TAG_COMMAND_CODE, String.valueOf(commandCode),
-                TAG_APPLICATION_ID, String.valueOf(applicationId)));
+        sample.stop(Timer.builder(PREFIX + "request.duration")
+                .description("Round-trip time from sending a Diameter request to receiving the answer; timeouts and write failures are excluded.")
+                .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
+                .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
+                .register(registry));
     }
 
     /**
@@ -73,8 +82,10 @@ final class DiameterSessionMeters {
      * @param applicationId as specified in diameter
      */
     void stopHandlerTimer(final Timer.Sample sample, final int commandCode, final int applicationId) {
-        sample.stop(registry.timer(PREFIX + "handler.duration",
-                TAG_COMMAND_CODE, String.valueOf(commandCode),
-                TAG_APPLICATION_ID, String.valueOf(applicationId)));
+        sample.stop(Timer.builder(PREFIX + "handler.duration")
+                .description("Time spent inside the application handler processing a received Diameter request.")
+                .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
+                .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
+                .register(registry));
     }
 }
