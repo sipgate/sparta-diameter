@@ -146,6 +146,8 @@ abstract class DiameterSession implements DiameterConnectionListener {
         final CompletableFuture<? extends OutgoingAnswer> future = handler.handle(request);
         future.whenComplete((answer, err) -> {
             meters.stopHandlerTimer(handlerSample, commandCode, applicationId);
+            // Keep this if even though nobody throws DiameterErrorAnswerException inside this lib. This is a way for
+            // applications to indicate a diameter business error.
             if (err instanceof final DiameterErrorAnswerException e && e.getAnswer() instanceof final ErrorAnswer.Out out) {
                 peer.send(out);
                 meters.recordError(commandCode, applicationId, DiameterSessionMeters.ERROR_TYPE_HANDLER_ERROR_ANSWER);
