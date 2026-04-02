@@ -147,7 +147,7 @@ abstract class DiameterSession implements DiameterConnectionListener {
         final Timer.Sample handlerSample = meters.startTimer();
         final CompletableFuture<? extends OutgoingAnswer> future = handler.handle(request);
         future.whenComplete((answer, err) -> {
-            meters.stopHandlerTimer(handlerSample, commandCode, applicationId, DiameterSessionMeters.COMMAND_TYPE_REQUEST);
+            meters.stopHandlerTimer(handlerSample, commandCode, applicationId);
             if (err instanceof final DiameterErrorAnswerException e && e.getAnswer() instanceof final ErrorAnswer.Out out) {
                 peer.send(out);
                 meters.recordError(commandCode, applicationId, DiameterSessionMeters.ERROR_TYPE_HANDLER_ERROR_ANSWER);

@@ -10,8 +10,8 @@ All meters use the `diameter.` prefix and follow [Micrometer naming conventions]
 | `diameter.connections.active` | Gauge | (✓) | | | (✓) | | Current number of open TCP connections. Available globally (no tags), split by `direction`, and split by `application_id`. |
 | `diameter.decode.errors` | Counter | | | | | | Counts messages that could not be parsed. |
 | `diameter.disconnections` | Counter | | | | ✓ | | Counts TCP disconnections. Does NOT indicate a clean Diameter DPR/DPA exchange. |
-| `diameter.handler.duration` | Timer | ✓ | ✓ | ✓ | | | Time from receiving an inbound request to the handler future completing. |
-| `diameter.request.duration` | Timer | ✓ | ✓ | ✓ | | | Round-trip time for an outbound request, measured until the answer is received. Excludes timed-out and write-failed requests. |
+| `diameter.handler.duration` | Timer | ✓ | ✓ | | | | Time from receiving an inbound request to the handler future completing. |
+| `diameter.request.duration` | Timer | ✓ | ✓ | | | | Round-trip time for an outbound request, measured until the answer is received. Excludes timed-out and write-failed requests. |
 | `diameter.requests.errors` | Counter | ✓ | ✓ | | | ✓ | Error events for both outbound requests and inbound handler failures, distinguished by `error_type`. |
 
 > Malicious peers can inflate `application_id` and `command_code` values to generate high-cardinality label sets. Defending against this is the application's responsibility via Micrometer's `MeterFilter`. See also ADR-0010 for the design rationale.
