@@ -63,8 +63,7 @@ final class DiameterSessionMeters {
     void stopRequestTimer(final Timer.Sample sample, final int commandCode, final int applicationId) {
         sample.stop(registry.timer(PREFIX + "request.duration",
                 TAG_COMMAND_CODE, String.valueOf(commandCode),
-                TAG_APPLICATION_ID, String.valueOf(applicationId),
-                TAG_COMMAND_TYPE, COMMAND_TYPE_REQUEST));
+                TAG_APPLICATION_ID, String.valueOf(applicationId)));
     }
 
     /**
@@ -72,13 +71,10 @@ final class DiameterSessionMeters {
      *
      * @param commandCode as specified in diameter
      * @param applicationId as specified in diameter
-     * @param commandType one of the COMMAND_TYPE_* constants
      */
-    void stopHandlerTimer(final Timer.Sample sample, final int commandCode, final int applicationId,
-                          final String commandType) {
+    void stopHandlerTimer(final Timer.Sample sample, final int commandCode, final int applicationId) {
         sample.stop(registry.timer(PREFIX + "handler.duration",
                 TAG_COMMAND_CODE, String.valueOf(commandCode),
-                TAG_APPLICATION_ID, String.valueOf(applicationId),
-                TAG_COMMAND_TYPE, commandType));
+                TAG_APPLICATION_ID, String.valueOf(applicationId)));
     }
 }
