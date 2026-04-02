@@ -3,10 +3,7 @@ package com.sipgate.sparta.diameter.base.transport;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tag;
-
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -42,15 +39,6 @@ final class DiameterTransportMeters {
                 .description("Number of currently open TCP connections.")
                 .tag(TAG_DIRECTION, DIRECTION_OUTBOUND)
                 .register(registry);
-        Counter.builder(PREFIX + "connections")
-                .description("TCP connections established; a direction=inbound/outbound tag indicates which side initiated. Does not imply a successful Diameter CER/CEA handshake — only that the TCP SYN/ACK completed.")
-                .register(registry);
-        Counter.builder(PREFIX + "disconnections")
-                .description("TCP disconnections observed; does not correlate with a clean Diameter DPR/DPA exchange.")
-                .register(registry);
-        Counter.builder(PREFIX + "decode.errors")
-                .description("Messages that could not be decoded; command_code and application_id are unavailable at decode time, so no tags are attached.")
-                .register(registry);
     }
 
     /**
@@ -63,7 +51,11 @@ final class DiameterTransportMeters {
         } else {
             activeOutboundConnections.incrementAndGet();
         }
-        registry.counter(PREFIX + "connections", TAG_DIRECTION, direction).increment();
+        Counter.builder(PREFIX + "connections")
+                .description("TCP connections established; a direction=inbound/outbound tag indicates which side initiated. Does not imply a successful Diameter CER/CEA handshake — only that the TCP SYN/ACK completed.")
+                .tag(TAG_DIRECTION, direction)
+                .register(registry)
+                .increment();
     }
 
     /**
@@ -76,7 +68,11 @@ final class DiameterTransportMeters {
         } else {
             activeOutboundConnections.decrementAndGet();
         }
-        registry.counter(PREFIX + "disconnections", TAG_DIRECTION, direction).increment();
+        Counter.builder(PREFIX + "disconnections")
+                .description("TCP disconnections observed; does not correlate with a clean Diameter DPR/DPA exchange.")
+                .tag(TAG_DIRECTION, direction)
+                .register(registry)
+                .increment();
     }
 
     void recordActiveApplicationIds(final Collection<Long> applicationIds) {
@@ -85,8 +81,10 @@ final class DiameterTransportMeters {
             activeConnectionsByAppId
                     .computeIfAbsent(appIdStr, id -> {
                         final var counter = new AtomicInteger(0);
-                        registry.gauge(PREFIX + "connections.active",
-                                List.of(Tag.of(TAG_APPLICATION_ID, id)), counter);
+                        Gauge.builder(PREFIX + "connections.active", counter, AtomicInteger::get)
+                                .description("Number of currently open TCP connections.")
+                                .tag(TAG_APPLICATION_ID, id)
+                                .register(registry);
                         return counter;
                     })
                     .incrementAndGet();
@@ -108,10 +106,13 @@ final class DiameterTransportMeters {
      * @param commandType one of COMMAND_TYPE_*
      */
     void recordSent(final int commandCode, final int applicationId, final String commandType) {
-        registry.counter(PREFIX + "commands.sent",
-                TAG_COMMAND_CODE, String.valueOf(commandCode),
-                TAG_APPLICATION_ID, String.valueOf(applicationId),
-                TAG_COMMAND_TYPE, commandType).increment();
+        Counter.builder(PREFIX + "commands.sent")
+                .description("Diameter commands sent by this node.")
+                .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
+                .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
+                .tag(TAG_COMMAND_TYPE, commandType)
+                .register(registry)
+                .increment();
     }
 
     /**
@@ -120,13 +121,19 @@ final class DiameterTransportMeters {
      * @param commandType one of COMMAND_TYPE_*
      */
     void recordReceived(final int commandCode, final int applicationId, final String commandType) {
-        registry.counter(PREFIX + "commands.received",
-                TAG_COMMAND_CODE, String.valueOf(commandCode),
-                TAG_APPLICATION_ID, String.valueOf(applicationId),
-                TAG_COMMAND_TYPE, commandType).increment();
+        Counter.builder(PREFIX + "commands.received")
+                .description("Diameter commands received by this node.")
+                .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
+                .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
+                .tag(TAG_COMMAND_TYPE, commandType)
+                .register(registry)
+                .increment();
     }
 
     void recordDecodeError() {
-        registry.counter(PREFIX + "decode.errors").increment();
+        Counter.builder(PREFIX + "decode.errors")
+                .description("Messages that could not be decoded")
+                .register(registry)
+                .increment();
     }
 }
