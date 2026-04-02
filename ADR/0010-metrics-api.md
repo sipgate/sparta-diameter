@@ -35,6 +35,8 @@ Meter names follow the Micrometer [naming conventions](https://docs.micrometer.i
 
 Every meter tagged with `command_code` is also tagged with `application_id`. Diameter command codes are not globally unique — the same code can appear in different application contexts — so `application_id` is required for correct disambiguation. The cardinality is bounded by what the node actually handles; a focused deployment such as an HSS sees a small, stable label space.
 
+**Cardinality attacks are out of scope.** A malicious peer could inflate the Diameter `Application-Id` or command code fields to generate unbounded label combinations, exhausting the metrics backend. Mitigating this (e.g. label allow-lists, cardinality limits) is the responsibility of the application layer, not this library.
+
 The sent counter (`diameter.commands.sent`) increments only on confirmed write success. Write failures increment the error counter instead, preserving the invariant `sent + write_failure = total attempted`.
 
 ### MeterBinder

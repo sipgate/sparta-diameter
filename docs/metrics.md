@@ -16,6 +16,8 @@ All meters use the `diameter.` prefix and follow [Micrometer naming conventions]
 
 `diameter.connections.active` is a global gauge (no tags) **and** a per-application-id gauge (with `application_id`).
 
+> Malicious peers can inflate `application_id` and `command_code` values to generate high-cardinality label sets. Defending against this is the application's responsibility via Micrometer's `MeterFilter`. See also ADR-0010 for the design rationale.
+
 ## Tag values
 
 | Tag | Values |
