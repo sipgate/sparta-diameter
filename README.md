@@ -58,7 +58,7 @@ final var config = new DiameterNodeConfig(
         List.of((long) _3gppConstants.VENDOR_ID_3GPP),
         List.of(new DiameterNodeConfig.VendorSpecificApp(
             _3gppConstants.VENDOR_ID_3GPP,
-            _3gppConstants.APP_ID_SGD_GDD))
+            SgdGddConstants.APP_ID_SGD_GDD))
     )
 );
 
@@ -98,7 +98,7 @@ final var config = new DiameterNodeConfig(
         List.of((long) _3gppConstants.VENDOR_ID_3GPP),
         List.of(new DiameterNodeConfig.VendorSpecificApp(
             _3gppConstants.VENDOR_ID_3GPP,
-            _3gppConstants.APP_ID_SGD_GDD))
+            SgdGddConstants.APP_ID_SGD_GDD))
     )
 );
 

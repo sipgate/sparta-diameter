@@ -5,6 +5,9 @@ package com.sipgate.sparta.diameter._3gpp.sgdgdd;
  */
 public final class SgdGddConstants {
 
+    // 3GPP TS 29 338, Sgd/Gdd interfaces
+    public static final int APP_ID_SGD_GDD = 16777313;
+
     // Command codes (3GPP TS 29.338 Table 6.3.2.2/1)
     public static final int CMD_MO_FORWARD_SHORT_MESSAGE = 8388645;
     public static final int CMD_MT_FORWARD_SHORT_MESSAGE = 8388646;

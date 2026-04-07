@@ -1,6 +1,5 @@
 package com.sipgate.sparta.diameter._3gpp.sgdgdd.messages;
 
-import com.sipgate.sparta.diameter._3gpp.common._3gppConstants;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasMmeNumberForMtSmsAVP;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSgsnNumberAVP;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSupportedFeaturesAVPs;
@@ -10,8 +9,8 @@ import com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins.HasScAddressAVP;
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins.HasSmDeliveryStartTimeAVP;
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins.HasSmDeliveryTimerAVP;
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins.HasSmRpUiAVP;
-import com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins.HasSmsMiCorrelationIdAVP;
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins.HasSmsGmscAddressAVP;
+import com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins.HasSmsMiCorrelationIdAVP;
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins.HasTfrFlagsAVP;
 import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
@@ -47,7 +46,7 @@ public interface MtForwardShortMessageRequest<T extends MtForwardShortMessageReq
 
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(SgdGddConstants.CMD_MT_FORWARD_SHORT_MESSAGE, true, retransmitted,
-                  _3gppConstants.APP_ID_SGD_GDD, hopByHop, endToEnd);
+                  SgdGddConstants.APP_ID_SGD_GDD, hopByHop, endToEnd);
         }
     }
 
@@ -56,7 +55,7 @@ public interface MtForwardShortMessageRequest<T extends MtForwardShortMessageReq
 
         public Out() {
             super(SgdGddConstants.CMD_MT_FORWARD_SHORT_MESSAGE, true,
-                  _3gppConstants.APP_ID_SGD_GDD);
+                  SgdGddConstants.APP_ID_SGD_GDD);
         }
     }
 }

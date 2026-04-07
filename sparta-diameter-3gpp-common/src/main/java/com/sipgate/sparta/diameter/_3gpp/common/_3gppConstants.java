@@ -7,9 +7,6 @@ public final class _3gppConstants {
 
     public static final int VENDOR_ID_3GPP = 10415;
 
-    // 3GPP TS 29 338, Sgd/Gdd interfaces
-    public static final int APP_ID_SGD_GDD = 16777313;
-
     // 3GPP TS 29.229, Cx and Dx interfaces
     public static final int AVP_SUPPORTED_FEATURES = 628;
     public static final int AVP_FEATURE_LIST_ID = 629;

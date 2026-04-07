@@ -1,6 +1,5 @@
 package com.sipgate.sparta.diameter._3gpp.sgdgdd.messages;
 
-import com.sipgate.sparta.diameter._3gpp.common._3gppConstants;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSmDeliveryOutcomeAVP;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSupportedFeaturesAVPs;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasUserIdentifierAVP;
@@ -40,7 +39,7 @@ public interface MoForwardShortMessageRequest<T extends MoForwardShortMessageReq
 
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(SgdGddConstants.CMD_MO_FORWARD_SHORT_MESSAGE, true, retransmitted,
-                  _3gppConstants.APP_ID_SGD_GDD, hopByHop, endToEnd);
+                SgdGddConstants.APP_ID_SGD_GDD, hopByHop, endToEnd);
         }
     }
 
@@ -49,7 +48,7 @@ public interface MoForwardShortMessageRequest<T extends MoForwardShortMessageReq
 
         public Out() {
             super(SgdGddConstants.CMD_MO_FORWARD_SHORT_MESSAGE, true,
-                  _3gppConstants.APP_ID_SGD_GDD);
+                  SgdGddConstants.APP_ID_SGD_GDD);
         }
     }
 }
