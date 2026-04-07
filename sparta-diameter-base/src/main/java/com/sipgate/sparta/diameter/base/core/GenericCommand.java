@@ -19,6 +19,11 @@ public abstract class GenericCommand<T extends GenericCommand<T>> extends Comman
         super(commandCode, request, proxiable, error, retransmitted, applicationId);
     }
 
+    @Override
+    public String getCommandName() {
+        return "Unknown[code=" + getCommandCode() + "]";
+    }
+
     public static final class In extends GenericCommand<In> implements IncomingCommand {
 
         private final HopByHopId hopByHop;

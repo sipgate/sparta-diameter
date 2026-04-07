@@ -7,6 +7,8 @@ import com.sipgate.sparta.diameter.base.core.OutgoingRequest;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoop;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.SocketAddress;
 
@@ -17,6 +19,8 @@ import java.net.SocketAddress;
  * initiated the TCP connection.
  */
 public final class DiameterPeer {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DiameterPeer.class);
 
     private final Channel channel;
     private final DiameterTransportMeters meters;
@@ -44,6 +48,7 @@ public final class DiameterPeer {
                     return;
                 }
 
+                LOGGER.error("could not send answer with hop-by-hop id: {}", answer.hopByHopId(), f.cause());
                 meters.recordSendError(commandCode, applicationId, DiameterTransportMeters.COMMAND_TYPE_ANSWER);
             });
     }
@@ -69,6 +74,7 @@ public final class DiameterPeer {
                     return;
                 }
 
+                LOGGER.error("could not send request with hop-by-hop id: {}", hopByHop, f.cause());
                 meters.recordSendError(commandCode, applicationId, DiameterTransportMeters.COMMAND_TYPE_REQUEST);
             });
     }

@@ -6,6 +6,9 @@ import com.sipgate.sparta.diameter.base.core.HopByHopId;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -13,6 +16,8 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 
 public class DemoApp {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DemoApp.class);
 
     public static void main(final String[] args) throws IOException, DiameterException {
         // Connect to the Diameter server
@@ -35,17 +40,17 @@ public class DemoApp {
         final DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
         cer.writeTo(dos, hopByHop, endToEnd);
 
-        System.out.println("Sent CER " + cer);
+        LOGGER.debug("Sent CER {}", cer);
 
         final ByteBuffer buffer = ByteBuffer.allocate(4096);
         final byte[] temp = new byte[4096];
         final int read = socket.getInputStream().read(temp);
-        System.out.println("Read " + read + " bytes from server");
+        LOGGER.debug("Read {} bytes from server", read);
         if (read > 0) {
             buffer.put(temp, 0, read);
             buffer.flip();
             final IncomingCommand msg = Command.parseMessage(buffer);
-            System.out.println("Received CEA " + msg);
+            LOGGER.debug("Received CEA {}", msg);
         }
 
         socket.close();

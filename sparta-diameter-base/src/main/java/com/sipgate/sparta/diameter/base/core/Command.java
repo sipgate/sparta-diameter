@@ -193,6 +193,20 @@ public abstract class Command<T extends Command<T>> implements
         return length;
     }
 
+    /**
+     * Returns a human-readable name for this command, suitable for log output.
+     * <p>
+     * The default implementation returns the fully-qualified class name, which is always
+     * correct, always unique, and grep-able in source. Concrete types may override this
+     * to return a prettier protocol-level name (e.g. {@code "Device-Watchdog"}).
+     * </p>
+     *
+     * @return a human-readable command name; never {@code null}.
+     */
+    public String getCommandName() {
+        return getClass().getName();
+    }
+
     protected void setRetransmissionFlag() {
         this.retransmitted = true;
     }

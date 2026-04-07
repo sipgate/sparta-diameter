@@ -8,6 +8,8 @@ import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +20,8 @@ import java.util.Set;
  * Bridges Netty channel lifecycle events to {@link DiameterSession}.
  */
 final class DiameterPeerHandler extends SimpleChannelInboundHandler<IncomingCommand> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DiameterPeerHandler.class);
 
     private final DiameterSession listener;
     private final String direction;
@@ -68,9 +72,11 @@ final class DiameterPeerHandler extends SimpleChannelInboundHandler<IncomingComm
 
     @Override
     public void exceptionCaught(final ChannelHandlerContext ctx, final Throwable cause) {
+        final var peer = new DiameterPeer(ctx.channel(), transportMeters);
         if (cause instanceof final DiameterException e) {
-            listener.onParseError(new DiameterPeer(ctx.channel(), transportMeters), e);
+            listener.onParseError(peer, e);
         } else {
+            LOGGER.error("unhandled exception for connection between local {} and remote {}", peer.localAddress(), peer.remoteAddress(), cause);
             ctx.close();
         }
     }

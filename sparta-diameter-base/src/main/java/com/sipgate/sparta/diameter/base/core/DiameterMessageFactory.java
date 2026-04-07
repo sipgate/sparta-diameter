@@ -5,6 +5,8 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasExperimentalResultAVP;
 import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +21,8 @@ import java.util.function.Consumer;
  * </p>
  */
 public final class DiameterMessageFactory {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DiameterMessageFactory.class);
 
     static final List<DiameterPackageFactory> FACTORIES = new ArrayList<>();
 
@@ -42,6 +46,7 @@ public final class DiameterMessageFactory {
      */
     public static void register(final DiameterPackageFactory factory) {
         FACTORIES.add(factory);
+        LOGGER.trace("registered {}", factory.getClass().getName());
     }
 
     /**
@@ -73,6 +78,7 @@ public final class DiameterMessageFactory {
             }
         }
 
+        LOGGER.warn("unknown command code {} for application id {}", commandCode, applicationId);
         return new GenericCommand.In(commandCode, isRequest, proxiable, isError, retransmitted, applicationId, hopByHop, endToEnd);
     }
 

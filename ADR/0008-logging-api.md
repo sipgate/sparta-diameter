@@ -21,26 +21,44 @@ No logging calls exist in the codebase today. ADR-0007 requires logging on unexp
 
 All logging in this project uses the SLF4J API (`org.slf4j:slf4j-api`).
 
+Every class that emits log output declares a private static final field:
+
 ```java
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-private static final Logger log = LoggerFactory.getLogger(SomeClass.class);
+private static final Logger LOGGER = LoggerFactory.getLogger(ContainingClass.class);
 ```
+
+The field is always named `LOGGER`. The argument to `getLogger` must be the class that declares the field — never a supertype, subtype, or unrelated class.
 
 No concrete logging implementation (`logback-classic`, `log4j-core`, `slf4j-simple`, etc.) is declared as a `compile` or `runtime` dependency in any library module. Test scope is exempt — `slf4j-simple` or a similar no-op binding may be declared `<scope>test</scope>` to silence "no SLF4J binding" warnings during unit test runs.
 
+SLF4J parameterized placeholders (`{}`) only — no string concatenation in log calls.
+
 > **Guardrail:** `System.out`, `System.err`, and `printStackTrace()` are banned in production code. All diagnostic output goes through SLF4J.
 
-## Open Questions
+## Level Mapping
 
-The following decisions are deferred until there is enough operational experience to make them non-arbitrarily:
+| Level | Use |
+|---|---|
+| `ERROR` | Write/encode failures — `IOException` or unexpected `Exception` during `writeTo()` or serialization |
+| `WARN` | Unrecognized command or AVP codes received from the peer |
+| `INFO` | Business-level results worth knowing — session lifecycle events, capability negotiation outcomes, non-2xxx result codes |
+| `DEBUG` | Specific values in scope during processing — AVP names and values, peer addresses |
+| `TRACE` | Branching decisions inside decode/encode logic |
 
-- **When to log** — which events at the library level are worth recording vs. delegating entirely to the application layer?
-- **Which level to use** — mapping of protocol events (decode failures, unknown commands, connection close) to TRACE / DEBUG / INFO / WARN / ERROR.
-- **What to include** — which fields (hop-by-hop ID, peer address, command code, …) belong in every log statement for effective tracing?
+## Density Rules
 
-A follow-up ADR (or an amendment to this one) will codify these once patterns emerge from real usage.
+This is a library — every `WARN` and `ERROR` statement appears in the consumer's log unconditionally unless they explicitly silence the package. Treat higher levels as a cost to the consumer.
+
+| Level | Expected density |
+|---|---|
+| `TRACE` | Rare — temporary diagnostic scaffolding introduced when chasing a specific bug; removed or kept only if it proved its worth |
+| `DEBUG` | Rare — only where the informational value is clear and lasting; avoid cluttering the source |
+| `INFO` | Sparse — at most once per message when a business-level error is confirmed |
+| `WARN` | Rare — only genuinely unexpected peer behaviour the library can work around |
+| `ERROR` | Exceptional — only when the library cannot recover |
 
 ## Consequences
 

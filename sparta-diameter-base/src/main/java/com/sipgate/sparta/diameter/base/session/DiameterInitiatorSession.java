@@ -11,6 +11,8 @@ import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -19,6 +21,8 @@ import java.util.concurrent.TimeUnit;
  * Diameter session for the initiator (I-) side of a connection.
  */
 public final class DiameterInitiatorSession extends DiameterSession {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DiameterInitiatorSession.class);
 
     private final Runnable reconnect;
     private Future<?> tcTimer;
@@ -55,12 +59,19 @@ public final class DiameterInitiatorSession extends DiameterSession {
 
     @Override
     public void onConnected(final DiameterPeer peer) {
+        LOGGER.info("local {} connected to remote {}", peer.localAddress(), peer.remoteAddress());
         this.peer = peer;
         this.peerState = PeerState.WAIT_I_CEA;
         sendAndTrack(buildCer()).whenComplete((cea, err) -> {
             if (err == null) {
                 handleCea(cea);
                 return;
+            }
+
+            if (err instanceof final DiameterErrorAnswerException e) {
+                LOGGER.info("CER rejected: {}", e.getAnswer());
+            } else {
+                LOGGER.error("error during CER/CEA", err);
             }
 
             if (peerState == PeerState.WAIT_I_CEA) {
@@ -92,6 +103,7 @@ public final class DiameterInitiatorSession extends DiameterSession {
     public void onDisconnected(final DiameterPeer peer) {
         super.onDisconnected(peer);
         if (!shuttingDown) {
+            LOGGER.debug("scheduling reconnect");
             final long tcMs = config.getTc().toMillis();
             tcTimer = peer.eventLoop().schedule(reconnect, tcMs, TimeUnit.MILLISECONDS);
         }

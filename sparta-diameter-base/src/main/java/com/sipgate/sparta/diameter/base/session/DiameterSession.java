@@ -26,6 +26,8 @@ import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -44,6 +46,8 @@ import java.util.concurrent.TimeoutException;
  * Shared state and helpers for initiator- and responder-side Diameter sessions.
  */
 public abstract class DiameterSession {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DiameterSession.class);
 
     public abstract void onConnected(DiameterPeer peer);
 
@@ -107,6 +111,7 @@ public abstract class DiameterSession {
                     "Handler for " + requestClass.getSimpleName() + " is already registered");
         }
         handlers.put(requestClass, handler);
+        LOGGER.trace("registered handler for {}", requestClass.getName());
     }
 
     /**
@@ -117,6 +122,7 @@ public abstract class DiameterSession {
      * communication with this peer is impossible.
      */
     public void stop() {
+        LOGGER.info("stopping forcefully");
         if (prepareDisconnect()) {
             shuttingDown = true;
             closePeer();
@@ -131,6 +137,7 @@ public abstract class DiameterSession {
      * <p>Use for operator-initiated shutdown where the node does not intend to reconnect.
      */
     public void stopGracefully() {
+        LOGGER.info("stopping gracefully");
         if (prepareDisconnect()) {
             shuttingDown = true;
             gracefulDisconnect(buildDpr(DiameterConstants.DCC_DO_NOT_WANT_TO_TALK_TO_YOU));
@@ -146,6 +153,7 @@ public abstract class DiameterSession {
      * <p>Use when the node needs to close and reconnect (e.g. after a configuration reload).
      */
     public void closeGracefully() {
+        LOGGER.info("closing gracefully");
         if (prepareDisconnect()) {
             gracefulDisconnect(buildDpr(DiameterConstants.DCC_REBOOTING));
         }
@@ -156,6 +164,7 @@ public abstract class DiameterSession {
             stopWatchdog();
             return true;
         }
+        LOGGER.debug("not open");
         return false;
     }
 
@@ -175,6 +184,7 @@ public abstract class DiameterSession {
     }
 
     protected void closePeer() {
+        LOGGER.debug("closing peer");
         peerState = PeerState.CLOSED;
         peer.close();
     }
@@ -189,6 +199,7 @@ public abstract class DiameterSession {
         final int applicationId = request.getApplicationId();
         final DiameterRequestHandler handler = handlers.get(request.getClass());
         if (handler == null) {
+            LOGGER.warn("request unsupported: {}", request.getCommandName());
             peer.send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED));
             return;
         }
@@ -281,6 +292,7 @@ public abstract class DiameterSession {
     }
 
     public void onDisconnected(final DiameterPeer peer) {
+        LOGGER.info("disconnected local {} and remote {}", peer.localAddress(), peer.remoteAddress());
         stopWatchdog();
         this.peerState = PeerState.CLOSED;
         this.watchdogState = WatchdogState.DOWN;
@@ -340,6 +352,7 @@ public abstract class DiameterSession {
     protected void complete(final IncomingAnswer answer) {
         final PendingRequest pending = pendingRequests.remove(answer.hopByHopId());
         if (pending == null) {
+            LOGGER.warn("found no pending request for answer with hop-by-hop id: {}", answer.hopByHopId());
             return;
         }
         pending.timeoutTask.cancel(false);
@@ -440,6 +453,7 @@ public abstract class DiameterSession {
                 watchdogState = WatchdogState.DOWN;
                 closePeer();
             }
+            LOGGER.info("Tw expired, watchdog state = {}", watchdogState);
             return;
         }
         final HopByHopId hopByHop = identifiers.nextHopByHop();

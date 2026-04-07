@@ -15,6 +15,8 @@ import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +24,8 @@ import java.util.List;
  * Diameter session for the responder (R-) side of a connection.
  */
 public final class DiameterResponderSession extends DiameterSession {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DiameterResponderSession.class);
 
     public DiameterResponderSession(final DiameterNodeConfig config) {
         this(config, new SimpleMeterRegistry());
@@ -33,6 +37,7 @@ public final class DiameterResponderSession extends DiameterSession {
 
     @Override
     public void onConnected(final DiameterPeer peer) {
+        LOGGER.info("remote {} connected to local {}", peer.remoteAddress(), peer.localAddress());
         this.peer = peer;
     }
 
@@ -70,6 +75,7 @@ public final class DiameterResponderSession extends DiameterSession {
             peerState = PeerState.R_OPEN;
             startWatchdog();
         } else {
+            LOGGER.info("no common application");
             peer.send(buildCea(cer, DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION));
             closePeer();
         }

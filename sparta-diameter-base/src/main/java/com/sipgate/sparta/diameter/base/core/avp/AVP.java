@@ -2,6 +2,8 @@ package com.sipgate.sparta.diameter.base.core.avp;
 
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -28,6 +30,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * </p>
  */
 public class AVP {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AVP.class);
+
     private final int code;
     private final boolean vendorSpecific;
     private final boolean mandatory;
@@ -655,6 +659,7 @@ public class AVP {
                     key.code(), key.vendorId(), definition.name(), existing.name()));
             }
         }
+        LOGGER.trace("registered {}", provider.getClass().getName());
     }
 
     /**
@@ -862,12 +867,15 @@ public class AVP {
 
         final var key = new AVPKey(code, vendorId);
         final AVPDefinition definition = registry.get(key);
-        if (definition == null && mandatory) {
-            // RFC 6733 §1.3.4: unrecognized AVP with M-bit set MUST trigger 5001
-            throw new AVPParseException(DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED,
+        if (definition == null) {
+            if (mandatory) {
+                // RFC 6733 §1.3.4: unrecognized AVP with M-bit set MUST trigger 5001
+                throw new AVPParseException(DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED,
                     new AVP(code, vendorSpecific, mandatory, protectedAVP, vendorId, data));
-        }
-        if (definition != null && definition.dataType().equals(GroupedAVP.class)) {
+            }
+
+            LOGGER.warn("AVP unsupported: {}", key);
+        } else if (definition.dataType().equals(GroupedAVP.class)) {
             // Parse grouped AVP
             final ByteBuffer dataBuffer = ByteBuffer.wrap(data);
             final List<AVP> nestedAVPs = new ArrayList<>();

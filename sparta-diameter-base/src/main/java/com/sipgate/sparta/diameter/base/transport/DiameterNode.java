@@ -16,6 +16,8 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.util.function.Function;
@@ -46,6 +48,8 @@ import java.util.function.Supplier;
  */
 public final class DiameterNode implements Closeable {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DiameterNode.class);
+
     private static final int MAX_FRAME_LENGTH = 16 * 1024 * 1024;
     private static final int LENGTH_FIELD_OFFSET = 1;
     private static final int LENGTH_FIELD_LENGTH = 3;
@@ -74,6 +78,7 @@ public final class DiameterNode implements Closeable {
      * }</pre>
      */
     public ChannelFuture listen(final int port, final Supplier<DiameterResponderSession> factory) {
+        LOGGER.info("starting to listen on port {}", port);
         return new ServerBootstrap()
                 .group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
@@ -96,6 +101,7 @@ public final class DiameterNode implements Closeable {
 
     private ChannelFuture doConnect(final String host, final int port,
                                     final Function<Runnable, DiameterInitiatorSession> factory) {
+        LOGGER.info("connecting to {}:{}", host, port);
         final Runnable reconnect = () -> doConnect(host, port, factory);
         return new Bootstrap()
                 .group(workerGroup)
