@@ -49,7 +49,9 @@ public final class _3gppAVPProvider implements AVPProvider {
             new AVPDefinition(_3gppConstants.AVP_SM_DELIVERY_OUTCOME, "SM-Delivery-Outcome",
                 GroupedAVP.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
             new AVPDefinition(_3gppConstants.AVP_ABSENT_USER_DIAGNOSTIC_SM, "AbsentUser-Diagnostic-SM",
-                Long.class, true, true, _3gppConstants.VENDOR_ID_3GPP)
+                Long.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(_3gppConstants.AVP_SMS_GMSC_ALERT_EVENT, "SMS-GMSC-Alert-Event",
+                Long.class, false, true, _3gppConstants.VENDOR_ID_3GPP)
         );
     }
 }
