@@ -41,9 +41,10 @@ public final class DiameterPeer {
             .addListener(f -> {
                 if (f.isSuccess()) {
                     meters.recordSent(commandCode, applicationId, DiameterTransportMeters.COMMAND_TYPE_ANSWER);
-                } else {
-                    meters.recordSendError(commandCode, applicationId, DiameterTransportMeters.COMMAND_TYPE_ANSWER);
+                    return;
                 }
+
+                meters.recordSendError(commandCode, applicationId, DiameterTransportMeters.COMMAND_TYPE_ANSWER);
             });
     }
 
@@ -65,9 +66,10 @@ public final class DiameterPeer {
             .addListener(f -> {
                 if (f.isSuccess()) {
                     meters.recordSent(commandCode, applicationId, DiameterTransportMeters.COMMAND_TYPE_REQUEST);
-                } else {
-                    meters.recordSendError(commandCode, applicationId, DiameterTransportMeters.COMMAND_TYPE_REQUEST);
+                    return;
                 }
+
+                meters.recordSendError(commandCode, applicationId, DiameterTransportMeters.COMMAND_TYPE_REQUEST);
             });
     }
 
