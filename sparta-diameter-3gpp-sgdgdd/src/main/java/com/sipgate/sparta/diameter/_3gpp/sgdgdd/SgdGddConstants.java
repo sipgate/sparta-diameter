@@ -30,6 +30,15 @@ public final class SgdGddConstants {
     public static final int AVP_REQUESTED_RETRANSMISSION_TIME = 3331;
     public static final int AVP_SMS_GMSC_ADDRESS = 3332;
 
+    // SM-Enumerated-Delivery-Failure-Cause values (3GPP TS 29.338 §6.3.3.6)
+    public static final int SM_DELIVERY_FAILURE_CAUSE_MEMORY_CAPACITY_EXCEEDED = 0;
+    public static final int SM_DELIVERY_FAILURE_CAUSE_EQUIPMENT_PROTOCOL_ERROR = 1;
+    public static final int SM_DELIVERY_FAILURE_CAUSE_EQUIPMENT_NOT_SM_EQUIPPED = 2;
+    public static final int SM_DELIVERY_FAILURE_CAUSE_UNKNOWN_SERVICE_CENTRE = 3;
+    public static final int SM_DELIVERY_FAILURE_CAUSE_SC_CONGESTION = 4;
+    public static final int SM_DELIVERY_FAILURE_CAUSE_INVALID_SME_ADDRESS = 5;
+    public static final int SM_DELIVERY_FAILURE_CAUSE_USER_NOT_SC_USER = 6;
+
     // Experimental Result values (3GPP TS 29.338 section 7, SGd/Gdd interfaces)
     // Carried in Experimental-Result AVP; Result-Code AVP shall be absent.
 
