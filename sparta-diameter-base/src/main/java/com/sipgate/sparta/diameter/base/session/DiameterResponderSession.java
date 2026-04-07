@@ -5,7 +5,6 @@ import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
-import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
@@ -38,7 +37,7 @@ public final class DiameterResponderSession extends DiameterSession {
     }
 
     @Override
-    public void onMessage(final DiameterPeer peer, final IncomingCommand command) {
+    public void onMessage(final IncomingCommand command) {
         if (command instanceof final CapabilitiesExchangeRequest.In cer) {
             handleCer(cer);
             return;

@@ -140,7 +140,7 @@ class DiameterResponderSessionTest {
         final CapabilitiesExchangeRequest.In cer = buildIncomingCer(5L);
 
         // WHEN
-        session.onMessage(peer, cer);
+        session.onMessage(cer);
 
         // THEN
         assertThat(session.getPeerState()).isEqualTo(PeerState.R_OPEN);
@@ -157,7 +157,7 @@ class DiameterResponderSessionTest {
         final CapabilitiesExchangeRequest.In cer = buildIncomingCer(5L);
 
         // WHEN
-        session.onMessage(peer, cer);
+        session.onMessage(cer);
 
         // THEN
         final ArgumentCaptor<CapabilitiesExchangeAnswer.Out> captor =
@@ -177,7 +177,7 @@ class DiameterResponderSessionTest {
         final CapabilitiesExchangeRequest.In cer = buildIncomingCer(99L);
 
         // WHEN
-        session.onMessage(peer, cer);
+        session.onMessage(cer);
 
         // THEN
         assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
@@ -194,7 +194,7 @@ class DiameterResponderSessionTest {
         final CapabilitiesExchangeRequest.In cer = buildIncomingCer(99L);
 
         // WHEN
-        session.onMessage(peer, cer);
+        session.onMessage(cer);
 
         // THEN
         final ArgumentCaptor<CapabilitiesExchangeAnswer.Out> captor =
@@ -214,7 +214,7 @@ class DiameterResponderSessionTest {
         final CapabilitiesExchangeRequest.In cer = buildIncomingCer(99L);
 
         // WHEN
-        session.onMessage(peer, cer);
+        session.onMessage(cer);
 
         // THEN
         verify(peer).close();
@@ -232,7 +232,7 @@ class DiameterResponderSessionTest {
         final CapabilitiesExchangeRequest.In cer = buildIncomingCerWithVendorSpecificAppId(VENDOR_3GPP, SGD_APP_ID);
 
         // WHEN
-        session.onMessage(peer, cer);
+        session.onMessage(cer);
 
         // THEN
         assertThat(session.getPeerState()).isEqualTo(PeerState.R_OPEN);
@@ -249,7 +249,7 @@ class DiameterResponderSessionTest {
         final CapabilitiesExchangeRequest.In cer = buildIncomingCerWithVendorSpecificAppId(VENDOR_3GPP, SGD_APP_ID);
 
         // WHEN
-        session.onMessage(peer, cer);
+        session.onMessage(cer);
 
         // THEN
         final ArgumentCaptor<CapabilitiesExchangeAnswer.Out> captor =
@@ -270,7 +270,7 @@ class DiameterResponderSessionTest {
         final CapabilitiesExchangeRequest.In cer = buildIncomingCerWithVendorSpecificAppId(differentVendorId, SGD_APP_ID);
 
         // WHEN
-        session.onMessage(peer, cer);
+        session.onMessage(cer);
 
         // THEN: vendor ID is irrelevant per RFC 6733 §5.3 — still a match
         assertThat(session.getPeerState()).isEqualTo(PeerState.R_OPEN);
@@ -287,7 +287,7 @@ class DiameterResponderSessionTest {
         final CapabilitiesExchangeRequest.In cer = buildIncomingCer(99L);
 
         // WHEN
-        session.onMessage(peer, cer);
+        session.onMessage(cer);
 
         // THEN
         final ArgumentCaptor<CapabilitiesExchangeAnswer.Out> captor =
@@ -305,7 +305,7 @@ class DiameterResponderSessionTest {
         final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_VENDOR_SPECIFIC_APP);
         session.onConnected(peer);
         final CapabilitiesExchangeRequest.In cer = buildIncomingCerWithVendorSpecificAppId(VENDOR_3GPP, SGD_APP_ID);
-        session.onMessage(peer, cer);
+        session.onMessage(cer);
 
         // THEN: the CEA sent back contains one Vendor-Specific-Application-Id grouped AVP
         final ArgumentCaptor<CapabilitiesExchangeAnswer.Out> captor =
@@ -345,7 +345,7 @@ class DiameterResponderSessionTest {
         session.setHandler(ReAuthRequest.In.class, req -> CompletableFuture.completedFuture(answer));
 
         // WHEN
-        session.onMessage(peer, rar);
+        session.onMessage(rar);
 
         // THEN
         verify(peer).send(answer);
@@ -361,7 +361,7 @@ class DiameterResponderSessionTest {
                 DiameterMessageFactory.createForParsing(DiameterConstants.CMD_RE_AUTH, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
-        session.onMessage(peer, rar);
+        session.onMessage(rar);
 
         // THEN
         final ArgumentCaptor<ReAuthAnswer.Out> captor = ArgumentCaptor.forClass(ReAuthAnswer.Out.class);
@@ -383,7 +383,7 @@ class DiameterResponderSessionTest {
                 DiameterMessageFactory.createForParsing(DiameterConstants.CMD_RE_AUTH, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
-        session.onMessage(peer, rar);
+        session.onMessage(rar);
 
         // THEN
         final ArgumentCaptor<ReAuthAnswer.Out> captor = ArgumentCaptor.forClass(ReAuthAnswer.Out.class);
@@ -406,7 +406,7 @@ class DiameterResponderSessionTest {
         session.setHandler(ReAuthRequest.In.class, req -> failing);
 
         // WHEN
-        session.onMessage(peer, rar);
+        session.onMessage(rar);
 
         // THEN
         final ArgumentCaptor<ErrorAnswer.Out> captor = ArgumentCaptor.forClass(ErrorAnswer.Out.class);
@@ -438,7 +438,7 @@ class DiameterResponderSessionTest {
                 DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DEVICE_WATCHDOG, 0, true, false, new HopByHopId(77), new EndToEndId(88), false);
 
         // WHEN
-        session.onMessage(peer, dwr);
+        session.onMessage(dwr);
 
         // THEN
         final ArgumentCaptor<DeviceWatchdogAnswer.Out> captor =
@@ -524,7 +524,7 @@ class DiameterResponderSessionTest {
         final DisconnectPeerAnswer.In dpa = captureAndBuildDpa(peer);
 
         // WHEN
-        session.onMessage(peer, dpa);
+        session.onMessage(dpa);
 
         // THEN
         assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
@@ -541,7 +541,7 @@ class DiameterResponderSessionTest {
                 DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
-        session.onMessage(peer, dpr);
+        session.onMessage(dpr);
 
         // THEN
         assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
@@ -558,7 +558,7 @@ class DiameterResponderSessionTest {
                 DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
-        session.onMessage(peer, dpr);
+        session.onMessage(dpr);
 
         // THEN
         final ArgumentCaptor<DisconnectPeerAnswer.Out> captor =
@@ -576,7 +576,7 @@ class DiameterResponderSessionTest {
         final DiameterResponderSession session = openedSession(peer);
         final DisconnectPeerRequest.In dpr = (DisconnectPeerRequest.In)
                 DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
-        session.onMessage(peer, dpr);
+        session.onMessage(dpr);
 
         // WHEN - channel closes after DPA was sent
         session.onDisconnected(peer);
@@ -596,7 +596,7 @@ class DiameterResponderSessionTest {
                 DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
-        session.onMessage(peer, dpr);
+        session.onMessage(dpr);
 
         // THEN
         verify(peer).close();
@@ -677,7 +677,7 @@ class DiameterResponderSessionTest {
         final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_AUTH_APP);
         session.onConnected(peer);
         final CapabilitiesExchangeRequest.In cer = buildIncomingCer(5L);
-        session.onMessage(peer, cer);
+        session.onMessage(cer);
         Mockito.clearInvocations(peer);
         return session;
     }

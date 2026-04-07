@@ -1,11 +1,9 @@
 package com.sipgate.sparta.diameter.base.session;
 
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
-import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
-import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.base.messages.DisconnectPeerRequest;
@@ -72,7 +70,7 @@ public final class DiameterInitiatorSession extends DiameterSession {
     }
 
     @Override
-    public void onMessage(final DiameterPeer peer, final IncomingCommand command) {
+    public void onMessage(final IncomingCommand command) {
         if (peerState == PeerState.I_OPEN) {
             handleWatchdog(command);
             if (command instanceof final DisconnectPeerRequest.In dpr) {
@@ -93,9 +91,9 @@ public final class DiameterInitiatorSession extends DiameterSession {
     @Override
     public void onDisconnected(final DiameterPeer peer) {
         super.onDisconnected(peer);
-        if (!shuttingDown && this.peer != null) {
+        if (!shuttingDown) {
             final long tcMs = config.getTc().toMillis();
-            tcTimer = this.peer.eventLoop().schedule(reconnect, tcMs, TimeUnit.MILLISECONDS);
+            tcTimer = peer.eventLoop().schedule(reconnect, tcMs, TimeUnit.MILLISECONDS);
         }
     }
 

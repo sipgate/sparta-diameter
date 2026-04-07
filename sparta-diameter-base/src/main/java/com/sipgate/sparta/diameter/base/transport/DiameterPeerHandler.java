@@ -22,7 +22,6 @@ final class DiameterPeerHandler extends SimpleChannelInboundHandler<IncomingComm
     private final DiameterSession listener;
     private final String direction;
     private final DiameterTransportMeters transportMeters;
-    private DiameterPeer peer;
     private Set<Long> negotiatedApplicationIds;
 
     DiameterPeerHandler(final DiameterSession listener, final String direction,
@@ -34,9 +33,8 @@ final class DiameterPeerHandler extends SimpleChannelInboundHandler<IncomingComm
 
     @Override
     public void channelActive(final ChannelHandlerContext ctx) {
-        peer = new DiameterPeer(ctx.channel(), transportMeters);
         transportMeters.recordConnected(direction);
-        listener.onConnected(peer);
+        listener.onConnected(new DiameterPeer(ctx.channel(), transportMeters));
     }
 
     @Override
@@ -54,7 +52,7 @@ final class DiameterPeerHandler extends SimpleChannelInboundHandler<IncomingComm
             transportMeters.recordActiveApplicationIds(negotiatedApplicationIds);
         }
 
-        listener.onMessage(peer, msg);
+        listener.onMessage(msg);
     }
 
     @Override
@@ -63,13 +61,15 @@ final class DiameterPeerHandler extends SimpleChannelInboundHandler<IncomingComm
             transportMeters.recordInactiveApplicationIds(negotiatedApplicationIds);
         }
         transportMeters.recordDisconnected(direction);
-        listener.onDisconnected(peer);
+        // use a new instance here instead of storing one in channelActive because a channel might never become active
+        // (e.g. connection rejected or timed out)
+        listener.onDisconnected(new DiameterPeer(ctx.channel(), transportMeters));
     }
 
     @Override
     public void exceptionCaught(final ChannelHandlerContext ctx, final Throwable cause) {
         if (cause instanceof final DiameterException e) {
-            listener.onParseError(peer, e);
+            listener.onParseError(new DiameterPeer(ctx.channel(), transportMeters), e);
         } else {
             ctx.close();
         }

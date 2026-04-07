@@ -45,6 +45,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -103,10 +104,12 @@ class DiameterInitiatorSessionTest {
     @Test
     void it_transitions_to_closed_and_down_on_disconnect() {
         // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubEventLoop(peer);
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
 
         // WHEN
-        session.onDisconnected(null);
+        session.onDisconnected(peer);
 
         // THEN
         assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
@@ -195,7 +198,7 @@ class DiameterInitiatorSessionTest {
         final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
 
         // WHEN
-        session.onMessage(peer, cea);
+        session.onMessage(cea);
 
         // THEN
         assertThat(session.getPeerState()).isEqualTo(PeerState.I_OPEN);
@@ -215,7 +218,7 @@ class DiameterInitiatorSessionTest {
                         0, false, false, new HopByHopId(cerHbH.value() + 1), new EndToEndId(2), false);
 
         // WHEN
-        session.onMessage(peer, wrongCea);
+        session.onMessage(wrongCea);
 
         // THEN: still waiting — rogue CEA had no effect
         assertThat(session.getPeerState()).isEqualTo(PeerState.WAIT_I_CEA);
@@ -234,7 +237,7 @@ class DiameterInitiatorSessionTest {
                 captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION);
 
         // WHEN
-        session.onMessage(peer, cea);
+        session.onMessage(cea);
 
         // THEN
         assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
@@ -253,7 +256,7 @@ class DiameterInitiatorSessionTest {
                 captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION);
 
         // WHEN
-        session.onMessage(peer, cea);
+        session.onMessage(cea);
 
         // THEN
         verify(peer).close();
@@ -306,7 +309,7 @@ class DiameterInitiatorSessionTest {
         final CapabilitiesExchangeAnswer.In answer = captureAndBuildCeaForRequest(peer);
 
         // WHEN
-        session.onMessage(peer, answer);
+        session.onMessage(answer);
 
         // THEN
         assertThat(future).isCompletedWithValue(answer);
@@ -326,7 +329,7 @@ class DiameterInitiatorSessionTest {
                         0, false, false, new HopByHopId(99), new EndToEndId(99), false);
 
         // WHEN
-        session.onMessage(peer, wrongAnswer);
+        session.onMessage(wrongAnswer);
 
         // THEN
         assertThat(future).isNotDone();
@@ -350,7 +353,7 @@ class DiameterInitiatorSessionTest {
         final ErrorAnswer.In errorIn = toIncomingAnswer(errorOut);
 
         // WHEN
-        session.onMessage(peer, errorIn);
+        session.onMessage(errorIn);
 
         // THEN
         final var cause = future.handle((a, ex) -> ex).join();
@@ -419,7 +422,7 @@ class DiameterInitiatorSessionTest {
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
         final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
-        session.onMessage(peer, cea);
+        session.onMessage(cea);
         Mockito.clearInvocations(peer);
 
         final CapabilitiesExchangeRequest.Out request =
@@ -453,7 +456,7 @@ class DiameterInitiatorSessionTest {
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
         final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
-        session.onMessage(peer, cea);
+        session.onMessage(cea);
         Mockito.clearInvocations(peer);
 
         final CapabilitiesExchangeRequest.Out request =
@@ -462,7 +465,7 @@ class DiameterInitiatorSessionTest {
         final CapabilitiesExchangeAnswer.In answer = captureAndBuildCeaForRequest(peer);
 
         // WHEN
-        session.onMessage(peer, answer);
+        session.onMessage(answer);
 
         // THEN
         verify(requestTimeout).cancel(false);
@@ -486,7 +489,7 @@ class DiameterInitiatorSessionTest {
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
         final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
-        session.onMessage(peer, cea);
+        session.onMessage(cea);
         Mockito.clearInvocations(peer);
 
         final CapabilitiesExchangeRequest.Out request =
@@ -527,7 +530,7 @@ class DiameterInitiatorSessionTest {
         session.setHandler(ReAuthRequest.In.class, req -> CompletableFuture.completedFuture(answer));
 
         // WHEN
-        session.onMessage(peer, rar);
+        session.onMessage(rar);
 
         // THEN
         verify(peer).send(answer);
@@ -543,7 +546,7 @@ class DiameterInitiatorSessionTest {
                 DiameterMessageFactory.createForParsing(DiameterConstants.CMD_RE_AUTH, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
-        session.onMessage(peer, rar);
+        session.onMessage(rar);
 
         // THEN
         final ArgumentCaptor<ReAuthAnswer.Out> captor = ArgumentCaptor.forClass(ReAuthAnswer.Out.class);
@@ -565,7 +568,7 @@ class DiameterInitiatorSessionTest {
                 DiameterMessageFactory.createForParsing(DiameterConstants.CMD_RE_AUTH, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
-        session.onMessage(peer, rar);
+        session.onMessage(rar);
 
         // THEN
         final ArgumentCaptor<ReAuthAnswer.Out> captor = ArgumentCaptor.forClass(ReAuthAnswer.Out.class);
@@ -590,7 +593,7 @@ class DiameterInitiatorSessionTest {
         final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
 
         // WHEN
-        session.onMessage(peer, cea);
+        session.onMessage(cea);
 
         // THEN
         assertThat(session.getWatchdogState()).isEqualTo(WatchdogState.OKAY);
@@ -670,7 +673,7 @@ class DiameterInitiatorSessionTest {
                 DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DEVICE_WATCHDOG, 0, true, false, new HopByHopId(77), new EndToEndId(88), false);
 
         // WHEN
-        session.onMessage(peer, dwr);
+        session.onMessage(dwr);
 
         // THEN — a DWA was sent back
         final ArgumentCaptor<DeviceWatchdogAnswer.Out> captor =
@@ -715,7 +718,7 @@ class DiameterInitiatorSessionTest {
 
         // WHEN — DWA arrives with matching hop-by-hop
         final DeviceWatchdogAnswer.In dwa = buildMatchingDwa(dwrHbH.getValue(), dwrE2E.getValue());
-        session.onMessage(peer, dwa);
+        session.onMessage(dwa);
 
         // THEN
         assertThat(session.getWatchdogState()).isEqualTo(WatchdogState.OKAY);
@@ -740,7 +743,7 @@ class DiameterInitiatorSessionTest {
         final CapabilitiesExchangeAnswer.In unrelatedAnswer = (CapabilitiesExchangeAnswer.In)
                 DiameterMessageFactory.createForParsing(DiameterConstants.CMD_CAPABILITIES_EXCHANGE,
                         0, false, false, new HopByHopId(99), new EndToEndId(99), false);
-        session.onMessage(peer, unrelatedAnswer);
+        session.onMessage(unrelatedAnswer);
 
         // THEN
         assertThat(session.getWatchdogState()).isEqualTo(WatchdogState.OKAY);
@@ -767,13 +770,13 @@ class DiameterInitiatorSessionTest {
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
         final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
-        session.onMessage(peer, cea);
+        session.onMessage(cea);
         Mockito.clearInvocations(peer);
 
         // WHEN — any message arrives in I_OPEN
         final ReAuthRequest.In rar = (ReAuthRequest.In)
                 DiameterMessageFactory.createForParsing(DiameterConstants.CMD_RE_AUTH, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
-        session.onMessage(peer, rar);
+        session.onMessage(rar);
 
         // THEN — the Tw timer was cancelled and rescheduled
         verify(twTimer).cancel(false);
@@ -892,7 +895,7 @@ class DiameterInitiatorSessionTest {
         final DisconnectPeerAnswer.In dpa = captureAndBuildDpa(peer);
 
         // WHEN
-        session.onMessage(peer, dpa);
+        session.onMessage(dpa);
 
         // THEN
         assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
@@ -909,7 +912,7 @@ class DiameterInitiatorSessionTest {
         final DisconnectPeerAnswer.In dpa = captureAndBuildDpa(peer);
 
         // WHEN
-        session.onMessage(peer, dpa);
+        session.onMessage(dpa);
 
         // THEN
         verify(peer).close();
@@ -961,7 +964,7 @@ class DiameterInitiatorSessionTest {
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> reconnectCalled.set(true));
         session.onConnected(peer);
         final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
-        session.onMessage(peer, cea);
+        session.onMessage(cea);
         org.mockito.Mockito.clearInvocations(peer);
 
         // trigger unexpected disconnect
@@ -1053,7 +1056,7 @@ class DiameterInitiatorSessionTest {
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
         final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
-        session.onMessage(peer, cea);
+        session.onMessage(cea);
         org.mockito.Mockito.clearInvocations(peer);
 
         // simulate unexpected disconnect → schedules Tc timer
@@ -1077,7 +1080,7 @@ class DiameterInitiatorSessionTest {
                 DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
-        session.onMessage(peer, dpr);
+        session.onMessage(dpr);
 
         // THEN
         assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
@@ -1094,7 +1097,7 @@ class DiameterInitiatorSessionTest {
                 DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
-        session.onMessage(peer, dpr);
+        session.onMessage(dpr);
 
         // THEN
         final ArgumentCaptor<DisconnectPeerAnswer.Out> captor =
@@ -1114,11 +1117,30 @@ class DiameterInitiatorSessionTest {
                 DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, false, new HopByHopId(10), new EndToEndId(20), false);
 
         // WHEN
-        session.onMessage(peer, dpr);
+        session.onMessage(dpr);
 
         // THEN
         verify(peer).close();
         assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
+    }
+
+    @Test
+    void it_calls_reconnect_when_Tc_timer_fires_after_tcp_never_connected() {
+        // GIVEN — onConnected never fires; simulates TCP connect failure where
+        // DiameterPeerHandler constructs a peer from ctx.channel() for channelInactive
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        final List<Runnable> tasks = new ArrayList<>();
+        stubEventLoop(peer, tasks);
+
+        final var reconnectCalled = new AtomicBoolean(false);
+        final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> reconnectCalled.set(true));
+
+        // WHEN — channelInactive fires without a prior channelActive
+        session.onDisconnected(peer);
+        tasks.get(tasks.size() - 1).run();
+
+        // THEN
+        assertThat(reconnectCalled).isTrue();
     }
 
     // -------------------------------------------------------------------------
@@ -1203,7 +1225,7 @@ class DiameterInitiatorSessionTest {
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
         final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
-        session.onMessage(peer, cea);
+        session.onMessage(cea);
         Mockito.clearInvocations(peer);
         return session;
     }
@@ -1223,7 +1245,7 @@ class DiameterInitiatorSessionTest {
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, () -> {});
         session.onConnected(peer);
         final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
-        session.onMessage(peer, cea);
+        session.onMessage(cea);
         Mockito.clearInvocations(peer);
         return session;
     }

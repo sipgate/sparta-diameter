@@ -47,7 +47,7 @@ public abstract class DiameterSession {
 
     public abstract void onConnected(DiameterPeer peer);
 
-    public abstract void onMessage(DiameterPeer peer, IncomingCommand command);
+    public abstract void onMessage(IncomingCommand command);
 
     protected final DiameterNodeConfig config;
     protected final CapabilityNegotiator negotiator;
