@@ -32,7 +32,6 @@ import com.sipgate.sparta.diameter.ietf.drmp.mixins.HasDrmpAVP;
 public interface MtForwardShortMessageRequest<T extends MtForwardShortMessageRequest<T>>
         extends HasSessionIdAVP<T>, HasDrmpAVP<T>, HasVendorSpecificApplicationIdAVP<T>,
                 HasAuthSessionStateAVP<T>,
-                HasDestinationHostAVP<T>, HasDestinationRealmAVP<T>,
                 HasUserNameAVP<T>,
                 HasSupportedFeaturesAVPs<T>, HasSmsMiCorrelationIdAVP<T>,
                 HasScAddressAVP<T>, HasSmRpUiAVP<T>,
