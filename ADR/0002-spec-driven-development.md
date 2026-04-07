@@ -30,9 +30,9 @@ Feature specifications live in `specs/<feature-name>/`. Each feature directory c
 
 | File | Purpose |
 |---|---|
-| `requirements.md` | What the feature must do — behaviour, acceptance criteria, edge cases |
-| `design.md` | How it works internally — class design, sequence diagrams, API shape |
-| `tasks.md` | Ordered implementation steps, tracked by an agent during execution |
+| `01-requirements.md` | What the feature must do — behaviour, acceptance criteria, edge cases |
+| `02-design.md` | How it works internally — class design, sequence diagrams, API shape |
+| `03-tasks.md` | Ordered implementation steps, tracked by an agent during execution |
 
 Not every feature needs all three files. Small, well-understood features may have only `tasks.md`. Large features with non-obvious design choices get all three.
 
