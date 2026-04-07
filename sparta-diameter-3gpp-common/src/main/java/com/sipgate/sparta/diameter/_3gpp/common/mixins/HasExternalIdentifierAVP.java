@@ -6,7 +6,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
 /**
- * Mixin for messages carrying the External-Identifier AVP (3GPP TS 29.336 §8.3.35).
+ * Mixin for messages carrying the External-Identifier AVP (3GPP TS 29.336 §6.4.11).
  */
 public interface HasExternalIdentifierAVP<T extends HasExternalIdentifierAVP<T>> extends AVPContainer<T> {
 

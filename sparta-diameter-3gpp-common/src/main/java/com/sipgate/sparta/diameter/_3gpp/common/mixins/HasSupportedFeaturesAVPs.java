@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Mixin for messages carrying zero or more Supported-Features AVPs (3GPP TS 29.229).
+ * Mixin for messages carrying zero or more Supported-Features AVPs (3GPP TS 29.229 §6.3.29).
  */
 public interface HasSupportedFeaturesAVPs<T extends HasSupportedFeaturesAVPs<T>> extends AVPContainer<T> {
 

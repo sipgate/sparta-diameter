@@ -6,7 +6,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
 /**
- * Mixin for messages carrying an SMS-GMSC-AlertEvent AVP (3GPP TS 29.338 S6c).
+ * Mixin for messages carrying an SMS-GMSC-AlertEvent AVP (3GPP TS 29.338 §5.3.3.23).
  * <p>
  * Unsigned32 bitmask — V flag only (M-bit must not be set).
  * See 3GPP TS 29.338 §5.3.3.23 for bit definitions.

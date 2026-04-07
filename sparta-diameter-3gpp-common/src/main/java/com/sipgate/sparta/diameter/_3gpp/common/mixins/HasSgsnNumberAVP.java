@@ -6,7 +6,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
 /**
- * Mixin for messages carrying an SGSN-Number AVP (3GPP TS 29.272).
+ * Mixin for messages carrying an SGSN-Number AVP (3GPP TS 29.272 §7.3.102).
  */
 public interface HasSgsnNumberAVP<T extends HasSgsnNumberAVP<T>> extends AVPContainer<T> {
 

@@ -7,7 +7,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 
 /**
- * Mixin for messages carrying a Serving-Node AVP (3GPP TS 29.173, code 2401).
+ * Mixin for messages carrying a Serving-Node AVP (3GPP TS 29.173 §6.4.3).
  */
 public interface HasServingNodeAVP<T extends HasServingNodeAVP<T>> extends AVPContainer<T> {
 

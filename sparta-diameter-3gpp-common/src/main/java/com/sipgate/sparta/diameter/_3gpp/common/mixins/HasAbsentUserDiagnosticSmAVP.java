@@ -6,7 +6,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
 /**
- * Mixin for messages carrying an AbsentUser-Diagnostic-SM AVP (3GPP TS 29.338 S6c, code 3322).
+ * Mixin for messages carrying an AbsentUser-Diagnostic-SM AVP (3GPP TS 29.338 §5.3.3.20).
  * <p>
  * Unsigned32 — M,V flags.
  * </p>

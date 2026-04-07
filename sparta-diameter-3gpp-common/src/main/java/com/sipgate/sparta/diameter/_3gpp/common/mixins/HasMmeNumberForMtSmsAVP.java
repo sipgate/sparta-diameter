@@ -6,7 +6,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 
 /**
- * Mixin for messages carrying an MME-Number-for-MT-SMS AVP (3GPP TS 29.272).
+ * Mixin for messages carrying an MME-Number-for-MT-SMS AVP (3GPP TS 29.272 §7.3.159).
  */
 public interface HasMmeNumberForMtSmsAVP<T extends HasMmeNumberForMtSmsAVP<T>> extends AVPContainer<T> {
 

@@ -7,7 +7,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 
 /**
- * Mixin for messages carrying a User-Identifier AVP (3GPP TS 29.336).
+ * Mixin for messages carrying a User-Identifier AVP (3GPP TS 29.336 §6.4.2).
  */
 public interface HasUserIdentifierAVP<T extends HasUserIdentifierAVP<T>> extends AVPContainer<T> {
 

@@ -7,7 +7,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 
 /**
- * Mixin for messages carrying an SM-Delivery-Outcome AVP (3GPP TS 29.338 S6c, code 3316).
+ * Mixin for messages carrying an SM-Delivery-Outcome AVP (3GPP TS 29.338 §5.3.3.14).
  */
 public interface HasSmDeliveryOutcomeAVP<T extends HasSmDeliveryOutcomeAVP<T>> extends AVPContainer<T> {
 
