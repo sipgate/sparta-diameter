@@ -19,9 +19,9 @@ public final class _3gppAVPProvider implements AVPProvider {
             new AVPDefinition(_3gppConstants.AVP_SUPPORTED_FEATURES, "Supported-Features",
                 GroupedAVP.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
             new AVPDefinition(_3gppConstants.AVP_FEATURE_LIST_ID, "Feature-List-ID",
-                Long.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+                Long.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
             new AVPDefinition(_3gppConstants.AVP_FEATURE_LIST, "Feature-List",
-                Long.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+                Long.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
 
             // 3GPP TS 29.329, Sh interface
             new AVPDefinition(_3gppConstants.AVP_MSISDN, "MSISDN",
@@ -37,7 +37,7 @@ public final class _3gppAVPProvider implements AVPProvider {
             new AVPDefinition(_3gppConstants.AVP_EPS_LOCATION_INFORMATION, "EPS-Location-Information",
                 GroupedAVP.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
             new AVPDefinition(_3gppConstants.AVP_MME_NUMBER_FOR_MT_SMS, "MME-Number-for-MT-SMS",
-                byte[].class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+                byte[].class, false, true, _3gppConstants.VENDOR_ID_3GPP),
             new AVPDefinition(_3gppConstants.AVP_SGSN_NUMBER, "SGSN-Number",
                 byte[].class, false, true, _3gppConstants.VENDOR_ID_3GPP),
 
