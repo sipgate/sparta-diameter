@@ -54,13 +54,14 @@ public final class DiameterMessageFactory {
      * @throws IllegalArgumentException if no registered factory handles the given combination
      */
     public static IncomingCommand createForParsing(
-            final int commandCode,
-            final int applicationId,
-            final boolean isRequest,
-            final boolean isError,
-            final HopByHopId hopByHop,
-            final EndToEndId endToEnd,
-            final boolean retransmitted) {
+        final int commandCode,
+        final int applicationId,
+        final boolean isRequest,
+        final boolean proxiable,
+        final boolean isError,
+        final HopByHopId hopByHop,
+        final EndToEndId endToEnd,
+        final boolean retransmitted) {
         if (!isRequest && isError) {
             return new ErrorAnswer.In(commandCode, applicationId, hopByHop, endToEnd);
         }
@@ -71,9 +72,8 @@ public final class DiameterMessageFactory {
                 return result;
             }
         }
-        throw new IllegalArgumentException(String.format(
-                "No factory handles commandCode=%d applicationId=%d isRequest=%b",
-                commandCode, applicationId, isRequest));
+
+        return new GenericCommand.In(commandCode, isRequest, proxiable, isError, retransmitted, applicationId, hopByHop, endToEnd);
     }
 
     /**

@@ -19,7 +19,7 @@ class DeviceWatchdogRequestTest {
         // GIVEN
         @SuppressWarnings("unchecked")
         final IncomingRequest<?, DeviceWatchdogAnswer.Out> request =
-            (IncomingRequest<?, DeviceWatchdogAnswer.Out>) DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DEVICE_WATCHDOG, 0, true, false, HBH, E2E, false);
+            (IncomingRequest<?, DeviceWatchdogAnswer.Out>) DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DEVICE_WATCHDOG, 0, true, true, false, HBH, E2E, false);
         final long successCode = DiameterConstants.RES_DIAMETER_SUCCESS;
 
         // WHEN
@@ -36,7 +36,7 @@ class DeviceWatchdogRequestTest {
     void it_creates_request_with_correct_identifiers() {
         // GIVEN / WHEN
         final DeviceWatchdogRequest.In request = (DeviceWatchdogRequest.In)
-                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DEVICE_WATCHDOG, 0, true, false, HBH, E2E, false);
+                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DEVICE_WATCHDOG, 0, true, true, false, HBH, E2E, false);
 
         // THEN
         assertThat(request.hopByHopId()).isEqualTo(HBH);
@@ -50,7 +50,7 @@ class DeviceWatchdogRequestTest {
     void it_creates_retransmitted_request_with_correct_flags() {
         // GIVEN / WHEN
         final DeviceWatchdogRequest.In request = (DeviceWatchdogRequest.In)
-                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DEVICE_WATCHDOG, 0, true, false, HBH, E2E, true);
+                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DEVICE_WATCHDOG, 0, true, true, false, HBH, E2E, true);
 
         // THEN
         assertThat(request.hopByHopId()).isEqualTo(HBH);

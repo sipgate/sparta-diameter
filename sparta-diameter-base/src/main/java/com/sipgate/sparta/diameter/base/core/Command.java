@@ -301,7 +301,7 @@ public abstract class Command<T extends Command<T>> implements
             }
 
             final IncomingCommand command = DiameterMessageFactory.createForParsing(
-                    commandCode, applicationId, isRequest, isError, hopByHop, endToEnd, isRetransmitted);
+                    commandCode, applicationId, isRequest, proxiable, isError, hopByHop, endToEnd, isRetransmitted);
 
             for (final AVP avp : avps) {
                 ((Command<?>) command).avps.add(avp);
