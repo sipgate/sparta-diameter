@@ -34,7 +34,7 @@ Feature specifications live in `specs/<feature-name>/`. Each feature directory c
 | `02-design.md` | How it works internally — class design, sequence diagrams, API shape |
 | `03-tasks.md` | Ordered implementation steps, tracked by an agent during execution |
 
-Not every feature needs all three files. Small, well-understood features may have only `tasks.md`. Large features with non-obvious design choices get all three.
+Not every feature needs all three files. Small, well-understood features may have only `03-tasks.md`. Large features with non-obvious design choices get all three.
 
 > **Guardrail:** `specs/` is for implementation specifications. Architectural decisions — those that document a trade-off made at a crossroads, with rejected alternatives — go in `ADR/` per ADR-0001. When in doubt: if it has a "Rejected alternatives" section, it is an ADR.
 
