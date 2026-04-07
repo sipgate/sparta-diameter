@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter._3gpp.sgdgdd.messages;
 
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasAbsentUserDiagnosticSmAVP;
+import com.sipgate.sparta.diameter._3gpp.common.mixins.HasEpsLocationInformationAVP;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSupportedFeaturesAVPs;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasUserIdentifierAVP;
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.SgdGddConstants;
@@ -30,6 +31,7 @@ public interface MtForwardShortMessageAnswer<T extends MtForwardShortMessageAnsw
                 HasAbsentUserDiagnosticSmAVP<T>,
                 HasSmDeliveryFailureCauseAVP<T>, HasSmRpUiAVP<T>,
                 HasRequestedRetransmissionTimeAVP<T>, HasUserIdentifierAVP<T>,
+                HasEpsLocationInformationAVP<T>,
                 HasFailedAVP<T>, HasProxyInfoAVPs<T>, HasRouteRecordAVPs<T> {
 
     final class In extends IncomingAnswer<In>

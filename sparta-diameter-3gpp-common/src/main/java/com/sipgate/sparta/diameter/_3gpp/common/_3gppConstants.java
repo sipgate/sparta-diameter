@@ -20,6 +20,7 @@ public final class _3gppConstants {
     public static final int AVP_EXTERNAL_IDENTIFIER = 3111;
 
     // 3GPP TS 29.272, S6a/S6d, S7a/S7d and S13/S13 interfaces
+    public static final int AVP_EPS_LOCATION_INFORMATION = 1496;
     public static final int AVP_MME_NUMBER_FOR_MT_SMS = 1645;
     public static final int AVP_SGSN_NUMBER = 1489;
 

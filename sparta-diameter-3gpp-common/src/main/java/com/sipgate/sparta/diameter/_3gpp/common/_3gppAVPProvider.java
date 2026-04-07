@@ -34,6 +34,8 @@ public final class _3gppAVPProvider implements AVPProvider {
                 String.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
 
             // 3GPP TS 29.272, S6a/S6d, S7a/S7d and S13/S13 interfaces
+            new AVPDefinition(_3gppConstants.AVP_EPS_LOCATION_INFORMATION, "EPS-Location-Information",
+                GroupedAVP.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
             new AVPDefinition(_3gppConstants.AVP_MME_NUMBER_FOR_MT_SMS, "MME-Number-for-MT-SMS",
                 byte[].class, true, true, _3gppConstants.VENDOR_ID_3GPP),
             new AVPDefinition(_3gppConstants.AVP_SGSN_NUMBER, "SGSN-Number",

@@ -1,5 +1,6 @@
 package com.sipgate.sparta.diameter._3gpp.sgdgdd.messages;
 
+import com.sipgate.sparta.diameter._3gpp.common.mixins.HasEpsLocationInformationAVP;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSmDeliveryOutcomeAVP;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSupportedFeaturesAVPs;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasUserIdentifierAVP;
@@ -29,6 +30,7 @@ public interface MoForwardShortMessageRequest<T extends MoForwardShortMessageReq
                 HasAuthSessionStateAVP<T>,
                 HasScAddressAVP<T>, HasOfrFlagsAVP<T>,
                 HasSupportedFeaturesAVPs<T>, HasUserIdentifierAVP<T>,
+                HasEpsLocationInformationAVP<T>,
                 HasSmRpUiAVP<T>, HasSmsMiCorrelationIdAVP<T>,
                 HasSmDeliveryOutcomeAVP<T>,
                 HasProxyInfoAVPs<T>, HasRouteRecordAVPs<T> {
