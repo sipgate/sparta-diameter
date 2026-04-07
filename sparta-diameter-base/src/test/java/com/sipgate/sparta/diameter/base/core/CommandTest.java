@@ -92,6 +92,23 @@ public class CommandTest {
     }
 
     @Test
+    void it_parses_command_code_bytes_without_sign_extension() {
+        // GIVEN: version 2 forces DiameterResultCodeException, so the exception carries the parsed
+        // commandCode. Middle byte of command 0x008001 is 0x80 — sign extension would yield -32767.
+        final byte[] message = hexStringToByteArray(
+                "0200001480008001000000000000ABCD00001234");
+        final ByteBuffer buffer = ByteBuffer.wrap(message);
+
+        // WHEN / THEN
+        assertThatThrownBy(() -> Command.parseMessage(buffer))
+                .isInstanceOf(DiameterResultCodeException.class)
+                .satisfies(ex -> {
+                    final DiameterResultCodeException rcEx = (DiameterResultCodeException) ex;
+                    assertThat(rcEx.getCommandCode()).isEqualTo(0x008001);
+                });
+    }
+
+    @Test
     void it_throws_DiameterResultCodeException_5011_for_unsupported_version() {
         // GIVEN: a Diameter message header with version 2, command 280, hop-by-hop 0xABCD, end-to-end 0x1234
         final byte[] message = hexStringToByteArray(

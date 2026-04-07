@@ -276,9 +276,9 @@ public abstract class Command<T extends Command<T>> implements
             final boolean isError = (rawFlags & 0x20) != 0;
             final boolean isRetransmitted = (rawFlags & 0x10) != 0;
 
-            final int commandCode = (byteBuffer.get() << 16) |        // bytes 5-7
-                    (byteBuffer.get() << 8) |
-                    byteBuffer.get();
+            final int commandCode = ((byteBuffer.get() & 0xFF) << 16) | // bytes 5-7
+                    ((byteBuffer.get() & 0xFF) << 8) |
+                    (byteBuffer.get() & 0xFF);
 
             final int applicationId = byteBuffer.getInt();            // bytes 8-11
             final HopByHopId hopByHop = new HopByHopId(byteBuffer.getInt());   // bytes 12-15
