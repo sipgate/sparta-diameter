@@ -6,6 +6,34 @@
 
 A Java library for the Diameter protocol (RFC 6733): message parsing and serialization, peer lifecycle management (CER/CEA, DWR/DWA, DPR/DPA), and a Netty-based transport layer for both server and client roles.
 
+## Installation
+
+Pick the modules you need. For example, to use the SGd/Gdd interface:
+
+Maven:
+
+```xml
+<dependency>
+    <groupId>com.sipgate</groupId>
+    <artifactId>sparta-diameter-3gpp-sgdgdd</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
+
+Gradle (Kotlin DSL):
+
+```kotlin
+implementation("com.sipgate:sparta-diameter-3gpp-sgdgdd:0.1.0")
+```
+
+Gradle (Groovy DSL):
+
+```groovy
+implementation 'com.sipgate:sparta-diameter-3gpp-sgdgdd:0.1.0'
+```
+
+See the [Modules](#modules) table for the full list of artifacts.
+
 ## Java Version
 
 Requires Java 17–24. **Java 25 is not supported** — compilation hangs or throws `OutOfMemoryError`.
