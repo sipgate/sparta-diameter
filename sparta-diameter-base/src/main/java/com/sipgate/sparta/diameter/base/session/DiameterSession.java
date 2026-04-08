@@ -292,7 +292,12 @@ public abstract class DiameterSession {
     }
 
     public void onDisconnected(final DiameterPeer peer) {
-        LOGGER.info("disconnected local {} and remote {}", peer.localAddress(), peer.remoteAddress());
+        if (peer == null) {
+            LOGGER.info("disconnected");
+        } else {
+            LOGGER.info("disconnected local {} and remote {}", peer.localAddress(), peer.remoteAddress());
+        }
+
         stopWatchdog();
         this.peerState = PeerState.CLOSED;
         this.watchdogState = WatchdogState.DOWN;
