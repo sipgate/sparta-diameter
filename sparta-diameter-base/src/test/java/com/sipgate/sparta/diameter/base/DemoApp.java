@@ -1,11 +1,9 @@
 package com.sipgate.sparta.diameter.base;
 
 import com.sipgate.sparta.diameter.base.core.Command;
-import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
-import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 
 import java.io.DataOutputStream;
@@ -14,9 +12,9 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 
-public class TestApp {
+public class DemoApp {
 
-    public static void main(String[] args) throws IOException, DiameterException {
+    public static void main(final String[] args) throws IOException, DiameterException {
         // Connect to the Diameter server
         final Socket socket = new Socket();
         socket.connect(new InetSocketAddress("localhost", 3868), 5000);
