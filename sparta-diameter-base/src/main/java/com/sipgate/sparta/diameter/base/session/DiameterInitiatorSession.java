@@ -4,6 +4,7 @@ import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
+import com.sipgate.sparta.diameter.base.core.ResultCodeUtil;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.base.messages.DisconnectPeerRequest;
@@ -69,7 +70,7 @@ public final class DiameterInitiatorSession extends DiameterSession {
             }
 
             if (err instanceof final DiameterErrorAnswerException e) {
-                LOGGER.info("CER rejected: {}", e.getAnswer());
+                LOGGER.info("CER rejected with {}", ResultCodeUtil.describeResultCode(e.getAnswer()));
             } else {
                 LOGGER.error("error during CER/CEA", err);
             }
