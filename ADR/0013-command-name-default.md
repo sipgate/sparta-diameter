@@ -1,6 +1,6 @@
 ---
-title: "ADR-0013: commandName() Default on Command"
-description: "Command.commandName() returns getClass().getName(); GenericCommand overrides with the raw code"
+title: "ADR-0013: getCommandName() Default on Command"
+description: "Command.getCommandName() returns getClass().getName(); GenericCommand overrides with the raw code"
 owner: "sipgate-uhlig"
 status: accepted
 tags:
@@ -23,7 +23,7 @@ The mechanism must satisfy two constraints:
 `Command` provides a non-abstract default:
 
 ```java
-public String commandName() {
+public String getCommandName() {
     return getClass().getName();
 }
 ```
@@ -34,7 +34,7 @@ This returns the fully-qualified class name (e.g. `com.sipgate.sparta.diameter.b
 
 ```java
 @Override
-public String commandName() {
+public String getCommandName() {
     return "Unknown[code=" + getCommandCode() + "]";
 }
 ```
@@ -43,16 +43,16 @@ The raw code is acceptable here specifically because there is no symbolic name t
 
 ## Rejected Alternatives
 
-**Abstract method** — forces every concrete subtype to implement `commandName()` at compile time. Rejected because the default (class name) is already a valid, unique identifier. Requiring every subclass to supply a custom string adds boilerplate with no safety gain: a subclass that blindly returns `""` compiles fine and is worse than the default.
+**Abstract method** — forces every concrete subtype to implement `getCommandName()` at compile time. Rejected because the default (class name) is already a valid, unique identifier. Requiring every subclass to supply a custom string adds boilerplate with no safety gain: a subclass that blindly returns `""` compiles fine and is worse than the default.
 
-**Annotation-based reflection** — place a `@CommandName("Device-Watchdog")` annotation on each class; `commandName()` reads it via reflection. Rejected because reflection adds runtime cost and complexity, and the annotation can go stale without a compile-time check.
+**Annotation-based reflection** — place a `@CommandName("Device-Watchdog")` annotation on each class; `getCommandName()` reads it via reflection. Rejected because reflection adds runtime cost and complexity, and the annotation can go stale without a compile-time check.
 
 **Class name stripping** — derive the pretty name by stripping package prefix and inner-class suffix from `getClass().getSimpleName()`. Rejected because the transformation is fragile: it relies on naming conventions enforced only by code review, and the result (e.g. `DeviceWatchdogRequestIn`) is less readable than the FQN is grep-able.
 
 ## Consequences
 
 - Every `Command` subtype can report its name to logging code without additional implementation work.
-- Protocol-specific modules may override `commandName()` to return RFC/3GPP names when the added readability is worth it.
+- Protocol-specific modules may override `getCommandName()` to return RFC/3GPP names when the added readability is worth it.
 - Unrecognised commands (via `GenericCommand`) expose the raw code, which is the only meaningful identifier available.
 
 ## Related ADRs
