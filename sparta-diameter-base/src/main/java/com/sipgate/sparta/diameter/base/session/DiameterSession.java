@@ -111,7 +111,7 @@ public abstract class DiameterSession {
                     "Handler for " + requestClass.getSimpleName() + " is already registered");
         }
         handlers.put(requestClass, handler);
-        LOGGER.trace("registered handler for {}", requestClass.getName());
+        LOGGER.debug("registered handler for {}", requestClass.getName());
     }
 
     /**

@@ -659,7 +659,7 @@ public class AVP {
                     key.code(), key.vendorId(), definition.name(), existing.name()));
             }
         }
-        LOGGER.trace("registered {}", provider.getClass().getName());
+        LOGGER.debug("registered {}", provider.getClass().getName());
     }
 
     /**

@@ -46,7 +46,7 @@ public final class DiameterMessageFactory {
      */
     public static void register(final DiameterPackageFactory factory) {
         FACTORIES.add(factory);
-        LOGGER.trace("registered {}", factory.getClass().getName());
+        LOGGER.debug("registered {}", factory.getClass().getName());
     }
 
     /**
