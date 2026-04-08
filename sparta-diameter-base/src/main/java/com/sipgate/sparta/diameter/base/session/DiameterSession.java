@@ -453,7 +453,7 @@ public abstract class DiameterSession {
                 watchdogState = WatchdogState.DOWN;
                 closePeer();
             }
-            LOGGER.info("Tw expired, watchdog state = {}", watchdogState);
+            LOGGER.warn("Tw expired, watchdog state = {}", watchdogState);
             return;
         }
         final HopByHopId hopByHop = identifiers.nextHopByHop();

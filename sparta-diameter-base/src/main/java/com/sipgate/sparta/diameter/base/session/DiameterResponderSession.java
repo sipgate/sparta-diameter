@@ -75,7 +75,7 @@ public final class DiameterResponderSession extends DiameterSession {
             peerState = PeerState.R_OPEN;
             startWatchdog();
         } else {
-            LOGGER.info("no common application");
+            LOGGER.warn("no common application");
             peer.send(buildCea(cer, DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION));
             closePeer();
         }
