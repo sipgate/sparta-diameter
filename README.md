@@ -168,6 +168,11 @@ final var avp = userIdentifier.findAVP(
 
 See [docs/metrics.md](docs/metrics.md) for the full list of meters and their tags.
 
+## Preparing a new release
+
+We're using the [Maven release plugin](https://maven.apache.org/maven-release/maven-release-plugin/index.html).
+When ready, run `mvn release:prepare` and follow the instructions. This will create, tag and push a new release.
+
 ## License
 
 MIT. See the [LICENSE](LICENSE) file for details.
