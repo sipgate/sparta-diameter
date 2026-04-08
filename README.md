@@ -201,6 +201,8 @@ See [docs/metrics.md](docs/metrics.md) for the full list of meters and their tag
 We're using the [Maven release plugin](https://maven.apache.org/maven-release/maven-release-plugin/index.html).
 When ready, run `mvn release:prepare` and follow the instructions. This will create, tag and push a new release.
 
+We skip `release:perform` — the actual build and deploy to Maven Central happens in GitHub Actions when the tag lands (see `.github/workflows/publish-release.yml`). After a successful prepare, run `mvn release:clean` to remove `release.properties` and POM backups; otherwise the next `release:prepare` will try to resume the previous run.
+
 ## License
 
 MIT. See the [LICENSE](LICENSE) file for details.
