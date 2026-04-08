@@ -24,8 +24,8 @@
     </developers>
     <scm>
         <url>https://github.com/sipgate/sparta-diameter</url>
-        <connection>scm:git:git://github.com/sipgate/sparta-diameter.git</connection>
-        <developerConnection>scm:git:ssh://github.com:sipgate/sparta-diameter.git</developerConnection>
+        <connection>scm:git:git@github.com:sipgate/sparta-diameter.git</connection>
+        <developerConnection>scm:git:git@github.com:sipgate/sparta-diameter.git</developerConnection>
     </scm>
 
     <modules>
