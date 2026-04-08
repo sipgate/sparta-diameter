@@ -70,12 +70,16 @@ public final class DiameterResponderSession extends DiameterSession {
         final List<Long> remoteAcctIds = cer.getAcctApplicationIds();
         final List<Long> remoteVendorSpecificAppIds = extractVendorSpecificAppIds(cer);
 
-        if (negotiator.hasCommonApplication(config.getCapabilities(), remoteAuthIds, remoteAcctIds, remoteVendorSpecificAppIds)) {
+        final DiameterNodeConfig.Capabilities configCapabilities = config.getCapabilities();
+        if (negotiator.hasCommonApplication(configCapabilities, remoteAuthIds, remoteAcctIds, remoteVendorSpecificAppIds)) {
             peer.send(buildCea(cer, DiameterConstants.RES_DIAMETER_SUCCESS));
             peerState = PeerState.R_OPEN;
             startWatchdog();
         } else {
-            LOGGER.warn("no common application");
+            LOGGER.warn("capabilities exchange did not find any common application");
+            LOGGER.debug(
+                "configCapabilities={}, remoteAuthIds={}, remoteAcctIds={}, remoteVendorSpecificAppIds={}",
+                configCapabilities, remoteAuthIds, remoteAcctIds, remoteVendorSpecificAppIds);
             peer.send(buildCea(cer, DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION));
             closePeer();
         }
