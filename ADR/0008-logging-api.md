@@ -38,6 +38,9 @@ SLF4J parameterized placeholders (`{}`) only — no string concatenation in log 
 
 > **Guardrail:** `System.out`, `System.err`, and `printStackTrace()` are banned in production code. All diagnostic output goes through SLF4J.
 
+
+Empty catch blocks are banned. If an exception is caught and not re-thrown, at minimum log with the exception.
+
 ## Level Mapping
 
 | Level | Use |
