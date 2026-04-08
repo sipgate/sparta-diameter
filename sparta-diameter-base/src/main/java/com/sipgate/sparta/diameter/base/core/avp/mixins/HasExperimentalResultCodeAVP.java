@@ -32,7 +32,7 @@ public interface HasExperimentalResultCodeAVP<T extends HasExperimentalResultCod
     default long getExperimentalResultCode() {
         final AVP experimentalResultCodeAVP = findAVP(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE, 0));
         if (experimentalResultCodeAVP != null) {
-            return experimentalResultCodeAVP.getDataAsLong();
+            return experimentalResultCodeAVP.getDataAsUnsignedInt();
         }
         return -1;
     }
