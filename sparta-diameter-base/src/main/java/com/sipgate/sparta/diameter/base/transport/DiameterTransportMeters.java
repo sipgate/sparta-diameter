@@ -31,12 +31,12 @@ final class DiameterTransportMeters {
         Gauge.builder(PREFIX + "connections.active", activeConnections, AtomicInteger::get)
                 .description("Number of currently open TCP connections.")
                 .register(registry);
-        Gauge.builder(PREFIX + "connections.active", activeInboundConnections, AtomicInteger::get)
-                .description("Number of currently open TCP connections.")
+        Gauge.builder(PREFIX + "connections.active.direction", activeInboundConnections, AtomicInteger::get)
+                .description("Number of currently open TCP connections by direction.")
                 .tag(TAG_DIRECTION, DIRECTION_INBOUND)
                 .register(registry);
-        Gauge.builder(PREFIX + "connections.active", activeOutboundConnections, AtomicInteger::get)
-                .description("Number of currently open TCP connections.")
+        Gauge.builder(PREFIX + "connections.active.direction", activeOutboundConnections, AtomicInteger::get)
+                .description("Number of currently open TCP connections by direction.")
                 .tag(TAG_DIRECTION, DIRECTION_OUTBOUND)
                 .register(registry);
     }
@@ -81,8 +81,8 @@ final class DiameterTransportMeters {
             activeConnectionsByAppId
                     .computeIfAbsent(appIdStr, id -> {
                         final var counter = new AtomicInteger(0);
-                        Gauge.builder(PREFIX + "connections.active", counter, AtomicInteger::get)
-                                .description("Number of currently open TCP connections.")
+                        Gauge.builder(PREFIX + "connections.active.application", counter, AtomicInteger::get)
+                                .description("Number of currently open TCP connections by application.")
                                 .tag(TAG_APPLICATION_ID, id)
                                 .register(registry);
                         return counter;
