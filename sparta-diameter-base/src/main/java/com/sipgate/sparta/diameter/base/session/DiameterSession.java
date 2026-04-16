@@ -399,7 +399,7 @@ public abstract class DiameterSession {
         }
         meters.recordOutgoingRequestError(pending.commandCode, pending.applicationId, cause);
         pending.timeoutTask.cancel(false);
-        pending.future.completeExceptionally(cause);
+        pending.future.completeExceptionally(cause == null ? new Exception("unspecified cause") : cause);
     }
 
     /**
