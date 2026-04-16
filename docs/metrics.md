@@ -5,7 +5,8 @@ All meters use the `diameter.` prefix and follow [Micrometer naming conventions]
 | Meter | Type | `application_id` | `command_code` | `command_type` | `direction` | `cause` | Description |
 |---|---|:---:|:---:|:---:|:---:|:---:|---|
 | `diameter.commands.received` | Counter | ✓ | ✓ | ✓ | | | Incremented for every Diameter command received from the peer after successful decode. |
-| `diameter.commands.sent` | Counter | ✓ | ✓ | ✓ | | | Incremented only on confirmed write success; write failures go to `diameter.requests.errors`. |
+| `diameter.commands.sent` | Counter | ✓ | ✓ | ✓ | | | Incremented only on confirmed write success. |
+| `diameter.commands.send_errors` | Counter | ✓ | ✓ | ✓ | | | Incremented only on failed writes. |
 | `diameter.connections` | Counter | | | | ✓ | | Counts completed TCP handshakes (SYN/ACK). Does NOT indicate a successful Diameter CER/CEA exchange. |
 | `diameter.connections.active` | Gauge | | | | | | Total number of currently open TCP connections. |
 | `diameter.connections.active.application` | Gauge | ✓ | | | | | Number of currently open TCP connections by application. |
