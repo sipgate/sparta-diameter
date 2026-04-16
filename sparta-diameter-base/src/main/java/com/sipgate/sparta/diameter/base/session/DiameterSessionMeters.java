@@ -24,7 +24,7 @@ final class DiameterSessionMeters {
      */
     void recordOutgoingRequestError(final int commandCode, final int applicationId, final Throwable cause) {
         Counter.builder(PREFIX + "requests.errors")
-                .description("Errors received after sending a Diameter request.")
+                .description("Errors received after sending a Diameter request, e.g. write failures, error answers, timeouts, disconnects, cancellations")
                 .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
                 .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
                 .tag(TAG_CAUSE, cause == null ? "none" : cause.getClass().getSimpleName())
