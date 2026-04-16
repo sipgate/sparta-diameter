@@ -2,7 +2,7 @@
 
 All meters use the `diameter.` prefix and follow [Micrometer naming conventions](https://docs.micrometer.io/micrometer/reference/concepts/naming.html).
 
-| Meter | Type | `application_id` | `command_code` | `command_type` | `direction` | `error_type` | Description |
+| Meter | Type | `application_id` | `command_code` | `command_type` | `direction` | `cause` | Description |
 |---|---|:---:|:---:|:---:|:---:|:---:|---|
 | `diameter.commands.received` | Counter | ✓ | ✓ | ✓ | | | Incremented for every Diameter command received from the peer after successful decode. |
 | `diameter.commands.sent` | Counter | ✓ | ✓ | ✓ | | | Incremented only on confirmed write success; write failures go to `diameter.requests.errors`. |
@@ -14,7 +14,8 @@ All meters use the `diameter.` prefix and follow [Micrometer naming conventions]
 | `diameter.disconnections` | Counter | | | | ✓ | | Counts TCP disconnections. Does NOT indicate a clean Diameter DPR/DPA exchange. |
 | `diameter.handler.duration` | Timer | ✓ | ✓ | | | | Time from receiving an inbound request to the handler future completing. |
 | `diameter.request.duration` | Timer | ✓ | ✓ | | | | Round-trip time for an outbound request, measured until the answer is received. Excludes timed-out and write-failed requests. |
-| `diameter.requests.errors` | Counter | ✓ | ✓ | | | ✓ | Error events for both outbound requests and inbound handler failures, distinguished by `error_type`. |
+| `diameter.requests.errors` | Counter | ✓ | ✓ | | | ✓ | Error events for outbound requests. |
+| `diameter.handler.errors` | Counter | ✓ | ✓ | | | ✓ | Error events for inbound handler failures. |
 
 > Malicious peers can inflate `application_id` and `command_code` values to generate high-cardinality label sets. Defending against this is the application's responsibility via Micrometer's `MeterFilter`. See also ADR-0010 for the design rationale.
 
@@ -26,4 +27,4 @@ All meters use the `diameter.` prefix and follow [Micrometer naming conventions]
 | `command_code` | numeric command code, e.g. `257`, `280` |
 | `command_type` | `request`, `answer` |
 | `direction` | `inbound`, `outbound` |
-| `error_type` | `timeout`, `write_failure`, `error_answer`, `handler_error_answer`, `handler_exception` |
+| `cause` | Class.getSimpleName() |

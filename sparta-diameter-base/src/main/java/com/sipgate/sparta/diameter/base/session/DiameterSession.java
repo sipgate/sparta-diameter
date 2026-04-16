@@ -230,10 +230,10 @@ public abstract class DiameterSession {
             // applications to indicate a diameter business error.
             if (err instanceof final DiameterErrorAnswerException e && e.getAnswer() instanceof final ErrorAnswer.Out out) {
                 send(out);
-                meters.recordError(commandCode, applicationId, DiameterSessionMeters.ERROR_TYPE_HANDLER_ERROR_ANSWER);
+                meters.recordHandlerError(commandCode, applicationId, err);
             } else if (err != null) {
                 send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
-                meters.recordError(commandCode, applicationId, DiameterSessionMeters.ERROR_TYPE_HANDLER_EXCEPTION);
+                meters.recordHandlerError(commandCode, applicationId, err);
             } else {
                 send(answer);
             }
@@ -260,7 +260,7 @@ public abstract class DiameterSession {
         } else {
             final long timeoutMs = timeout.toMillis();
             timeoutTask = peer.eventLoop().schedule(
-                    () -> timeout(hopByHop, timeoutMs, commandCode, applicationId),
+                    () -> timeout(hopByHop, timeoutMs),
                     timeoutMs, TimeUnit.MILLISECONDS);
         }
 
@@ -380,18 +380,16 @@ public abstract class DiameterSession {
         pending.timeoutTask.cancel(false);
         meters.stopRequestTimer(pending.timerSample, pending.commandCode, pending.applicationId);
         if (answer instanceof final ErrorAnswer.In errorAnswer) {
-            meters.recordError(pending.commandCode, pending.applicationId, DiameterSessionMeters.ERROR_TYPE_ERROR_ANSWER);
-            pending.future.completeExceptionally(new DiameterErrorAnswerException(errorAnswer));
+            final var cause = new DiameterErrorAnswerException(errorAnswer);
+            meters.recordOutgoingRequestError(pending.commandCode, pending.applicationId, cause);
+            pending.future.completeExceptionally(cause);
         } else {
             pending.future.complete(answer);
         }
     }
 
-    private void timeout(final HopByHopId hopByHop, final long timeoutMs,
-                         final int commandCode, final int applicationId) {
-        meters.recordError(commandCode, applicationId, DiameterSessionMeters.ERROR_TYPE_TIMEOUT);
-        fail(hopByHop, new TimeoutException(
-                "Request " + hopByHop.value() + " timed out after " + timeoutMs + " ms"));
+    private void timeout(final HopByHopId hopByHop, final long timeoutMs) {
+        fail(hopByHop, new TimeoutException("Request " + hopByHop.value() + " timed out after " + timeoutMs + " ms"));
     }
 
     private void fail(final HopByHopId hopByHop, final Throwable cause) {
@@ -399,6 +397,7 @@ public abstract class DiameterSession {
         if (pending == null) {
             return;
         }
+        meters.recordOutgoingRequestError(pending.commandCode, pending.applicationId, cause);
         pending.timeoutTask.cancel(false);
         pending.future.completeExceptionally(cause);
     }

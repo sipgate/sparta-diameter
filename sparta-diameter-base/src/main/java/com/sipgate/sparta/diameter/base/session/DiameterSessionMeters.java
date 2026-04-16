@@ -6,15 +6,10 @@ import io.micrometer.core.instrument.Timer;
 
 final class DiameterSessionMeters {
 
-    static final String ERROR_TYPE_TIMEOUT = "timeout";
-    static final String ERROR_TYPE_ERROR_ANSWER = "error_answer";
-    static final String ERROR_TYPE_HANDLER_ERROR_ANSWER = "handler_error_answer";
-    static final String ERROR_TYPE_HANDLER_EXCEPTION = "handler_exception";
-
     private static final String PREFIX = "diameter.";
     private static final String TAG_COMMAND_CODE = "command_code";
     private static final String TAG_APPLICATION_ID = "application_id";
-    private static final String TAG_ERROR_TYPE = "error_type";
+    private static final String TAG_CAUSE = "cause";
 
     private final MeterRegistry registry;
 
@@ -25,14 +20,29 @@ final class DiameterSessionMeters {
     /**
      * @param commandCode as specified in diameter
      * @param applicationId as specified in diameter
-     * @param errorType one of the ERROR_TYPE_* constants
+     * @param cause class name used for tag
      */
-    void recordError(final int commandCode, final int applicationId, final String errorType) {
+    void recordOutgoingRequestError(final int commandCode, final int applicationId, final Throwable cause) {
         Counter.builder(PREFIX + "requests.errors")
-                .description("Errors encountered while handling a Diameter request, tagged by error_type (timeout, error_answer, handler_error_answer, handler_exception).")
+                .description("Errors received after sending a Diameter request.")
                 .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
                 .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
-                .tag(TAG_ERROR_TYPE, errorType)
+                .tag(TAG_CAUSE, cause.getClass().getSimpleName())
+                .register(registry)
+                .increment();
+    }
+
+    /**
+     * @param commandCode as specified in diameter
+     * @param applicationId as specified in diameter
+     * @param cause class name used for tag
+     */
+    void recordHandlerError(final int commandCode, final int applicationId, final Throwable cause) {
+        Counter.builder(PREFIX + "handler.errors")
+                .description("Errors encountered while handling a Diameter request.")
+                .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
+                .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
+                .tag(TAG_CAUSE, cause.getClass().getSimpleName())
                 .register(registry)
                 .increment();
     }
