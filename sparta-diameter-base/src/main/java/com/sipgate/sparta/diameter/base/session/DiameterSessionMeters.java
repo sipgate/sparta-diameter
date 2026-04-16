@@ -27,7 +27,7 @@ final class DiameterSessionMeters {
                 .description("Errors received after sending a Diameter request.")
                 .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
                 .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
-                .tag(TAG_CAUSE, cause.getClass().getSimpleName())
+                .tag(TAG_CAUSE, cause == null ? "none" : cause.getClass().getSimpleName())
                 .register(registry)
                 .increment();
     }
@@ -42,7 +42,7 @@ final class DiameterSessionMeters {
                 .description("Errors encountered while handling a Diameter request.")
                 .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
                 .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
-                .tag(TAG_CAUSE, cause.getClass().getSimpleName())
+                .tag(TAG_CAUSE, cause == null ? "none" : cause.getClass().getSimpleName())
                 .register(registry)
                 .increment();
     }
