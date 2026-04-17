@@ -4,7 +4,11 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Objects;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 
 final class DiameterSessionMeters {
 
@@ -30,7 +34,7 @@ final class DiameterSessionMeters {
                 .description("Errors received after sending a Diameter request, e.g. write failures, error answers, timeouts, disconnects, cancellations")
                 .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
                 .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
-                .tag(TAG_CAUSE, cause.getClass().getSimpleName())
+                .tag(TAG_CAUSE, extractCauseTag(cause))
                 .register(registry)
                 .increment();
     }
@@ -46,9 +50,23 @@ final class DiameterSessionMeters {
                 .description("Errors encountered while handling a Diameter request.")
                 .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
                 .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
-                .tag(TAG_CAUSE, cause.getClass().getSimpleName())
+                .tag(TAG_CAUSE, extractCauseTag(cause))
                 .register(registry)
                 .increment();
+    }
+
+    private static String extractCauseTag(final Throwable cause) {
+        final var effectiveCause = extractEffectiveCause(cause);
+        final var simple = effectiveCause.getClass().getSimpleName();
+        return simple.isEmpty() ? effectiveCause.getClass().getName() : simple;
+    }
+
+    private static Throwable extractEffectiveCause(final Throwable wrapper) {
+        if (wrapper instanceof CompletionException || wrapper instanceof UncheckedIOException || wrapper instanceof ExecutionException) {
+            return wrapper.getCause() == null ? wrapper : wrapper.getCause();
+        }
+
+        return wrapper;
     }
 
     Timer.Sample startTimer() {
