@@ -15,7 +15,10 @@ the application.
 - The `OutgoingRequest` object passed to `relay()` is never modified
 - The application is responsible for appending a `Route-Record` AVP before calling `relay()`
 - `relay()` returns a `CompletableFuture<A>` that completes when the answer arrives
-- All other AVPs in the outgoing request are forwarded unchanged
+- All other AVPs in the outgoing request are forwarded unchanged, including `Origin-Realm` and `Origin-Host`.
+
+  > NB: The current implementation always overrides the configured `Origin-Realm` and `Origin-Host` for any outgoing
+  diameter command.
 
 ## Open design question
 

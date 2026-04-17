@@ -26,6 +26,7 @@ import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import io.netty.channel.ChannelFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +50,9 @@ public abstract class DiameterSession {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DiameterSession.class);
 
-    public abstract void onConnected(DiameterPeer peer);
+    public void onConnected(final DiameterPeer peer) {
+        this.peer = peer;
+    }
 
     public abstract void onMessage(IncomingCommand command);
 
@@ -60,7 +63,7 @@ public abstract class DiameterSession {
 
     protected PeerState peerState;
     protected WatchdogState watchdogState;
-    protected DiameterPeer peer;
+    private DiameterPeer peer;
 
     protected boolean shuttingDown = false;
 
@@ -98,6 +101,22 @@ public abstract class DiameterSession {
         final HopByHopId hopByHop = identifiers.nextHopByHop();
         final EndToEndId endToEnd = DiameterIdentifiers.nextEndToEnd();
         return sendAndTrack(request, hopByHop, endToEnd, config.getRequestTimeout());
+    }
+
+    ChannelFuture send(final OutgoingAnswer<?> answer) {
+        return send(peer, answer);
+    }
+
+    private ChannelFuture send(final DiameterPeer peer, final OutgoingAnswer<?> answer) {
+        answer.setOriginHost(config.getOriginHost());
+        answer.setOriginRealm(config.getOriginRealm());
+        return peer.send(answer);
+    }
+
+    ChannelFuture send(final OutgoingRequest<?, ?> request, final HopByHopId hopByHop, final EndToEndId endToEnd) {
+        request.setOriginHost(config.getOriginHost());
+        request.setOriginRealm(config.getOriginRealm());
+        return peer.send(request, hopByHop, endToEnd);
     }
 
     /**
@@ -179,7 +198,7 @@ public abstract class DiameterSession {
     protected void handleInboundDpr(final DisconnectPeerRequest.In dpr) {
         stopWatchdog();
         peerState = PeerState.CLOSING;
-        peer.send(DiameterMessageFactory.createAnswer(dpr, DiameterConstants.RES_DIAMETER_SUCCESS))
+        send(DiameterMessageFactory.createAnswer(dpr, DiameterConstants.RES_DIAMETER_SUCCESS))
             .addListener(ignored -> closePeer());
     }
 
@@ -200,7 +219,7 @@ public abstract class DiameterSession {
         final DiameterRequestHandler handler = handlers.get(request.getClass());
         if (handler == null) {
             LOGGER.warn("request unsupported: {}", request.getCommandName());
-            peer.send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED));
+            send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED));
             return;
         }
         final Timer.Sample handlerSample = meters.startTimer();
@@ -210,13 +229,13 @@ public abstract class DiameterSession {
             // Keep this if even though nobody throws DiameterErrorAnswerException inside this lib. This is a way for
             // applications to indicate a diameter business error.
             if (err instanceof final DiameterErrorAnswerException e && e.getAnswer() instanceof final ErrorAnswer.Out out) {
-                peer.send(out);
+                send(out);
                 meters.recordError(commandCode, applicationId, DiameterSessionMeters.ERROR_TYPE_HANDLER_ERROR_ANSWER);
             } else if (err != null) {
-                peer.send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
+                send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
                 meters.recordError(commandCode, applicationId, DiameterSessionMeters.ERROR_TYPE_HANDLER_EXCEPTION);
             } else {
-                peer.send(answer);
+                send(answer);
             }
         });
     }
@@ -248,7 +267,7 @@ public abstract class DiameterSession {
         final Timer.Sample timerSample = meters.startTimer();
         pendingRequests.put(hopByHop, new PendingRequest<>(future, timeoutTask, timerSample, commandCode, applicationId));
 
-        peer.send(request, hopByHop, endToEnd).addListener(writeResult -> {
+        send(request, hopByHop, endToEnd).addListener(writeResult -> {
             if (!writeResult.isSuccess()) {
                 fail(hopByHop, writeResult.cause());
             }
@@ -325,10 +344,10 @@ public abstract class DiameterSession {
                     true,
                     List.of(avpEx.getOffendingAvp()));
             answer.setFailedAVP(failedAvp);
-            peer.send(answer);
+            send(peer, answer);
         } else if (cause instanceof final DiameterResultCodeException rcEx) {
             final ErrorAnswer.Out answer = buildParseErrorAnswer(rcEx);
-            peer.send(answer);
+            send(peer, answer);
             stop();
         } else {
             closePeer();
@@ -336,9 +355,7 @@ public abstract class DiameterSession {
     }
 
     private ErrorAnswer.Out buildParseErrorAnswer(final DiameterResultCodeException e) {
-        return DiameterMessageFactory.createErrorAnswer(e)
-                .setOriginHost(config.getOriginHost())
-                .setOriginRealm(config.getOriginRealm());
+        return DiameterMessageFactory.createErrorAnswer(e);
     }
 
     PeerState getPeerState() {
@@ -390,8 +407,6 @@ public abstract class DiameterSession {
      * Populates origin, host IP, vendor, product, and application AVPs on a CER.
      */
     protected void populateCapabilityAvps(final CapabilitiesExchangeRequest.Out cer) {
-        cer.setOriginHost(config.getOriginHost());
-        cer.setOriginRealm(config.getOriginRealm());
         cer.setVendorId(config.getVendorId());
         cer.setProductName(config.getProductName());
         cer.addAllHostIpAddresses(config.getHostIpAddresses());
@@ -407,8 +422,6 @@ public abstract class DiameterSession {
      * Populates origin, host IP, vendor, product, and application AVPs on a CEA.
      */
     protected void populateCapabilityAvps(final CapabilitiesExchangeAnswer.Out cea) {
-        cea.setOriginHost(config.getOriginHost());
-        cea.setOriginRealm(config.getOriginRealm());
         cea.setVendorId(config.getVendorId());
         cea.setProductName(config.getProductName());
         cea.addAllHostIpAddresses(config.getHostIpAddresses());

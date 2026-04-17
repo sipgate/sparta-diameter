@@ -38,7 +38,7 @@ public final class DiameterResponderSession extends DiameterSession {
     @Override
     public void onConnected(final DiameterPeer peer) {
         LOGGER.info("remote {} connected to local {}", peer.remoteAddress(), peer.localAddress());
-        this.peer = peer;
+        super.onConnected(peer);
     }
 
     @Override
@@ -72,7 +72,7 @@ public final class DiameterResponderSession extends DiameterSession {
 
         final DiameterNodeConfig.Capabilities configCapabilities = config.getCapabilities();
         if (negotiator.hasCommonApplication(configCapabilities, remoteAuthIds, remoteAcctIds, remoteVendorSpecificAppIds)) {
-            peer.send(buildCea(cer, DiameterConstants.RES_DIAMETER_SUCCESS));
+            send(buildCea(cer, DiameterConstants.RES_DIAMETER_SUCCESS));
             peerState = PeerState.R_OPEN;
             startWatchdog();
         } else {
@@ -80,7 +80,7 @@ public final class DiameterResponderSession extends DiameterSession {
             LOGGER.debug(
                 "configCapabilities={}, remoteAuthIds={}, remoteAcctIds={}, remoteVendorSpecificAppIds={}",
                 configCapabilities, remoteAuthIds, remoteAcctIds, remoteVendorSpecificAppIds);
-            peer.send(buildCea(cer, DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION));
+            send(buildCea(cer, DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION));
             closePeer();
         }
     }
