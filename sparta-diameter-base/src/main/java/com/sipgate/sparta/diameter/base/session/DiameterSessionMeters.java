@@ -4,6 +4,8 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
+import java.util.Objects;
+
 final class DiameterSessionMeters {
 
     private static final String PREFIX = "diameter.";
@@ -23,11 +25,12 @@ final class DiameterSessionMeters {
      * @param cause class name used for tag
      */
     void recordOutgoingRequestError(final int commandCode, final int applicationId, final Throwable cause) {
+        Objects.requireNonNull(cause, "cause must not be null");
         Counter.builder(PREFIX + "requests.errors")
                 .description("Errors received after sending a Diameter request, e.g. write failures, error answers, timeouts, disconnects, cancellations")
                 .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
                 .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
-                .tag(TAG_CAUSE, cause == null ? "none" : cause.getClass().getSimpleName())
+                .tag(TAG_CAUSE, cause.getClass().getSimpleName())
                 .register(registry)
                 .increment();
     }
@@ -38,11 +41,12 @@ final class DiameterSessionMeters {
      * @param cause class name used for tag
      */
     void recordHandlerError(final int commandCode, final int applicationId, final Throwable cause) {
+        Objects.requireNonNull(cause, "cause must not be null");
         Counter.builder(PREFIX + "handler.errors")
                 .description("Errors encountered while handling a Diameter request.")
                 .tag(TAG_COMMAND_CODE, String.valueOf(commandCode))
                 .tag(TAG_APPLICATION_ID, String.valueOf(applicationId))
-                .tag(TAG_CAUSE, cause == null ? "none" : cause.getClass().getSimpleName())
+                .tag(TAG_CAUSE, cause.getClass().getSimpleName())
                 .register(registry)
                 .increment();
     }

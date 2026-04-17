@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -393,13 +394,14 @@ public abstract class DiameterSession {
     }
 
     private void fail(final HopByHopId hopByHop, final Throwable cause) {
+        Objects.requireNonNull(cause, "cause must not be null");
         final PendingRequest<?> pending = pendingRequests.remove(hopByHop);
         if (pending == null) {
             return;
         }
         meters.recordOutgoingRequestError(pending.commandCode, pending.applicationId, cause);
         pending.timeoutTask.cancel(false);
-        pending.future.completeExceptionally(cause == null ? new Exception("unspecified cause") : cause);
+        pending.future.completeExceptionally(cause);
     }
 
     /**
