@@ -358,7 +358,7 @@ public abstract class DiameterSession {
         return DiameterMessageFactory.createErrorAnswer(e);
     }
 
-    PeerState getPeerState() {
+    public PeerState getPeerState() {
         return peerState;
     }
 
