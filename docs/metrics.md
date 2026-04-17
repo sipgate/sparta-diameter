@@ -28,4 +28,4 @@ All meters use the `diameter.` prefix and follow [Micrometer naming conventions]
 | `command_code` | numeric command code, e.g. `257`, `280` |
 | `command_type` | `request`, `answer` |
 | `direction` | `inbound`, `outbound` |
-| `cause` | Class.getSimpleName() |
+| `cause` | based on the supplied throwable |
