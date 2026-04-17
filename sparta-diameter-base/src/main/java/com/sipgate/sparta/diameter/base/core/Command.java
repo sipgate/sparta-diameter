@@ -6,6 +6,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPParseException;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginHostAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginRealmAVP;
+import com.sipgate.sparta.diameter.base.core.avp.mixins.HasSessionIdAVP;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -23,6 +24,7 @@ import java.util.List;
  */
 public abstract class Command<T extends Command<T>> implements
     Selfable<T>,
+    HasSessionIdAVP<T>,
     HasOriginHostAVP<T>,
     HasOriginRealmAVP<T> {
 
@@ -115,6 +117,15 @@ public abstract class Command<T extends Command<T>> implements
      * @return A copy of the list of AVPs.
      */
     protected List<AVP> getAVPs() { return new ArrayList<>(avps); }
+
+    /**
+     * Adds an AVP to this command at first position (RFX 6733 requires that Session-Id AVP is the first)
+     *
+     * @param avp The AVP to add
+     */
+    public void unshiftAvp(final AVP avp) {
+        avps.add(0, avp);
+    }
 
     /**
      * Adds an AVP to this command.
@@ -301,17 +312,24 @@ public abstract class Command<T extends Command<T>> implements
             if (version != DiameterConstants.DIAMETER_VERSION) {
                 throw new DiameterResultCodeException(
                         DiameterConstants.RES_DIAMETER_UNSUPPORTED_VERSION,
-                        commandCode, proxiable, applicationId, hopByHop, endToEnd);
+                        commandCode, proxiable, applicationId, hopByHop, endToEnd, null);
             }
 
-            final List<AVP> avps;
+            final List<AVP> avps = new ArrayList<>();
             try {
-                avps = parseAVPs(byteBuffer, messageLength - 20);
+                parseAVPs(byteBuffer, messageLength - 20, avps);
             } catch (final AVPParseException e) {
+                final var sessionIdKey = new AVPKey(DiameterConstants.AVP_SESSION_ID, 0);
+                final var sessionId = avps.stream()
+                    .filter(avp -> avp.isSameKey(sessionIdKey))
+                    .findFirst()
+                    .map(AVP::getDataAsString)
+                    .orElse(null);
+
                 // the exception from parseAVPs doesn't know about the context so we must enrich it here.
                 throw new AVPParseException(e.getResultCode(),
                         commandCode, proxiable, applicationId, hopByHop, endToEnd,
-                        e.getOffendingAvp());
+                        e.getOffendingAvp(), sessionId);
             }
 
             final IncomingCommand command = DiameterMessageFactory.createForParsing(
@@ -337,13 +355,12 @@ public abstract class Command<T extends Command<T>> implements
      *
      * @param byteBuffer      the ByteBuffer to read from
      * @param remainingLength the number of bytes remaining in the message after the header
-     * @return a list of parsed AVPs
+     * @param avps will be modified within the function, filled with each parsed AVP
      * @throws IOException       if an I/O error occurs while reading the AVPs
      * @throws AVPParseException if the first AVP in the buffer violates RFC 6733
      */
-    private static List<AVP> parseAVPs(final ByteBuffer byteBuffer, final int remainingLength)
+    private static void parseAVPs(final ByteBuffer byteBuffer, final int remainingLength, final List<AVP> avps)
             throws IOException, AVPParseException {
-        final List<AVP> avps = new ArrayList<>();
         int bytesRead = 0;
 
         while (bytesRead < remainingLength) {
@@ -352,8 +369,6 @@ public abstract class Command<T extends Command<T>> implements
             final int padding = (4 - (avp.getLength() % 4)) % 4;
             bytesRead += avp.getLength() + padding;
         }
-
-        return avps;
     }
 
 }

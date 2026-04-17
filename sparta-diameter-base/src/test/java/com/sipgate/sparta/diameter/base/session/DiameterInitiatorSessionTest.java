@@ -1156,7 +1156,7 @@ class DiameterInitiatorSessionTest {
         final AVP offending = AVP.createRaw(new AVPKey(999, 0), true, true, false, new byte[0]);
         final AVPParseException cause = new AVPParseException(
                 DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED,
-                280, true, 0, new HopByHopId(1), new EndToEndId(2), offending);
+                280, true, 0, new HopByHopId(1), new EndToEndId(2), offending, null);
 
         // WHEN
         session.onParseError(peer, cause);
@@ -1180,7 +1180,7 @@ class DiameterInitiatorSessionTest {
         final DiameterInitiatorSession session = openedSession(peer, tasks);
         final DiameterResultCodeException cause = new DiameterResultCodeException(
                 DiameterConstants.RES_DIAMETER_UNSUPPORTED_VERSION,
-                280, false, 0, new HopByHopId(1), new EndToEndId(2));
+                280, false, 0, new HopByHopId(1), new EndToEndId(2), null);
 
         // WHEN
         session.onParseError(peer, cause);

@@ -117,18 +117,35 @@ public final class DiameterMessageFactory {
     public static ErrorAnswer.Out createErrorAnswer(
             final IncomingRequest<?, ?> request,
             final long resultCode) {
-        return new ErrorAnswer.Out(
+        return createErrorAnswer(
                 request.getCommandCode(),
                 request.isProxiable(),
                 request.getApplicationId(),
                 request.hopByHopId(),
-                request.endToEndId()
-        ).setResultCode(resultCode);
+                request.endToEndId(),
+                request.getSessionId(),
+                resultCode
+        );
     }
 
     public static ErrorAnswer.Out createErrorAnswer(final DiameterResultCodeException cause) {
-        return new ErrorAnswer.Out(cause.getCommandCode(), cause.isProxiable(), cause.getApplicationId(), cause.getHopByHop(), cause.getEndToEnd())
-                .setResultCode(cause.getResultCode());
+        return createErrorAnswer(cause.getCommandCode(), cause.isProxiable(), cause.getApplicationId(), cause.getHopByHop(), cause.getEndToEnd(), cause.getSessionId(), cause.getResultCode());
+    }
+
+    private static ErrorAnswer.Out createErrorAnswer(
+        final int commandCode,
+        final boolean isProxiable,
+        final int applicationId,
+        final HopByHopId hopByHop,
+        final EndToEndId endToEnd,
+        final String sessionId,
+        final long resultCode
+    ) {
+        final var errorAnswer= new ErrorAnswer.Out(commandCode, isProxiable, applicationId, hopByHop, endToEnd);
+        if (sessionId != null) {
+            errorAnswer.unshiftAvp(AVP.create(new AVPKey(DiameterConstants.AVP_SESSION_ID, 0), sessionId));
+        }
+        return errorAnswer.setResultCode(resultCode);
     }
 
     /**
@@ -174,12 +191,20 @@ public final class DiameterMessageFactory {
             @SuppressWarnings("unchecked")
             final A answer = (A) factory.createAnswer(commandCode, applicationId, request.hopByHopId(), request.endToEndId());
             if (answer != null) {
+                prependSessionId(request, answer);
                 initializer.accept(answer);
                 return answer;
             }
         }
 
         throw new IllegalArgumentException("No factory handles answer for command code: " + commandCode);
+    }
+
+    private static void prependSessionId(final Request<?, ?> request, final Answer<?> answer) {
+        final var sessionId = request.getSessionId();
+        if (sessionId != null) {
+            answer.unshiftAvp(AVP.create(new AVPKey(DiameterConstants.AVP_SESSION_ID, 0), sessionId));
+        }
     }
 
 }

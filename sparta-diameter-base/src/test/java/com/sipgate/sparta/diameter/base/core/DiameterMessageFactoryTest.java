@@ -2,9 +2,14 @@ package com.sipgate.sparta.diameter.base.core;
 
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogAnswer;
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogRequest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static com.sipgate.sparta.diameter.base.core.DiameterConstants.RES_DIAMETER_SUCCESS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 class DiameterMessageFactoryTest {
 
@@ -54,15 +59,112 @@ class DiameterMessageFactoryTest {
                         DiameterConstants.CMD_DEVICE_WATCHDOG, 0, true, true, false, HOP, END, false);
 
         // WHEN
-        final OutgoingAnswer<?> answer = DiameterMessageFactory.createAnswer(
-                request, DiameterConstants.RES_DIAMETER_SUCCESS);
+        final OutgoingAnswer<?> answer = DiameterMessageFactory.createAnswer(request, RES_DIAMETER_SUCCESS);
 
         // THEN
         assertThat(answer).isInstanceOf(DeviceWatchdogAnswer.Out.class);
         assertThat(answer.hopByHopId()).isEqualTo(HOP);
         assertThat(answer.endToEndId()).isEqualTo(END);
-        assertThat(answer.getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_SUCCESS);
-        assertThat(((Command<?>) answer).isRequest()).isFalse();
+        assertThat(answer.getResultCode()).isEqualTo(RES_DIAMETER_SUCCESS);
+        assertThat(answer.isRequest()).isFalse();
+    }
+
+    @Nested
+    class SessionId {
+        private DeviceWatchdogRequest.In request;
+
+        @BeforeEach
+        void setUp() {
+            request = spy((DeviceWatchdogRequest.In)
+                DiameterMessageFactory.createForParsing(
+                    DiameterConstants.CMD_DEVICE_WATCHDOG, 0, true, true, false, HOP, END, false));
+        }
+
+        @Nested
+        class HasSessionId {
+            static final String SESSION_ID = "some-session-id";
+
+            @BeforeEach
+            void setUp() {
+                when(request.getSessionId()).thenReturn(SESSION_ID);
+            }
+
+            @Test
+            void create_answer_sets_session_id() {
+                // GIVEN: see setup
+                // WHEN
+                final var answer = DiameterMessageFactory.createAnswer(request, RES_DIAMETER_SUCCESS);
+
+                // THEN
+                assertThat(answer.getSessionId()).isEqualTo(SESSION_ID);
+            }
+
+            @Test
+            void create_error_answer_sets_session_id() {
+                // GIVEN: see setup
+                // WHEN
+                final var answer = DiameterMessageFactory.createErrorAnswer(request, RES_DIAMETER_SUCCESS);
+
+                // THEN
+                assertThat(answer).isInstanceOf(ErrorAnswer.class);
+                assertThat(answer.getSessionId()).isEqualTo(SESSION_ID);
+            }
+
+            @Test
+            void create_error_answer_for_result_code_exception_sets_session_id() {
+                // GIVEN: a cause with session id
+                final var cause = new DiameterResultCodeException(RES_DIAMETER_SUCCESS, 123, false, 456, HOP, END, SESSION_ID);
+
+                // WHEN
+                final var answer = DiameterMessageFactory.createErrorAnswer(cause);
+
+                // THEN
+                assertThat(answer).isInstanceOf(ErrorAnswer.class);
+                assertThat(answer.getSessionId()).isEqualTo(SESSION_ID);
+            }
+        }
+
+        @Nested
+        class NoSessionId {
+            @BeforeEach
+            void setUp() {
+                when(request.getSessionId()).thenReturn(null);
+            }
+
+            @Test
+            void create_answer_does_not_set_session_id() {
+                // GIVEN: see setup
+                // WHEN
+                final var answer = DiameterMessageFactory.createAnswer(request, RES_DIAMETER_SUCCESS);
+
+                // THEN
+                assertThat(answer.getSessionId()).isNull();
+            }
+
+            @Test
+            void create_error_answer_does_not_set_session_id() {
+                // GIVEN: see setup
+                // WHEN
+                final var answer = DiameterMessageFactory.createErrorAnswer(request, RES_DIAMETER_SUCCESS);
+
+                // THEN
+                assertThat(answer).isInstanceOf(ErrorAnswer.class);
+                assertThat(answer.getSessionId()).isNull();
+            }
+
+            @Test
+            void create_error_answer_for_result_code_exception_does_not_set_session_id() {
+                // GIVEN: a cause without session id
+                final var cause = new DiameterResultCodeException(RES_DIAMETER_SUCCESS, 123, false, 456, HOP, END, null);
+
+                // WHEN
+                final var answer = DiameterMessageFactory.createErrorAnswer(cause);
+
+                // THEN
+                assertThat(answer).isInstanceOf(ErrorAnswer.class);
+                assertThat(answer.getSessionId()).isNull();
+            }
+        }
     }
 
     @Test

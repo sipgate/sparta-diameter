@@ -128,7 +128,7 @@ public class CommandTest {
     }
 
     @Test
-    void it_throws_for_first_bad_avp_only_when_multiple_violations_exist() {
+    void it_throws_only_for_first_bad_avp_when_multiple_violations_exist() {
         // GIVEN: a message with two AVPs that both have invalid lengths (< 8)
         final byte[] message = hexStringToByteArray(
                 "0100002480000118000000000000ABCD00001234" + // 20-byte header
@@ -143,7 +143,28 @@ public class CommandTest {
                     final AVPParseException avpEx = (AVPParseException) ex;
                     assertThat(avpEx.getResultCode()).isEqualTo(RES_DIAMETER_INVALID_AVP_LENGTH);
                     assertThat(avpEx.getOffendingAvp().getCode()).isEqualTo(1);
+                    assertThat(avpEx.getSessionId()).isNull();
                 });
+    }
+
+    @Test
+    void it_throws_for_bad_avp_with_session_id() {
+        // GIVEN: a message with a valid session id AVP and a bad AVP afterwards
+        final byte[] message = hexStringToByteArray(
+            "0100002480000118000000000000ABCD00001234" + // 20-byte header
+                "000001074000000961000000" +             // session id: "a" + 3-byte padding for 32-bit boundaries, RFC 6733 § 4.2., OctetString
+                "0000000240000007");                     // second AVP: code 2, length 7 (invalid)
+        final ByteBuffer buffer = ByteBuffer.wrap(message);
+
+        // WHEN / THEN: single-error rule — only the first violation is reported
+        assertThatThrownBy(() -> Command.parseMessage(buffer))
+            .isInstanceOf(AVPParseException.class)
+            .satisfies(ex -> {
+                final AVPParseException avpEx = (AVPParseException) ex;
+                assertThat(avpEx.getResultCode()).isEqualTo(RES_DIAMETER_INVALID_AVP_LENGTH);
+                assertThat(avpEx.getOffendingAvp().getCode()).isEqualTo(2);
+                assertThat(avpEx.getSessionId()).isEqualTo("a");
+            });
     }
 
     @Test

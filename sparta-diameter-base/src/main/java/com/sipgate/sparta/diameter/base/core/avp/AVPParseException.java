@@ -22,7 +22,7 @@ public class AVPParseException extends DiameterResultCodeException {
      * @param offendingAvp the offending AVP (may be a stub if the header was incomplete)
      */
     AVPParseException(final long resultCode, final AVP offendingAvp) {
-        this(resultCode, 0, false, 0, new HopByHopId(0), new EndToEndId(0), offendingAvp);
+        this(resultCode, 0, false, 0, new HopByHopId(0), new EndToEndId(0), offendingAvp, null);
     }
 
     /**
@@ -33,12 +33,13 @@ public class AVPParseException extends DiameterResultCodeException {
      * @param hopByHop      the hop-by-hop identifier from the parsed header
      * @param endToEnd      the end-to-end identifier from the parsed header
      * @param offendingAvp  the offending AVP
+     * @param sessionId     the session id of the request or null if unknown
      */
     public AVPParseException(final long resultCode, final int commandCode,
             final boolean proxiable, final int applicationId,
             final HopByHopId hopByHop, final EndToEndId endToEnd,
-            final AVP offendingAvp) {
-        super(resultCode, commandCode, proxiable, applicationId, hopByHop, endToEnd);
+            final AVP offendingAvp, final String sessionId) {
+        super(resultCode, commandCode, proxiable, applicationId, hopByHop, endToEnd, sessionId);
         this.offendingAvp = offendingAvp;
     }
 

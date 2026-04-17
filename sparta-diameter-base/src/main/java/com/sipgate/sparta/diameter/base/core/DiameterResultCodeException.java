@@ -20,6 +20,7 @@ public class DiameterResultCodeException extends DiameterException {
     private final int applicationId;
     private final HopByHopId hopByHop;
     private final EndToEndId endToEnd;
+    private final String sessionId;
 
     /**
      * Constructs a {@code DiameterResultCodeException} with the given result code and
@@ -31,10 +32,9 @@ public class DiameterResultCodeException extends DiameterException {
      * @param applicationId the application ID from the parsed header
      * @param hopByHop      the hop-by-hop identifier from the parsed header
      * @param endToEnd      the end-to-end identifier from the parsed header
+     * @param sessionId     the session id avp value from the parsed message, if parsed already
      */
-    public DiameterResultCodeException(final long resultCode, final int commandCode,
-            final boolean proxiable, final int applicationId,
-            final HopByHopId hopByHop, final EndToEndId endToEnd) {
+    public DiameterResultCodeException(final long resultCode, final int commandCode, final boolean proxiable, final int applicationId, final HopByHopId hopByHop, final EndToEndId endToEnd, final String sessionId) {
         super("Diameter protocol error: result code " + resultCode);
         this.resultCode = resultCode;
         this.commandCode = commandCode;
@@ -42,6 +42,7 @@ public class DiameterResultCodeException extends DiameterException {
         this.applicationId = applicationId;
         this.hopByHop = hopByHop;
         this.endToEnd = endToEnd;
+        this.sessionId = sessionId;
     }
 
     /**
@@ -96,5 +97,12 @@ public class DiameterResultCodeException extends DiameterException {
      */
     public EndToEndId getEndToEnd() {
         return endToEnd;
+    }
+
+    /**
+     * @return the session id avp value from the parsed message, if parsed already or null
+     */
+    public String getSessionId() {
+        return sessionId;
     }
 }

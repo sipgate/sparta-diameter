@@ -16,7 +16,7 @@ class DiameterResultCodeExceptionTest {
         // GIVEN
         final DiameterResultCodeException exception = new DiameterResultCodeException(
                 RES_DIAMETER_UNSUPPORTED_VERSION,
-                257, true, 0, new HopByHopId(1), new EndToEndId(2));
+                257, true, 0, new HopByHopId(1), new EndToEndId(2), null);
 
         // THEN
         assertThat(exception).isInstanceOf(DiameterException.class);
@@ -27,11 +27,12 @@ class DiameterResultCodeExceptionTest {
         // GIVEN
         final HopByHopId hopByHop = new HopByHopId(0xABCD);
         final EndToEndId endToEnd = new EndToEndId(0x1234);
+        final String sessionId = "some-session-id";
 
         // WHEN
         final DiameterResultCodeException exception = new DiameterResultCodeException(
                 RES_DIAMETER_UNSUPPORTED_VERSION,
-                257, true, 16777251, hopByHop, endToEnd);
+                257, true, 16777251, hopByHop, endToEnd, sessionId);
 
         // THEN
         assertThat(exception.getResultCode()).isEqualTo(RES_DIAMETER_UNSUPPORTED_VERSION);
@@ -40,6 +41,7 @@ class DiameterResultCodeExceptionTest {
         assertThat(exception.getApplicationId()).isEqualTo(16777251);
         assertThat(exception.getHopByHop()).isEqualTo(hopByHop);
         assertThat(exception.getEndToEnd()).isEqualTo(endToEnd);
+        assertThat(exception.getSessionId()).isEqualTo(sessionId);
     }
 
     @Test
@@ -49,7 +51,7 @@ class DiameterResultCodeExceptionTest {
         final AVPParseException exception = new AVPParseException(
                 RES_DIAMETER_AVP_UNSUPPORTED,
                 257, false, 0, new HopByHopId(1), new EndToEndId(2),
-                stub);
+                stub, null);
 
         // THEN — inheritance chain is correct
         assertThat(exception)
@@ -66,7 +68,7 @@ class DiameterResultCodeExceptionTest {
         final AVPParseException exception = new AVPParseException(
                 RES_DIAMETER_AVP_UNSUPPORTED,
                 280, false, 0, new HopByHopId(10), new EndToEndId(20),
-                offendingAvp);
+                offendingAvp, null);
 
         // THEN
         assertThat(exception.getOffendingAvp()).isSameAs(offendingAvp);
