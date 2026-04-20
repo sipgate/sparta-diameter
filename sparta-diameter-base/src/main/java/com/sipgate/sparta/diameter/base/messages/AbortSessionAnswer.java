@@ -11,13 +11,13 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
  * The ASA message is used to respond to an ASR message for session abort requests.
  * </p>
  */
-public interface AbortSessionAnswer<T extends AbortSessionAnswer<T>>
-        extends HasSessionIdAVP<T>, HasUserNameAVP<T>, HasOriginStateIdAVP<T>, HasErrorMessageAVP<T>,
-                HasErrorReportingHostAVP<T>, HasFailedAVP<T>, HasRedirectHostAVPs<T>,
-                HasRedirectHostUsageAVP<T>, HasRedirectMaxCacheTimeAVP<T>, HasProxyInfoAVPs<T> {
+public interface AbortSessionAnswer
+        extends HasSessionIdAVP, HasUserNameAVP, HasOriginStateIdAVP, HasErrorMessageAVP,
+                HasErrorReportingHostAVP, HasFailedAVP, HasRedirectHostAVPs,
+                HasRedirectHostUsageAVP, HasRedirectMaxCacheTimeAVP, HasProxyInfoAVPs {
 
-    final class In extends IncomingAnswer<In>
-            implements AbortSessionAnswer<In> {
+    final class In extends IncomingAnswer
+            implements AbortSessionAnswer {
 
         In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_ABORT_SESSION, true,
@@ -25,8 +25,8 @@ public interface AbortSessionAnswer<T extends AbortSessionAnswer<T>>
         }
     }
 
-    final class Out extends OutgoingAnswer<Out>
-            implements AbortSessionAnswer<Out> {
+    final class Out extends OutgoingAnswer
+            implements AbortSessionAnswer {
 
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_ABORT_SESSION, true,

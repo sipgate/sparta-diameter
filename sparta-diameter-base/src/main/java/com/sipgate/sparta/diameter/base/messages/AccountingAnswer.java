@@ -11,16 +11,16 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
  * The ACA message is used to respond to an ACR message for accounting requests.
  * </p>
  */
-public interface AccountingAnswer<T extends AccountingAnswer<T>>
-        extends HasSessionIdAVP<T>, HasAccountingRecordTypeAVP<T>, HasAccountingRecordNumberAVP<T>,
-                HasAcctApplicationIdAVP<T>, HasVendorSpecificApplicationIdAVP<T>, HasUserNameAVP<T>,
-                HasAccountingSubSessionIdAVP<T>, HasAcctSessionIdAVP<T>, HasAcctMultiSessionIdAVP<T>,
-                HasErrorMessageAVP<T>, HasErrorReportingHostAVP<T>, HasFailedAVP<T>,
-                HasAcctInterimIntervalAVP<T>, HasAccountingRealtimeRequiredAVP<T>,
-                HasOriginStateIdAVP<T>, HasEventTimestampAVP<T>, HasProxyInfoAVPs<T> {
+public interface AccountingAnswer
+        extends HasSessionIdAVP, HasAccountingRecordTypeAVP, HasAccountingRecordNumberAVP,
+                HasAcctApplicationIdAVP, HasVendorSpecificApplicationIdAVP, HasUserNameAVP,
+                HasAccountingSubSessionIdAVP, HasAcctSessionIdAVP, HasAcctMultiSessionIdAVP,
+                HasErrorMessageAVP, HasErrorReportingHostAVP, HasFailedAVP,
+                HasAcctInterimIntervalAVP, HasAccountingRealtimeRequiredAVP,
+                HasOriginStateIdAVP, HasEventTimestampAVP, HasProxyInfoAVPs {
 
-    final class In extends IncomingAnswer<In>
-            implements AccountingAnswer<In> {
+    final class In extends IncomingAnswer
+            implements AccountingAnswer {
 
         In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_ACCOUNTING, true,
@@ -28,8 +28,8 @@ public interface AccountingAnswer<T extends AccountingAnswer<T>>
         }
     }
 
-    final class Out extends OutgoingAnswer<Out>
-            implements AccountingAnswer<Out> {
+    final class Out extends OutgoingAnswer
+            implements AccountingAnswer {
 
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_ACCOUNTING, true,

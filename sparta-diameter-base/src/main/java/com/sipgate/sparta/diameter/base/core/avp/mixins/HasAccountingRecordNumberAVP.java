@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Accounting-Record-Number AVP identifies this record within one session.
  * </p>
  */
-public interface HasAccountingRecordNumberAVP<T extends HasAccountingRecordNumberAVP<T>> extends AVPContainer<T> {
+public interface HasAccountingRecordNumberAVP extends AVPContainer {
 
     /**
      * Sets the Accounting-Record-Number AVP.
      *
      * @param accountingRecordNumber The accounting record number to set.
      */
-    default T setAccountingRecordNumber(final long accountingRecordNumber) {
+    default void setAccountingRecordNumber(final long accountingRecordNumber) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ACCOUNTING_RECORD_NUMBER, 0), accountingRecordNumber));
-        return self();
     }
 
     /**

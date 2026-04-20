@@ -18,11 +18,10 @@ import java.util.List;
  * pattern; callers are responsible for ensuring at least one value is present.
  * </p>
  */
-public interface HasHostIpAddressAVPs<T extends HasHostIpAddressAVPs<T>> extends AVPContainer<T> {
+public interface HasHostIpAddressAVPs extends AVPContainer {
 
-    default T addHostIpAddress(final InetAddress hostIpAddress) {
+    default void addHostIpAddress(final InetAddress hostIpAddress) {
         addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_HOST_IP_ADDRESS, 0), hostIpAddress));
-        return self();
     }
 
     default List<InetAddress> getHostIpAddresses() {
@@ -38,10 +37,9 @@ public interface HasHostIpAddressAVPs<T extends HasHostIpAddressAVPs<T>> extends
         return all.isEmpty() ? null : all.get(0);
     }
 
-    default T addAllHostIpAddresses(final Collection<InetAddress> hostIpAddresses) {
+    default void addAllHostIpAddresses(final Collection<InetAddress> hostIpAddresses) {
         for (final InetAddress addr : hostIpAddresses) {
             addHostIpAddress(addr);
         }
-        return self();
     }
 }

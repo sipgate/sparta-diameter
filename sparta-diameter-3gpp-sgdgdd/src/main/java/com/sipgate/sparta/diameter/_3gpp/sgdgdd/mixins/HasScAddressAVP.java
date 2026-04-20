@@ -12,11 +12,10 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * OctetString — E.164 number encoded as TBCD-string. M,V flags.
  * </p>
  */
-public interface HasScAddressAVP<T extends HasScAddressAVP<T>> extends AVPContainer<T> {
+public interface HasScAddressAVP extends AVPContainer {
 
-    default T setScAddress(final byte[] value) {
+    default void setScAddress(final byte[] value) {
         setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_SC_ADDRESS, _3gppConstants.VENDOR_ID_3GPP), value));
-        return self();
     }
 
     default byte[] getScAddress() {

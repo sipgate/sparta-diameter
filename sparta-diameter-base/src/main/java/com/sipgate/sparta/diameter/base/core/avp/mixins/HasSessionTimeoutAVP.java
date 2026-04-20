@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Session-Timeout AVP contains the maximum number of seconds of service to be provided.
  * </p>
  */
-public interface HasSessionTimeoutAVP<T extends HasSessionTimeoutAVP<T>> extends AVPContainer<T> {
+public interface HasSessionTimeoutAVP extends AVPContainer {
 
     /**
      * Sets the Session-Timeout AVP.
      *
      * @param sessionTimeout The session timeout to set.
      */
-    default T setSessionTimeout(final long sessionTimeout) {
+    default void setSessionTimeout(final long sessionTimeout) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_SESSION_TIMEOUT, 0), sessionTimeout));
-        return self();
     }
 
     /**

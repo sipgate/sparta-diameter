@@ -40,7 +40,7 @@ public final class ResultCodeUtil {
      * @param answer The error answer to extract from
      * @return A human-readable string like "Result-Code 3002" or "Experimental-Result-Code 5001"
      */
-    public static String describeResultCode(final ErrorAnswer<?> answer) {
+    public static String describeResultCode(final ErrorAnswer answer) {
         final var experimentalResult = answer.getExperimentalResult();
         if (experimentalResult == null) {
             return "Result-Code " + answer.getResultCode();

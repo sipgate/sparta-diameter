@@ -22,7 +22,7 @@ public final class SgdGddMessageFactory implements DiameterPackageFactory {
     }
 
     @Override
-    public OutgoingAnswer<?> createAnswer(final int commandCode, final int applicationId,
+    public OutgoingAnswer createAnswer(final int commandCode, final int applicationId,
                                           final HopByHopId hopByHop, final EndToEndId endToEnd) {
         final var outgoingAnswer = switch (commandCode) {
             case SgdGddConstants.CMD_MO_FORWARD_SHORT_MESSAGE ->

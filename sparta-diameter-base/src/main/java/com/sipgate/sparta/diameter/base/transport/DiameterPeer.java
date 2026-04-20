@@ -37,7 +37,7 @@ public final class DiameterPeer {
      * @param answer the answer to send
      * @return a {@link ChannelFuture} that completes when the write is done
      */
-    public ChannelFuture send(final OutgoingAnswer<?> answer) {
+    public ChannelFuture send(final OutgoingAnswer answer) {
         final int commandCode = answer.getCommandCode();
         final int applicationId = answer.getApplicationId();
         return channel
@@ -62,7 +62,7 @@ public final class DiameterPeer {
      * @param endToEnd the end-to-end identifier for this transmission
      * @return a {@link ChannelFuture} that completes when the write is done
      */
-    public ChannelFuture send(final OutgoingRequest<?, ?> request,
+    public ChannelFuture send(final OutgoingRequest<?> request,
                               final HopByHopId hopByHop, final EndToEndId endToEnd) {
         final int commandCode = request.getCommandCode();
         final int applicationId = request.getApplicationId();

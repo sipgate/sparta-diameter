@@ -12,11 +12,10 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * UTF8String — identifies the destination user's HSS. V flag only.
  * </p>
  */
-public interface HasHssIdAVP<T extends HasHssIdAVP<T>> extends AVPContainer<T> {
+public interface HasHssIdAVP extends AVPContainer {
 
-    default T setHssId(final String value) {
+    default void setHssId(final String value) {
         setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_HSS_ID, _3gppConstants.VENDOR_ID_3GPP), value));
-        return self();
     }
 
     default String getHssId() {

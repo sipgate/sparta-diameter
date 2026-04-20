@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Authorization-Lifetime AVP contains the maximum number of seconds of service to be provided.
  * </p>
  */
-public interface HasAuthorizationLifetimeAVP<T extends HasAuthorizationLifetimeAVP<T>> extends AVPContainer<T> {
+public interface HasAuthorizationLifetimeAVP extends AVPContainer {
 
     /**
      * Sets the Authorization-Lifetime AVP.
      *
      * @param authorizationLifetime The authorization lifetime to set.
      */
-    default T setAuthorizationLifetime(final long authorizationLifetime) {
+    default void setAuthorizationLifetime(final long authorizationLifetime) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_AUTHORIZATION_LIFETIME, 0), authorizationLifetime));
-        return self();
     }
 
     /**

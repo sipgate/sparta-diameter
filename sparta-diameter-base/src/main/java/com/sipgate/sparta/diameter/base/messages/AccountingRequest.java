@@ -11,16 +11,16 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
  * The ACR message is used to send accounting information for a user session.
  * </p>
  */
-public interface AccountingRequest<T extends AccountingRequest<T>>
-        extends HasSessionIdAVP<T>, HasAccountingRecordTypeAVP<T>, HasAccountingRecordNumberAVP<T>,
-                HasAcctApplicationIdAVP<T>, HasVendorSpecificApplicationIdAVP<T>, HasUserNameAVP<T>,
-                HasAccountingSubSessionIdAVP<T>, HasAcctSessionIdAVP<T>, HasAcctMultiSessionIdAVP<T>,
-                HasAcctInterimIntervalAVP<T>, HasAccountingRealtimeRequiredAVP<T>,
-                HasOriginStateIdAVP<T>, HasEventTimestampAVP<T>,
-                HasProxyInfoAVPs<T>, HasRouteRecordAVPs<T> {
+public interface AccountingRequest
+        extends HasSessionIdAVP, HasAccountingRecordTypeAVP, HasAccountingRecordNumberAVP,
+                HasAcctApplicationIdAVP, HasVendorSpecificApplicationIdAVP, HasUserNameAVP,
+                HasAccountingSubSessionIdAVP, HasAcctSessionIdAVP, HasAcctMultiSessionIdAVP,
+                HasAcctInterimIntervalAVP, HasAccountingRealtimeRequiredAVP,
+                HasOriginStateIdAVP, HasEventTimestampAVP,
+                HasProxyInfoAVPs, HasRouteRecordAVPs {
 
-    final class In extends IncomingRequest<In, AccountingAnswer.Out>
-            implements AccountingRequest<In> {
+    final class In extends IncomingRequest<AccountingAnswer.Out>
+            implements AccountingRequest {
 
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(DiameterConstants.CMD_ACCOUNTING, true, retransmitted,
@@ -28,8 +28,8 @@ public interface AccountingRequest<T extends AccountingRequest<T>>
         }
     }
 
-    final class Out extends OutgoingRequest<Out, AccountingAnswer.In>
-            implements AccountingRequest<Out> {
+    final class Out extends OutgoingRequest<AccountingAnswer.In>
+            implements AccountingRequest {
 
         public Out() {
             super(DiameterConstants.CMD_ACCOUNTING, true,

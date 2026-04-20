@@ -14,16 +14,15 @@ import java.net.InetAddress;
  * as defined in RFC 6733. The Host-IP-Address AVP informs a peer of the sender's IP address.
  * </p>
  */
-public interface HasHostIpAddressAVP<T extends HasHostIpAddressAVP<T>> extends AVPContainer<T> {
+public interface HasHostIpAddressAVP extends AVPContainer {
 
     /**
      * Sets the Host-IP-Address AVP.
      *
      * @param hostIpAddress The host IP address to set.
      */
-    default T setHostIpAddress(final InetAddress hostIpAddress) {
+    default void setHostIpAddress(final InetAddress hostIpAddress) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_HOST_IP_ADDRESS, 0), hostIpAddress));
-        return self();
     }
 
     /**

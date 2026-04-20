@@ -11,7 +11,7 @@ import java.io.IOException;
  * supplies the full header context explicitly.
  * </p>
  */
-public abstract class GenericCommand<T extends GenericCommand<T>> extends Command<T> {
+public abstract class GenericCommand extends Command {
 
     protected GenericCommand(final int commandCode, final boolean request, final boolean proxiable,
                              final boolean error, final boolean retransmitted,
@@ -24,7 +24,7 @@ public abstract class GenericCommand<T extends GenericCommand<T>> extends Comman
         return "Unknown[code=" + getCommandCode() + "]";
     }
 
-    public static final class In extends GenericCommand<In> implements IncomingCommand {
+    public static final class In extends GenericCommand implements IncomingCommand {
 
         private final HopByHopId hopByHop;
         private final EndToEndId endToEnd;
@@ -46,7 +46,7 @@ public abstract class GenericCommand<T extends GenericCommand<T>> extends Comman
      * directly to the wire. Not an {@link OutgoingAnswer} or {@link OutgoingRequest}
      * in the standard sense; use {@link #writeTo} directly.
      */
-    public static final class Out extends GenericCommand<Out> {
+    public static final class Out extends GenericCommand {
 
         private final HopByHopId storedHopByHop;
         private final EndToEndId storedEndToEnd;

@@ -31,8 +31,8 @@ class BaseMessageFactoryTest {
 
         for (final Class<? extends IncomingRequest> cls : requestTypes) {
             // WHEN
-            final IncomingRequest<?, ?> instance =
-                    (IncomingRequest<?, ?>) cls.getDeclaredConstructors()[0]
+            final IncomingRequest<?> instance =
+                    (IncomingRequest<?>) cls.getDeclaredConstructors()[0]
                             .newInstance(HOP, END, false);
             final IncomingCommand result = factory.createForParsing(
                     instance.getCommandCode(), 0, true, HOP, END, false);
@@ -56,8 +56,8 @@ class BaseMessageFactoryTest {
 
         for (final Class<? extends IncomingAnswer> cls : answerTypes) {
             // WHEN
-            final IncomingAnswer<?> instance =
-                    (IncomingAnswer<?>) cls.getDeclaredConstructors()[0]
+            final IncomingAnswer instance =
+                    (IncomingAnswer) cls.getDeclaredConstructors()[0]
                             .newInstance(HOP, END);
             final IncomingCommand result = factory.createForParsing(
                     instance.getCommandCode(), 0, false, HOP, END, false);

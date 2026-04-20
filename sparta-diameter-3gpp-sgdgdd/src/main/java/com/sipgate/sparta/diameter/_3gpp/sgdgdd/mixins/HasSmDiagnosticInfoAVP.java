@@ -12,11 +12,10 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * OctetString — complementary information associated with SM Delivery Failure. M,V flags.
  * </p>
  */
-public interface HasSmDiagnosticInfoAVP<T extends HasSmDiagnosticInfoAVP<T>> extends AVPContainer<T> {
+public interface HasSmDiagnosticInfoAVP extends AVPContainer {
 
-    default T setSmDiagnosticInfo(final byte[] value) {
+    default void setSmDiagnosticInfo(final byte[] value) {
         setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_SM_DIAGNOSTIC_INFO, _3gppConstants.VENDOR_ID_3GPP), value));
-        return self();
     }
 
     default byte[] getSmDiagnosticInfo() {

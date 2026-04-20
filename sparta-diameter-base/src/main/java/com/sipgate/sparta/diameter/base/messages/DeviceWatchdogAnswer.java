@@ -13,11 +13,11 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginStateIdAVP;
  * The DWA message is used to confirm the health of the transport connection in response to a DWR message.
  * </p>
  */
-public interface DeviceWatchdogAnswer<T extends DeviceWatchdogAnswer<T>>
-        extends HasOriginStateIdAVP<T>, HasErrorMessageAVP<T>, HasFailedAVP<T> {
+public interface DeviceWatchdogAnswer
+        extends HasOriginStateIdAVP, HasErrorMessageAVP, HasFailedAVP {
 
-    final class In extends IncomingAnswer<In>
-            implements DeviceWatchdogAnswer<In> {
+    final class In extends IncomingAnswer
+            implements DeviceWatchdogAnswer {
 
         In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_DEVICE_WATCHDOG, false,
@@ -25,8 +25,8 @@ public interface DeviceWatchdogAnswer<T extends DeviceWatchdogAnswer<T>>
         }
     }
 
-    final class Out extends OutgoingAnswer<Out>
-            implements DeviceWatchdogAnswer<Out> {
+    final class Out extends OutgoingAnswer
+            implements DeviceWatchdogAnswer {
 
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_DEVICE_WATCHDOG, false,

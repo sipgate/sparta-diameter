@@ -14,11 +14,10 @@ import java.util.Date;
  * Time — UTC timestamp until which the SMS-GMSC is capable to retransmit. V flag only.
  * </p>
  */
-public interface HasMaximumRetransmissionTimeAVP<T extends HasMaximumRetransmissionTimeAVP<T>> extends AVPContainer<T> {
+public interface HasMaximumRetransmissionTimeAVP extends AVPContainer {
 
-    default T setMaximumRetransmissionTime(final Date value) {
+    default void setMaximumRetransmissionTime(final Date value) {
         setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_MAXIMUM_RETRANSMISSION_TIME, _3gppConstants.VENDOR_ID_3GPP), value));
-        return self();
     }
 
     default Date getMaximumRetransmissionTime() {

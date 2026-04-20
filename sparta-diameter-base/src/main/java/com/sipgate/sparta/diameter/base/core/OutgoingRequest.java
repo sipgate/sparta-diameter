@@ -6,8 +6,8 @@ import java.io.IOException;
 /**
  * Base class for all outgoing Diameter request messages.
  */
-public abstract class OutgoingRequest<T extends OutgoingRequest<T, A>, A extends Answer<A>>
-        extends Request<T, A> {
+public abstract class OutgoingRequest<A extends Answer>
+        extends Request<A> {
 
     protected OutgoingRequest(final int commandCode, final boolean proxiable,
                                final int applicationId) {

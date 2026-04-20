@@ -15,11 +15,10 @@ import java.util.List;
  * RFC 6733 defines {@code * [ Route-Record ]} in proxiable request messages.
  * </p>
  */
-public interface HasRouteRecordAVPs<T extends HasRouteRecordAVPs<T>> extends AVPContainer<T> {
+public interface HasRouteRecordAVPs extends AVPContainer {
 
-    default T addRouteRecord(final String routeRecord) {
+    default void addRouteRecord(final String routeRecord) {
         addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ROUTE_RECORD, 0), routeRecord));
-        return self();
     }
 
     default List<String> getRouteRecords() {
@@ -35,10 +34,9 @@ public interface HasRouteRecordAVPs<T extends HasRouteRecordAVPs<T>> extends AVP
         return all.isEmpty() ? null : all.get(0);
     }
 
-    default T addAllRouteRecords(final Collection<String> routeRecords) {
+    default void addAllRouteRecords(final Collection<String> routeRecords) {
         for (final String record : routeRecords) {
             addRouteRecord(record);
         }
-        return self();
     }
 }

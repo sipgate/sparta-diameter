@@ -12,11 +12,10 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * OctetString — E.164 number of the SMS-GMSC or SMS Router encoded as TBCD-string. V flag only.
  * </p>
  */
-public interface HasSmsGmscAddressAVP<T extends HasSmsGmscAddressAVP<T>> extends AVPContainer<T> {
+public interface HasSmsGmscAddressAVP extends AVPContainer {
 
-    default T setSmsGmscAddress(final byte[] value) {
+    default void setSmsGmscAddress(final byte[] value) {
         setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_SMS_GMSC_ADDRESS, _3gppConstants.VENDOR_ID_3GPP), value));
-        return self();
     }
 
     default byte[] getSmsGmscAddress() {

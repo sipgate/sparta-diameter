@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Error-Message AVP contains a human-readable error message.
  * </p>
  */
-public interface HasErrorMessageAVP<T extends HasErrorMessageAVP<T>> extends AVPContainer<T> {
+public interface HasErrorMessageAVP extends AVPContainer {
 
     /**
      * Sets the Error-Message AVP.
      *
      * @param errorMessage The error message to set.
      */
-    default T setErrorMessage(final String errorMessage) {
+    default void setErrorMessage(final String errorMessage) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ERROR_MESSAGE, 0), errorMessage));
-        return self();
     }
 
     /**

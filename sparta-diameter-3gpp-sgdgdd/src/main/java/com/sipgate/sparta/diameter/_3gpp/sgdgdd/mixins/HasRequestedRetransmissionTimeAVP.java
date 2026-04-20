@@ -14,11 +14,10 @@ import java.util.Date;
  * Time — UTC timestamp at which the SMS-GMSC is requested to retransmit. V flag only.
  * </p>
  */
-public interface HasRequestedRetransmissionTimeAVP<T extends HasRequestedRetransmissionTimeAVP<T>> extends AVPContainer<T> {
+public interface HasRequestedRetransmissionTimeAVP extends AVPContainer {
 
-    default T setRequestedRetransmissionTime(final Date value) {
+    default void setRequestedRetransmissionTime(final Date value) {
         setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_REQUESTED_RETRANSMISSION_TIME, _3gppConstants.VENDOR_ID_3GPP), value));
-        return self();
     }
 
     default Date getRequestedRetransmissionTime() {

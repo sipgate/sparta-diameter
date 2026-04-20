@@ -26,13 +26,13 @@ import com.sipgate.sparta.diameter.base.core.ErrorAnswer;
  */
 public final class DiameterErrorAnswerException extends Exception {
 
-    private final ErrorAnswer<?> answer;
+    private final ErrorAnswer answer;
 
-    public DiameterErrorAnswerException(final ErrorAnswer<?> answer) {
+    public DiameterErrorAnswerException(final ErrorAnswer answer) {
         this.answer = answer;
     }
 
-    public ErrorAnswer<?> getAnswer() {
+    public ErrorAnswer getAnswer() {
         return answer;
     }
 }

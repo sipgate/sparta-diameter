@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Class AVP is used to provide additional information to authorization/accounting servers.
  * </p>
  */
-public interface HasClassAVP<T extends HasClassAVP<T>> extends AVPContainer<T> {
+public interface HasClassAVP extends AVPContainer {
 
     /**
      * Sets the Class AVP.
      *
      * @param classValue The class value to set.
      */
-    default T setClassAVP(final byte[] classValue) {
+    default void setClassAVP(final byte[] classValue) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_CLASS, 0), classValue));
-        return self();
     }
 
     /**

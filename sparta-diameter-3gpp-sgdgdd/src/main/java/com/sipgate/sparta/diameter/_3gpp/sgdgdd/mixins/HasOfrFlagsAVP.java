@@ -12,11 +12,10 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * Unsigned32 bitmask — bit 0: S6a/S6d-Indicator (set=Gdd/SGSN, clear=SGd/MME). V flag only.
  * </p>
  */
-public interface HasOfrFlagsAVP<T extends HasOfrFlagsAVP<T>> extends AVPContainer<T> {
+public interface HasOfrFlagsAVP extends AVPContainer {
 
-    default T setOfrFlags(final long value) {
+    default void setOfrFlags(final long value) {
         setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_OFR_FLAGS, _3gppConstants.VENDOR_ID_3GPP), value));
-        return self();
     }
 
     default long getOfrFlags() {

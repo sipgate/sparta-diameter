@@ -3,7 +3,7 @@ package com.sipgate.sparta.diameter.base.core;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public abstract class OutgoingAnswer<T extends OutgoingAnswer<T>> extends Answer<T> {
+public abstract class OutgoingAnswer extends Answer {
 
 
 

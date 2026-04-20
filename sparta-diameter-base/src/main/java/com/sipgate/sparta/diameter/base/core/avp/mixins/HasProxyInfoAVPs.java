@@ -17,11 +17,10 @@ import java.util.List;
  * For messages where Proxy-Info is optional and singular, use {@link HasProxyInfoAVP} instead.
  * </p>
  */
-public interface HasProxyInfoAVPs<T extends HasProxyInfoAVPs<T>> extends AVPContainer<T> {
+public interface HasProxyInfoAVPs extends AVPContainer {
 
-    default T addProxyInfo(final GroupedAVP proxyInfo) {
+    default void addProxyInfo(final GroupedAVP proxyInfo) {
         addAVP(proxyInfo);
-        return self();
     }
 
     default List<GroupedAVP> getProxyInfos() {
@@ -37,10 +36,9 @@ public interface HasProxyInfoAVPs<T extends HasProxyInfoAVPs<T>> extends AVPCont
         return all.isEmpty() ? null : all.get(0);
     }
 
-    default T addAllProxyInfos(final Collection<GroupedAVP> proxyInfos) {
+    default void addAllProxyInfos(final Collection<GroupedAVP> proxyInfos) {
         for (final GroupedAVP avp : proxyInfos) {
             addProxyInfo(avp);
         }
-        return self();
     }
 }

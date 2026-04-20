@@ -13,11 +13,10 @@ import java.util.List;
 /**
  * Mixin for messages carrying zero or more Supported-Features AVPs (3GPP TS 29.229 §6.3.29).
  */
-public interface HasSupportedFeaturesAVPs<T extends HasSupportedFeaturesAVPs<T>> extends AVPContainer<T> {
+public interface HasSupportedFeaturesAVPs extends AVPContainer {
 
-    default T addSupportedFeatures(final GroupedAVP value) {
+    default void addSupportedFeatures(final GroupedAVP value) {
         addAVP(AVP.create(new AVPKey(_3gppConstants.AVP_SUPPORTED_FEATURES, _3gppConstants.VENDOR_ID_3GPP), value.getAVPs()));
-        return self();
     }
 
     default List<GroupedAVP> getSupportedFeatures() {
@@ -30,10 +29,9 @@ public interface HasSupportedFeaturesAVPs<T extends HasSupportedFeaturesAVPs<T>>
         return result;
     }
 
-    default T addAllSupportedFeatures(final Collection<GroupedAVP> values) {
+    default void addAllSupportedFeatures(final Collection<GroupedAVP> values) {
         for (final GroupedAVP value : values) {
             addSupportedFeatures(value);
         }
-        return self();
     }
 }

@@ -89,13 +89,13 @@ public final class DiameterInitiatorSession extends DiameterSession {
                 handleInboundDpr(dpr);
                 return;
             }
-            if (command instanceof final IncomingRequest<?, ?> request) {
+            if (command instanceof final IncomingRequest<?> request) {
                 dispatchInboundRequest(request);
                 return;
             }
         }
 
-        if (command instanceof final IncomingAnswer<?> answer) {
+        if (command instanceof final IncomingAnswer answer) {
             complete(answer);
         }
     }

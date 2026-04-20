@@ -13,11 +13,10 @@ import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
  * Grouped — used in the context of MSISDN-less SMS delivery in IMS. V flag only.
  * </p>
  */
-public interface HasSmsMiCorrelationIdAVP<T extends HasSmsMiCorrelationIdAVP<T>> extends AVPContainer<T> {
+public interface HasSmsMiCorrelationIdAVP extends AVPContainer {
 
-    default T setSmsMiCorrelationId(final GroupedAVP value) {
+    default void setSmsMiCorrelationId(final GroupedAVP value) {
         setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_SMSMI_CORRELATION_ID, _3gppConstants.VENDOR_ID_3GPP), value.getAVPs()));
-        return self();
     }
 
     default GroupedAVP getSmsMiCorrelationId() {

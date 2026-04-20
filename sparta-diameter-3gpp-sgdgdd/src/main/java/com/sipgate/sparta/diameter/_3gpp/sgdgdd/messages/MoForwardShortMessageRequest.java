@@ -25,18 +25,18 @@ import com.sipgate.sparta.diameter.ietf.drmp.mixins.HasDrmpAVP;
 /**
  * MO-Forward-Short-Message Request (OFR) — 3GPP TS 29.338 §6.3.2.3.
  */
-public interface MoForwardShortMessageRequest<T extends MoForwardShortMessageRequest<T>>
-        extends HasSessionIdAVP<T>, HasDrmpAVP<T>, HasVendorSpecificApplicationIdAVP<T>,
-                HasAuthSessionStateAVP<T>,
-                HasScAddressAVP<T>, HasOfrFlagsAVP<T>,
-                HasSupportedFeaturesAVPs<T>, HasUserIdentifierAVP<T>,
-                HasEpsLocationInformationAVP<T>,
-                HasSmRpUiAVP<T>, HasSmsMiCorrelationIdAVP<T>,
-                HasSmDeliveryOutcomeAVP<T>,
-                HasProxyInfoAVPs<T>, HasRouteRecordAVPs<T> {
+public interface MoForwardShortMessageRequest
+        extends HasSessionIdAVP, HasDrmpAVP, HasVendorSpecificApplicationIdAVP,
+                HasAuthSessionStateAVP,
+                HasScAddressAVP, HasOfrFlagsAVP,
+                HasSupportedFeaturesAVPs, HasUserIdentifierAVP,
+                HasEpsLocationInformationAVP,
+                HasSmRpUiAVP, HasSmsMiCorrelationIdAVP,
+                HasSmDeliveryOutcomeAVP,
+                HasProxyInfoAVPs, HasRouteRecordAVPs {
 
-    final class In extends IncomingRequest<In, MoForwardShortMessageAnswer.Out>
-            implements MoForwardShortMessageRequest<In> {
+    final class In extends IncomingRequest<MoForwardShortMessageAnswer.Out>
+            implements MoForwardShortMessageRequest {
 
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(SgdGddConstants.CMD_MO_FORWARD_SHORT_MESSAGE, true, retransmitted,
@@ -44,8 +44,8 @@ public interface MoForwardShortMessageRequest<T extends MoForwardShortMessageReq
         }
     }
 
-    final class Out extends OutgoingRequest<Out, MoForwardShortMessageAnswer.In>
-            implements MoForwardShortMessageRequest<Out> {
+    final class Out extends OutgoingRequest<MoForwardShortMessageAnswer.In>
+            implements MoForwardShortMessageRequest {
 
         public Out() {
             super(SgdGddConstants.CMD_MO_FORWARD_SHORT_MESSAGE, true,

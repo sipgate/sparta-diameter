@@ -18,11 +18,10 @@ import java.util.List;
  * (e.g. ACR/ACA), use {@link HasVendorSpecificApplicationIdAVP} instead.
  * </p>
  */
-public interface HasVendorSpecificApplicationIdAVPs<T extends HasVendorSpecificApplicationIdAVPs<T>> extends AVPContainer<T> {
+public interface HasVendorSpecificApplicationIdAVPs extends AVPContainer {
 
-    default T addVendorSpecificApplicationId(final GroupedAVP vendorSpecificApplicationId) {
+    default void addVendorSpecificApplicationId(final GroupedAVP vendorSpecificApplicationId) {
         addAVP(vendorSpecificApplicationId);
-        return self();
     }
 
     default List<GroupedAVP> getVendorSpecificApplicationIds() {
@@ -38,10 +37,9 @@ public interface HasVendorSpecificApplicationIdAVPs<T extends HasVendorSpecificA
         return all.isEmpty() ? null : all.get(0);
     }
 
-    default T addAllVendorSpecificApplicationIds(final Collection<GroupedAVP> vendorSpecificApplicationIds) {
+    default void addAllVendorSpecificApplicationIds(final Collection<GroupedAVP> vendorSpecificApplicationIds) {
         for (final GroupedAVP avp : vendorSpecificApplicationIds) {
             addVendorSpecificApplicationId(avp);
         }
-        return self();
     }
 }

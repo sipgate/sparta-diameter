@@ -11,11 +11,10 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * Unsigned32 — M,V flags.
  * </p>
  */
-public interface HasAbsentUserDiagnosticSmAVP<T extends HasAbsentUserDiagnosticSmAVP<T>> extends AVPContainer<T> {
+public interface HasAbsentUserDiagnosticSmAVP extends AVPContainer {
 
-    default T setAbsentUserDiagnosticSm(final long value) {
+    default void setAbsentUserDiagnosticSm(final long value) {
         setAVP(AVP.create(new AVPKey(_3gppConstants.AVP_ABSENT_USER_DIAGNOSTIC_SM, _3gppConstants.VENDOR_ID_3GPP), value));
-        return self();
     }
 
     default long getAbsentUserDiagnosticSm() {

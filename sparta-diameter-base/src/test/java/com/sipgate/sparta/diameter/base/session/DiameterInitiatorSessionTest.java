@@ -346,7 +346,7 @@ class DiameterInitiatorSessionTest {
         final ArgumentCaptor<HopByHopId> hbhCaptor = ArgumentCaptor.forClass(HopByHopId.class);
         final ArgumentCaptor<EndToEndId> e2eCaptor = ArgumentCaptor.forClass(EndToEndId.class);
         verify(peer).send(any(CapabilitiesExchangeRequest.Out.class), hbhCaptor.capture(), e2eCaptor.capture());
-        final var cer = (IncomingRequest<?, ?>) DiameterMessageFactory.createForParsing(
+        final var cer = (IncomingRequest<?>) DiameterMessageFactory.createForParsing(
                 DiameterConstants.CMD_CAPABILITIES_EXCHANGE, 0, true, true, false,
                 hbhCaptor.getValue(), e2eCaptor.getValue(), false);
         final var errorOut = DiameterMessageFactory.createErrorAnswer(cer, DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY);

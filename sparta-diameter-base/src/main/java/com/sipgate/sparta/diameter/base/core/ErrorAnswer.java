@@ -16,17 +16,17 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.HasSessionIdAVP;
  * covers both the inbound ({@link In}) and outbound ({@link Out}) representations. The type
  * itself signals the error condition — callers do not need to inspect the E-bit separately.
  */
-public sealed interface ErrorAnswer<T extends ErrorAnswer<T>>
-        extends HasResultCodeAVP<T>, HasSessionIdAVP<T>, HasOriginStateIdAVP<T>,
-                HasErrorMessageAVP<T>, HasErrorReportingHostAVP<T>,
-                HasFailedAVP<T>, HasExperimentalResultAVP<T>, HasProxyInfoAVP<T>
+public sealed interface ErrorAnswer
+        extends HasResultCodeAVP, HasSessionIdAVP, HasOriginStateIdAVP,
+                HasErrorMessageAVP, HasErrorReportingHostAVP,
+                HasFailedAVP, HasExperimentalResultAVP, HasProxyInfoAVP
         permits ErrorAnswer.In, ErrorAnswer.Out {
 
     /**
      * A received E-bit answer. Produced by {@link DiameterMessageFactory} when the E-bit is
      * set on an inbound answer; correlation with the pending request is done by hop-by-hop ID.
      */
-    final class In extends IncomingAnswer<In> implements ErrorAnswer<In> {
+    final class In extends IncomingAnswer implements ErrorAnswer {
 
         public In(final int commandCode, final int applicationId,
                   final HopByHopId hopByHop, final EndToEndId endToEnd) {
@@ -38,7 +38,7 @@ public sealed interface ErrorAnswer<T extends ErrorAnswer<T>>
      * An outgoing E-bit answer. Constructed by a request handler that needs to signal a
      * protocol error to the peer.
      */
-    final class Out extends OutgoingAnswer<Out> implements ErrorAnswer<Out> {
+    final class Out extends OutgoingAnswer implements ErrorAnswer {
 
         Out(final int commandCode, final boolean proxiable,
             final int applicationId,

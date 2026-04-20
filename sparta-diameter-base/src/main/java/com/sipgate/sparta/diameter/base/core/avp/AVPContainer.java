@@ -1,7 +1,5 @@
 package com.sipgate.sparta.diameter.base.core.avp;
 
-import com.sipgate.sparta.diameter.base.core.Selfable;
-
 import java.util.List;
 
 /**
@@ -11,7 +9,7 @@ import java.util.List;
  * as defined in <a href="https://datatracker.ietf.org/doc/html/rfc6733#section-4.4">RFC 6733, Section 4.4</a>.
  * </p>
  */
-public interface AVPContainer<T extends AVPContainer<T>> extends Selfable<T> {
+public interface AVPContainer {
 
     /**
      * Adds an AVP to this message.

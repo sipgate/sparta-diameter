@@ -15,11 +15,10 @@ import java.util.List;
  * RFC 6733 defines {@code * [ Inband-Security-Id ]} in CER/CEA.
  * </p>
  */
-public interface HasInbandSecurityIdAVPs<T extends HasInbandSecurityIdAVPs<T>> extends AVPContainer<T> {
+public interface HasInbandSecurityIdAVPs extends AVPContainer {
 
-    default T addInbandSecurityId(final long inbandSecurityId) {
+    default void addInbandSecurityId(final long inbandSecurityId) {
         addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_INBAND_SECURITY_ID, 0), inbandSecurityId));
-        return self();
     }
 
     default List<Long> getInbandSecurityIds() {
@@ -35,10 +34,9 @@ public interface HasInbandSecurityIdAVPs<T extends HasInbandSecurityIdAVPs<T>> e
         return all.isEmpty() ? null : all.get(0);
     }
 
-    default T addAllInbandSecurityIds(final Collection<Long> inbandSecurityIds) {
+    default void addAllInbandSecurityIds(final Collection<Long> inbandSecurityIds) {
         for (final long id : inbandSecurityIds) {
             addInbandSecurityId(id);
         }
-        return self();
     }
 }

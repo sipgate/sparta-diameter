@@ -12,11 +12,10 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * See 3GPP TS 29.338 §5.3.3.23 for bit definitions.
  * </p>
  */
-public interface HasSmsGmscAlertEventAVP<T extends HasSmsGmscAlertEventAVP<T>> extends AVPContainer<T> {
+public interface HasSmsGmscAlertEventAVP extends AVPContainer {
 
-    default T setSmsGmscAlertEvent(final long value) {
+    default void setSmsGmscAlertEvent(final long value) {
         setAVP(AVP.create(new AVPKey(_3gppConstants.AVP_SMS_GMSC_ALERT_EVENT, _3gppConstants.VENDOR_ID_3GPP), value));
-        return self();
     }
 
     default long getSmsGmscAlertEvent() {

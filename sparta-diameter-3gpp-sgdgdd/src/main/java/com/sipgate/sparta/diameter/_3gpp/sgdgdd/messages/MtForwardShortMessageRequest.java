@@ -29,19 +29,19 @@ import com.sipgate.sparta.diameter.ietf.drmp.mixins.HasDrmpAVP;
 /**
  * MT-Forward-Short-Message Request (TFR) — 3GPP TS 29.338 §6.3.2.5.
  */
-public interface MtForwardShortMessageRequest<T extends MtForwardShortMessageRequest<T>>
-        extends HasSessionIdAVP<T>, HasDrmpAVP<T>, HasVendorSpecificApplicationIdAVP<T>,
-                HasAuthSessionStateAVP<T>,
-                HasUserNameAVP<T>,
-                HasSupportedFeaturesAVPs<T>, HasSmsMiCorrelationIdAVP<T>,
-                HasScAddressAVP<T>, HasSmRpUiAVP<T>,
-                HasMmeNumberForMtSmsAVP<T>, HasSgsnNumberAVP<T>,
-                HasTfrFlagsAVP<T>, HasSmDeliveryTimerAVP<T>, HasSmDeliveryStartTimeAVP<T>,
-                HasMaximumRetransmissionTimeAVP<T>, HasSmsGmscAddressAVP<T>,
-                HasProxyInfoAVPs<T>, HasRouteRecordAVPs<T> {
+public interface MtForwardShortMessageRequest
+        extends HasSessionIdAVP, HasDrmpAVP, HasVendorSpecificApplicationIdAVP,
+                HasAuthSessionStateAVP,
+                HasUserNameAVP,
+                HasSupportedFeaturesAVPs, HasSmsMiCorrelationIdAVP,
+                HasScAddressAVP, HasSmRpUiAVP,
+                HasMmeNumberForMtSmsAVP, HasSgsnNumberAVP,
+                HasTfrFlagsAVP, HasSmDeliveryTimerAVP, HasSmDeliveryStartTimeAVP,
+                HasMaximumRetransmissionTimeAVP, HasSmsGmscAddressAVP,
+                HasProxyInfoAVPs, HasRouteRecordAVPs {
 
-    final class In extends IncomingRequest<In, MtForwardShortMessageAnswer.Out>
-            implements MtForwardShortMessageRequest<In> {
+    final class In extends IncomingRequest<MtForwardShortMessageAnswer.Out>
+            implements MtForwardShortMessageRequest {
 
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(SgdGddConstants.CMD_MT_FORWARD_SHORT_MESSAGE, true, retransmitted,
@@ -49,8 +49,8 @@ public interface MtForwardShortMessageRequest<T extends MtForwardShortMessageReq
         }
     }
 
-    final class Out extends OutgoingRequest<Out, MtForwardShortMessageAnswer.In>
-            implements MtForwardShortMessageRequest<Out> {
+    final class Out extends OutgoingRequest<MtForwardShortMessageAnswer.In>
+            implements MtForwardShortMessageRequest {
 
         public Out() {
             super(SgdGddConstants.CMD_MT_FORWARD_SHORT_MESSAGE, true,

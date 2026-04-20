@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Acct-Multi-Session-Id AVP is used to link together multiple related accounting sessions.
  * </p>
  */
-public interface HasAcctMultiSessionIdAVP<T extends HasAcctMultiSessionIdAVP<T>> extends AVPContainer<T> {
+public interface HasAcctMultiSessionIdAVP extends AVPContainer {
 
     /**
      * Sets the Acct-Multi-Session-Id AVP.
      *
      * @param acctMultiSessionId The accounting multi-session identifier to set.
      */
-    default T setAcctMultiSessionId(final String acctMultiSessionId) {
+    default void setAcctMultiSessionId(final String acctMultiSessionId) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ACCOUNTING_MULTI_SESSION_ID, 0), acctMultiSessionId));
-        return self();
     }
 
     /**

@@ -8,6 +8,7 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginHostAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginRealmAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasSessionIdAVP;
 
+
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -22,11 +23,10 @@ import java.util.List;
  * It provides common functionality for handling the Diameter header and AVPs.
  * </p>
  */
-public abstract class Command<T extends Command<T>> implements
-    Selfable<T>,
-    HasSessionIdAVP<T>,
-    HasOriginHostAVP<T>,
-    HasOriginRealmAVP<T> {
+public abstract class Command implements
+    HasSessionIdAVP,
+    HasOriginHostAVP,
+    HasOriginRealmAVP {
 
     // Diameter header fields
     private final int version;
@@ -336,7 +336,7 @@ public abstract class Command<T extends Command<T>> implements
                     commandCode, applicationId, isRequest, proxiable, isError, hopByHop, endToEnd, isRetransmitted);
 
             for (final AVP avp : avps) {
-                ((Command<?>) command).avps.add(avp);
+                ((Command) command).avps.add(avp);
             }
 
             return command;

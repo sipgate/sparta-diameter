@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Accounting-Realtime-Required AVP is used to inform the client whether real-time accounting is required.
  * </p>
  */
-public interface HasAccountingRealtimeRequiredAVP<T extends HasAccountingRealtimeRequiredAVP<T>> extends AVPContainer<T> {
+public interface HasAccountingRealtimeRequiredAVP extends AVPContainer {
 
     /**
      * Sets the Accounting-Realtime-Required AVP.
      *
      * @param accountingRealtimeRequired The accounting realtime required value to set.
      */
-    default T setAccountingRealtimeRequired(final int accountingRealtimeRequired) {
+    default void setAccountingRealtimeRequired(final int accountingRealtimeRequired) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ACCOUNTING_REALTIME_REQUIRED, 0), accountingRealtimeRequired));
-        return self();
     }
 
     /**

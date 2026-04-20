@@ -24,18 +24,18 @@ import com.sipgate.sparta.diameter.ietf.drmp.mixins.HasDrmpAVP;
 /**
  * MT-Forward-Short-Message Answer (TFA) — 3GPP TS 29.338 §6.3.2.6.
  */
-public interface MtForwardShortMessageAnswer<T extends MtForwardShortMessageAnswer<T>>
-        extends HasSessionIdAVP<T>, HasDrmpAVP<T>, HasVendorSpecificApplicationIdAVP<T>,
-                HasExperimentalResultAVP<T>, HasAuthSessionStateAVP<T>,
-                HasSupportedFeaturesAVPs<T>,
-                HasAbsentUserDiagnosticSmAVP<T>,
-                HasSmDeliveryFailureCauseAVP<T>, HasSmRpUiAVP<T>,
-                HasRequestedRetransmissionTimeAVP<T>, HasUserIdentifierAVP<T>,
-                HasEpsLocationInformationAVP<T>,
-                HasFailedAVP<T>, HasProxyInfoAVPs<T>, HasRouteRecordAVPs<T> {
+public interface MtForwardShortMessageAnswer
+        extends HasSessionIdAVP, HasDrmpAVP, HasVendorSpecificApplicationIdAVP,
+                HasExperimentalResultAVP, HasAuthSessionStateAVP,
+                HasSupportedFeaturesAVPs,
+                HasAbsentUserDiagnosticSmAVP,
+                HasSmDeliveryFailureCauseAVP, HasSmRpUiAVP,
+                HasRequestedRetransmissionTimeAVP, HasUserIdentifierAVP,
+                HasEpsLocationInformationAVP,
+                HasFailedAVP, HasProxyInfoAVPs, HasRouteRecordAVPs {
 
-    final class In extends IncomingAnswer<In>
-            implements MtForwardShortMessageAnswer<In> {
+    final class In extends IncomingAnswer
+            implements MtForwardShortMessageAnswer {
 
         In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(SgdGddConstants.CMD_MT_FORWARD_SHORT_MESSAGE, true,
@@ -43,8 +43,8 @@ public interface MtForwardShortMessageAnswer<T extends MtForwardShortMessageAnsw
         }
     }
 
-    final class Out extends OutgoingAnswer<Out>
-            implements MtForwardShortMessageAnswer<Out> {
+    final class Out extends OutgoingAnswer
+            implements MtForwardShortMessageAnswer {
 
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(SgdGddConstants.CMD_MT_FORWARD_SHORT_MESSAGE, true,

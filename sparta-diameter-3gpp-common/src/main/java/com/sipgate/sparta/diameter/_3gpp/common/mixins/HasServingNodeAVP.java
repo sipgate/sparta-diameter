@@ -9,11 +9,10 @@ import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 /**
  * Mixin for messages carrying a Serving-Node AVP (3GPP TS 29.173 §6.4.3).
  */
-public interface HasServingNodeAVP<T extends HasServingNodeAVP<T>> extends AVPContainer<T> {
+public interface HasServingNodeAVP extends AVPContainer {
 
-    default T setServingNode(final GroupedAVP value) {
+    default void setServingNode(final GroupedAVP value) {
         setAVP(AVP.create(new AVPKey(_3gppConstants.AVP_SERVING_NODE, _3gppConstants.VENDOR_ID_3GPP), value.getAVPs()));
-        return self();
     }
 
     default GroupedAVP getServingNode() {

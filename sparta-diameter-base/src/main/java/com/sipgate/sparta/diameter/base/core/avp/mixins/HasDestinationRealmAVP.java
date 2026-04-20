@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Destination-Realm AVP contains the realm to which the message should be routed.
  * </p>
  */
-public interface HasDestinationRealmAVP<T extends HasDestinationRealmAVP<T>> extends AVPContainer<T> {
+public interface HasDestinationRealmAVP extends AVPContainer {
 
     /**
      * Sets the Destination-Realm AVP.
      *
      * @param destinationRealm The destination realm identifier to set.
      */
-    default T setDestinationRealm(final String destinationRealm) {
+    default void setDestinationRealm(final String destinationRealm) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_DESTINATION_REALM, 0), destinationRealm));
-        return self();
     }
 
     /**

@@ -96,8 +96,8 @@ public final class DiameterMessageFactory {
      * @return the constructed answer
      * @throws IllegalArgumentException if no factory handles the request's command code
      */
-    public static <A extends OutgoingAnswer<A>> A createAnswer(
-            final IncomingRequest<?, A> request,
+    public static <A extends OutgoingAnswer> A createAnswer(
+            final IncomingRequest<A> request,
             final long resultCode) {
         return createAnswer(request, answer -> answer.setResultCode(resultCode));
     }
@@ -115,7 +115,7 @@ public final class DiameterMessageFactory {
      * @return the constructed error answer
      */
     public static ErrorAnswer.Out createErrorAnswer(
-            final IncomingRequest<?, ?> request,
+            final IncomingRequest<?> request,
             final long resultCode) {
         return createErrorAnswer(
                 request.getCommandCode(),
@@ -145,7 +145,8 @@ public final class DiameterMessageFactory {
         if (sessionId != null) {
             errorAnswer.unshiftAvp(AVP.create(new AVPKey(DiameterConstants.AVP_SESSION_ID, 0), sessionId));
         }
-        return errorAnswer.setResultCode(resultCode);
+        errorAnswer.setResultCode(resultCode);
+        return errorAnswer;
     }
 
     /**
@@ -163,8 +164,8 @@ public final class DiameterMessageFactory {
      * @return the constructed answer
      * @throws IllegalArgumentException if no factory handles the request's command code
      */
-    public static <A extends OutgoingAnswer<A> & HasExperimentalResultAVP<A>> A createExperimentalResultAnswer(
-            final IncomingRequest<?, A> request,
+    public static <A extends OutgoingAnswer & HasExperimentalResultAVP> A createExperimentalResultAnswer(
+            final IncomingRequest<A> request,
             final long vendorId,
             final long experimentalResultCode) {
         return createAnswer(request, answer -> {
@@ -180,8 +181,8 @@ public final class DiameterMessageFactory {
         });
     }
 
-    private static <A extends OutgoingAnswer<A>> A createAnswer(
-        final IncomingRequest<?, A> request,
+    private static <A extends OutgoingAnswer> A createAnswer(
+        final IncomingRequest<A> request,
         final Consumer<A> initializer
     ) {
         final var commandCode = request.getCommandCode();
@@ -200,7 +201,7 @@ public final class DiameterMessageFactory {
         throw new IllegalArgumentException("No factory handles answer for command code: " + commandCode);
     }
 
-    private static void prependSessionId(final Request<?, ?> request, final Answer<?> answer) {
+    private static void prependSessionId(final Request<?> request, final Answer answer) {
         final var sessionId = request.getSessionId();
         if (sessionId != null) {
             answer.unshiftAvp(AVP.create(new AVPKey(DiameterConstants.AVP_SESSION_ID, 0), sessionId));

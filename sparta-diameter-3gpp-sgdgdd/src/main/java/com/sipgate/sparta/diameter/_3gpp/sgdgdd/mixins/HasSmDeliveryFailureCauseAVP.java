@@ -13,11 +13,10 @@ import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
  * Grouped — contains SM-Enumerated-Delivery-Failure-Cause and optionally SM-Diagnostic-Info. M,V flags.
  * </p>
  */
-public interface HasSmDeliveryFailureCauseAVP<T extends HasSmDeliveryFailureCauseAVP<T>> extends AVPContainer<T> {
+public interface HasSmDeliveryFailureCauseAVP extends AVPContainer {
 
-    default T setSmDeliveryFailureCause(final GroupedAVP value) {
+    default void setSmDeliveryFailureCause(final GroupedAVP value) {
         setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_SM_DELIVERY_FAILURE_CAUSE, _3gppConstants.VENDOR_ID_3GPP), value.getAVPs()));
-        return self();
     }
 
     default GroupedAVP getSmDeliveryFailureCause() {

@@ -11,13 +11,13 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
  * The RAA message is used to respond to a RAR message for re-authentication requests.
  * </p>
  */
-public interface ReAuthAnswer<T extends ReAuthAnswer<T>>
-        extends HasSessionIdAVP<T>, HasUserNameAVP<T>, HasOriginStateIdAVP<T>, HasErrorMessageAVP<T>,
-                HasErrorReportingHostAVP<T>, HasFailedAVP<T>, HasRedirectHostAVPs<T>,
-                HasRedirectHostUsageAVP<T>, HasRedirectMaxCacheTimeAVP<T>, HasProxyInfoAVPs<T> {
+public interface ReAuthAnswer
+        extends HasSessionIdAVP, HasUserNameAVP, HasOriginStateIdAVP, HasErrorMessageAVP,
+                HasErrorReportingHostAVP, HasFailedAVP, HasRedirectHostAVPs,
+                HasRedirectHostUsageAVP, HasRedirectMaxCacheTimeAVP, HasProxyInfoAVPs {
 
-    final class In extends IncomingAnswer<In>
-            implements ReAuthAnswer<In> {
+    final class In extends IncomingAnswer
+            implements ReAuthAnswer {
 
         In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_RE_AUTH, true,
@@ -25,8 +25,8 @@ public interface ReAuthAnswer<T extends ReAuthAnswer<T>>
         }
     }
 
-    final class Out extends OutgoingAnswer<Out>
-            implements ReAuthAnswer<Out> {
+    final class Out extends OutgoingAnswer
+            implements ReAuthAnswer {
 
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_RE_AUTH, true,

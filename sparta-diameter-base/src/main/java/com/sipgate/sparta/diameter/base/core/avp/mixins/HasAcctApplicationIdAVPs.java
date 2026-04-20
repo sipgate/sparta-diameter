@@ -17,11 +17,10 @@ import java.util.List;
  * (e.g. ACR/ACA), use {@link HasAcctApplicationIdAVP} instead.
  * </p>
  */
-public interface HasAcctApplicationIdAVPs<T extends HasAcctApplicationIdAVPs<T>> extends AVPContainer<T> {
+public interface HasAcctApplicationIdAVPs extends AVPContainer {
 
-    default T addAcctApplicationId(final long acctApplicationId) {
+    default void addAcctApplicationId(final long acctApplicationId) {
         addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ACCT_APPLICATION_ID, 0), acctApplicationId));
-        return self();
     }
 
     default List<Long> getAcctApplicationIds() {
@@ -37,10 +36,9 @@ public interface HasAcctApplicationIdAVPs<T extends HasAcctApplicationIdAVPs<T>>
         return all.isEmpty() ? null : all.get(0);
     }
 
-    default T addAllAcctApplicationIds(final Collection<Long> acctApplicationIds) {
+    default void addAllAcctApplicationIds(final Collection<Long> acctApplicationIds) {
         for (final long id : acctApplicationIds) {
             addAcctApplicationId(id);
         }
-        return self();
     }
 }

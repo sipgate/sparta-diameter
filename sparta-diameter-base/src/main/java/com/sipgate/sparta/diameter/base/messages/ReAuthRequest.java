@@ -11,12 +11,12 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
  * The RAR message is used to request re-authentication of a user session.
  * </p>
  */
-public interface ReAuthRequest<T extends ReAuthRequest<T>>
-        extends HasSessionIdAVP<T>, HasAuthApplicationIdAVP<T>, HasReAuthRequestTypeAVP<T>,
-                HasUserNameAVP<T>, HasOriginStateIdAVP<T>, HasProxyInfoAVPs<T>, HasRouteRecordAVPs<T> {
+public interface ReAuthRequest
+        extends HasSessionIdAVP, HasAuthApplicationIdAVP, HasReAuthRequestTypeAVP,
+                HasUserNameAVP, HasOriginStateIdAVP, HasProxyInfoAVPs, HasRouteRecordAVPs {
 
-    final class In extends IncomingRequest<In, ReAuthAnswer.Out>
-            implements ReAuthRequest<In> {
+    final class In extends IncomingRequest<ReAuthAnswer.Out>
+            implements ReAuthRequest {
 
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(DiameterConstants.CMD_RE_AUTH, true, retransmitted,
@@ -24,8 +24,8 @@ public interface ReAuthRequest<T extends ReAuthRequest<T>>
         }
     }
 
-    final class Out extends OutgoingRequest<Out, ReAuthAnswer.In>
-            implements ReAuthRequest<Out> {
+    final class Out extends OutgoingRequest<ReAuthAnswer.In>
+            implements ReAuthRequest {
 
         public Out() {
             super(DiameterConstants.CMD_RE_AUTH, true,

@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Acct-Interim-Interval AVP is used to indicate the number of seconds between each interim accounting record.
  * </p>
  */
-public interface HasAcctInterimIntervalAVP<T extends HasAcctInterimIntervalAVP<T>> extends AVPContainer<T> {
+public interface HasAcctInterimIntervalAVP extends AVPContainer {
 
     /**
      * Sets the Acct-Interim-Interval AVP.
      *
      * @param acctInterimInterval The accounting interim interval to set.
      */
-    default T setAcctInterimInterval(final long acctInterimInterval) {
+    default void setAcctInterimInterval(final long acctInterimInterval) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ACCT_INTERIM_INTERVAL, 0), acctInterimInterval));
-        return self();
     }
 
     /**

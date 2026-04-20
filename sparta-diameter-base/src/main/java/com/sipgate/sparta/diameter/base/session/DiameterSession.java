@@ -91,8 +91,8 @@ public abstract class DiameterSession {
      * Sends an outgoing request and returns a future that completes when the matching
      * answer arrives (correlated by hop-by-hop identifier).
      */
-    public <R extends OutgoingRequest<R, A>, A extends Answer<A>> CompletableFuture<A> send(
-            final R request) {
+    public <A extends Answer> CompletableFuture<A> send(
+            final OutgoingRequest<A> request) {
         if (peerState != PeerState.I_OPEN && peerState != PeerState.R_OPEN) {
             final CompletableFuture<A> failed = new CompletableFuture<>();
             failed.completeExceptionally(
@@ -104,17 +104,17 @@ public abstract class DiameterSession {
         return sendAndTrack(request, hopByHop, endToEnd, config.getRequestTimeout());
     }
 
-    ChannelFuture send(final OutgoingAnswer<?> answer) {
+    ChannelFuture send(final OutgoingAnswer answer) {
         return send(peer, answer);
     }
 
-    private ChannelFuture send(final DiameterPeer peer, final OutgoingAnswer<?> answer) {
+    private ChannelFuture send(final DiameterPeer peer, final OutgoingAnswer answer) {
         answer.setOriginHost(config.getOriginHost());
         answer.setOriginRealm(config.getOriginRealm());
         return peer.send(answer);
     }
 
-    ChannelFuture send(final OutgoingRequest<?, ?> request, final HopByHopId hopByHop, final EndToEndId endToEnd) {
+    ChannelFuture send(final OutgoingRequest<?> request, final HopByHopId hopByHop, final EndToEndId endToEnd) {
         request.setOriginHost(config.getOriginHost());
         request.setOriginRealm(config.getOriginRealm());
         return peer.send(request, hopByHop, endToEnd);
@@ -123,7 +123,7 @@ public abstract class DiameterSession {
     /**
      * Registers a handler for inbound requests of the given type.
      */
-    public <R extends IncomingRequest<R, A>, A extends OutgoingAnswer<A>> void setHandler(
+    public <R extends IncomingRequest<A>, A extends OutgoingAnswer> void setHandler(
             final Class<R> requestClass,
             final DiameterRequestHandler<R, A> handler) {
         if (handlers.containsKey(requestClass)) {
@@ -214,7 +214,7 @@ public abstract class DiameterSession {
      * {@code DIAMETER_COMMAND_UNSUPPORTED} if no handler is registered.
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    protected void dispatchInboundRequest(final IncomingRequest<?, ? extends OutgoingAnswer> request) {
+    protected void dispatchInboundRequest(final IncomingRequest<? extends OutgoingAnswer> request) {
         final int commandCode = request.getCommandCode();
         final int applicationId = request.getApplicationId();
         final DiameterRequestHandler handler = handlers.get(request.getClass());
@@ -241,15 +241,15 @@ public abstract class DiameterSession {
         });
     }
 
-    protected <R extends OutgoingRequest<R, A>, A extends Answer<A>> CompletableFuture<A> sendAndTrack(
-            final R request) {
+    protected <A extends Answer> CompletableFuture<A> sendAndTrack(
+            final OutgoingRequest<A> request) {
         final HopByHopId hopByHop = identifiers.nextHopByHop();
         final EndToEndId endToEnd = DiameterIdentifiers.nextEndToEnd();
         return sendAndTrack(request, hopByHop, endToEnd, config.getRequestTimeout());
     }
 
-    private <R extends OutgoingRequest<R, A>, A extends Answer<A>> CompletableFuture<A> sendAndTrack(
-            final R request, final HopByHopId hopByHop, final EndToEndId endToEnd,
+    private <A extends Answer> CompletableFuture<A> sendAndTrack(
+            final OutgoingRequest<A> request, final HopByHopId hopByHop, final EndToEndId endToEnd,
             final Duration timeout) {
         final CompletableFuture<A> future = new CompletableFuture<>();
         final int commandCode = request.getCommandCode();
@@ -373,6 +373,7 @@ public abstract class DiameterSession {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected void complete(final IncomingAnswer answer) {
+
         final PendingRequest pending = pendingRequests.remove(answer.hopByHopId());
         if (pending == null) {
             LOGGER.warn("found no pending request for answer with hop-by-hop id: {}", answer.hopByHopId());
@@ -494,8 +495,9 @@ public abstract class DiameterSession {
     }
 
     private DisconnectPeerRequest.Out buildDpr(final int disconnectCause) {
-        return new DisconnectPeerRequest.Out()
-                .setDisconnectCause(disconnectCause);
+        final var dpr = new DisconnectPeerRequest.Out();
+        dpr.setDisconnectCause(disconnectCause);
+        return dpr;
     }
 
     private static final class PendingRequest<A> {

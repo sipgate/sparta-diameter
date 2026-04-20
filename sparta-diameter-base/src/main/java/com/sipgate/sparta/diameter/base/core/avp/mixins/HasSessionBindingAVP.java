@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Session-Binding AVP is used to indicate a hint to the server about the session binding.
  * </p>
  */
-public interface HasSessionBindingAVP<T extends HasSessionBindingAVP<T>> extends AVPContainer<T> {
+public interface HasSessionBindingAVP extends AVPContainer {
 
     /**
      * Sets the Session-Binding AVP.
      *
      * @param sessionBinding The session binding to set.
      */
-    default T setSessionBinding(final long sessionBinding) {
+    default void setSessionBinding(final long sessionBinding) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_SESSION_BINDING, 0), sessionBinding));
-        return self();
     }
 
     /**

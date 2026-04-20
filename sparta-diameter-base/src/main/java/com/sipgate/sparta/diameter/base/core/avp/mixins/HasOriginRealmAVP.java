@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Origin-Realm AVP contains the realm of the originating host.
  * </p>
  */
-public interface HasOriginRealmAVP<T extends HasOriginRealmAVP<T>> extends AVPContainer<T> {
+public interface HasOriginRealmAVP extends AVPContainer {
 
     /**
      * Sets the Origin-Realm AVP.
      *
      * @param originRealm The origin realm identifier to set.
      */
-    default T setOriginRealm(final String originRealm) {
+    default void setOriginRealm(final String originRealm) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ORIGIN_REALM, 0), originRealm));
-        return self();
     }
 
     /**

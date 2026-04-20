@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Disconnect-Cause AVP is used to inform the peer of the reason for the disconnection.
  * </p>
  */
-public interface HasDisconnectCauseAVP<T extends HasDisconnectCauseAVP<T>> extends AVPContainer<T> {
+public interface HasDisconnectCauseAVP extends AVPContainer {
 
     /**
      * Sets the Disconnect-Cause AVP.
      *
      * @param disconnectCause The disconnect cause to set.
      */
-    default T setDisconnectCause(final int disconnectCause) {
+    default void setDisconnectCause(final int disconnectCause) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_DISCONNECT_CAUSE, 0), disconnectCause));
-        return self();
     }
 
     /**

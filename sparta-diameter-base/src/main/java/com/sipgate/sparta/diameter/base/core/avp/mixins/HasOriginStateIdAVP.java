@@ -13,16 +13,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * The Origin-State-Id AVP is used to detect and manage peer restarts.
  * </p>
  */
-public interface HasOriginStateIdAVP<T extends HasOriginStateIdAVP<T>> extends AVPContainer<T> {
+public interface HasOriginStateIdAVP extends AVPContainer {
 
     /**
      * Sets the Origin-State-Id AVP.
      *
      * @param originStateId The origin state identifier to set.
      */
-    default T setOriginStateId(final long originStateId) {
+    default void setOriginStateId(final long originStateId) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ORIGIN_STATE_ID, 0), originStateId));
-        return self();
     }
 
     /**

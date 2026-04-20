@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Origin-Host AVP identifies the endpoint that originated the Diameter message.
  * </p>
  */
-public interface HasOriginHostAVP<T extends HasOriginHostAVP<T>> extends AVPContainer<T> {
+public interface HasOriginHostAVP extends AVPContainer {
 
     /**
      * Sets the Origin-Host AVP.
      *
      * @param originHost The origin host identifier to set.
      */
-    default T setOriginHost(final String originHost) {
+    default void setOriginHost(final String originHost) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ORIGIN_HOST, 0), originHost));
-        return self();
     }
 
     /**

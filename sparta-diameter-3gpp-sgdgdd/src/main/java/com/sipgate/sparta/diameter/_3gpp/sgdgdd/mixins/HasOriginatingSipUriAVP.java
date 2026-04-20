@@ -12,11 +12,10 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * UTF8String — public identity of the IMS UE without MSISDN that is the sender. V flag only.
  * </p>
  */
-public interface HasOriginatingSipUriAVP<T extends HasOriginatingSipUriAVP<T>> extends AVPContainer<T> {
+public interface HasOriginatingSipUriAVP extends AVPContainer {
 
-    default T setOriginatingSipUri(final String value) {
+    default void setOriginatingSipUri(final String value) {
         setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_ORIGINATING_SIP_URI, _3gppConstants.VENDOR_ID_3GPP), value));
-        return self();
     }
 
     default String getOriginatingSipUri() {

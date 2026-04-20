@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Proxy-State AVP contains state information that a proxy wishes to preserve.
  * </p>
  */
-public interface HasProxyStateAVP<T extends HasProxyStateAVP<T>> extends AVPContainer<T> {
+public interface HasProxyStateAVP extends AVPContainer {
 
     /**
      * Sets the Proxy-State AVP.
      *
      * @param proxyState The proxy state to set.
      */
-    default T setProxyState(final byte[] proxyState) {
+    default void setProxyState(final byte[] proxyState) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_PROXY_STATE, 0), proxyState));
-        return self();
     }
 
     /**

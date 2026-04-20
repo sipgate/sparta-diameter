@@ -14,11 +14,10 @@ import java.util.Date;
  * Time — UTC timestamp at which the SM Delivery Supervision Timer was started. M,V flags.
  * </p>
  */
-public interface HasSmDeliveryStartTimeAVP<T extends HasSmDeliveryStartTimeAVP<T>> extends AVPContainer<T> {
+public interface HasSmDeliveryStartTimeAVP extends AVPContainer {
 
-    default T setSmDeliveryStartTime(final Date value) {
+    default void setSmDeliveryStartTime(final Date value) {
         setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_SM_DELIVERY_START_TIME, _3gppConstants.VENDOR_ID_3GPP), value));
-        return self();
     }
 
     default Date getSmDeliveryStartTime() {

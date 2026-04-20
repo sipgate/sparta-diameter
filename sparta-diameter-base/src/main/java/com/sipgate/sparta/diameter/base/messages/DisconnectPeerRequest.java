@@ -11,11 +11,11 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.HasDisconnectCauseAVP;
  * The DPR message is used to gracefully disconnect a Diameter peer connection.
  * </p>
  */
-public interface DisconnectPeerRequest<T extends DisconnectPeerRequest<T>>
-        extends HasDisconnectCauseAVP<T> {
+public interface DisconnectPeerRequest
+        extends HasDisconnectCauseAVP {
 
-    final class In extends IncomingRequest<In, DisconnectPeerAnswer.Out>
-            implements DisconnectPeerRequest<In> {
+    final class In extends IncomingRequest<DisconnectPeerAnswer.Out>
+            implements DisconnectPeerRequest {
 
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(DiameterConstants.CMD_DISCONNECT_PEER, false, retransmitted,
@@ -23,8 +23,8 @@ public interface DisconnectPeerRequest<T extends DisconnectPeerRequest<T>>
         }
     }
 
-    final class Out extends OutgoingRequest<Out, DisconnectPeerAnswer.In>
-            implements DisconnectPeerRequest<Out> {
+    final class Out extends OutgoingRequest<DisconnectPeerAnswer.In>
+            implements DisconnectPeerRequest {
 
         public Out() {
             super(DiameterConstants.CMD_DISCONNECT_PEER, false,

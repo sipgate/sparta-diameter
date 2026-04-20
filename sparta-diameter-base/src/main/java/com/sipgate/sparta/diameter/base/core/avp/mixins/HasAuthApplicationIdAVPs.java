@@ -17,11 +17,10 @@ import java.util.List;
  * (e.g. RAR, ASR, STR), use {@link HasAuthApplicationIdAVP} instead.
  * </p>
  */
-public interface HasAuthApplicationIdAVPs<T extends HasAuthApplicationIdAVPs<T>> extends AVPContainer<T> {
+public interface HasAuthApplicationIdAVPs extends AVPContainer {
 
-    default T addAuthApplicationId(final long authApplicationId) {
+    default void addAuthApplicationId(final long authApplicationId) {
         addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0), authApplicationId));
-        return self();
     }
 
     default List<Long> getAuthApplicationIds() {
@@ -37,10 +36,9 @@ public interface HasAuthApplicationIdAVPs<T extends HasAuthApplicationIdAVPs<T>>
         return all.isEmpty() ? null : all.get(0);
     }
 
-    default T addAllAuthApplicationIds(final Collection<Long> authApplicationIds) {
+    default void addAllAuthApplicationIds(final Collection<Long> authApplicationIds) {
         for (final long id : authApplicationIds) {
             addAuthApplicationId(id);
         }
-        return self();
     }
 }

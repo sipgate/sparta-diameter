@@ -18,8 +18,8 @@ import java.util.concurrent.CompletableFuture;
  */
 @FunctionalInterface
 public interface DiameterRequestHandler<
-        R extends IncomingRequest<R, A>,
-        A extends OutgoingAnswer<A>> {
+        R extends IncomingRequest<A>,
+        A extends OutgoingAnswer> {
 
     /**
      * Handles an inbound request and returns a future that resolves to the answer.

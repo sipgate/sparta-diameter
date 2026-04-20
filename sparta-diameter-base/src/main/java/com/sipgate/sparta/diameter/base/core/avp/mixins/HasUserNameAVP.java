@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The User-Name AVP contains the username in a format consistent with the NAI specification.
  * </p>
  */
-public interface HasUserNameAVP<T extends HasUserNameAVP<T>> extends AVPContainer<T> {
+public interface HasUserNameAVP extends AVPContainer {
 
     /**
      * Sets the User-Name AVP.
      *
      * @param userName The username to set.
      */
-    default T setUserName(final String userName) {
+    default void setUserName(final String userName) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_USER_NAME, 0), userName));
-        return self();
     }
 
     /**

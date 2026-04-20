@@ -12,6 +12,6 @@ public interface DiameterPackageFactory {
     /**
      * Returns null if this factory does not handle the given command code / application ID.
      */
-    OutgoingAnswer<?> createAnswer(int commandCode, int applicationId,
+    OutgoingAnswer createAnswer(int commandCode, int applicationId,
                                    HopByHopId hopByHop, EndToEndId endToEnd);
 }

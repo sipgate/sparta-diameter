@@ -26,8 +26,8 @@ class DiameterMessageFactoryTest {
         assertThat(result).isInstanceOf(DeviceWatchdogRequest.In.class);
         assertThat(result.hopByHopId()).isEqualTo(HOP);
         assertThat(result.endToEndId()).isEqualTo(END);
-        assertThat(((Command<?>) result).isRequest()).isTrue();
-        assertThat(((Command<?>) result).isRetransmitted()).isFalse();
+        assertThat(((Command) result).isRequest()).isTrue();
+        assertThat(((Command) result).isRetransmitted()).isFalse();
     }
 
     @Test
@@ -37,7 +37,7 @@ class DiameterMessageFactoryTest {
                 DiameterConstants.CMD_DEVICE_WATCHDOG, 0, true, true, false, HOP, END, true);
 
         // THEN
-        assertThat(((Command<?>) result).isRetransmitted()).isTrue();
+        assertThat(((Command) result).isRetransmitted()).isTrue();
     }
 
     @Test
@@ -48,7 +48,7 @@ class DiameterMessageFactoryTest {
 
         // THEN
         assertThat(result).isInstanceOf(DeviceWatchdogAnswer.In.class);
-        assertThat(((Command<?>) result).isRequest()).isFalse();
+        assertThat(((Command) result).isRequest()).isFalse();
     }
 
     @Test
@@ -59,7 +59,7 @@ class DiameterMessageFactoryTest {
                         DiameterConstants.CMD_DEVICE_WATCHDOG, 0, true, true, false, HOP, END, false);
 
         // WHEN
-        final OutgoingAnswer<?> answer = DiameterMessageFactory.createAnswer(request, RES_DIAMETER_SUCCESS);
+        final OutgoingAnswer answer = DiameterMessageFactory.createAnswer(request, RES_DIAMETER_SUCCESS);
 
         // THEN
         assertThat(answer).isInstanceOf(DeviceWatchdogAnswer.Out.class);

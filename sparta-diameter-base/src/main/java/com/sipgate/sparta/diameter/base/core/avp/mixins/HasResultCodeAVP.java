@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Result-Code AVP indicates whether a particular request was completed successfully or whether an error occurred.
  * </p>
  */
-public interface HasResultCodeAVP<T extends HasResultCodeAVP<T>> extends AVPContainer<T> {
+public interface HasResultCodeAVP extends AVPContainer {
 
     /**
      * Sets the Result-Code AVP.
      *
      * @param resultCode The result code to set.
      */
-    default T setResultCode(final long resultCode) {
+    default void setResultCode(final long resultCode) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_RESULT_CODE, 0), resultCode));
-        return self();
     }
 
     /**

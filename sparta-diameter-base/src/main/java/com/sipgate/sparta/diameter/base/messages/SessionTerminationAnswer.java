@@ -11,14 +11,14 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
  * The STA message is used to respond to an STR message for session termination requests.
  * </p>
  */
-public interface SessionTerminationAnswer<T extends SessionTerminationAnswer<T>>
-        extends HasSessionIdAVP<T>, HasUserNameAVP<T>, HasClassAVPs<T>,
-                HasErrorMessageAVP<T>, HasErrorReportingHostAVP<T>, HasFailedAVP<T>,
-                HasOriginStateIdAVP<T>, HasRedirectHostAVPs<T>,
-                HasRedirectHostUsageAVP<T>, HasRedirectMaxCacheTimeAVP<T>, HasProxyInfoAVPs<T> {
+public interface SessionTerminationAnswer
+        extends HasSessionIdAVP, HasUserNameAVP, HasClassAVPs,
+                HasErrorMessageAVP, HasErrorReportingHostAVP, HasFailedAVP,
+                HasOriginStateIdAVP, HasRedirectHostAVPs,
+                HasRedirectHostUsageAVP, HasRedirectMaxCacheTimeAVP, HasProxyInfoAVPs {
 
-    final class In extends IncomingAnswer<In>
-            implements SessionTerminationAnswer<In> {
+    final class In extends IncomingAnswer
+            implements SessionTerminationAnswer {
 
         In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_SESSION_TERMINATION, true,
@@ -26,8 +26,8 @@ public interface SessionTerminationAnswer<T extends SessionTerminationAnswer<T>>
         }
     }
 
-    final class Out extends OutgoingAnswer<Out>
-            implements SessionTerminationAnswer<Out> {
+    final class Out extends OutgoingAnswer
+            implements SessionTerminationAnswer {
 
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_SESSION_TERMINATION, true,

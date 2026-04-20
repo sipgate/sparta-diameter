@@ -10,7 +10,7 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.HasResultCodeAVP;
  * Answer messages have the R-bit cleared in the Diameter header flags.
  * </p>
  */
-public abstract class Answer<T extends Answer<T>> extends Command<T> implements HasResultCodeAVP<T> {
+public abstract class Answer extends Command implements HasResultCodeAVP {
 
     private final HopByHopId hopByHop;
     private final EndToEndId endToEnd;

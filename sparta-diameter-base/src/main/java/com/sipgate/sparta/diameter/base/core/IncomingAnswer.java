@@ -1,7 +1,7 @@
 package com.sipgate.sparta.diameter.base.core;
 
-public abstract class IncomingAnswer<T extends IncomingAnswer<T>>
-        extends Answer<T>
+public abstract class IncomingAnswer
+        extends Answer
         implements IncomingCommand {
 
     protected IncomingAnswer(final int commandCode, final boolean proxiable,

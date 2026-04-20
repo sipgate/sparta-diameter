@@ -11,15 +11,15 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
  * The CEA message is used to respond to a CER message and exchange capabilities between Diameter peers.
  * </p>
  */
-public interface CapabilitiesExchangeAnswer<T extends CapabilitiesExchangeAnswer<T>>
-        extends HasVendorIdAVP<T>, HasProductNameAVP<T>, HasOriginStateIdAVP<T>,
-                HasHostIpAddressAVPs<T>, HasSupportedVendorIdAVPs<T>, HasAuthApplicationIdAVPs<T>,
-                HasInbandSecurityIdAVPs<T>, HasAcctApplicationIdAVPs<T>,
-                HasVendorSpecificApplicationIdAVPs<T>, HasFirmwareRevisionAVP<T>,
-                HasErrorMessageAVP<T>, HasFailedAVP<T> {
+public interface CapabilitiesExchangeAnswer
+        extends HasVendorIdAVP, HasProductNameAVP, HasOriginStateIdAVP,
+                HasHostIpAddressAVPs, HasSupportedVendorIdAVPs, HasAuthApplicationIdAVPs,
+                HasInbandSecurityIdAVPs, HasAcctApplicationIdAVPs,
+                HasVendorSpecificApplicationIdAVPs, HasFirmwareRevisionAVP,
+                HasErrorMessageAVP, HasFailedAVP {
 
-    final class In extends IncomingAnswer<In>
-            implements CapabilitiesExchangeAnswer<In> {
+    final class In extends IncomingAnswer
+            implements CapabilitiesExchangeAnswer {
 
         In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false,
@@ -27,8 +27,8 @@ public interface CapabilitiesExchangeAnswer<T extends CapabilitiesExchangeAnswer
         }
     }
 
-    final class Out extends OutgoingAnswer<Out>
-            implements CapabilitiesExchangeAnswer<Out> {
+    final class Out extends OutgoingAnswer
+            implements CapabilitiesExchangeAnswer {
 
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false,

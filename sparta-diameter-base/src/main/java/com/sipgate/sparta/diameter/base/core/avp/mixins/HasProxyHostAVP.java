@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Proxy-Host AVP contains the identity of the host that added the Proxy-Info AVP.
  * </p>
  */
-public interface HasProxyHostAVP<T extends HasProxyHostAVP<T>> extends AVPContainer<T> {
+public interface HasProxyHostAVP extends AVPContainer {
 
     /**
      * Sets the Proxy-Host AVP.
      *
      * @param proxyHost The proxy host identifier to set.
      */
-    default T setProxyHost(final String proxyHost) {
+    default void setProxyHost(final String proxyHost) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_PROXY_HOST, 0), proxyHost));
-        return self();
     }
 
     /**

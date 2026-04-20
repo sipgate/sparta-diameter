@@ -7,8 +7,8 @@ package com.sipgate.sparta.diameter.base.core;
  * concrete {@code In} classes do not need to redeclare them.
  * </p>
  */
-public abstract class IncomingRequest<T extends IncomingRequest<T, A>, A extends OutgoingAnswer<A>>
-        extends Request<T, A>
+public abstract class IncomingRequest<A extends OutgoingAnswer>
+        extends Request<A>
         implements IncomingCommand {
 
     private final HopByHopId hopByHop;

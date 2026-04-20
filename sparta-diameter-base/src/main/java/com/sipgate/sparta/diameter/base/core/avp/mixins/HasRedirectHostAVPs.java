@@ -15,11 +15,10 @@ import java.util.List;
  * RFC 6733 defines {@code * [ Redirect-Host ]} in answer messages that support redirection.
  * </p>
  */
-public interface HasRedirectHostAVPs<T extends HasRedirectHostAVPs<T>> extends AVPContainer<T> {
+public interface HasRedirectHostAVPs extends AVPContainer {
 
-    default T addRedirectHost(final String redirectHost) {
+    default void addRedirectHost(final String redirectHost) {
         addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_REDIRECT_HOST, 0), redirectHost));
-        return self();
     }
 
     default List<String> getRedirectHosts() {
@@ -35,10 +34,9 @@ public interface HasRedirectHostAVPs<T extends HasRedirectHostAVPs<T>> extends A
         return all.isEmpty() ? null : all.get(0);
     }
 
-    default T addAllRedirectHosts(final Collection<String> redirectHosts) {
+    default void addAllRedirectHosts(final Collection<String> redirectHosts) {
         for (final String host : redirectHosts) {
             addRedirectHost(host);
         }
-        return self();
     }
 }

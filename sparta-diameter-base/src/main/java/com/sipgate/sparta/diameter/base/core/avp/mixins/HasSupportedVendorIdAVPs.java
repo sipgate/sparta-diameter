@@ -15,11 +15,10 @@ import java.util.List;
  * RFC 6733 defines {@code * [ Supported-Vendor-Id ]} in CER/CEA.
  * </p>
  */
-public interface HasSupportedVendorIdAVPs<T extends HasSupportedVendorIdAVPs<T>> extends AVPContainer<T> {
+public interface HasSupportedVendorIdAVPs extends AVPContainer {
 
-    default T addSupportedVendorId(final long supportedVendorId) {
+    default void addSupportedVendorId(final long supportedVendorId) {
         addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_SUPPORTED_VENDOR_ID, 0), supportedVendorId));
-        return self();
     }
 
     default List<Long> getSupportedVendorIds() {
@@ -35,10 +34,9 @@ public interface HasSupportedVendorIdAVPs<T extends HasSupportedVendorIdAVPs<T>>
         return all.isEmpty() ? null : all.get(0);
     }
 
-    default T addAllSupportedVendorIds(final Collection<Long> supportedVendorIds) {
+    default void addAllSupportedVendorIds(final Collection<Long> supportedVendorIds) {
         for (final long id : supportedVendorIds) {
             addSupportedVendorId(id);
         }
-        return self();
     }
 }

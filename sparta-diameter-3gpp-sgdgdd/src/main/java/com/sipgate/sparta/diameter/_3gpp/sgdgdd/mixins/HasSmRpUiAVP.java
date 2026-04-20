@@ -12,11 +12,10 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * OctetString — short message transfer protocol data unit. M,V flags.
  * </p>
  */
-public interface HasSmRpUiAVP<T extends HasSmRpUiAVP<T>> extends AVPContainer<T> {
+public interface HasSmRpUiAVP extends AVPContainer {
 
-    default T setSmRpUi(final byte[] value) {
+    default void setSmRpUi(final byte[] value) {
         setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_SM_RP_UI, _3gppConstants.VENDOR_ID_3GPP), value));
-        return self();
     }
 
     default byte[] getSmRpUi() {

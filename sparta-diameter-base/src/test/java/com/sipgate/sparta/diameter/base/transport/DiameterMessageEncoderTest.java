@@ -45,6 +45,6 @@ class DiameterMessageEncoderTest {
         assertThat(parsed).isInstanceOf(DeviceWatchdogRequest.In.class);
         assertThat(parsed.hopByHopId()).isEqualTo(new HopByHopId(0x1234));
         assertThat(parsed.endToEndId()).isEqualTo(new EndToEndId(0x5678));
-        assertThat(((Command<?>) parsed).isRequest()).isTrue();
+        assertThat(((Command) parsed).isRequest()).isTrue();
     }
 }

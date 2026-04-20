@@ -41,7 +41,7 @@ public final class BaseMessageFactory implements DiameterPackageFactory {
     }
 
     @Override
-    public OutgoingAnswer<?> createAnswer(final int commandCode, final int applicationId,
+    public OutgoingAnswer createAnswer(final int commandCode, final int applicationId,
                                           final HopByHopId hopByHop, final EndToEndId endToEnd) {
         return switch (commandCode) {
             case DiameterConstants.CMD_ABORT_SESSION ->

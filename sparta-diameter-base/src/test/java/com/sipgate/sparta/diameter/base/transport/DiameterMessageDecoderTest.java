@@ -31,7 +31,7 @@ class DiameterMessageDecoderTest {
         );
     }
 
-    private static ByteBuf serialize(final OutgoingRequest request,
+    private static ByteBuf serialize(final OutgoingRequest<?> request,
                                      final HopByHopId hopByHop,
                                      final EndToEndId endToEnd) throws Exception {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -54,7 +54,7 @@ class DiameterMessageDecoderTest {
         assertThat(decoded).isInstanceOf(DeviceWatchdogRequest.In.class);
         assertThat(decoded.hopByHopId()).isEqualTo(new HopByHopId(0x0000BEEF));
         assertThat(decoded.endToEndId()).isEqualTo(new EndToEndId(0x0000CAFE));
-        assertThat(((Command<?>) decoded).isRequest()).isTrue();
+        assertThat(((Command) decoded).isRequest()).isTrue();
 
         decoder.finish();
     }

@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Acct-Application-Id AVP is used to advertise support of the Accounting portion of an application.
  * </p>
  */
-public interface HasAcctApplicationIdAVP<T extends HasAcctApplicationIdAVP<T>> extends AVPContainer<T> {
+public interface HasAcctApplicationIdAVP extends AVPContainer {
 
     /**
      * Sets the Acct-Application-Id AVP.
      *
      * @param acctApplicationId The accounting application identifier to set.
      */
-    default T setAcctApplicationId(final long acctApplicationId) {
+    default void setAcctApplicationId(final long acctApplicationId) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ACCT_APPLICATION_ID, 0), acctApplicationId));
-        return self();
     }
 
     /**

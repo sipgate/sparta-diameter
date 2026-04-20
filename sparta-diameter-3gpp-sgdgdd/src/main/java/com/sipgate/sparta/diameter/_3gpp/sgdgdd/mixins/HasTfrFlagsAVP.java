@@ -12,11 +12,10 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * Unsigned32 bitmask — bit 0: More-Messages-To-Send. M,V flags.
  * </p>
  */
-public interface HasTfrFlagsAVP<T extends HasTfrFlagsAVP<T>> extends AVPContainer<T> {
+public interface HasTfrFlagsAVP extends AVPContainer {
 
-    default T setTfrFlags(final long value) {
+    default void setTfrFlags(final long value) {
         setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_TFR_FLAGS, _3gppConstants.VENDOR_ID_3GPP), value));
-        return self();
     }
 
     default long getTfrFlags() {

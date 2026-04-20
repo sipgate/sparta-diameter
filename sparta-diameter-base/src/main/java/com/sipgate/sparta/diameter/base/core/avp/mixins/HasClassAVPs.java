@@ -17,11 +17,10 @@ import java.util.List;
  * {@link Object#getClass()}.
  * </p>
  */
-public interface HasClassAVPs<T extends HasClassAVPs<T>> extends AVPContainer<T> {
+public interface HasClassAVPs extends AVPContainer {
 
-    default T addClassAVP(final byte[] classValue) {
+    default void addClassAVP(final byte[] classValue) {
         addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_CLASS, 0), classValue));
-        return self();
     }
 
     default List<byte[]> getClassAVPs() {
@@ -37,10 +36,9 @@ public interface HasClassAVPs<T extends HasClassAVPs<T>> extends AVPContainer<T>
         return all.isEmpty() ? null : all.get(0);
     }
 
-    default T addAllClassAVPs(final Collection<byte[]> classValues) {
+    default void addAllClassAVPs(final Collection<byte[]> classValues) {
         for (final byte[] value : classValues) {
             addClassAVP(value);
         }
-        return self();
     }
 }

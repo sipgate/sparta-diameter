@@ -14,16 +14,15 @@ import java.util.Date;
  * as defined in RFC 6733. The Event-Timestamp AVP is used to record the time that the reported event occurred.
  * </p>
  */
-public interface HasEventTimestampAVP<T extends HasEventTimestampAVP<T>> extends AVPContainer<T> {
+public interface HasEventTimestampAVP extends AVPContainer {
 
     /**
      * Sets the Event-Timestamp AVP.
      *
      * @param eventTimestamp The event timestamp to set.
      */
-    default T setEventTimestamp(final Date eventTimestamp) {
+    default void setEventTimestamp(final Date eventTimestamp) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_EVENT_TIMESTAMP, 0), eventTimestamp));
-        return self();
     }
 
     /**

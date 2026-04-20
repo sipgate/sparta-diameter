@@ -12,11 +12,10 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * Unsigned32 — SM Delivery supervision timer value in seconds. M,V flags.
  * </p>
  */
-public interface HasSmDeliveryTimerAVP<T extends HasSmDeliveryTimerAVP<T>> extends AVPContainer<T> {
+public interface HasSmDeliveryTimerAVP extends AVPContainer {
 
-    default T setSmDeliveryTimer(final long value) {
+    default void setSmDeliveryTimer(final long value) {
         setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_SM_DELIVERY_TIMER, _3gppConstants.VENDOR_ID_3GPP), value));
-        return self();
     }
 
     default long getSmDeliveryTimer() {

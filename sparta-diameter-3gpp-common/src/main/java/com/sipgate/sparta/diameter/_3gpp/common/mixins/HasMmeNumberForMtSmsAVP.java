@@ -8,11 +8,10 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 /**
  * Mixin for messages carrying an MME-Number-for-MT-SMS AVP (3GPP TS 29.272 §7.3.159).
  */
-public interface HasMmeNumberForMtSmsAVP<T extends HasMmeNumberForMtSmsAVP<T>> extends AVPContainer<T> {
+public interface HasMmeNumberForMtSmsAVP extends AVPContainer {
 
-    default T setMmeNumberForMtSms(final byte[] value) {
+    default void setMmeNumberForMtSms(final byte[] value) {
         setAVP(AVP.create(new AVPKey(_3gppConstants.AVP_MME_NUMBER_FOR_MT_SMS, _3gppConstants.VENDOR_ID_3GPP), value));
-        return self();
     }
 
     default byte[] getMmeNumberForMtSms() {

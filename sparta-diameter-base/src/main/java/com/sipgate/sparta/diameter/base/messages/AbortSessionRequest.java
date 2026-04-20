@@ -11,12 +11,12 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
  * The ASR message is used to request immediate termination of a user session.
  * </p>
  */
-public interface AbortSessionRequest<T extends AbortSessionRequest<T>>
-        extends HasSessionIdAVP<T>, HasAuthApplicationIdAVP<T>, HasUserNameAVP<T>,
-                HasOriginStateIdAVP<T>, HasProxyInfoAVPs<T>, HasRouteRecordAVPs<T> {
+public interface AbortSessionRequest
+        extends HasSessionIdAVP, HasAuthApplicationIdAVP, HasUserNameAVP,
+                HasOriginStateIdAVP, HasProxyInfoAVPs, HasRouteRecordAVPs {
 
-    final class In extends IncomingRequest<In, AbortSessionAnswer.Out>
-            implements AbortSessionRequest<In> {
+    final class In extends IncomingRequest<AbortSessionAnswer.Out>
+            implements AbortSessionRequest {
 
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(DiameterConstants.CMD_ABORT_SESSION, true, retransmitted,
@@ -24,8 +24,8 @@ public interface AbortSessionRequest<T extends AbortSessionRequest<T>>
         }
     }
 
-    final class Out extends OutgoingRequest<Out, AbortSessionAnswer.In>
-            implements AbortSessionRequest<Out> {
+    final class Out extends OutgoingRequest<AbortSessionAnswer.In>
+            implements AbortSessionRequest {
 
         public Out() {
             super(DiameterConstants.CMD_ABORT_SESSION, true,

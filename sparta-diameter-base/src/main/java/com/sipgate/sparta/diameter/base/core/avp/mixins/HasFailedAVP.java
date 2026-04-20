@@ -13,16 +13,15 @@ import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
  * as defined in RFC 6733. The Failed-AVP AVP provides debugging information in cases where a request is rejected or not fully processed.
  * </p>
  */
-public interface HasFailedAVP<T extends HasFailedAVP<T>> extends AVPContainer<T> {
+public interface HasFailedAVP extends AVPContainer {
 
     /**
      * Sets the Failed-AVP AVP.
      *
      * @param failedAVP The failed AVP to set.
      */
-    default T setFailedAVP(final GroupedAVP failedAVP) {
+    default void setFailedAVP(final GroupedAVP failedAVP) {
         setAVP(failedAVP);
-        return self();
     }
 
     /**

@@ -12,16 +12,15 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  * as defined in RFC 6733. The Accounting-Record-Type AVP contains the type of accounting record being sent.
  * </p>
  */
-public interface HasAccountingRecordTypeAVP<T extends HasAccountingRecordTypeAVP<T>> extends AVPContainer<T> {
+public interface HasAccountingRecordTypeAVP extends AVPContainer {
 
     /**
      * Sets the Accounting-Record-Type AVP.
      *
      * @param accountingRecordType The accounting record type to set.
      */
-    default T setAccountingRecordType(final int accountingRecordType) {
+    default void setAccountingRecordType(final int accountingRecordType) {
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_ACCOUNTING_RECORD_TYPE, 0), accountingRecordType));
-        return self();
     }
 
     /**

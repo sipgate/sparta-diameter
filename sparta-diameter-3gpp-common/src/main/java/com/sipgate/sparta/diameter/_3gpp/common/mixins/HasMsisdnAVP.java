@@ -10,11 +10,10 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
  *
  * <p>The value is a TBCD-encoded octet string as defined in ITU-T Rec E.164.
  */
-public interface HasMsisdnAVP<T extends HasMsisdnAVP<T>> extends AVPContainer<T> {
+public interface HasMsisdnAVP extends AVPContainer {
 
-    default T setMsisdn(final byte[] value) {
+    default void setMsisdn(final byte[] value) {
         setAVP(AVP.create(new AVPKey(_3gppConstants.AVP_MSISDN, _3gppConstants.VENDOR_ID_3GPP), value));
-        return self();
     }
 
     default byte[] getMsisdn() {

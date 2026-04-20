@@ -9,11 +9,10 @@ import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 /**
  * Mixin for messages carrying an SM-Delivery-Outcome AVP (3GPP TS 29.338 §5.3.3.14).
  */
-public interface HasSmDeliveryOutcomeAVP<T extends HasSmDeliveryOutcomeAVP<T>> extends AVPContainer<T> {
+public interface HasSmDeliveryOutcomeAVP extends AVPContainer {
 
-    default T setSmDeliveryOutcome(final GroupedAVP value) {
+    default void setSmDeliveryOutcome(final GroupedAVP value) {
         setAVP(AVP.create(new AVPKey(_3gppConstants.AVP_SM_DELIVERY_OUTCOME, _3gppConstants.VENDOR_ID_3GPP), value.getAVPs()));
-        return self();
     }
 
     default GroupedAVP getSmDeliveryOutcome() {

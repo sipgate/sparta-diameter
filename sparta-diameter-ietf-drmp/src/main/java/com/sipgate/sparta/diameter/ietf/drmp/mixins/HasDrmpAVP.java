@@ -13,11 +13,10 @@ import com.sipgate.sparta.diameter.ietf.drmp.DrmpConstants;
  * {@code PRIORITY_10} per RFC 7944 §8.
  * </p>
  */
-public interface HasDrmpAVP<T extends HasDrmpAVP<T>> extends AVPContainer<T> {
+public interface HasDrmpAVP extends AVPContainer {
 
-    default T setDrmp(final int priority) {
+    default void setDrmp(final int priority) {
         setAVP(AVP.create(new AVPKey(DrmpConstants.AVP_DRMP, 0), priority));
-        return self();
     }
 
     default int getDrmp() {

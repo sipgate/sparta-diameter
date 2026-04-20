@@ -12,8 +12,8 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.HasSessionIdAVP;
  * Request messages have the R-bit set in the Diameter header flags.
  * </p>
  */
-public abstract class Request<T extends Request<T, ANSWER>, ANSWER extends Answer<ANSWER>> extends Command<T>
-        implements HasDestinationHostAVP<T>, HasDestinationRealmAVP<T> {
+public abstract class Request<ANSWER extends Answer> extends Command
+        implements HasDestinationHostAVP, HasDestinationRealmAVP {
 
     protected Request(final int commandCode, final boolean proxiable, final boolean retransmitted,
                       final int applicationId) {

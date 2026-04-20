@@ -11,13 +11,13 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
  * The STR message is used to request termination of a user session.
  * </p>
  */
-public interface SessionTerminationRequest<T extends SessionTerminationRequest<T>>
-        extends HasSessionIdAVP<T>, HasAuthApplicationIdAVP<T>, HasTerminationCauseAVP<T>,
-                HasUserNameAVP<T>, HasOriginStateIdAVP<T>,
-                HasClassAVPs<T>, HasProxyInfoAVPs<T>, HasRouteRecordAVPs<T> {
+public interface SessionTerminationRequest
+        extends HasSessionIdAVP, HasAuthApplicationIdAVP, HasTerminationCauseAVP,
+                HasUserNameAVP, HasOriginStateIdAVP,
+                HasClassAVPs, HasProxyInfoAVPs, HasRouteRecordAVPs {
 
-    final class In extends IncomingRequest<In, SessionTerminationAnswer.Out>
-            implements SessionTerminationRequest<In> {
+    final class In extends IncomingRequest<SessionTerminationAnswer.Out>
+            implements SessionTerminationRequest {
 
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(DiameterConstants.CMD_SESSION_TERMINATION, true, retransmitted,
@@ -25,8 +25,8 @@ public interface SessionTerminationRequest<T extends SessionTerminationRequest<T
         }
     }
 
-    final class Out extends OutgoingRequest<Out, SessionTerminationAnswer.In>
-            implements SessionTerminationRequest<Out> {
+    final class Out extends OutgoingRequest<SessionTerminationAnswer.In>
+            implements SessionTerminationRequest {
 
         public Out() {
             super(DiameterConstants.CMD_SESSION_TERMINATION, true,

@@ -11,11 +11,11 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginStateIdAVP;
  * The DWR message is used to monitor the health of the transport connection between Diameter peers.
  * </p>
  */
-public interface DeviceWatchdogRequest<T extends DeviceWatchdogRequest<T>>
-        extends HasOriginStateIdAVP<T> {
+public interface DeviceWatchdogRequest
+        extends HasOriginStateIdAVP {
 
-    final class In extends IncomingRequest<In, DeviceWatchdogAnswer.Out>
-            implements DeviceWatchdogRequest<In> {
+    final class In extends IncomingRequest<DeviceWatchdogAnswer.Out>
+            implements DeviceWatchdogRequest {
 
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(DiameterConstants.CMD_DEVICE_WATCHDOG, false, retransmitted,
@@ -23,8 +23,8 @@ public interface DeviceWatchdogRequest<T extends DeviceWatchdogRequest<T>>
         }
     }
 
-    final class Out extends OutgoingRequest<Out, DeviceWatchdogAnswer.In>
-            implements DeviceWatchdogRequest<Out> {
+    final class Out extends OutgoingRequest<DeviceWatchdogAnswer.In>
+            implements DeviceWatchdogRequest {
 
         public Out() {
             super(DiameterConstants.CMD_DEVICE_WATCHDOG, false,
