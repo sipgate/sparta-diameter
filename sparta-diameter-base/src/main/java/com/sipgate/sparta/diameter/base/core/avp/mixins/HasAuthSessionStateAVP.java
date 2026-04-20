@@ -20,6 +20,11 @@ public interface HasAuthSessionStateAVP<T extends HasAuthSessionStateAVP<T>> ext
      * @param authSessionState The authentication session state to set.
      */
     default T setAuthSessionState(final int authSessionState) {
+        if (authSessionState != DiameterConstants.AUTH_SESSION_STATE_MAINTAINED
+            && authSessionState != DiameterConstants.AUTH_SESSION_STATE_NOT_MAINTAINED) {
+            throw new IllegalArgumentException(String.format("Invalid auth session state: %d", authSessionState));
+        }
+
         setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_AUTH_SESSION_STATE, 0), authSessionState));
         return self();
     }

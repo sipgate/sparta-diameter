@@ -138,6 +138,10 @@ public final class DiameterConstants {
     public static final int DCC_BUSY = 1;
     public static final int DCC_DO_NOT_WANT_TO_TALK_TO_YOU = 2;
 
+    // Auth-Session-State values
+    public static final int AUTH_SESSION_STATE_MAINTAINED = 0;
+    public static final int AUTH_SESSION_STATE_NOT_MAINTAINED = 1;
+
     private DiameterConstants() {
         // Utility class - no instantiation
     }
