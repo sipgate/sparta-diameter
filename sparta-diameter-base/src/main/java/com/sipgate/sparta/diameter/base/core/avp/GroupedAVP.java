@@ -27,8 +27,7 @@ public class GroupedAVP extends AVP implements AVPContainer {
      * @param avps      The list of AVPs to include in this Grouped AVP.
      */
     public GroupedAVP(final AVPKey key, final boolean mandatory, final List<AVP> avps) {
-        super(key.code(), mandatory, serializeAVPs(avps));
-        this.avps = new ArrayList<>(avps);
+        this(key.code(), key.vendorId() != 0, mandatory, false, key.vendorId(), avps);
     }
 
     /**
