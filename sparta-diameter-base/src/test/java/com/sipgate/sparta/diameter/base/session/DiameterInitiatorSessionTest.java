@@ -1153,7 +1153,8 @@ class DiameterInitiatorSessionTest {
         final DiameterPeer peer = mock(DiameterPeer.class);
         stubSend(peer);
         final DiameterInitiatorSession session = openedSession(peer);
-        final AVP offending = AVP.createRaw(new AVPKey(999, 0), true, true, false, new byte[0]);
+        final var offendingKey = new AVPKey(999, 0);
+        final AVP offending = AVP.createRaw(offendingKey, true, true, false, new byte[0]);
         final AVPParseException cause = new AVPParseException(
                 DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED,
                 280, true, 0, new HopByHopId(1), new EndToEndId(2), offending, null);
@@ -1165,7 +1166,7 @@ class DiameterInitiatorSessionTest {
         final ArgumentCaptor<ErrorAnswer.Out> captor = ArgumentCaptor.forClass(ErrorAnswer.Out.class);
         verify(peer).send(captor.capture());
         assertThat(captor.getValue().getFailedAVP()).isNotNull();
-        assertThat(captor.getValue().getFailedAVP().getAVPs()).containsExactly(offending);
+        assertThat(captor.getValue().getFailedAVP().findAVPs(offendingKey)).containsExactly(offending);
         verify(peer, never()).close();
     }
 

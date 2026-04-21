@@ -6,6 +6,8 @@ import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 
+import java.util.List;
+
 /**
  * Interface for Diameter messages that include Proxy-Info AVP.
  * <p>
@@ -18,10 +20,10 @@ public interface HasProxyInfoAVP extends AVPContainer {
     /**
      * Sets the Proxy-Info AVP.
      *
-     * @param proxyInfo The proxy info to set.
+     * @param avps The child AVPs of the Proxy-Info grouped AVP.
      */
-    default void setProxyInfo(final GroupedAVP proxyInfo) {
-        setAVP(proxyInfo);
+    default void setProxyInfo(final List<AVP> avps) {
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_PROXY_INFO, 0), avps));
     }
 
     /**
@@ -29,11 +31,8 @@ public interface HasProxyInfoAVP extends AVPContainer {
      *
      * @return The proxy info, or null if not found.
      */
-    default GroupedAVP getProxyInfo() {
-        final AVP proxyInfoAVP = findAVP(new AVPKey(DiameterConstants.AVP_PROXY_INFO, 0));
-        if (proxyInfoAVP != null) {
-            return (GroupedAVP) proxyInfoAVP;
-        }
-        return null;
+    default AVPContainer getProxyInfo() {
+        final var avp = findAVP(new AVPKey(DiameterConstants.AVP_PROXY_INFO, 0));
+        return avp instanceof final GroupedAVP grouped ? grouped : null;
     }
 }

@@ -15,7 +15,7 @@ import java.util.List;
  * Grouped AVPs are used to encapsulate multiple AVPs within a single AVP.
  * </p>
  */
-public class GroupedAVP extends AVP {
+public class GroupedAVP extends AVP implements AVPContainer {
 
     private final List<AVP> avps;
 
@@ -61,7 +61,21 @@ public class GroupedAVP extends AVP {
      *
      * @param avp The AVP to add.
      */
+    @Override
     public void addAVP(final AVP avp) {
+        avps.add(avp);
+    }
+
+    /**
+     * Adds or updates an AVP in this grouped AVP, ensuring uniqueness by AVP code.
+     * If an AVP with the same code already exists, it will be replaced.
+     * Otherwise, the AVP will be added.
+     *
+     * @param avp The AVP to add or update.
+     */
+    @Override
+    public void setAVP(final AVP avp) {
+        avps.removeIf(avp::isSameKey);
         avps.add(avp);
     }
 
@@ -71,6 +85,7 @@ public class GroupedAVP extends AVP {
      * @param key The AVP key to search for.
      * @return The first matching AVP, or null if no match is found.
      */
+    @Override
     public AVP findAVP(final AVPKey key) {
         for (final AVP avp : avps) {
             if (avp.isSameKey(key)) {
@@ -86,6 +101,7 @@ public class GroupedAVP extends AVP {
      * @param key The AVP key to search for.
      * @return A list of matching AVPs, or an empty list if no matches are found.
      */
+    @Override
     public List<AVP> findAVPs(final AVPKey key) {
         final List<AVP> result = new ArrayList<>();
         for (final AVP avp : avps) {

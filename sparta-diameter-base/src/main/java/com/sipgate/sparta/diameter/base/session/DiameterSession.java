@@ -16,7 +16,6 @@ import com.sipgate.sparta.diameter.base.core.OutgoingRequest;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPParseException;
-import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogAnswer;
@@ -340,11 +339,7 @@ public abstract class DiameterSession {
     public void onParseError(final DiameterPeer peer, final DiameterException cause) {
         if (cause instanceof final AVPParseException avpEx) {
             final ErrorAnswer.Out answer = buildParseErrorAnswer(avpEx);
-            final GroupedAVP failedAvp = new GroupedAVP(
-                    new AVPKey(DiameterConstants.AVP_FAILED_AVP, 0),
-                    true,
-                    List.of(avpEx.getOffendingAvp()));
-            answer.setFailedAVP(failedAvp);
+            answer.setFailedAVP(List.of(avpEx.getOffendingAvp()));
             send(peer, answer);
         } else if (cause instanceof final DiameterResultCodeException rcEx) {
             final ErrorAnswer.Out answer = buildParseErrorAnswer(rcEx);
@@ -416,7 +411,7 @@ public abstract class DiameterSession {
         cer.addAllAuthApplicationIds(config.getCapabilities().authApplicationIds());
         cer.addAllAcctApplicationIds(config.getCapabilities().acctApplicationIds());
         for (final DiameterNodeConfig.VendorSpecificApp app : config.getCapabilities().vendorSpecificApplications()) {
-            cer.addVendorSpecificApplicationId(buildVendorSpecificAppIdAVP(app));
+            cer.addVendorSpecificApplicationId(buildVendorSpecificAppIdAVPs(app));
         }
     }
 
@@ -431,15 +426,15 @@ public abstract class DiameterSession {
         cea.addAllAuthApplicationIds(config.getCapabilities().authApplicationIds());
         cea.addAllAcctApplicationIds(config.getCapabilities().acctApplicationIds());
         for (final DiameterNodeConfig.VendorSpecificApp app : config.getCapabilities().vendorSpecificApplications()) {
-            cea.addVendorSpecificApplicationId(buildVendorSpecificAppIdAVP(app));
+            cea.addVendorSpecificApplicationId(buildVendorSpecificAppIdAVPs(app));
         }
     }
 
-    private static GroupedAVP buildVendorSpecificAppIdAVP(final DiameterNodeConfig.VendorSpecificApp app) {
-        return (GroupedAVP) AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0), List.of(
+    private static List<AVP> buildVendorSpecificAppIdAVPs(final DiameterNodeConfig.VendorSpecificApp app) {
+        return List.of(
                 AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), app.vendorId()),
                 AVP.create(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0), app.authApplicationId())
-        ));
+        );
     }
 
     private void failAllPending(final Throwable cause) {

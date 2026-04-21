@@ -6,6 +6,8 @@ import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 
+import java.util.List;
+
 /**
  * Interface for Diameter messages that include Failed-AVP AVP.
  * <p>
@@ -18,10 +20,10 @@ public interface HasFailedAVP extends AVPContainer {
     /**
      * Sets the Failed-AVP AVP.
      *
-     * @param failedAVP The failed AVP to set.
+     * @param avps The child AVPs of the Failed-AVP grouped AVP.
      */
-    default void setFailedAVP(final GroupedAVP failedAVP) {
-        setAVP(failedAVP);
+    default void setFailedAVP(final List<AVP> avps) {
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_FAILED_AVP, 0), avps));
     }
 
     /**
@@ -29,11 +31,8 @@ public interface HasFailedAVP extends AVPContainer {
      *
      * @return The failed AVP, or null if not found.
      */
-    default GroupedAVP getFailedAVP() {
-        final AVP failedAVP = findAVP(new AVPKey(DiameterConstants.AVP_FAILED_AVP, 0));
-        if (failedAVP != null) {
-            return (GroupedAVP) failedAVP;
-        }
-        return null;
+    default AVPContainer getFailedAVP() {
+        final var avp = findAVP(new AVPKey(DiameterConstants.AVP_FAILED_AVP, 0));
+        return avp instanceof final GroupedAVP grouped ? grouped : null;
     }
 }

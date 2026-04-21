@@ -20,26 +20,28 @@ import java.util.List;
  */
 public interface HasVendorSpecificApplicationIdAVPs extends AVPContainer {
 
-    default void addVendorSpecificApplicationId(final GroupedAVP vendorSpecificApplicationId) {
-        addAVP(vendorSpecificApplicationId);
+    default void addVendorSpecificApplicationId(final List<AVP> avps) {
+        addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0), avps));
     }
 
-    default List<GroupedAVP> getVendorSpecificApplicationIds() {
-        final List<GroupedAVP> result = new ArrayList<>();
+    default List<AVPContainer> getVendorSpecificApplicationIds() {
+        final List<AVPContainer> result = new ArrayList<>();
         for (final AVP avp : findAVPs(new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0))) {
-            result.add((GroupedAVP) avp);
+            if (avp instanceof final GroupedAVP grouped) {
+                result.add(grouped);
+            }
         }
         return result;
     }
 
-    default GroupedAVP getFirstVendorSpecificApplicationId() {
-        final List<GroupedAVP> all = getVendorSpecificApplicationIds();
+    default AVPContainer getFirstVendorSpecificApplicationId() {
+        final var all = getVendorSpecificApplicationIds();
         return all.isEmpty() ? null : all.get(0);
     }
 
-    default void addAllVendorSpecificApplicationIds(final Collection<GroupedAVP> vendorSpecificApplicationIds) {
-        for (final GroupedAVP avp : vendorSpecificApplicationIds) {
-            addVendorSpecificApplicationId(avp);
+    default void addAllVendorSpecificApplicationIds(final Collection<List<AVP>> vendorSpecificApplicationIds) {
+        for (final List<AVP> avps : vendorSpecificApplicationIds) {
+            addVendorSpecificApplicationId(avps);
         }
     }
 }

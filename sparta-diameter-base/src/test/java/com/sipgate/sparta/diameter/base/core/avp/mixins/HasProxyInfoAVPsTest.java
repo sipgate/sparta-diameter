@@ -1,9 +1,8 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
-import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
-import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.messages.ReAuthRequest;
 import org.junit.jupiter.api.Test;
 
@@ -13,9 +12,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class HasProxyInfoAVPsTest {
 
-    private static GroupedAVP proxyInfo(final String proxyHost) {
-        return new GroupedAVP(new AVPKey(DiameterConstants.AVP_PROXY_INFO, 0), true,
-                List.of(AVP.create(new AVPKey(DiameterConstants.AVP_PROXY_HOST, 0), proxyHost)));
+    private static final AVPKey PROXY_INFO_AVP_KEY = new AVPKey(DiameterConstants.AVP_PROXY_HOST, 0);
+
+    private static List<AVP> proxyInfo(final String proxyHost) {
+        return List.of(AVP.create(PROXY_INFO_AVP_KEY, proxyHost));
     }
 
     @Test
@@ -54,7 +54,7 @@ class HasProxyInfoAVPsTest {
         rar.addProxyInfo(pi2);
 
         // THEN
-        assertThat(rar.getFirstProxyInfo()).isSameAs(pi1);
+        assertThat(rar.getFirstProxyInfo().findAVPs(PROXY_INFO_AVP_KEY)).isEqualTo(pi1);
     }
 
     @Test

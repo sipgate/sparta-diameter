@@ -15,12 +15,12 @@ import java.util.List;
  */
 public interface HasSupportedFeaturesAVPs extends AVPContainer {
 
-    default void addSupportedFeatures(final GroupedAVP value) {
-        addAVP(AVP.create(new AVPKey(_3gppConstants.AVP_SUPPORTED_FEATURES, _3gppConstants.VENDOR_ID_3GPP), value.getAVPs()));
+    default void addSupportedFeatures(final List<AVP> avps) {
+        addAVP(AVP.create(new AVPKey(_3gppConstants.AVP_SUPPORTED_FEATURES, _3gppConstants.VENDOR_ID_3GPP), avps));
     }
 
-    default List<GroupedAVP> getSupportedFeatures() {
-        final List<GroupedAVP> result = new ArrayList<>();
+    default List<AVPContainer> getSupportedFeatures() {
+        final List<AVPContainer> result = new ArrayList<>();
         for (final AVP avp : findAVPs(new AVPKey(_3gppConstants.AVP_SUPPORTED_FEATURES, _3gppConstants.VENDOR_ID_3GPP))) {
             if (avp instanceof final GroupedAVP grouped) {
                 result.add(grouped);
@@ -29,9 +29,9 @@ public interface HasSupportedFeaturesAVPs extends AVPContainer {
         return result;
     }
 
-    default void addAllSupportedFeatures(final Collection<GroupedAVP> values) {
-        for (final GroupedAVP value : values) {
-            addSupportedFeatures(value);
+    default void addAllSupportedFeatures(final Collection<List<AVP>> values) {
+        for (final List<AVP> avps : values) {
+            addSupportedFeatures(avps);
         }
     }
 }

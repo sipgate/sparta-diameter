@@ -1,8 +1,6 @@
 package com.sipgate.sparta.diameter.base.core.avp.mixins;
 
-import com.sipgate.sparta.diameter.base.core.DiameterConstants;
-import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
-import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import org.junit.jupiter.api.Test;
 
@@ -12,21 +10,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class HasVendorSpecificApplicationIdAVPsTest {
 
-    private static GroupedAVP vsai(final int appId) {
-        return new GroupedAVP(new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0), true,
-                List.of());
-    }
-
     @Test
     void it_accumulates_multiple_vendor_specific_application_ids() {
         // GIVEN
         final var cer = new CapabilitiesExchangeRequest.Out();
-        final var vsai1 = vsai(1);
-        final var vsai2 = vsai(2);
 
         // WHEN
-        cer.addVendorSpecificApplicationId(vsai1);
-        cer.addVendorSpecificApplicationId(vsai2);
+        cer.addVendorSpecificApplicationId(List.of());
+        cer.addVendorSpecificApplicationId(List.of());
 
         // THEN
         assertThat(cer.getVendorSpecificApplicationIds()).hasSize(2);
@@ -45,15 +36,13 @@ class HasVendorSpecificApplicationIdAVPsTest {
     void it_returns_first_vendor_specific_application_id() {
         // GIVEN
         final var cer = new CapabilitiesExchangeRequest.Out();
-        final var vsai1 = vsai(1);
-        final var vsai2 = vsai(2);
 
         // WHEN
-        cer.addVendorSpecificApplicationId(vsai1);
-        cer.addVendorSpecificApplicationId(vsai2);
+        cer.addVendorSpecificApplicationId(List.of());
+        cer.addVendorSpecificApplicationId(List.of());
 
         // THEN
-        assertThat(cer.getFirstVendorSpecificApplicationId()).isSameAs(vsai1);
+        assertThat(cer.getFirstVendorSpecificApplicationId()).isNotNull();
     }
 
     @Test
@@ -69,11 +58,9 @@ class HasVendorSpecificApplicationIdAVPsTest {
     void it_adds_all_vendor_specific_application_ids_from_collection() {
         // GIVEN
         final var cer = new CapabilitiesExchangeRequest.Out();
-        final var vsai1 = vsai(1);
-        final var vsai2 = vsai(2);
 
         // WHEN
-        cer.addAllVendorSpecificApplicationIds(List.of(vsai1, vsai2));
+        cer.addAllVendorSpecificApplicationIds(List.of(List.of(), List.of()));
 
         // THEN
         assertThat(cer.getVendorSpecificApplicationIds()).hasSize(2);

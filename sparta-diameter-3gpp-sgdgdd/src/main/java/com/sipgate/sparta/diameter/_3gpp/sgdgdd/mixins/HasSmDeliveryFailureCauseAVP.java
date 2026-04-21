@@ -7,6 +7,8 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 
+import java.util.List;
+
 /**
  * Mixin for messages carrying an SM-Delivery-Failure-Cause AVP (3GPP TS 29.338 §6.3.3.5, code 3303).
  * <p>
@@ -15,11 +17,11 @@ import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
  */
 public interface HasSmDeliveryFailureCauseAVP extends AVPContainer {
 
-    default void setSmDeliveryFailureCause(final GroupedAVP value) {
-        setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_SM_DELIVERY_FAILURE_CAUSE, _3gppConstants.VENDOR_ID_3GPP), value.getAVPs()));
+    default void setSmDeliveryFailureCause(final List<AVP> avps) {
+        setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_SM_DELIVERY_FAILURE_CAUSE, _3gppConstants.VENDOR_ID_3GPP), avps));
     }
 
-    default GroupedAVP getSmDeliveryFailureCause() {
+    default AVPContainer getSmDeliveryFailureCause() {
         final var avp = findAVP(new AVPKey(SgdGddConstants.AVP_SM_DELIVERY_FAILURE_CAUSE, _3gppConstants.VENDOR_ID_3GPP));
         return avp instanceof final GroupedAVP grouped ? grouped : null;
     }

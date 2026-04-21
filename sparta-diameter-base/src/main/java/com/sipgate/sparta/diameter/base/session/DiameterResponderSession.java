@@ -6,8 +6,8 @@ import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
-import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.base.messages.DisconnectPeerRequest;
@@ -87,12 +87,12 @@ public final class DiameterResponderSession extends DiameterSession {
 
     private static List<Long> extractVendorSpecificAppIds(final CapabilitiesExchangeRequest.In cer) {
         final List<Long> appIds = new ArrayList<>();
-        for (final GroupedAVP grouped : cer.getVendorSpecificApplicationIds()) {
-            final AVP authAppAvp = grouped.findAVP(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0));
+        for (final AVPContainer container : cer.getVendorSpecificApplicationIds()) {
+            final AVP authAppAvp = container.findAVP(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0));
             if (authAppAvp != null) {
                 appIds.add(authAppAvp.getDataAsUnsignedInt());
-            }
-            final AVP acctAppAvp = grouped.findAVP(new AVPKey(DiameterConstants.AVP_ACCT_APPLICATION_ID, 0));
+                }
+            final AVP acctAppAvp = container.findAVP(new AVPKey(DiameterConstants.AVP_ACCT_APPLICATION_ID, 0));
             if (acctAppAvp != null) {
                 appIds.add(acctAppAvp.getDataAsUnsignedInt());
             }

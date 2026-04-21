@@ -6,6 +6,8 @@ import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 
+import java.util.List;
+
 /**
  * Interface for Diameter messages that include Experimental-Result AVP.
  * <p>
@@ -18,10 +20,10 @@ public interface HasExperimentalResultAVP extends AVPContainer {
     /**
      * Sets the Experimental-Result AVP.
      *
-     * @param experimentalResult The experimental result to set.
+     * @param avps The child AVPs of the Experimental-Result grouped AVP.
      */
-    default void setExperimentalResult(final GroupedAVP experimentalResult) {
-        setAVP(experimentalResult);
+    default void setExperimentalResult(final List<AVP> avps) {
+        setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT, 0), avps));
     }
 
     /**
@@ -29,11 +31,8 @@ public interface HasExperimentalResultAVP extends AVPContainer {
      *
      * @return The experimental result, or null if not found.
      */
-    default GroupedAVP getExperimentalResult() {
-        final AVP experimentalResultAVP = findAVP(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT, 0));
-        if (experimentalResultAVP != null) {
-            return (GroupedAVP) experimentalResultAVP;
-        }
-        return null;
+    default AVPContainer getExperimentalResult() {
+        final var avp = findAVP(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT, 0));
+        return avp instanceof final GroupedAVP grouped ? grouped : null;
     }
 }

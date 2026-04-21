@@ -19,26 +19,28 @@ import java.util.List;
  */
 public interface HasProxyInfoAVPs extends AVPContainer {
 
-    default void addProxyInfo(final GroupedAVP proxyInfo) {
-        addAVP(proxyInfo);
+    default void addProxyInfo(final List<AVP> avps) {
+        addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_PROXY_INFO, 0), avps));
     }
 
-    default List<GroupedAVP> getProxyInfos() {
-        final List<GroupedAVP> result = new ArrayList<>();
+    default List<AVPContainer> getProxyInfos() {
+        final List<AVPContainer> result = new ArrayList<>();
         for (final AVP avp : findAVPs(new AVPKey(DiameterConstants.AVP_PROXY_INFO, 0))) {
-            result.add((GroupedAVP) avp);
+            if (avp instanceof final GroupedAVP grouped) {
+                result.add(grouped);
+            }
         }
         return result;
     }
 
-    default GroupedAVP getFirstProxyInfo() {
-        final List<GroupedAVP> all = getProxyInfos();
+    default AVPContainer getFirstProxyInfo() {
+        final var all = getProxyInfos();
         return all.isEmpty() ? null : all.get(0);
     }
 
-    default void addAllProxyInfos(final Collection<GroupedAVP> proxyInfos) {
-        for (final GroupedAVP avp : proxyInfos) {
-            addProxyInfo(avp);
+    default void addAllProxyInfos(final Collection<List<AVP>> proxyInfos) {
+        for (final List<AVP> avps : proxyInfos) {
+            addProxyInfo(avps);
         }
     }
 }

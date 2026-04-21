@@ -2,7 +2,6 @@ package com.sipgate.sparta.diameter.base.core;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
-import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasExperimentalResultAVP;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
@@ -169,15 +168,10 @@ public final class DiameterMessageFactory {
             final long vendorId,
             final long experimentalResultCode) {
         return createAnswer(request, answer -> {
-            final var experimentalResult = new GroupedAVP(
-                new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT, 0),
-                true,
-                List.of(
+            answer.setExperimentalResult(List.of(
                     AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), vendorId),
                     AVP.create(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE, 0), experimentalResultCode)
                 ));
-
-            answer.setExperimentalResult(experimentalResult);
         });
     }
 

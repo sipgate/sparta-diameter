@@ -2,7 +2,6 @@ package com.sipgate.sparta.diameter.base.core;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
-import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -66,9 +65,7 @@ class ResultCodeUtilTest {
                 new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), 10415L);
         final var experimentalResultCode = AVP.create(
                 new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE, 0), 5001L);
-        final var experimentalResult = new GroupedAVP(
-                new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT, 0), true, List.of(vendorId, experimentalResultCode));
-        answer.setExperimentalResult(experimentalResult);
+        answer.setExperimentalResult(List.of(vendorId, experimentalResultCode));
 
         // WHEN
         final var actual = ResultCodeUtil.describeResultCode(answer);

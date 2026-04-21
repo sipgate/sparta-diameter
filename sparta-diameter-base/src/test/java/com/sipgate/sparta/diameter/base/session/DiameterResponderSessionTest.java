@@ -4,6 +4,7 @@ import com.sipgate.sparta.diameter.base.DiameterException;
 import com.sipgate.sparta.diameter.base.core.Command;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.DiameterResultCodeException;
+import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.base.core.EndToEndId;
@@ -311,9 +312,9 @@ class DiameterResponderSessionTest {
         final ArgumentCaptor<CapabilitiesExchangeAnswer.Out> captor =
                 ArgumentCaptor.forClass(CapabilitiesExchangeAnswer.Out.class);
         verify(peer).send(captor.capture());
-        final List<GroupedAVP> vsAppIds = captor.getValue().getVendorSpecificApplicationIds();
+        final List<AVPContainer> vsAppIds = captor.getValue().getVendorSpecificApplicationIds();
         assertThat(vsAppIds).hasSize(1);
-        final GroupedAVP grouped = vsAppIds.get(0);
+        final AVPContainer grouped = vsAppIds.get(0);
         assertThat(grouped.findAVP(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0)).getDataAsUnsignedInt()).isEqualTo(VENDOR_3GPP);
         assertThat(grouped.findAVP(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0)).getDataAsUnsignedInt()).isEqualTo(SGD_APP_ID);
     }
@@ -613,7 +614,8 @@ class DiameterResponderSessionTest {
         final DiameterPeer peer = mock(DiameterPeer.class);
         stubSend(peer);
         final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_AUTH_APP);
-        final AVP offending = AVP.createRaw(new AVPKey(999, 0), true, true, false, new byte[0]);
+        final var offendingKey = new AVPKey(999, 0);
+        final AVP offending = AVP.createRaw(offendingKey, true, true, false, new byte[0]);
         final AVPParseException cause = new AVPParseException(
                 DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED,
                 280, true, 0, new HopByHopId(1), new EndToEndId(2), offending, null);
@@ -625,7 +627,7 @@ class DiameterResponderSessionTest {
         final ArgumentCaptor<ErrorAnswer.Out> captor = ArgumentCaptor.forClass(ErrorAnswer.Out.class);
         verify(peer).send(captor.capture());
         assertThat(captor.getValue().getFailedAVP()).isNotNull();
-        assertThat(captor.getValue().getFailedAVP().getAVPs()).containsExactly(offending);
+        assertThat(captor.getValue().getFailedAVP().findAVPs(offendingKey)).containsExactly(offending);
         verify(peer, never()).close();
     }
 
@@ -694,11 +696,10 @@ class DiameterResponderSessionTest {
     private static CapabilitiesExchangeRequest.In buildIncomingCerWithVendorSpecificAppId(
             final long vendorId, final long authAppId) throws Exception {
         final CapabilitiesExchangeRequest.Out cerOut = new CapabilitiesExchangeRequest.Out();
-        cerOut.addVendorSpecificApplicationId(
-                (GroupedAVP) AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0), List.of(
+        cerOut.addVendorSpecificApplicationId(List.of(
                         AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), vendorId),
                         AVP.create(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0), authAppId)
-                )));
+                ));
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         cerOut.writeTo(new DataOutputStream(baos), new HopByHopId(1), new EndToEndId(2));
         return (CapabilitiesExchangeRequest.In) Command.parseMessage(ByteBuffer.wrap(baos.toByteArray()));

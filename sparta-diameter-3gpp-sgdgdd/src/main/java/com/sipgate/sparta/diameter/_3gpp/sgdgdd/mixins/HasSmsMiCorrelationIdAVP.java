@@ -7,6 +7,8 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 
+import java.util.List;
+
 /**
  * Mixin for messages carrying an SMSMI-Correlation-ID AVP (3GPP TS 29.338 §6.3.3.13, code 3324).
  * <p>
@@ -15,11 +17,11 @@ import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
  */
 public interface HasSmsMiCorrelationIdAVP extends AVPContainer {
 
-    default void setSmsMiCorrelationId(final GroupedAVP value) {
-        setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_SMSMI_CORRELATION_ID, _3gppConstants.VENDOR_ID_3GPP), value.getAVPs()));
+    default void setSmsMiCorrelationId(final List<AVP> avps) {
+        setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_SMSMI_CORRELATION_ID, _3gppConstants.VENDOR_ID_3GPP), avps));
     }
 
-    default GroupedAVP getSmsMiCorrelationId() {
+    default AVPContainer getSmsMiCorrelationId() {
         final var avp = findAVP(new AVPKey(SgdGddConstants.AVP_SMSMI_CORRELATION_ID, _3gppConstants.VENDOR_ID_3GPP));
         return avp instanceof final GroupedAVP grouped ? grouped : null;
     }
