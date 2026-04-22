@@ -3,7 +3,7 @@
     <parent>
         <groupId>com.sipgate</groupId>
         <artifactId>sparta-diameter</artifactId>
-        <version>0.1.9-SNAPSHOT</version>
+        <version>0.1.9</version>
     </parent>
     <artifactId>sparta-diameter-base</artifactId>
     <name>sparta-diameter-base</name>
