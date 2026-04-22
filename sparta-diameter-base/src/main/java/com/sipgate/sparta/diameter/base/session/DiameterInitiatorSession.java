@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /**
@@ -23,6 +24,7 @@ public final class DiameterInitiatorSession extends DiameterSession {
 
     private final Consumer<DiameterInitiatorSession> reconnect;
     private final Timer tcTimer = new Timer();
+    private final AtomicReference<TimerTask> reconnectTask = new AtomicReference<>();
 
     public DiameterInitiatorSession(final DiameterNodeConfig config, final Consumer<DiameterInitiatorSession> reconnect) {
         this(config, reconnect, new SimpleMeterRegistry());
@@ -106,8 +108,13 @@ public final class DiameterInitiatorSession extends DiameterSession {
 
     public void scheduleReconnect() {
         LOGGER.debug("scheduling reconnect");
-        final long tcMs = config.getTc().toMillis();
-        tcTimer.schedule(reconnectTimerTask(reconnect, this), tcMs);
+        reconnectTask.getAndUpdate(oldTask -> {
+            stopTcTimer(oldTask);
+            final long tcMs = config.getTc().toMillis();
+            final var newTask = reconnectTimerTask(reconnect, this);
+            tcTimer.schedule(newTask, tcMs);
+            return newTask;
+        });
     }
 
     private static TimerTask reconnectTimerTask(final Consumer<DiameterInitiatorSession> reconnect,
@@ -121,7 +128,15 @@ public final class DiameterInitiatorSession extends DiameterSession {
     }
 
     private void stopTcTimer() {
-        tcTimer.cancel();
+        reconnectTask.getAndUpdate(DiameterInitiatorSession::stopTcTimer);
+    }
+
+    private static TimerTask stopTcTimer(final TimerTask task) {
+        if (task != null) {
+            task.cancel();
+        }
+
+        return null;
     }
 
     private void handleCea(final CapabilitiesExchangeAnswer.In cea) {

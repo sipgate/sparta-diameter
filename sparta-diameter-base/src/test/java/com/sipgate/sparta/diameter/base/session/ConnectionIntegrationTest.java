@@ -20,7 +20,7 @@ public class ConnectionIntegrationTest {
     private static final long VENDOR_ID = 42;
 
     @Test
-    void it_connects_to_server_session() throws Exception {
+    void it_connects_to_server_session() {
         // GIVEN
         final var port = 3868;
         final var meterRegistry = new SimpleMeterRegistry();
@@ -53,21 +53,22 @@ public class ConnectionIntegrationTest {
                 return session;
             });
 
-            final var client = new DiameterNode(meterRegistry);
-            final var clientSessionRef = new AtomicReference<DiameterInitiatorSession>();
-            client.connect(
-                "localhost",
-                port,
-                reconnect -> {
-                    final var diameterInitiatorSession = new DiameterInitiatorSession(nodeConfig, reconnect, meterRegistry);
-                    clientSessionRef.set(diameterInitiatorSession);
-                    return diameterInitiatorSession;
-                }
-            );
+            try (final var client = new DiameterNode(meterRegistry)) {
+                final var clientSessionRef = new AtomicReference<DiameterInitiatorSession>();
+                client.connect(
+                    "localhost",
+                    port,
+                    reconnect -> {
+                        final var diameterInitiatorSession = new DiameterInitiatorSession(nodeConfig, reconnect, meterRegistry);
+                        clientSessionRef.set(diameterInitiatorSession);
+                        return diameterInitiatorSession;
+                    }
+                );
 
-            // THEN: after some time both sides think they are connected
-            await().untilAsserted(() -> assertThat(clientSessionRef.get().getPeerState()).isEqualTo(PeerState.I_OPEN));
-            assertThat(serverSessionRef.get().getPeerState()).isEqualTo(PeerState.R_OPEN);
+                // THEN: after some time both sides think they are connected
+                await().untilAsserted(() -> assertThat(clientSessionRef.get().getPeerState()).isEqualTo(PeerState.I_OPEN));
+                assertThat(serverSessionRef.get().getPeerState()).isEqualTo(PeerState.R_OPEN);
+            }
         }
     }
 
@@ -96,9 +97,8 @@ public class ConnectionIntegrationTest {
             Duration.ofSeconds(1)
         );
 
-        final AtomicReference<DiameterInitiatorSession> clientSessionRef;
-        try (var client = new DiameterNode(meterRegistry)) {
-            clientSessionRef = new AtomicReference<DiameterInitiatorSession>();
+        try (final var client = new DiameterNode(meterRegistry)) {
+            final var clientSessionRef = new AtomicReference<DiameterInitiatorSession>();
             client.connect(
                 "localhost",
                 port,
@@ -133,13 +133,65 @@ public class ConnectionIntegrationTest {
     }
 
     @Test
-    void it_schedules_Tc_timer_on_unexpected_disconnect() {
-        fail("implement me");
-    }
-
-    @Test
     void it_schedules_Tc_timer_after_closeGracefully() {
-        fail("implement me");
+        // GIVEN
+        final var port = 3868;
+        final var meterRegistry = new SimpleMeterRegistry();
+
+        final var capabilities = new DiameterNodeConfig.Capabilities(
+            List.of(APP_ID),
+            List.of(),
+            List.of(VENDOR_ID),
+            List.of(new DiameterNodeConfig.VendorSpecificApp(VENDOR_ID, APP_ID))
+        );
+
+        final var loopbackAddress = List.of(InetAddress.getLoopbackAddress());
+        final var nodeConfig = new DiameterNodeConfig(
+            "demo-client",
+            "demo-realm",
+            loopbackAddress,
+            0,
+            "demo-product",
+            capabilities,
+            Duration.ofSeconds(6),
+            Duration.ofMillis(500)
+        );
+
+        // GIVEN: there is a listening server
+        final var serverSessionRef = new AtomicReference<DiameterResponderSession>();
+        try (final var server = new DiameterNode(meterRegistry)) {
+
+            // WHEN: the server is started
+            server.listen(port, () -> {
+                final var session = createServer(capabilities, meterRegistry);
+                serverSessionRef.set(session);
+                return session;
+            });
+
+            try (final var client = new DiameterNode(meterRegistry)) {
+                final var clientSessionRef = new AtomicReference<DiameterInitiatorSession>();
+                client.connect(
+                    "localhost",
+                    port,
+                    reconnect -> {
+                        final var diameterInitiatorSession = new DiameterInitiatorSession(nodeConfig, reconnect, meterRegistry);
+                        clientSessionRef.set(diameterInitiatorSession);
+                        return diameterInitiatorSession;
+                    }
+                );
+
+                // GIVEN: connection has been established
+                await().untilAsserted(() -> assertThat(clientSessionRef.get().getPeerState()).isEqualTo(PeerState.I_OPEN));
+
+                // WHEN
+                clientSessionRef.get().closeGracefully();
+
+                await().untilAsserted(() -> assertThat(clientSessionRef.get().getPeerState()).isEqualTo(PeerState.CLOSED));
+                await().untilAsserted(() -> assertThat(clientSessionRef.get().getPeerState()).isEqualTo(PeerState.I_OPEN));
+
+                clientSessionRef.get().stopGracefully();
+            }
+        }
     }
 
     private static DiameterResponderSession createServer(final DiameterNodeConfig.Capabilities capabilities, final SimpleMeterRegistry meterRegistry) {

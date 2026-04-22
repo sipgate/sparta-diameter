@@ -1,6 +1,5 @@
 package com.sipgate.sparta.diameter.base.session;
 
-import com.sipgate.sparta.diameter.base.DiameterException;
 import com.sipgate.sparta.diameter.base.core.Command;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
@@ -28,6 +27,9 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoop;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.ScheduledFuture;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -38,6 +40,7 @@ import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -46,9 +49,11 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -934,10 +939,102 @@ class DiameterInitiatorSessionTest {
     // Reconnect (Tc timer)
     // -------------------------------------------------------------------------
 
-    @Test
-    @SuppressWarnings("unchecked")
-    void it_cancels_Tc_timer_when_stop_is_called_while_reconnect_is_pending() throws Exception {
-        fail("rewrite me!");
+    @Nested
+    class Reconnect {
+        private static final Duration RECONNECT_DELAY = Duration.ofMillis(500);
+        private static final DiameterNodeConfig CONFIG = new DiameterNodeConfig(
+            "hss.example.com",
+            "example.com",
+            Collections.singletonList(LOCALHOST),
+            0L,
+            "sparta",
+            new DiameterNodeConfig.Capabilities(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList()),
+            Duration.ofSeconds(6),
+            RECONNECT_DELAY
+        );
+
+        @Test
+        void it_reconnects_after_tc_timer() {
+            // GIVEN
+            final var reconnectCalled = new AtomicBoolean();
+            final var session = new DiameterInitiatorSession(CONFIG, ignored -> reconnectCalled.set(true));
+
+            // WHEN
+            session.scheduleReconnect();
+
+            // THEN
+            await().untilAsserted(() -> assertThat(reconnectCalled).isTrue());
+        }
+
+        @Test
+        void it_reconnects_after_disconnect() {
+            // GIVEN
+            final var reconnectCalled = new AtomicBoolean();
+            final var session = new DiameterInitiatorSession(CONFIG, ignored -> reconnectCalled.set(true));
+
+            // WHEN
+            session.onDisconnected(null);
+
+            // THEN
+            await().untilAsserted(() -> assertThat(reconnectCalled).isTrue());
+        }
+
+        @Test
+        void it_allows_reconnect_after_close() {
+            // GIVEN
+            final var reconnectCalled = new AtomicInteger();
+            final var session = new DiameterInitiatorSession(CONFIG, ignored -> reconnectCalled.incrementAndGet());
+
+            session.scheduleReconnect();
+            session.closeGracefully();
+
+            // WHEN
+            session.scheduleReconnect();
+
+            // THEN
+            await()
+                // give the timer a chance to run
+                .pollDelay(RECONNECT_DELAY.multipliedBy(2))
+                .untilAsserted(() -> assertThat(reconnectCalled).hasValue(1));
+        }
+
+        @Nested
+        class CancelReconnect {
+            private final AtomicBoolean reconnectCalled = new AtomicBoolean();
+            private DiameterInitiatorSession session;
+
+            @BeforeEach
+            void given() {
+                session = new DiameterInitiatorSession(CONFIG, ignored -> reconnectCalled.set(true));
+                session.scheduleReconnect();
+            }
+
+            @Test
+            void it_cancels_reconnect_on_stop() {
+                // WHEN
+                session.stop();
+            }
+
+            @Test
+            void it_cancels_reconnect_on_stop_gracefully() {
+                // WHEN
+                session.stopGracefully();
+            }
+
+            @Test
+            void it_cancels_reconnect_on_close_gracefully() {
+                // WHEN
+                session.closeGracefully();
+            }
+
+            @AfterEach
+            void then() {
+                await()
+                    // give the timer a chance to run
+                    .pollDelay(RECONNECT_DELAY.multipliedBy(2))
+                    .untilAsserted(() -> assertThat(reconnectCalled).isFalse());
+            }
+        }
     }
 
     @Test
