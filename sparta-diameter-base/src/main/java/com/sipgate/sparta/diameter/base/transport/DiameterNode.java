@@ -105,7 +105,7 @@ public final class DiameterNode implements Closeable {
                 .channel(NioSocketChannel.class)
                 .handler(newInitializer(() -> session, DiameterTransportMeters.DIRECTION_OUTBOUND))
                 .connect(host, port)
-                .addListener((ChannelFuture future) -> {
+                .addListener((final ChannelFuture future) -> {
                     if (!future.isSuccess()) {
                         LOGGER.warn("failed to connect to {}:{}", host, port, future.cause());
                         session.scheduleReconnect();
