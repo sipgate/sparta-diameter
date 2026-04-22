@@ -10,12 +10,14 @@ import java.util.Objects;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 
+import static com.sipgate.sparta.diameter.base.MetersUtils.TAG_CAUSE;
+import static com.sipgate.sparta.diameter.base.MetersUtils.extractCauseTag;
+
 final class DiameterSessionMeters {
 
     private static final String PREFIX = "diameter.";
     private static final String TAG_COMMAND_CODE = "command_code";
     private static final String TAG_APPLICATION_ID = "application_id";
-    private static final String TAG_CAUSE = "cause";
 
     private final MeterRegistry registry;
 
@@ -53,20 +55,6 @@ final class DiameterSessionMeters {
                 .tag(TAG_CAUSE, extractCauseTag(cause))
                 .register(registry)
                 .increment();
-    }
-
-    private static String extractCauseTag(final Throwable cause) {
-        final var effectiveCause = extractEffectiveCause(cause);
-        final var simple = effectiveCause.getClass().getSimpleName();
-        return simple.isEmpty() ? effectiveCause.getClass().getName() : simple;
-    }
-
-    private static Throwable extractEffectiveCause(final Throwable wrapper) {
-        if (wrapper instanceof CompletionException || wrapper instanceof UncheckedIOException || wrapper instanceof ExecutionException) {
-            return wrapper.getCause() == null ? wrapper : wrapper.getCause();
-        }
-
-        return wrapper;
     }
 
     Timer.Sample startTimer() {

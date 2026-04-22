@@ -84,7 +84,12 @@ public final class DiameterNode implements Closeable {
                 .group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
                 .childHandler(newInitializer(factory, DiameterTransportMeters.DIRECTION_INBOUND))
-                .bind(port);
+                .bind(port)
+                .addListener(f -> {
+                    if (!f.isSuccess()) {
+                        transportMeters.recordListenError(f.cause());
+                    }
+                });
     }
 
     /**
@@ -107,6 +112,7 @@ public final class DiameterNode implements Closeable {
                 .connect(host, port)
                 .addListener((final ChannelFuture future) -> {
                     if (!future.isSuccess()) {
+                        transportMeters.recordConnectError(future.cause());
                         LOGGER.warn("failed to connect to {}:{}", host, port, future.cause());
                         session.scheduleReconnect();
                     }

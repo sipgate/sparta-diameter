@@ -7,6 +7,9 @@ import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.sipgate.sparta.diameter.base.MetersUtils.TAG_CAUSE;
+import static com.sipgate.sparta.diameter.base.MetersUtils.extractCauseTag;
+
 final class DiameterTransportMeters {
 
     static final String DIRECTION_INBOUND = "inbound";
@@ -128,6 +131,22 @@ final class DiameterTransportMeters {
                 .tag(TAG_COMMAND_TYPE, commandType)
                 .register(registry)
                 .increment();
+    }
+
+    void recordListenError(final Throwable cause) {
+        Counter.builder(PREFIX + "listen.error")
+            .description("Causes of transport listen errors")
+            .tag(TAG_CAUSE, extractCauseTag(cause))
+            .register(registry)
+            .increment();
+    }
+
+    void recordConnectError(final Throwable cause) {
+        Counter.builder(PREFIX + "connect.error")
+            .description("Causes of transport connection errors")
+            .tag(TAG_CAUSE, extractCauseTag(cause))
+            .register(registry)
+            .increment();
     }
 
     /**
