@@ -1,22 +1,18 @@
 package com.sipgate.sparta.diameter.base.session;
 
-import com.sipgate.sparta.diameter.base.core.DiameterConstants;
-import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
-import com.sipgate.sparta.diameter.base.core.IncomingCommand;
-import com.sipgate.sparta.diameter.base.core.IncomingRequest;
-import com.sipgate.sparta.diameter.base.core.ResultCodeUtil;
+import com.sipgate.sparta.diameter.base.core.*;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.base.messages.DisconnectPeerRequest;
 import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
-
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.function.Consumer;
 
 /**
  * Diameter session for the initiator (I-) side of a connection.
@@ -25,14 +21,14 @@ public final class DiameterInitiatorSession extends DiameterSession {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DiameterInitiatorSession.class);
 
-    private final Runnable reconnect;
-    private Future<?> tcTimer;
+    private final Consumer<DiameterInitiatorSession> reconnect;
+    private final Timer tcTimer = new Timer();
 
-    public DiameterInitiatorSession(final DiameterNodeConfig config, final Runnable reconnect) {
+    public DiameterInitiatorSession(final DiameterNodeConfig config, final Consumer<DiameterInitiatorSession> reconnect) {
         this(config, reconnect, new SimpleMeterRegistry());
     }
 
-    public DiameterInitiatorSession(final DiameterNodeConfig config, final Runnable reconnect,
+    public DiameterInitiatorSession(final DiameterNodeConfig config, final Consumer<DiameterInitiatorSession> reconnect,
                                     final MeterRegistry meterRegistry) {
         super(config, meterRegistry);
         this.reconnect = reconnect;
@@ -104,17 +100,28 @@ public final class DiameterInitiatorSession extends DiameterSession {
     public void onDisconnected(final DiameterPeer peer) {
         super.onDisconnected(peer);
         if (!shuttingDown) {
-            LOGGER.debug("scheduling reconnect");
-            final long tcMs = config.getTc().toMillis();
-            tcTimer = peer.eventLoop().schedule(reconnect, tcMs, TimeUnit.MILLISECONDS);
+            scheduleReconnect();
         }
     }
 
+    public void scheduleReconnect() {
+        LOGGER.debug("scheduling reconnect");
+        final long tcMs = config.getTc().toMillis();
+        tcTimer.schedule(reconnectTimerTask(reconnect, this), tcMs);
+    }
+
+    private static TimerTask reconnectTimerTask(final Consumer<DiameterInitiatorSession> reconnect,
+                                                final DiameterInitiatorSession diameterInitiatorSession) {
+        return new TimerTask() {
+            @Override
+            public void run() {
+                reconnect.accept(diameterInitiatorSession);
+            }
+        };
+    }
+
     private void stopTcTimer() {
-        if (tcTimer != null) {
-            tcTimer.cancel(false);
-            tcTimer = null;
-        }
+        tcTimer.cancel();
     }
 
     private void handleCea(final CapabilitiesExchangeAnswer.In cea) {
@@ -128,7 +135,7 @@ public final class DiameterInitiatorSession extends DiameterSession {
 
     private CapabilitiesExchangeRequest.Out buildCer() {
         final CapabilitiesExchangeRequest.Out cer =
-                new CapabilitiesExchangeRequest.Out();
+            new CapabilitiesExchangeRequest.Out();
         populateCapabilityAvps(cer);
         return cer;
     }

@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -88,26 +89,28 @@ public final class DiameterNode implements Closeable {
 
     /**
      * Initiates an outgoing Diameter connection to the given host and port.
-     *
-     * <pre>{@code
-     * node.connect("peer.example.com", 3868,
-     *     reconnect -> new DiameterInitiatorSession(config, reconnect));
-     * }</pre>
      */
     public ChannelFuture connect(final String host, final int port,
-                                 final Function<Runnable, DiameterInitiatorSession> factory) {
-        return doConnect(host, port, factory);
+                                 final Function<Consumer<DiameterInitiatorSession>, DiameterInitiatorSession> factory) {
+        final Consumer<DiameterInitiatorSession> reconnect = (session) -> doConnect(host, port, session);
+        final var session = factory.apply(reconnect);
+        return doConnect(host, port, session);
     }
 
     private ChannelFuture doConnect(final String host, final int port,
-                                    final Function<Runnable, DiameterInitiatorSession> factory) {
+                                    final DiameterInitiatorSession session) {
         LOGGER.info("connecting to {}:{}", host, port);
-        final Runnable reconnect = () -> doConnect(host, port, factory);
         return new Bootstrap()
                 .group(workerGroup)
                 .channel(NioSocketChannel.class)
-                .handler(newInitializer(() -> factory.apply(reconnect), DiameterTransportMeters.DIRECTION_OUTBOUND))
-                .connect(host, port);
+                .handler(newInitializer(() -> session, DiameterTransportMeters.DIRECTION_OUTBOUND))
+                .connect(host, port)
+                .addListener((ChannelFuture future) -> {
+                    if (!future.isSuccess()) {
+                        LOGGER.warn("failed to connect to {}:{}", host, port, future.cause());
+                        session.scheduleReconnect();
+                    }
+                });
     }
 
     private ChannelInitializer<SocketChannel> newInitializer(
