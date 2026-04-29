@@ -1,5 +1,6 @@
 package com.sipgate.sparta.diameter._3gpp.sgdgdd.messages;
 
+import com.sipgate.sparta.diameter._3gpp.common._3gppAnswer;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasAbsentUserDiagnosticSmAVP;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasEpsLocationInformationAVP;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSupportedFeaturesAVPs;
@@ -25,14 +26,13 @@ import com.sipgate.sparta.diameter.ietf.drmp.mixins.HasDrmpAVP;
  * MT-Forward-Short-Message Answer (TFA) — 3GPP TS 29.338 §6.3.2.6.
  */
 public interface MtForwardShortMessageAnswer
-        extends HasSessionIdAVP, HasDrmpAVP, HasVendorSpecificApplicationIdAVP,
-                HasExperimentalResultAVP, HasAuthSessionStateAVP,
-                HasSupportedFeaturesAVPs,
+        extends _3gppAnswer,
+                HasDrmpAVP,
                 HasAbsentUserDiagnosticSmAVP,
                 HasSmDeliveryFailureCauseAVP, HasSmRpUiAVP,
                 HasRequestedRetransmissionTimeAVP, HasUserIdentifierAVP,
                 HasEpsLocationInformationAVP,
-                HasFailedAVP, HasProxyInfoAVPs, HasRouteRecordAVPs {
+                HasRouteRecordAVPs {
 
     final class In extends IncomingAnswer
             implements MtForwardShortMessageAnswer {

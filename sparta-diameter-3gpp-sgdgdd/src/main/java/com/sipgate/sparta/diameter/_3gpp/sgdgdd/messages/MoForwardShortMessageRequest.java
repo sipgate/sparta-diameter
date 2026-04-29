@@ -1,5 +1,6 @@
 package com.sipgate.sparta.diameter._3gpp.sgdgdd.messages;
 
+import com.sipgate.sparta.diameter._3gpp.common._3gppRequest;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasEpsLocationInformationAVP;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSmDeliveryOutcomeAVP;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSupportedFeaturesAVPs;
@@ -26,10 +27,10 @@ import com.sipgate.sparta.diameter.ietf.drmp.mixins.HasDrmpAVP;
  * MO-Forward-Short-Message Request (OFR) — 3GPP TS 29.338 §6.3.2.3.
  */
 public interface MoForwardShortMessageRequest
-        extends HasSessionIdAVP, HasDrmpAVP, HasVendorSpecificApplicationIdAVP,
-                HasAuthSessionStateAVP,
+        extends _3gppRequest,
+                HasDrmpAVP,
                 HasScAddressAVP, HasOfrFlagsAVP,
-                HasSupportedFeaturesAVPs, HasUserIdentifierAVP,
+                HasUserIdentifierAVP,
                 HasEpsLocationInformationAVP,
                 HasSmRpUiAVP, HasSmsMiCorrelationIdAVP,
                 HasSmDeliveryOutcomeAVP,

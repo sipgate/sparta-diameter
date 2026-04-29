@@ -1,5 +1,6 @@
 package com.sipgate.sparta.diameter._3gpp.sgdgdd.messages;
 
+import com.sipgate.sparta.diameter._3gpp.common._3gppRequest;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasMmeNumberForMtSmsAVP;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSgsnNumberAVP;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSupportedFeaturesAVPs;
@@ -30,10 +31,10 @@ import com.sipgate.sparta.diameter.ietf.drmp.mixins.HasDrmpAVP;
  * MT-Forward-Short-Message Request (TFR) — 3GPP TS 29.338 §6.3.2.5.
  */
 public interface MtForwardShortMessageRequest
-        extends HasSessionIdAVP, HasDrmpAVP, HasVendorSpecificApplicationIdAVP,
-                HasAuthSessionStateAVP,
+        extends _3gppRequest,
+                HasDrmpAVP,
                 HasUserNameAVP,
-                HasSupportedFeaturesAVPs, HasSmsMiCorrelationIdAVP,
+                HasSmsMiCorrelationIdAVP,
                 HasScAddressAVP, HasSmRpUiAVP,
                 HasMmeNumberForMtSmsAVP, HasSgsnNumberAVP,
                 HasTfrFlagsAVP, HasSmDeliveryTimerAVP, HasSmDeliveryStartTimeAVP,

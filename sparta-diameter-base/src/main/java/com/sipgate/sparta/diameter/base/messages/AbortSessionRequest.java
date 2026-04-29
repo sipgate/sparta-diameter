@@ -12,8 +12,9 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
  * </p>
  */
 public interface AbortSessionRequest
-        extends HasSessionIdAVP, HasAuthApplicationIdAVP, HasUserNameAVP,
-                HasOriginStateIdAVP, HasProxyInfoAVPs, HasRouteRecordAVPs {
+        extends DiameterRequest,
+                HasSessionIdAVP, HasAuthApplicationIdAVP, HasUserNameAVP,
+                HasOriginStateIdAVP {
 
     final class In extends IncomingRequest<AbortSessionAnswer.Out>
             implements AbortSessionRequest {

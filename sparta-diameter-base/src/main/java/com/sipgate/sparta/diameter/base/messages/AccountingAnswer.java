@@ -12,12 +12,13 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
  * </p>
  */
 public interface AccountingAnswer
-        extends HasSessionIdAVP, HasAccountingRecordTypeAVP, HasAccountingRecordNumberAVP,
+        extends DiameterAnswer,
+                HasSessionIdAVP, HasAccountingRecordTypeAVP, HasAccountingRecordNumberAVP,
                 HasAcctApplicationIdAVP, HasVendorSpecificApplicationIdAVP, HasUserNameAVP,
                 HasAccountingSubSessionIdAVP, HasAcctSessionIdAVP, HasAcctMultiSessionIdAVP,
-                HasErrorMessageAVP, HasErrorReportingHostAVP, HasFailedAVP,
+                HasErrorReportingHostAVP,
                 HasAcctInterimIntervalAVP, HasAccountingRealtimeRequiredAVP,
-                HasOriginStateIdAVP, HasEventTimestampAVP, HasProxyInfoAVPs {
+                HasOriginStateIdAVP, HasEventTimestampAVP {
 
     final class In extends IncomingAnswer
             implements AccountingAnswer {

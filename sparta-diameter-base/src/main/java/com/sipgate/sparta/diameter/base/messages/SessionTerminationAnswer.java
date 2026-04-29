@@ -12,10 +12,11 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
  * </p>
  */
 public interface SessionTerminationAnswer
-        extends HasSessionIdAVP, HasUserNameAVP, HasClassAVPs,
-                HasErrorMessageAVP, HasErrorReportingHostAVP, HasFailedAVP,
+        extends DiameterAnswer,
+                HasSessionIdAVP, HasUserNameAVP, HasClassAVPs,
+                HasErrorReportingHostAVP,
                 HasOriginStateIdAVP, HasRedirectHostAVPs,
-                HasRedirectHostUsageAVP, HasRedirectMaxCacheTimeAVP, HasProxyInfoAVPs {
+                HasRedirectHostUsageAVP, HasRedirectMaxCacheTimeAVP {
 
     final class In extends IncomingAnswer
             implements SessionTerminationAnswer {

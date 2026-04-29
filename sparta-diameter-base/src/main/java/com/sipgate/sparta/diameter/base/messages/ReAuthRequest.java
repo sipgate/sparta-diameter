@@ -12,8 +12,9 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.*;
  * </p>
  */
 public interface ReAuthRequest
-        extends HasSessionIdAVP, HasAuthApplicationIdAVP, HasReAuthRequestTypeAVP,
-                HasUserNameAVP, HasOriginStateIdAVP, HasProxyInfoAVPs, HasRouteRecordAVPs {
+        extends DiameterRequest,
+                HasSessionIdAVP, HasAuthApplicationIdAVP, HasReAuthRequestTypeAVP,
+                HasUserNameAVP, HasOriginStateIdAVP {
 
     final class In extends IncomingRequest<ReAuthAnswer.Out>
             implements ReAuthRequest {

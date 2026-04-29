@@ -1,5 +1,6 @@
 package com.sipgate.sparta.diameter._3gpp.sgdgdd.messages;
 
+import com.sipgate.sparta.diameter._3gpp.common._3gppAnswer;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasExternalIdentifierAVP;
 import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSupportedFeaturesAVPs;
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.SgdGddConstants;
@@ -22,12 +23,10 @@ import com.sipgate.sparta.diameter.ietf.drmp.mixins.HasDrmpAVP;
  * MO-Forward-Short-Message Answer (OFA) — 3GPP TS 29.338 §6.3.2.4.
  */
 public interface MoForwardShortMessageAnswer
-        extends HasSessionIdAVP, HasDrmpAVP, HasVendorSpecificApplicationIdAVP,
-                HasExperimentalResultAVP, HasAuthSessionStateAVP,
-                HasSupportedFeaturesAVPs,
-                HasSmDeliveryFailureCauseAVP, HasSmRpUiAVP,
+        extends _3gppAnswer,
+                HasDrmpAVP, HasSmDeliveryFailureCauseAVP, HasSmRpUiAVP,
                 HasExternalIdentifierAVP,
-                HasFailedAVP, HasProxyInfoAVPs, HasRouteRecordAVPs {
+                HasRouteRecordAVPs {
 
     final class In extends IncomingAnswer
             implements MoForwardShortMessageAnswer {
