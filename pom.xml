@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.sipgate</groupId>
     <artifactId>sparta-diameter</artifactId>
-    <version>0.1.10-SNAPSHOT</version>
+    <version>0.1.10</version>
     <packaging>pom</packaging>
     <name>sparta-diameter</name>
     <description>Java library for the Diameter protocol by sipgate</description>
@@ -24,7 +24,7 @@
         <url>https://github.com/sipgate/sparta-diameter</url>
         <connection>scm:git:git@github.com:sipgate/sparta-diameter.git</connection>
         <developerConnection>scm:git:git@github.com:sipgate/sparta-diameter.git</developerConnection>
-      <tag>HEAD</tag>
+      <tag>0.1.10</tag>
   </scm>
 
     <modules>
