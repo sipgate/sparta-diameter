@@ -99,11 +99,10 @@ public abstract class AvpSpecTestBase {
     }
 
     private static void assertStoredAvp(final AVPContainer container, final AvpDef def) {
-        // TODO: check if code and vendor id should be unsigned int (java long) or signed int (java int)
-        final var avps = container.findAVPs(new AVPKey((int) def.avpCode(), (int) def.vendorId()));
+        final var avps = container.findAVPs(new AVPKey(def.avpCode(), def.vendorId()));
         assertThat(avps).as("%s no AVP stored after setter", def.attributeName()).hasSize(1);
         final AVP stored = avps.get(0);
-        assertThat(stored.getCode()).as("%s code", def.attributeName()).isEqualTo((int) def.avpCode());
+        assertThat(stored.getCode()).as("%s code", def.attributeName()).isEqualTo(def.avpCode());
         assertFlag(stored.isMandatory(), def.mandatoryBit(), def.attributeName(), "M");
         assertFlag(stored.isVendorSpecific(), def.vendorSpecificBit(), def.attributeName(), "V");
     }

@@ -32,11 +32,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AVP {
     private static final Logger LOGGER = LoggerFactory.getLogger(AVP.class);
 
-    private final int code;
+    private final long code;
     private final boolean vendorSpecific;
     private final boolean mandatory;
     private final boolean protectedAVP;
-    private final int vendorId;
+    private final long vendorId;
     private final byte[] data;
 
     // Factory functionality merged from AVPFactory
@@ -63,8 +63,8 @@ public class AVP {
      * @param vendorId       The vendor ID.
      * @param data           The AVP data.
      */
-    AVP(final int code, final boolean vendorSpecific, final boolean mandatory, final boolean protectedAVP,
-        final int vendorId, final byte[] data) {
+    AVP(final long code, final boolean vendorSpecific, final boolean mandatory, final boolean protectedAVP,
+        final long vendorId, final byte[] data) {
         this.code = code;
         this.vendorSpecific = vendorSpecific;
         this.mandatory = mandatory;
@@ -80,8 +80,8 @@ public class AVP {
      * @param mandatory Indicates whether the AVP is mandatory.
      * @param data      The AVP data.
      */
-    AVP(final int code, final boolean mandatory, final byte[] data) {
-        this(code, false, mandatory, false, 0, data);
+    AVP(final long code, final boolean mandatory, final byte[] data) {
+        this(code, false, mandatory, false, 0L, data);
     }
 
     /**
@@ -104,7 +104,7 @@ public class AVP {
      *
      * @return The AVP code.
      */
-    public int getCode() {
+    public long getCode() {
         return code;
     }
 
@@ -148,7 +148,7 @@ public class AVP {
      *
      * @return The vendor ID, or 0 if not vendor-specific.
      */
-    public int getVendorId() {
+    public long getVendorId() {
         return vendorId;
     }
 
@@ -347,8 +347,8 @@ public class AVP {
      * @throws IOException If an I/O error occurs.
      */
     public void writeTo(final DataOutputStream outputStream) throws IOException {
-        // AVP Code (4 bytes)
-        outputStream.writeInt(code);
+        // AVP Code (4 bytes, 32-bit unsigned)
+        outputStream.writeInt((int) code);
 
         // Flags (1 byte)
         int flags = 0;
@@ -363,9 +363,9 @@ public class AVP {
         outputStream.writeByte((length >> 8) & 0xFF);
         outputStream.writeByte(length & 0xFF);
 
-        // Vendor-Id (4 bytes, if vendor-specific)
+        // Vendor-Id (4 bytes, 32-bit unsigned, if vendor-specific)
         if (vendorSpecific) {
-            outputStream.writeInt(vendorId);
+            outputStream.writeInt((int) vendorId);
         }
 
         // Data
@@ -835,8 +835,8 @@ public class AVP {
             throw new EOFException("Buffer does not contain enough data for an AVP header");
         }
 
-        // AVP Code (4 bytes)
-        final int code = buffer.getInt();
+        // AVP Code (4 bytes, 32-bit unsigned)
+        final long code = Integer.toUnsignedLong(buffer.getInt());
 
         // Flags (1 byte)
         final byte flags = buffer.get();
@@ -849,12 +849,12 @@ public class AVP {
             // RFC 6733 §4.1: length field out of valid range
             // We think that this is an edge case and the RFC doesn't cover all cases.
             // We have decided to simply answer with a stub AVP without payload.
-            final var stub = new AVP(code, vendorSpecific, mandatory, protectedAVP, 0, new byte[0]);
+            final var stub = new AVP(code, vendorSpecific, mandatory, protectedAVP, 0L, new byte[0]);
             throw new AVPParseException(DiameterConstants.RES_DIAMETER_INVALID_AVP_LENGTH, stub);
         }
 
-        // Vendor-Id (4 bytes, if vendor-specific)
-        final int vendorId = vendorSpecific ? buffer.getInt() : 0;
+        // Vendor-Id (4 bytes, 32-bit unsigned, if vendor-specific)
+        final long vendorId = vendorSpecific ? Integer.toUnsignedLong(buffer.getInt()) : 0L;
 
         // Data
         final int dataLength = length - (vendorSpecific ? 12 : 8);
@@ -899,7 +899,7 @@ public class AVP {
             sb.append("Unknown-AVP-").append(this.code);
         }
 
-        sb.append(" <Code: 0x").append(Integer.toHexString(code).toLowerCase());
+        sb.append(" <Code: 0x").append(Long.toHexString(code).toLowerCase());
         sb.append(", Flags: 0x").append(Integer.toHexString(getFlagsValue()).toLowerCase());
         sb.append(" (").append(getFlagsString()).append(")");
         sb.append(", Length: ").append(getLength());

@@ -11,7 +11,7 @@ package com.sipgate.sparta.diameter.base.core.avp;
  * @param code     the AVP code
  * @param vendorId the vendor ID, or 0 for IETF base AVPs (i.e. not vendor-specific)
  */
-public record AVPKey(int code, int vendorId) {
+public record AVPKey(long code, long vendorId) {
     // We don't have an overloaded constructor with code only for not vendor-specific, because we want to be explicit.
     // If we had such constructor, one could accidentally forget to set a vendor ID.
 }

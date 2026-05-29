@@ -28,7 +28,7 @@ class SgdGddAVPProviderTest {
             if (!Modifier.isStatic(field.getModifiers()) || !Modifier.isFinal(field.getModifiers())) {
                 continue;
             }
-            final int code = field.getInt(null);
+            final long code = field.getLong(null);
             if (!registeredCodes.contains(code)) {
                 missing.add(field.getName() + " (code=" + code + ")");
             }

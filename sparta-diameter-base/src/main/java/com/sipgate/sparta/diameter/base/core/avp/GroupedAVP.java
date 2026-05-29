@@ -27,7 +27,7 @@ public class GroupedAVP extends AVP implements AVPContainer {
      * @param avps      The list of AVPs to include in this Grouped AVP.
      */
     public GroupedAVP(final AVPKey key, final boolean mandatory, final List<AVP> avps) {
-        this(key.code(), key.vendorId() != 0, mandatory, false, key.vendorId(), avps);
+        this(key.code(), key.vendorId() != 0L, mandatory, false, key.vendorId(), avps);
     }
 
     /**
@@ -40,8 +40,8 @@ public class GroupedAVP extends AVP implements AVPContainer {
      * @param vendorId       The vendor ID.
      * @param avps           The list of AVPs to include in this Grouped AVP.
      */
-    public GroupedAVP(final int code, final boolean vendorSpecific, final boolean mandatory, final boolean protectedAVP,
-                      final int vendorId, final List<AVP> avps) {
+    public GroupedAVP(final long code, final boolean vendorSpecific, final boolean mandatory, final boolean protectedAVP,
+                      final long vendorId, final List<AVP> avps) {
         super(code, vendorSpecific, mandatory, protectedAVP, vendorId, serializeAVPs(avps));
         this.avps = new ArrayList<>(avps);
     }

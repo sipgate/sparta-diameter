@@ -4,8 +4,8 @@ package com.sipgate.sparta.diameter.base.core.avp;
  * Defines the specification for a Diameter AVP.
  * Contains all metadata needed to properly construct AVPs with the correct flags and types.
  */
-public record AVPDefinition(int code, String name, Class<?> dataType,
-                             boolean mandatory, boolean vendorSpecific, int vendorId) {
+public record AVPDefinition(long code, String name, Class<?> dataType,
+                             boolean mandatory, boolean vendorSpecific, long vendorId) {
 
     public AVPDefinition {
         if (name == null || name.trim().isEmpty()) {
