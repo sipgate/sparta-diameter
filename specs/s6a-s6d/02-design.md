@@ -41,6 +41,15 @@ Per review: **strict** convention (GOTCHA 8) — one module per defining spec, n
   "Diameter Mobile IPv6" — the two module names are deliberately distinguished by content; confirm
   final names at implementation per GOTCHA 1.
 
+**Spec-currency check (verified, GOTCHA 3).** Per datatracker, **none** of RFC 4004, RFC 5447,
+RFC 5778 is obsoleted or updated — all three are current Proposed Standards. The two MIPv6 RFCs
+are *complementary*, not redundant: RFC 5447 (NAS↔server) **defines** MIP6-Agent-Info (486,
+§4.2.1); RFC 5778 (HA↔server) **defines** Service-Selection (493, §6.2) and **imports** 486 from
+RFC 5447 (rfc5778 reused-AVP table, "MIP6-Agent-Info 486 RFC 5447"). RFC 4004 (Diameter Mobile
+IPv4) is the original definer of MIP-Home-Agent-Address (334, §7.4) and MIP-Home-Agent-Host
+(348, §7.11). So the three-module split picks the correct (non-obsoleted) defining spec for each
+AVP — no obsoletion substitution applies here (unlike Cx/Dx's RFC 4590→5090 / 4005→7155).
+
 ## S6aConstants
 
 ```
@@ -104,6 +113,7 @@ Flags from Table 7.3.1/1: `M,V` ⇒ `mandatory=true, vendorSpecific=true, 10415`
 | 1430 | APN-Configuration | Grouped | M,V | APN-Configuration-Profile |
 | 1431 | EPS-Subscribed-QoS-Profile | Grouped | M,V | APN-Configuration |
 | 1432 | VPLMN-Dynamic-Address-Allowed | Enumerated | M,V | APN-Configuration |
+| 1434 | Alert-Reason | Enumerated | M,V | NOR (message-direct) — definition only, no mixin |
 | 1435 | AMBR | Grouped | M,V | Subscription-Data, APN-Configuration |
 | 1438 | PDN-GW-Allocation-Type | Enumerated | M,V | APN-Configuration |
 | 1440 | RAT-Frequency-Selection-Priority-ID | Unsigned32 | M,V | Subscription-Data |
@@ -125,6 +135,11 @@ Flags from Table 7.3.1/1: `M,V` ⇒ `mandatory=true, vendorSpecific=true, 10415`
 
 > Codes 1604/1635/1643 etc. (PUR-Flags, A-MSISDN, …) are reachable only via out-of-scope
 > branches and are **not** modelled in the first delivery (no HSS use, no decode obligation).
+> `Alert-Reason` (1434) **is** modelled (definition only): it is an M,V **message-direct** AVP
+> in NOR (§7.2.17), which the HSS *decodes*, so it must be registered or a NOR carrying it fails
+> decode with 5001. The HSS does not read it ⇒ no mixin. (Other NOR optionals the HSS ignores —
+> Maximum-UE-Availability-Time, Emergency-Services, Homogeneous-Support-* — are reused TS 29.336
+> AVPs with the M-bit **cleared**, so omitting them is decode-safe.)
 
 ## Reused-AVP mapping (no duplicates)
 
@@ -142,7 +157,7 @@ Flags from Table 7.3.1/1: `M,V` ⇒ `mandatory=true, vendorSpecific=true, 10415`
 | Pre-emption-Vulnerability | 1048 | Enumerated | `3gpp-common` (TS 29.212) | **add** ⚠ |
 | Max-Requested-Bandwidth-UL | 516 | Unsigned32 | `3gpp-common` (TS 29.214) | **add** ⚠ |
 | Max-Requested-Bandwidth-DL | 515 | Unsigned32 | `3gpp-common` (TS 29.214) | **add** ⚠ |
-| 3GPP-Charging-Characteristics | 13 | OctetString | `3gpp-common` (TS 32.299) | **add** ⚠ |
+| 3GPP-Charging-Characteristics | 13 | OctetString | `3gpp-common` (TS 29.061) | **add** ⚠ |
 | Service-Selection | 493 | UTF8String | foreign IETF (RFC 5778, vendor 0) | **new** ⚠ |
 | MIP6-Agent-Info | 486 | Grouped | foreign IETF (RFC 5447, vendor 0) | **new** ⚠ |
 | MIP-Home-Agent-Address | 334 | Address | foreign IETF (RFC 4004, vendor 0) | **new** ⚠ |

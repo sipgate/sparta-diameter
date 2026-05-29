@@ -94,8 +94,9 @@ Die sechs Pflicht-Command-Paare aus AWBD-585. Application-ID 16777251, alle PXY:
       jeweils zuständigen `AVPProvider` registriert → verlustfreier Encode→Decode-Round-Trip.
 - [ ] Keine AVP-Duplikate: gemeinsame AVPs werden aus `base`/`drmp`/`3gpp-common`
       (bzw. neuen, nach definierender Spec benannten Modulen) referenziert.
-- [ ] `createAnswer` setzt `Auth-Session-State = NO_STATE_MAINTAINED`
-      (TS 29.272 §7.1.3 Accounting nicht genutzt, §7.1.4 Sessions implizit terminiert).
+- [ ] `createAnswer` setzt `Auth-Session-State = AUTH_SESSION_STATE_NOT_MAINTAINED` (RFC-6733-Wert
+      `NO_STATE_MAINTAINED` = 1) (TS 29.272 §7.1.3 Accounting nicht genutzt, §7.1.4 Sessions
+      implizit terminiert).
 - [ ] Tests (AssertJ, `it_<behavior>`, GIVEN/WHEN/THEN) für Provider, Factory und je
       Command-Paar mindestens ein Encode→Decode-Round-Trip inkl. eines befüllten
       Grouped-AVP (mind. einmal Subscription-Data-Teilbaum).

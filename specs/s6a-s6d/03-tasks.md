@@ -8,9 +8,10 @@ round-trip); pure data classes get their assertion test alongside. Build with `m
 - [ ] Verify reused-AVP **codes/types/flags** against defining specs (skill GOTCHA 2/3):
       TS 29.212 (RAT-Type 1032, QoS-Class-Identifier 1028, Allocation-Retention-Priority 1034,
       Priority-Level 1046, Pre-emption-Capability 1047, Pre-emption-Vulnerability 1048),
-      TS 29.214 (Max-Requested-Bandwidth-UL 516 / -DL 515), TS 32.299 (3GPP-Charging-
+      TS 29.214 (Max-Requested-Bandwidth-UL 516 / -DL 515), TS 29.061 (3GPP-Charging-
       Characteristics 13), RFC 5778 (Service-Selection 493), RFC 5447 (MIP6-Agent-Info 486),
       RFC 4004 (MIP-Home-Agent-Address 334, MIP-Home-Agent-Host 348). Fetch & cite each.
+      (Obsoletion of RFC 4004/5447/5778 already checked — all current, none obsoleted; see 02-design.)
 - [ ] Confirm final names of the three per-RFC foreign Mobile-IP modules (GOTCHA 1).
 - [ ] **Discover** `Confidentiality-Key` (625) / `Integrity-Key` (626) home at this later stage:
       if the Cx/Dx branch added them to `3gpp-common`, reuse; else add there (avoid duplicate).
@@ -18,7 +19,7 @@ round-trip); pure data classes get their assertion test alongside. Build with `m
 
 ## 1. Shared 3GPP AVPs → `3gpp-common`
 
-- [ ] Add to `_3gppConstants` + `_3gppAVPProvider` (grouped under a `// TS 29.212` / `// TS 32.299`
+- [ ] Add to `_3gppConstants` + `_3gppAVPProvider` (grouped under a `// TS 29.212` / `// TS 29.061`
       comment, matching existing style): RAT-Type, QoS-Class-Identifier,
       Allocation-Retention-Priority, Priority-Level, Pre-emption-Capability,
       Pre-emption-Vulnerability, Max-Requested-Bandwidth-UL/DL, 3GPP-Charging-Characteristics
@@ -46,7 +47,8 @@ round-trip); pure data classes get their assertion test alongside. Build with `m
 - [ ] Define every in-scope S6a AVP from the design inventory (codes 1400–1638 subset), correct
       type/flags/vendor 10415. Include **all nested-only** AVPs (RAND/XRES/AUTN/KASME/Kc/SRES,
       Item-Number, Context-Identifier, PDN-Type, EPS-Subscribed-QoS-Profile, vectors, …) so
-      round-trip resolves.
+      round-trip resolves. Include **Alert-Reason (1434, Enumerated, M,V)** — M-bit, message-direct
+      in NOR (HSS decodes NOR) ⇒ must be registered or NOR fails decode with 5001 (definition only).
 - [ ] `S6aAVPProviderTest` (mirror `SgdGddAVPProviderTest`): assert each definition.
 
 ## 5. Mixins (`s6a/mixins`) — message-direct AVPs only
