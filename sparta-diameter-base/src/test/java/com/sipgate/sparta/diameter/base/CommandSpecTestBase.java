@@ -30,7 +30,13 @@ public abstract class CommandSpecTestBase {
     protected abstract String messagesPackage();
 
     protected String classNameFor(final String commandName) {
-        return commandName.replace("-", "");
+        final String[] parts = commandName.split("-");
+        final StringBuilder sb = new StringBuilder();
+        for (final String part : parts) {
+            sb.append(Character.toUpperCase(part.charAt(0)));
+            sb.append(part.substring(1).toLowerCase());
+        }
+        return sb.toString();
     }
 
     protected long expectedApplicationId(final CommandDef def) {
@@ -111,8 +117,11 @@ public abstract class CommandSpecTestBase {
     }
 
     private static String pluralize(final String base) {
+        if (base.endsWith("ss")) {
+            return base + "es"; // "Address" -> "Addresses", "Class" -> "Classes"
+        }
         if (base.endsWith("s")) {
-            return base + "es"; // "Address" -> "Addresses"
+            return base; // "Features" already plural
         }
         return base + "s";
     }
