@@ -29,7 +29,7 @@ public interface HasOriginStateIdAVP extends AVPContainer {
      *
      * @return The origin state identifier, or -1 if not found.
      */
-    default int getOriginStateId() {
+    default long getOriginStateId() {
         final AVP originStateIdAVP = findAVP(new AVPKey(DiameterConstants.AVP_ORIGIN_STATE_ID, 0));
         if (originStateIdAVP != null && originStateIdAVP.getData().length >= 4) {
             return originStateIdAVP.getDataAsInt();
