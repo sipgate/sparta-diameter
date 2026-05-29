@@ -45,6 +45,36 @@ public final class _3gppAVPProvider implements AVPProvider {
             new AVPDefinition(_3gppConstants.AVP_SERVING_NODE, "Serving-Node",
                 GroupedAVP.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
 
+            // 3GPP TS 29.212, Gx interface (QoS AVPs reused by S6a/S6d)
+            new AVPDefinition(_3gppConstants.AVP_QOS_CLASS_IDENTIFIER, "QoS-Class-Identifier",
+                Integer.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(_3gppConstants.AVP_RAT_TYPE, "RAT-Type",
+                Integer.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(_3gppConstants.AVP_ALLOCATION_RETENTION_PRIORITY, "Allocation-Retention-Priority",
+                GroupedAVP.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(_3gppConstants.AVP_PRIORITY_LEVEL, "Priority-Level",
+                Long.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(_3gppConstants.AVP_PRE_EMPTION_CAPABILITY, "Pre-emption-Capability",
+                Integer.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(_3gppConstants.AVP_PRE_EMPTION_VULNERABILITY, "Pre-emption-Vulnerability",
+                Integer.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
+
+            // 3GPP TS 29.214, Rx interface (bandwidth AVPs reused by S6a/S6d AMBR)
+            new AVPDefinition(_3gppConstants.AVP_MAX_REQUESTED_BANDWIDTH_DL, "Max-Requested-Bandwidth-DL",
+                Long.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(_3gppConstants.AVP_MAX_REQUESTED_BANDWIDTH_UL, "Max-Requested-Bandwidth-UL",
+                Long.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+
+            // 3GPP TS 29.061, Gi/Sgi interface (UTF8String per §16.4.7 Diameter AVP table)
+            new AVPDefinition(_3gppConstants.AVP_3GPP_CHARGING_CHARACTERISTICS, "3GPP-Charging-Characteristics",
+                String.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
+
+            // 3GPP TS 29.229, Cx/Dx interface (also reused by S6a/S6d UTRAN-Vector)
+            new AVPDefinition(_3gppConstants.AVP_CONFIDENTIALITY_KEY, "Confidentiality-Key",
+                byte[].class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(_3gppConstants.AVP_INTEGRITY_KEY, "Integrity-Key",
+                byte[].class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+
             // 3GPP TS 29.338, S6c interface
             new AVPDefinition(_3gppConstants.AVP_SM_DELIVERY_OUTCOME, "SM-Delivery-Outcome",
                 GroupedAVP.class, true, true, _3gppConstants.VENDOR_ID_3GPP),

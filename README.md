@@ -52,7 +52,11 @@ Requires Java 17–24. **Java 25 is not supported** — compilation hangs or thr
 |--------|----------|
 | `sparta-diameter-base` | Core protocol, transport layer, session management |
 | `sparta-diameter-3gpp-common` | Shared 3GPP constants and AVP mixins |
-| `sparta-diameter-3gpp-s6a` | S6a interface (HSS–MME) |
+| `sparta-diameter-ietf-drmp` | DRMP AVP (RFC 7944) |
+| `sparta-diameter-ietf-diameter-mobile-ipv4` | MIP-Home-Agent-Address/Host AVPs (RFC 4004) |
+| `sparta-diameter-ietf-diameter-mobile-ipv6` | MIP6-Agent-Info AVP (RFC 5447) |
+| `sparta-diameter-ietf-diameter-mip6-service-selection` | Service-Selection AVP (RFC 5778) |
+| `sparta-diameter-3gpp-s6a` | S6a/S6d interface (HSS–MME/SGSN) |
 | `sparta-diameter-3gpp-s6c` | S6c interface (SMS/MWD) |
 | `sparta-diameter-3gpp-cxdx` | Cx/Dx interfaces (IMS HSS) |
 | `sparta-diameter-3gpp-sgdgdd` | SGd/Gdd interfaces (SMS delivery via MO/MT) |
@@ -64,7 +68,8 @@ Requires Java 17–24. **Java 25 is not supported** — compilation hangs or thr
 - ✅ Netty-based transport (`DiameterNode`, `DiameterPeer`)
 - ✅ Session layer with capability negotiation, watchdog, reconnect timer (Tc)
 - ✅ SGd/Gdd: MO-Forward-Short-Message, MT-Forward-Short-Message
-- 🚧 S6a, Cx/Dx: constants and AVP definitions in progress
+- ✅ S6a/S6d: ULR/ULA, AIR/AIA, CLR/CLA, IDR/IDA, PUR/PUA, NOR/NOA
+- 🚧 Cx/Dx: constants and AVP definitions in progress
 - 🚧 Comprehensive test coverage
 
 ## Usage

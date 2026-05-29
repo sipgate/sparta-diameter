@@ -1,4 +1,4 @@
-package com.sipgate.sparta.diameter._3gpp.common;
+package com.sipgate.sparta.diameter._3gpp.s6a;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVPDefinition;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
@@ -11,19 +11,19 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class _3gppAVPProviderTest {
+class S6aAVPProviderTest {
 
     @Test
     void it_has_a_definition_for_every_avp_constant() throws IllegalAccessException {
         // GIVEN
-        final var provider = new _3gppAVPProvider();
+        final var provider = new S6aAVPProvider();
         final var registeredCodes = provider.getDefinitions().stream()
             .map(AVPDefinition::code)
             .collect(Collectors.toUnmodifiableSet());
 
         // WHEN
         final var missing = new ArrayList<String>();
-        for (final var field : _3gppConstants.class.getDeclaredFields()) {
+        for (final var field : S6aConstants.class.getDeclaredFields()) {
             if (!field.getName().startsWith("AVP_") || field.getType() != int.class) {
                 continue;
             }
@@ -38,34 +38,30 @@ class _3gppAVPProviderTest {
 
         // THEN
         assertThat(missing)
-            .as("AVP_* constants in _3gppConstants without a definition in _3gppAVPProvider")
+            .as("AVP_* constants in S6aConstants without a definition in S6aAVPProvider")
             .isEmpty();
     }
 
     @Test
-    void it_defines_the_reused_qos_and_charging_avps_with_correct_type_and_flags() {
+    void it_defines_representative_avps_with_correct_type_and_flags() {
         // GIVEN
-        final var provider = new _3gppAVPProvider();
+        final var provider = new S6aAVPProvider();
         final Function<Integer, AVPDefinition> byCode = code -> provider.getDefinitions().stream()
             .filter(d -> d.code() == code)
             .findFirst().orElseThrow();
 
-        // WHEN / THEN — verified against the defining specs (see specs/s6a-s6d/02-design.md task 0)
-        // TS 29.212 QoS family
-        assertDefinition(byCode.apply(1028), "QoS-Class-Identifier", Integer.class, true, true);
-        assertDefinition(byCode.apply(1032), "RAT-Type", Integer.class, true, true);
-        assertDefinition(byCode.apply(1034), "Allocation-Retention-Priority", GroupedAVP.class, false, true);
-        assertDefinition(byCode.apply(1046), "Priority-Level", Long.class, false, true);
-        assertDefinition(byCode.apply(1047), "Pre-emption-Capability", Integer.class, false, true);
-        assertDefinition(byCode.apply(1048), "Pre-emption-Vulnerability", Integer.class, false, true);
-        // TS 29.214 bandwidth
-        assertDefinition(byCode.apply(515), "Max-Requested-Bandwidth-DL", Long.class, true, true);
-        assertDefinition(byCode.apply(516), "Max-Requested-Bandwidth-UL", Long.class, true, true);
-        // TS 29.061 — UTF8String (not OctetString)
-        assertDefinition(byCode.apply(13), "3GPP-Charging-Characteristics", String.class, false, true);
-        // TS 29.229 keys reused by UTRAN-Vector
-        assertDefinition(byCode.apply(625), "Confidentiality-Key", byte[].class, true, true);
-        assertDefinition(byCode.apply(626), "Integrity-Key", byte[].class, true, true);
+        // WHEN / THEN — one per type, plus the V-only AVPs and the M,V Alert-Reason (must register)
+        assertDefinition(byCode.apply(1400), "Subscription-Data", GroupedAVP.class, true, true);
+        assertDefinition(byCode.apply(1402), "IMEI", String.class, true, true);
+        assertDefinition(byCode.apply(1405), "ULR-Flags", Long.class, true, true);
+        assertDefinition(byCode.apply(1407), "Visited-PLMN-Id", byte[].class, true, true);
+        assertDefinition(byCode.apply(1420), "Cancellation-Type", Integer.class, true, true);
+        assertDefinition(byCode.apply(1434), "Alert-Reason", Integer.class, true, true);
+        // V-only AVPs (M-bit must NOT be set)
+        assertDefinition(byCode.apply(1613), "SIPTO-Permission", Integer.class, false, true);
+        assertDefinition(byCode.apply(1615), "UE-SRVCC-Capability", Integer.class, false, true);
+        assertDefinition(byCode.apply(1618), "LIPA-Permission", Integer.class, false, true);
+        assertDefinition(byCode.apply(1638), "CLR-Flags", Long.class, false, true);
     }
 
     private static void assertDefinition(final AVPDefinition definition, final String name,

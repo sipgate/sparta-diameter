@@ -143,31 +143,51 @@ Flags from Table 7.3.1/1: `M,V` ⇒ `mandatory=true, vendorSpecific=true, 10415`
 
 ## Reused-AVP mapping (no duplicates)
 
-| AVP | Code | Type | Source module | Status |
-|---|---|---|---|---|
-| Session-Id, Origin/Destination-Host/Realm, User-Name, Auth-Session-State, Result-Code, Experimental-Result(-Code), Vendor-Specific-Application-Id, Failed-AVP, Proxy-Info, Route-Record | — | — | `base` (RFC 6733) | exists |
-| DRMP | — | Enumerated | `ietf-drmp` | exists |
-| Supported-Features / Feature-List-ID / Feature-List | 628/629/630 | — | `3gpp-common` | exists |
-| MSISDN | 701 | OctetString | `3gpp-common` | exists |
-| RAT-Type | 1032 | Enumerated | `3gpp-common` (TS 29.212) | **add** ⚠verify code/flags |
-| QoS-Class-Identifier | 1028 | Enumerated | `3gpp-common` (TS 29.212) | **add** ⚠ |
-| Allocation-Retention-Priority | 1034 | Grouped | `3gpp-common` (TS 29.212) | **add** ⚠ |
-| Priority-Level | 1046 | Unsigned32 | `3gpp-common` (TS 29.212) | **add** ⚠ |
-| Pre-emption-Capability | 1047 | Enumerated | `3gpp-common` (TS 29.212) | **add** ⚠ |
-| Pre-emption-Vulnerability | 1048 | Enumerated | `3gpp-common` (TS 29.212) | **add** ⚠ |
-| Max-Requested-Bandwidth-UL | 516 | Unsigned32 | `3gpp-common` (TS 29.214) | **add** ⚠ |
-| Max-Requested-Bandwidth-DL | 515 | Unsigned32 | `3gpp-common` (TS 29.214) | **add** ⚠ |
-| 3GPP-Charging-Characteristics | 13 | OctetString | `3gpp-common` (TS 29.061) | **add** ⚠ |
-| Service-Selection | 493 | UTF8String | foreign IETF (RFC 5778, vendor 0) | **new** ⚠ |
-| MIP6-Agent-Info | 486 | Grouped | foreign IETF (RFC 5447, vendor 0) | **new** ⚠ |
-| MIP-Home-Agent-Address | 334 | Address | foreign IETF (RFC 4004, vendor 0) | **new** ⚠ |
-| MIP-Home-Agent-Host | 348 | Grouped | foreign IETF (RFC 4004, vendor 0) | **new** ⚠ |
+| AVP | Code | Type | Flags | Source module | Status |
+|---|---|---|---|---|---|
+| Session-Id, Origin/Destination-Host/Realm, User-Name, Auth-Session-State, Result-Code, Experimental-Result(-Code), Vendor-Specific-Application-Id, Failed-AVP, Proxy-Info, Route-Record | — | — | — | `base` (RFC 6733) | exists |
+| DRMP | — | Enumerated | — | `ietf-drmp` | exists |
+| Supported-Features / Feature-List-ID / Feature-List | 628/629/630 | — | — | `3gpp-common` | exists |
+| MSISDN | 701 | OctetString | M,V | `3gpp-common` | exists |
+| RAT-Type | 1032 | Enumerated | M,V | `3gpp-common` (TS 29.212 §5.3.31) | ✅verified |
+| QoS-Class-Identifier | 1028 | Enumerated | M,V | `3gpp-common` (TS 29.212 §5.3.17) | ✅ |
+| Allocation-Retention-Priority | 1034 | Grouped | V | `3gpp-common` (TS 29.212 §5.3.32) | ✅ |
+| Priority-Level | 1046 | Unsigned32 | V | `3gpp-common` (TS 29.212 §5.3.45) | ✅ |
+| Pre-emption-Capability | 1047 | Enumerated | V | `3gpp-common` (TS 29.212 §5.3.46) | ✅ |
+| Pre-emption-Vulnerability | 1048 | Enumerated | V | `3gpp-common` (TS 29.212 §5.3.47) | ✅ |
+| Max-Requested-Bandwidth-UL | 516 | Unsigned32 | M,V | `3gpp-common` (TS 29.214 §5.3.15) | ✅ |
+| Max-Requested-Bandwidth-DL | 515 | Unsigned32 | M,V | `3gpp-common` (TS 29.214 §5.3.14) | ✅ |
+| 3GPP-Charging-Characteristics | 13 | **UTF8String** | V | `3gpp-common` (TS 29.061 §16.4.7) | ✅ (was wrongly OctetString) |
+| Confidentiality-Key | 625 | OctetString | M,V | `3gpp-common` (TS 29.272 §7.3.57, def. TS 29.229) | ✅ |
+| Integrity-Key | 626 | OctetString | M,V | `3gpp-common` (TS 29.272 §7.3.58, def. TS 29.229) | ✅ |
+| Service-Selection | 493 | UTF8String | M (vendor 0) | foreign IETF (RFC 5778 §6.2) | ✅ |
+| MIP6-Agent-Info | 486 | Grouped | M (vendor 0) | foreign IETF (RFC 5447 §4.2.1) | ✅ |
+| MIP-Home-Agent-Address | 334 | Address | M (vendor 0) | foreign IETF (RFC 4004 §7.4) | ✅ |
+| MIP-Home-Agent-Host | 348 | Grouped | M (vendor 0) | foreign IETF (RFC 4004 §7.11) | ✅ |
 
-⚠ = code/type/flags must be confirmed against the **defining** spec before coding (skill
-GOTCHA 2/3 + „verify defining spec"). The 3GPP TS 29.212 QoS family + 3GPP-Charging-Characteristics
-go into `3gpp-common` (3GPP, cross-interface reusables — same rationale as the existing 29.329/
-29.336/29.173/29.338 entries there). The IETF Mobile-IP AVPs go into the foreign module(s) per the
-decision above.
+The 3GPP TS 29.212 QoS family + 3GPP-Charging-Characteristics go into `3gpp-common` (3GPP,
+cross-interface reusables — same rationale as the existing 29.329/29.336/29.173/29.338 entries).
+The IETF Mobile-IP AVPs go into the foreign module(s) per the decision above.
+
+### Task 0 verification results (2026-05-29, ✅ all confirmed against defining specs)
+
+Flags column above uses the **defining-spec** AVP flag table (columns Must|May|Should-not|Must-not).
+For vendor-0 IETF AVPs `V` is *Must-not* ⇒ `vendorSpecific=false, mandatory=true`. For 3GPP
+AVPs `V` Must-set, vendor 10415. Notes / deviations:
+
+- **3GPP-Charging-Characteristics (13) is UTF8String**, not OctetString. TS 29.061 §16.4.7 Diameter
+  AVP table lists Value Type = UTF8String (the octet layout in §16.4.7's RADIUS-VSA sub-attribute
+  is a separate encoding). The design table above is corrected; the provider uses `String.class`.
+- **RAT-Type (1032) M-bit**: TS 29.212 §5.3.31 marks it V-only (M Must-not), but TS 29.272
+  Table 7.3.1/2 says M-bit **"Must set"** for S6a/S6d. RAT-Type is message-direct in ULR (HSS
+  *decodes*). We define it **M,V** to match the S6a/S6d interface requirement.
+- **MIP-Home-Agent-Host (348) is Grouped**. RFC 4004's §7 flag-table row says "DiamIdent", but the
+  §7.11 body and its ABNF (`{Destination-Realm}{Destination-Host}`) define it as Grouped; RFC 5447
+  and TS 29.272 §7.3.43 also treat it as a Grouped container. The table entry is a known erratum.
+- **Confidentiality-Key (625)/Integrity-Key (626)**: the Cx/Dx branch put these in its own `cxdx`
+  module (not `3gpp-common`). Per task 0 ("else add there") we add them to `3gpp-common`. ⚠ MERGE
+  COORDINATION: at merge the `cxdx` module must drop its local 625/626 and reuse `3gpp-common`, or
+  the Reflections AVP-registry scan throws "Duplicate AVP registration".
 
 ## Grouped-AVP nesting (in-scope subset, TS 29.272 §7.3)
 

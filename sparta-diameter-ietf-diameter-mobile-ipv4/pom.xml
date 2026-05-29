@@ -1,0 +1,28 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.sipgate</groupId>
+        <artifactId>sparta-diameter</artifactId>
+        <version>0.1.11-SNAPSHOT</version>
+    </parent>
+    <artifactId>sparta-diameter-ietf-diameter-mobile-ipv4</artifactId>
+    <name>sparta-diameter-ietf-diameter-mobile-ipv4</name>
+    <description>RFC 4004 — Diameter Mobile IPv4 Application (MIP-Home-Agent-Address/Host AVPs)</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.sipgate</groupId>
+            <artifactId>sparta-diameter-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
