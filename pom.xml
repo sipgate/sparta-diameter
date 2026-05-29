@@ -32,6 +32,7 @@
         <module>sparta-diameter-spec-extractor</module>
         <module>sparta-diameter-base</module>
         <module>sparta-diameter-ietf-drmp</module>
+        <module>sparta-diameter-ietf-radius-digest-authentication</module>
         <module>sparta-diameter-3gpp-common</module>
         <module>sparta-diameter-3gpp-s6c</module>
         <module>sparta-diameter-3gpp-sgdgdd</module>
