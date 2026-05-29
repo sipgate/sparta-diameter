@@ -2,16 +2,21 @@ package com.sipgate.sparta.diameter.base;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.spec.AvpDef;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.math.BigInteger;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -29,6 +34,10 @@ public abstract class AvpSpecTestBase {
 
     protected static Stream<Arguments> named(final Set<AvpDef> defs) {
         return defs.stream().map(d -> Arguments.of(Named.of(d.attributeName(), d)));
+    }
+
+    protected int exampleEnumValueFor(final AvpDef def) {
+        return 42;
     }
 
     @ParameterizedTest(name = "{0}")
@@ -52,6 +61,89 @@ public abstract class AvpSpecTestBase {
         }
     }
 
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("provideAvpDefs")
+    void it_roundtrips_all_avps(final AvpDef def) throws Throwable {
+        final String base = methodBase(def.attributeName());
+        final Class<?> single = tryLoad(mixinsPackage() + "." + singleMixinName(base));
+        final Class<?> multi = tryLoad(mixinsPackage() + "." + multiMixinName(base));
+        final Type<?> shape = shapeOf(def);
+        final boolean grouped = "Grouped".equals(def.valueType());
+
+        if (single != null) {
+            final Object container = newContainer(single);
+            final var name = getSingleName(base);
+            single.getMethod("set" + name, shape.setterParam()).invoke(container, shape.value());
+            final Object got = single.getMethod("get" + name).invoke(container);
+            if (grouped) {
+                assertThat(got).as(def.attributeName()).isNotNull();
+            } else {
+                assertThat(got).as(def.attributeName()).isEqualTo(shape.value());
+            }
+        }
+
+        if (multi != null) {
+            final Object container = newContainer(multi);
+            multi.getMethod("add" + base, shape.setterParam()).invoke(container, shape.value());
+            final List<?> list = (List<?>) multi.getMethod("get" + pluralize(base)).invoke(container);
+            assertThat(list).as(def.attributeName()).hasSize(1);
+            if (grouped) {
+                assertThat(list.get(0)).as(def.attributeName()).isNotNull();
+            } else {
+                assertThat(list.get(0)).as(def.attributeName()).isEqualTo(shape.value());
+            }
+        }
+    }
+
+    /**
+     * Proxy implementing {@code mixin} backed by an in-memory AVP list. Default methods run as-is;
+     * the four {@link AVPContainer} methods route to the list.
+     */
+    private static Object newContainer(final Class<?> mixin) {
+        final List<AVP> avps = new ArrayList<>();
+        final AVPContainer backing = new AVPContainer() {
+            @Override
+            public void addAVP(final AVP avp) {
+                avps.add(avp);
+            }
+
+            @Override
+            public void setAVP(final AVP avp) {
+                avps.removeIf(a -> a.isSameKey(avp));
+                avps.add(avp);
+            }
+
+            @Override
+            public AVP findAVP(final AVPKey key) {
+                for (final AVP a : avps) {
+                    if (a.isSameKey(key)) {
+                        return a;
+                    }
+                }
+
+                return null;
+            }
+
+            @Override
+            public List<AVP> findAVPs(final AVPKey key) {
+                final List<AVP> result = new ArrayList<>();
+                for (final AVP a : avps) {
+                    if (a.isSameKey(key)) {
+                        result.add(a);
+                    }
+                }
+
+                return result;
+            }
+        };
+        return Proxy.newProxyInstance(
+            mixin.getClassLoader(),
+            new Class<?>[]{mixin},
+            (proxy, method, args) -> method.isDefault()
+                ? InvocationHandler.invokeDefault(proxy, method, args)
+                : method.invoke(backing, args));
+    }
+
     /**
      * Asserts a single (flat) setter and getter exist on {@code methods}, name only.
      */
@@ -67,17 +159,21 @@ public abstract class AvpSpecTestBase {
      */
     protected static void verifySingleAccessors(final Method[] methods, final String base,
                                                 final Type<?> shape, final String label) {
-        // "Class" single accessors use the AVP suffix (setClassAVP / getClassAVP) to avoid the
-        // Object.getClass() collision; every other base maps directly to set<base> / get<base>.
-        final String nameSuffix = "Class".equals(base) ? "ClassAVP" : base;
-        assertThat(methods).as("%s missing set%s(%s)", label, nameSuffix, shape.setterParam.getSimpleName()).anyMatch(m ->
-            m.getName().equals("set" + nameSuffix)
+        final var name = getSingleName(base);
+        assertThat(methods).as("%s missing set%s(%s)", label, name, shape.setterParam.getSimpleName()).anyMatch(m ->
+            m.getName().equals("set" + name)
                 && m.getParameterCount() == 1
                 && m.getParameterTypes()[0] == shape.setterParam);
-        assertThat(methods).as("%s missing get%s(): %s", label, nameSuffix, shape.getterReturn.getSimpleName()).anyMatch(m ->
-            m.getName().equals("get" + nameSuffix)
+        assertThat(methods).as("%s missing get%s(): %s", label, name, shape.getterReturn.getSimpleName()).anyMatch(m ->
+            m.getName().equals("get" + name)
                 && m.getParameterCount() == 0
                 && shape.getterReturn.isAssignableFrom(m.getReturnType()));
+    }
+
+    private static String getSingleName(final String base) {
+        // "Class" single accessors use the AVP suffix (setClassAVP / getClassAVP) to avoid the
+        // Object.getClass() collision; every other base maps directly to set<base> / get<base>.
+        return "Class".equals(base) ? "ClassAVP" : base;
     }
 
     /**
@@ -122,7 +218,7 @@ public abstract class AvpSpecTestBase {
     protected record Type<S>(Class<S> setterParam, Class<?> getterReturn, S value) {
     }
 
-    protected static Type<?> shapeOf(final AvpDef def) {
+    private Type<?> shapeOf(final AvpDef def) {
         return switch (def.valueType()) {
             case "OctetString" -> new Type<>(byte[].class, byte[].class, new byte[]{'o', 'c', 't', 'e', 't', '-', 's', 't', 'r', 'i', 'n', 'g'});
             case "Integer32" -> new Type<>(int.class, int.class, -32);
@@ -132,11 +228,12 @@ public abstract class AvpSpecTestBase {
             case "Float32" -> new Type<>(float.class, float.class, 32f);
             case "Float64" -> new Type<>(double.class, double.class, 64d);
             case "Address" -> new Type<>(InetAddress.class, InetAddress.class, Inet4Address.getLoopbackAddress());
-            case "Time" -> new Type<>(Date.class, Date.class, new Date());
+            // must be seconds, without milliseconds, because diameter doesn't have millis
+            case "Time" -> new Type<>(Date.class, Date.class, Date.from(Instant.ofEpochSecond(1780090087)));
             case "UTF8String" -> new Type<>(String.class, String.class, "UTF-8");
             case "DiameterIdentity", "DiamIdent" -> new Type<>(String.class, String.class, "diameter-identity");
             case "DiameterURI", "DiamURI" -> new Type<>(String.class, String.class, "diameter-uri");
-            case "Enumerated" -> new Type<>(int.class, int.class, 42);
+            case "Enumerated" -> new Type<>(int.class, int.class, exampleEnumValueFor(def));
             case "Grouped" -> new Type<>(List.class, AVPContainer.class, List.<AVP>of());
             default -> throw new IllegalArgumentException("Unknown valueType: " + def.valueType());
         };

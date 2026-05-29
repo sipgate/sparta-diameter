@@ -1,5 +1,6 @@
 package com.sipgate.sparta.diameter.base;
 
+import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.spec.AvpDef;
 import com.sipgate.sparta.diameter.spec.AvpRfcTableParser;
 import org.junit.jupiter.params.provider.Arguments;
@@ -96,5 +97,13 @@ public class BaseAvpSpecTest extends AvpSpecTestBase {
     @Override
     protected String mixinsPackage() {
         return "com.sipgate.sparta.diameter.base.core.avp.mixins";
+    }
+
+    @Override
+    protected int exampleEnumValueFor(final AvpDef def) {
+        return switch (def.attributeName()) {
+            case "Auth-Session-State" -> DiameterConstants.AUTH_SESSION_STATE_MAINTAINED;
+            default -> super.exampleEnumValueFor(def);
+        };
     }
 }
