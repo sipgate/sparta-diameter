@@ -31,7 +31,11 @@
         <module>sparta-diameter-spec</module>
         <module>sparta-diameter-spec-extractor</module>
         <module>sparta-diameter-base</module>
+        <module>sparta-diameter-ietf-doic</module>
         <module>sparta-diameter-ietf-drmp</module>
+        <module>sparta-diameter-ietf-load</module>
+        <module>sparta-diameter-ietf-nas</module>
+        <module>sparta-diameter-etsi-e2</module>
         <module>sparta-diameter-3gpp-common</module>
         <module>sparta-diameter-3gpp-s6c</module>
         <module>sparta-diameter-3gpp-sgdgdd</module>
@@ -100,7 +104,27 @@
             </dependency>
             <dependency>
                 <groupId>com.sipgate</groupId>
+                <artifactId>sparta-diameter-ietf-doic</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sipgate</groupId>
                 <artifactId>sparta-diameter-ietf-drmp</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sipgate</groupId>
+                <artifactId>sparta-diameter-ietf-load</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sipgate</groupId>
+                <artifactId>sparta-diameter-ietf-nas</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sipgate</groupId>
+                <artifactId>sparta-diameter-etsi-e2</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

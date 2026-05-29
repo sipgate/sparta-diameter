@@ -66,6 +66,11 @@ public final class ExtractorFor3gpp {
             "https://www.3gpp.org/ftp/Specs/latest/Rel-19/29_series/29229-j10.zip",
             "sparta-diameter-3gpp-common/src/test/resources/cxdx-avps.json",
             VENDOR_ID_3GPP,
+            List.of("Table 6.3.0.1: Diameter Multimedia Application AVPs")),
+        new SpecSource(
+            "https://www.3gpp.org/ftp/Specs/latest/Rel-19/29_series/29229-j10.zip",
+            "sparta-diameter-3gpp-cxdx/src/test/resources/cxdx-avps.json",
+            VENDOR_ID_3GPP,
             List.of("Table 6.3.0.1: Diameter Multimedia Application AVPs"))
     );
 
