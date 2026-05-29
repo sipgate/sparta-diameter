@@ -34,6 +34,7 @@
         <module>sparta-diameter-ietf-drmp</module>
         <module>sparta-diameter-ietf-radius-digest-authentication</module>
         <module>sparta-diameter-ietf-diameter-nas</module>
+        <module>sparta-diameter-etsi-e2</module>
         <module>sparta-diameter-3gpp-common</module>
         <module>sparta-diameter-3gpp-s6c</module>
         <module>sparta-diameter-3gpp-sgdgdd</module>
