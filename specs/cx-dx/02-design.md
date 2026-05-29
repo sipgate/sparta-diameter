@@ -186,7 +186,14 @@ recursive decoder (`AVP.readFrom`) resolves them and the message round-trips los
 **no mixin**. This mirrors the existing precedent: SGd/Gdd defines `SM-Enumerated-Delivery-Failure-Cause`
 (3304, a child of the grouped `SM-Delivery-Failure-Cause`) in its provider with no mixin.
 
-Concretely, only these ~22 message-direct AVPs get a cxdx mixin: Public-Identity, Server-Name,
+A `Has<Name>AVP` mixin models a single-valued AVP (`{X}` / `[X]`); a `Has<Name>AVPs` mixin
+models a repeatable AVP (`*[X]` / `1*{X}`) — pick per the ABNF qualifier of each message (see
+Message composition). Four interface-specific AVPs are repeatable and so have a `…AVPs` (list)
+mixin: **Public-Identity** (SAR, RTR), **SCSCF-Restoration-Info** (SAA), **SIP-Auth-Data-Item**
+(MAA) and **Identity-with-Emergency-Registration** (RTA); Public-Identity and SIP-Auth-Data-Item
+*also* keep a single mixin for the messages where they are `{X}`/`[X]` (MAR/MAA resp. MAR/SAR).
+
+Concretely, these message-direct AVPs get a cxdx mixin: Public-Identity, Server-Name,
 User-Data, SIP-Number-Auth-Items, SIP-Auth-Data-Item, Server-Assignment-Type,
 Deregistration-Reason, Charging-Information, User-Data-Already-Available, Associated-Identities,
 Wildcarded-Public-Identity, Loose-Route-Indication, SCSCF-Restoration-Info,
@@ -206,14 +213,14 @@ Origin-Realm / Result-Code header AVPs come from the base command classes.
 
 - **SAR (301, REQ)** — `_3gppRequest`, `HasDrmpAVP`, `HasDestinationHostAVP`,
   `HasDestinationRealmAVP`, `HasUserNameAVP`, `HasSupportedFeaturesAVPs`,
-  `HasPublicIdentityAVP`, `HasWildcardedPublicIdentityAVP`, `HasServerNameAVP`,
+  `HasPublicIdentityAVPs` *(0..n)*, `HasWildcardedPublicIdentityAVP`, `HasServerNameAVP`,
   `HasServerAssignmentTypeAVP`, `HasUserDataAlreadyAvailableAVP`,
   `HasScscfRestorationInfoAVP`, `HasMultipleRegistrationIndicationAVP`,
   `HasSessionPriorityAVP`, `HasSarFlagsAVP`, `HasFailedPcscfAVP`,
   `HasProxyInfoAVPs`, `HasRouteRecordAVPs`
 - **SAA (301, ANS)** — `_3gppAnswer`, `HasDrmpAVP`, `HasUserNameAVP`, `HasUserDataAVP`,
   `HasChargingInformationAVP`, `HasAssociatedIdentitiesAVP`, `HasLooseRouteIndicationAVP`,
-  `HasScscfRestorationInfoAVP`, `HasAssociatedRegisteredIdentitiesAVP`, `HasServerNameAVP`,
+  `HasScscfRestorationInfoAVPs` *(0..n)*, `HasAssociatedRegisteredIdentitiesAVP`, `HasServerNameAVP`,
   `HasWildcardedPublicIdentityAVP`, `HasPriviledgedSenderIndicationAVP`,
   `HasAllowedWafWwsfIdentitiesAVP`, `HasRouteRecordAVPs`
 - **MAR (303, REQ)** — `_3gppRequest`, `HasDrmpAVP`, `HasDestinationRealmAVP`,
@@ -224,7 +231,7 @@ Origin-Realm / Result-Code header AVPs come from the base command classes.
   `HasSipNumberAuthItemsAVP`, `HasSipAuthDataItemAVPs` *(0..n)*, `HasRouteRecordAVPs`
 - **RTR (304, REQ)** — `_3gppRequest`, `HasDrmpAVP`, `HasDestinationRealmAVP`,
   `HasUserNameAVP`, `HasAssociatedIdentitiesAVP`, `HasSupportedFeaturesAVPs`,
-  `HasPublicIdentityAVP`, `HasDeregistrationReasonAVP`, `HasRtrFlagsAVP`,
+  `HasPublicIdentityAVPs` *(0..n)*, `HasDeregistrationReasonAVP`, `HasRtrFlagsAVP`,
   `HasProxyInfoAVPs`, `HasRouteRecordAVPs`
 - **RTA (304, ANS)** — `_3gppAnswer`, `HasDrmpAVP`, `HasAssociatedIdentitiesAVP`,
   `HasIdentityWithEmergencyRegistrationAVPs` *(0..n)*, `HasRouteRecordAVPs`

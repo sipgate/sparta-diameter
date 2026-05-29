@@ -924,12 +924,26 @@ Method names follow the AVP: e.g. `HasServerNameAVP` → `setServerName`/`getSer
 | `HasAllowedWafWwsfIdentitiesAVP` | `AVP_ALLOWED_WAF_WWSF_IDENTITIES` | `setAllowedWafWwsfIdentities` / `getAllowedWafWwsfIdentities` |
 | `HasFailedPcscfAVP` | `AVP_FAILED_PCSCF` | `setFailedPcscf` / `getFailedPcscf` |
 
-- [ ] **Step 3: Create the two repeatable-grouped mixins** — from the repeatable template:
+- [ ] **Step 3: Create the repeatable-grouped mixins** — from the repeatable template:
 
 | Mixin / file | AVP const | methods |
 |---|---|---|
 | `HasSipAuthDataItemAVPs` | `AVP_SIP_AUTH_DATA_ITEM` | `addSipAuthDataItem(List<AVP>)` / `getSipAuthDataItems()` |
 | `HasIdentityWithEmergencyRegistrationAVPs` | `AVP_IDENTITY_WITH_EMERGENCY_REGISTRATION` | `addIdentityWithEmergencyRegistration(List<AVP>)` / `getIdentityWithEmergencyRegistrations()` |
+| `HasScscfRestorationInfoAVPs` | `AVP_SCSCF_RESTORATION_INFO` | `addScscfRestorationInfo(List<AVP>)` / `getScscfRestorationInfos()` |
+
+- [ ] **Step 3b: Create the repeatable-leaf mixin** — model on base `HasRouteRecordAVPs`
+  (`add(String)` via `addAVP`, getter returning `List<String>`):
+
+| Mixin / file | AVP const | methods |
+|---|---|---|
+| `HasPublicIdentityAVPs` | `AVP_PUBLIC_IDENTITY` | `addPublicIdentity(String)` / `getPublicIdentities()` |
+
+> **Single vs list (per ABNF qualifier).** Some AVPs appear `{X}`/`[X]` in one message and `*[X]`
+> in another, so they get **both** a single and a list mixin: Public-Identity → single in MAR/MAA,
+> list (`HasPublicIdentityAVPs`) in SAR/RTR; SCSCF-Restoration-Info → single in SAR, list
+> (`HasScscfRestorationInfoAVPs`) in SAA; SIP-Auth-Data-Item → single in MAR, list in MAA. Verify
+> each AVP's qualifier in the command ABNF (`*` / `1*` prefix ⇒ list).
 
 - [ ] **Step 4: Verify compilation** — `mvn -q -pl sparta-diameter-3gpp-cxdx -am test-compile` → PASS.
 
@@ -943,6 +957,11 @@ git commit -m "feat(cxdx): add message-direct AVP mixins"
 ---
 
 ## Task 8: Messages SAR / SAA
+
+> **Amendment (post-review).** Per the ABNF, **SAR** carries `*[ Public-Identity ]` and **SAA**
+> carries `*[ SCSCF-Restoration-Info ]` — both repeatable. Use the list mixins in the code below:
+> SAR `extends … HasPublicIdentityAVPs …` (keep single `HasScscfRestorationInfoAVP` — SAR's is `[X]`);
+> SAA `extends … HasScscfRestorationInfoAVPs …`. See Task 7 Step 3/3b.
 
 **Files:**
 - Create: `.../cxdx/messages/ServerAssignmentRequest.java`
@@ -1161,6 +1180,10 @@ git commit -m "feat(cxdx): add MAR/MAA messages"
 ---
 
 ## Task 10: Messages RTR / RTA
+
+> **Amendment (post-review).** Per the ABNF, **RTR** carries `*[ Public-Identity ]` (repeatable).
+> Use `HasPublicIdentityAVPs` (not the single `HasPublicIdentityAVP`) in `RegistrationTerminationRequest`.
+> See Task 7 Step 3/3b.
 
 **Files:**
 - Create: `.../cxdx/messages/RegistrationTerminationAnswer.java`

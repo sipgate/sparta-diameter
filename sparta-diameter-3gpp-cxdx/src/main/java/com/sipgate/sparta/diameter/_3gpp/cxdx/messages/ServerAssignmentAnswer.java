@@ -8,7 +8,7 @@ import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasAssociatedRegisteredIden
 import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasChargingInformationAVP;
 import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasLooseRouteIndicationAVP;
 import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasPriviledgedSenderIndicationAVP;
-import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasScscfRestorationInfoAVP;
+import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasScscfRestorationInfoAVPs;
 import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasServerNameAVP;
 import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasUserDataAVP;
 import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasWildcardedPublicIdentityAVP;
@@ -24,7 +24,7 @@ import com.sipgate.sparta.diameter.ietf.drmp.mixins.HasDrmpAVP;
 public interface ServerAssignmentAnswer
         extends _3gppAnswer,
                 HasDrmpAVP, HasUserNameAVP, HasUserDataAVP, HasChargingInformationAVP,
-                HasAssociatedIdentitiesAVP, HasLooseRouteIndicationAVP, HasScscfRestorationInfoAVP,
+                HasAssociatedIdentitiesAVP, HasLooseRouteIndicationAVP, HasScscfRestorationInfoAVPs,
                 HasAssociatedRegisteredIdentitiesAVP, HasServerNameAVP, HasWildcardedPublicIdentityAVP,
                 HasPriviledgedSenderIndicationAVP, HasAllowedWafWwsfIdentitiesAVP,
                 HasRouteRecordAVPs {

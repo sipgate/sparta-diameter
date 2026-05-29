@@ -5,7 +5,7 @@ import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSupportedFeaturesAVPs;
 import com.sipgate.sparta.diameter._3gpp.cxdx.CxDxConstants;
 import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasAssociatedIdentitiesAVP;
 import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasDeregistrationReasonAVP;
-import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasPublicIdentityAVP;
+import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasPublicIdentityAVPs;
 import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasRtrFlagsAVP;
 import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
@@ -21,7 +21,7 @@ import com.sipgate.sparta.diameter.ietf.drmp.mixins.HasDrmpAVP;
 public interface RegistrationTerminationRequest
         extends _3gppRequest,
                 HasDrmpAVP, HasDestinationRealmAVP, HasUserNameAVP, HasAssociatedIdentitiesAVP,
-                HasSupportedFeaturesAVPs, HasPublicIdentityAVP, HasDeregistrationReasonAVP, HasRtrFlagsAVP,
+                HasSupportedFeaturesAVPs, HasPublicIdentityAVPs, HasDeregistrationReasonAVP, HasRtrFlagsAVP,
                 HasProxyInfoAVPs, HasRouteRecordAVPs {
 
     final class In extends IncomingRequest<RegistrationTerminationAnswer.Out> implements RegistrationTerminationRequest {

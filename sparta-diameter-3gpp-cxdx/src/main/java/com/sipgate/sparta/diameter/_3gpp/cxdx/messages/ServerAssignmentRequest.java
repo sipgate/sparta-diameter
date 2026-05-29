@@ -5,7 +5,7 @@ import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSupportedFeaturesAVPs;
 import com.sipgate.sparta.diameter._3gpp.cxdx.CxDxConstants;
 import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasFailedPcscfAVP;
 import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasMultipleRegistrationIndicationAVP;
-import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasPublicIdentityAVP;
+import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasPublicIdentityAVPs;
 import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasSarFlagsAVP;
 import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasScscfRestorationInfoAVP;
 import com.sipgate.sparta.diameter._3gpp.cxdx.mixins.HasServerAssignmentTypeAVP;
@@ -28,7 +28,7 @@ import com.sipgate.sparta.diameter.ietf.drmp.mixins.HasDrmpAVP;
 public interface ServerAssignmentRequest
         extends _3gppRequest,
                 HasDrmpAVP, HasDestinationHostAVP, HasDestinationRealmAVP, HasUserNameAVP,
-                HasSupportedFeaturesAVPs, HasPublicIdentityAVP, HasWildcardedPublicIdentityAVP,
+                HasSupportedFeaturesAVPs, HasPublicIdentityAVPs, HasWildcardedPublicIdentityAVP,
                 HasServerNameAVP, HasServerAssignmentTypeAVP, HasUserDataAlreadyAvailableAVP,
                 HasScscfRestorationInfoAVP, HasMultipleRegistrationIndicationAVP, HasSessionPriorityAVP,
                 HasSarFlagsAVP, HasFailedPcscfAVP,
