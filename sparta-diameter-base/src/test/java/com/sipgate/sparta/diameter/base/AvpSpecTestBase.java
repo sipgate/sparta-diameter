@@ -4,6 +4,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.spec.AvpDef;
+import com.sipgate.sparta.diameter.spec.AvpFlagRule;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -44,8 +45,8 @@ public abstract class AvpSpecTestBase {
     @MethodSource("provideAvpDefs")
     void it_defines_all_avp_accessors(final AvpDef def) {
         final String base = methodBase(def.attributeName());
-        final Class<?> single = tryLoad(mixinsPackage() + "." + singleMixinName(base));
-        final Class<?> multi = tryLoad(mixinsPackage() + "." + multiMixinName(base));
+        final Class<AVPContainer> single = tryLoad(mixinsPackage() + "." + singleMixinName(base));
+        final Class<AVPContainer> multi = tryLoad(mixinsPackage() + "." + multiMixinName(base));
 
         assertThat(single != null || multi != null)
             .as("%s: neither %s nor %s found in %s",
@@ -65,15 +66,16 @@ public abstract class AvpSpecTestBase {
     @MethodSource("provideAvpDefs")
     void it_roundtrips_all_avps(final AvpDef def) throws Throwable {
         final String base = methodBase(def.attributeName());
-        final Class<?> single = tryLoad(mixinsPackage() + "." + singleMixinName(base));
-        final Class<?> multi = tryLoad(mixinsPackage() + "." + multiMixinName(base));
+        final Class<AVPContainer> single = tryLoad(mixinsPackage() + "." + singleMixinName(base));
+        final Class<AVPContainer> multi = tryLoad(mixinsPackage() + "." + multiMixinName(base));
         final Type<?> shape = shapeOf(def);
         final boolean grouped = "Grouped".equals(def.valueType());
 
         if (single != null) {
-            final Object container = newContainer(single);
+            final AVPContainer container = newContainer(single);
             final var name = getSingleName(base);
             single.getMethod("set" + name, shape.setterParam()).invoke(container, shape.value());
+            assertStoredAvp(container, def);
             final Object got = single.getMethod("get" + name).invoke(container);
             if (grouped) {
                 assertThat(got).as(def.attributeName()).isNotNull();
@@ -83,8 +85,9 @@ public abstract class AvpSpecTestBase {
         }
 
         if (multi != null) {
-            final Object container = newContainer(multi);
+            final AVPContainer container = newContainer(multi);
             multi.getMethod("add" + base, shape.setterParam()).invoke(container, shape.value());
+            assertStoredAvp(container, def);
             final List<?> list = (List<?>) multi.getMethod("get" + pluralize(base)).invoke(container);
             assertThat(list).as(def.attributeName()).hasSize(1);
             if (grouped) {
@@ -95,11 +98,29 @@ public abstract class AvpSpecTestBase {
         }
     }
 
+    private static void assertStoredAvp(final AVPContainer container, final AvpDef def) {
+        // TODO: check if code and vendor id should be unsigned int (java long) or signed int (java int)
+        final var avps = container.findAVPs(new AVPKey((int) def.avpCode(), (int) def.vendorId()));
+        assertThat(avps).as("%s no AVP stored after setter", def.attributeName()).hasSize(1);
+        final AVP stored = avps.get(0);
+        assertThat(stored.getCode()).as("%s code", def.attributeName()).isEqualTo((int) def.avpCode());
+        assertFlag(stored.isMandatory(), def.mandatoryBit(), def.attributeName(), "M");
+        assertFlag(stored.isVendorSpecific(), def.vendorSpecificBit(), def.attributeName(), "V");
+    }
+
+    private static void assertFlag(final boolean actual, final AvpFlagRule rule, final String avpName, final String bitName) {
+        switch (rule) {
+            case MUST -> assertThat(actual).as("%s %s bit must be set", avpName, bitName).isTrue();
+            case MUST_NOT -> assertThat(actual).as("%s %s bit must not be set", avpName, bitName).isFalse();
+            case MAY, SHOULD_NOT -> { /* advisory — no assertion */ }
+        }
+    }
+
     /**
      * Proxy implementing {@code mixin} backed by an in-memory AVP list. Default methods run as-is;
      * the four {@link AVPContainer} methods route to the list.
      */
-    private static Object newContainer(final Class<?> mixin) {
+    private static AVPContainer newContainer(final Class<AVPContainer> mixin) {
         final List<AVP> avps = new ArrayList<>();
         final AVPContainer backing = new AVPContainer() {
             @Override
@@ -136,7 +157,7 @@ public abstract class AvpSpecTestBase {
                 return result;
             }
         };
-        return Proxy.newProxyInstance(
+        return (AVPContainer) Proxy.newProxyInstance(
             mixin.getClassLoader(),
             new Class<?>[]{mixin},
             (proxy, method, args) -> method.isDefault()
@@ -271,9 +292,9 @@ public abstract class AvpSpecTestBase {
         return base.endsWith("AVP") ? "Has" + base + "s" : "Has" + base + "AVPs";
     }
 
-    private static Class<?> tryLoad(final String fqcn) {
+    private static Class<AVPContainer> tryLoad(final String fqcn) {
         try {
-            return Class.forName(fqcn);
+            return (Class<AVPContainer>) Class.forName(fqcn);
         } catch (final ClassNotFoundException e) {
             return null;
         }

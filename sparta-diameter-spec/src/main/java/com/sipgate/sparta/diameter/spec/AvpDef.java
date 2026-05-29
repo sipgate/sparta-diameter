@@ -1,7 +1,7 @@
 package com.sipgate.sparta.diameter.spec;
 
 public record AvpDef(
-    long applicationId,
+    long vendorId,
     long avpCode,
     String attributeName,
     String valueType,
