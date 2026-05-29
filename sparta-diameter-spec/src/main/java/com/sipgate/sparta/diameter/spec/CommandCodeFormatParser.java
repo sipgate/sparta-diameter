@@ -43,7 +43,7 @@ public final class CommandCodeFormatParser {
                 body.fixed(), body.required(), body.optional());
     }
 
-    private record Header(long commandId, boolean isRequest, boolean isProxiable, boolean isError, long applicationId) {
+    private record Header(int commandId, boolean isRequest, boolean isProxiable, boolean isError, long applicationId) {
     }
 
     private static Header parseHeader(final TokenStream tokens) {
@@ -60,7 +60,7 @@ public final class CommandCodeFormatParser {
                     "Expected 'Diameter Header' or 'Diameter-Header' at position " + first.position() + ", got '" + first.text() + "'");
         }
         tokens.expect(Type.COLON);
-        final long commandCode = Long.parseLong(tokens.expect(Type.NUMBER).text());
+        final int commandCode = Integer.parseInt(tokens.expect(Type.NUMBER).text());
 
         boolean isRequest = false;
         boolean isProxiable = false;

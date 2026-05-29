@@ -10,7 +10,7 @@ import java.util.List;
  */
 public record CommandDef(
         long applicationId,
-        long commandId,
+        int commandId,
         String commandName,
         boolean isRequest,
         boolean isProxiable,
