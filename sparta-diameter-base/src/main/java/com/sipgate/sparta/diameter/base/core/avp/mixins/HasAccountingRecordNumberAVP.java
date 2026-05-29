@@ -31,7 +31,7 @@ public interface HasAccountingRecordNumberAVP extends AVPContainer {
     default long getAccountingRecordNumber() {
         final AVP accountingRecordNumberAVP = findAVP(new AVPKey(DiameterConstants.AVP_ACCOUNTING_RECORD_NUMBER, 0));
         if (accountingRecordNumberAVP != null) {
-            return accountingRecordNumberAVP.getDataAsLong();
+            return accountingRecordNumberAVP.getDataAsUnsignedInt();
         }
         return -1;
     }

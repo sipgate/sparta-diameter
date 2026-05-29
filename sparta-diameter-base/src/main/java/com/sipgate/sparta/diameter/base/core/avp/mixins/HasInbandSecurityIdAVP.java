@@ -31,7 +31,7 @@ public interface HasInbandSecurityIdAVP extends AVPContainer {
     default long getInbandSecurityId() {
         final AVP inbandSecurityIdAVP = findAVP(new AVPKey(DiameterConstants.AVP_INBAND_SECURITY_ID, 0));
         if (inbandSecurityIdAVP != null) {
-            return inbandSecurityIdAVP.getDataAsLong();
+            return inbandSecurityIdAVP.getDataAsUnsignedInt();
         }
         return -1;
     }

@@ -31,7 +31,7 @@ public interface HasMultiRoundTimeOutAVP extends AVPContainer {
     default long getMultiRoundTimeOut() {
         final AVP multiRoundTimeOutAVP = findAVP(new AVPKey(DiameterConstants.AVP_MULTI_ROUND_TIME_OUT, 0));
         if (multiRoundTimeOutAVP != null) {
-            return multiRoundTimeOutAVP.getDataAsLong();
+            return multiRoundTimeOutAVP.getDataAsUnsignedInt();
         }
         return -1;
     }

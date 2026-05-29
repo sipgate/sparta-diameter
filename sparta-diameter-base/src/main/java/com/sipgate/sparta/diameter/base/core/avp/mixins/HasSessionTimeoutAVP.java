@@ -31,7 +31,7 @@ public interface HasSessionTimeoutAVP extends AVPContainer {
     default long getSessionTimeout() {
         final AVP sessionTimeoutAVP = findAVP(new AVPKey(DiameterConstants.AVP_SESSION_TIMEOUT, 0));
         if (sessionTimeoutAVP != null) {
-            return sessionTimeoutAVP.getDataAsLong();
+            return sessionTimeoutAVP.getDataAsUnsignedInt();
         }
         return -1;
     }

@@ -31,7 +31,7 @@ public interface HasAcctApplicationIdAVP extends AVPContainer {
     default long getAcctApplicationId() {
         final AVP acctApplicationIdAVP = findAVP(new AVPKey(DiameterConstants.AVP_ACCT_APPLICATION_ID, 0));
         if (acctApplicationIdAVP != null) {
-            return acctApplicationIdAVP.getDataAsLong();
+            return acctApplicationIdAVP.getDataAsUnsignedInt();
         }
         return -1;
     }

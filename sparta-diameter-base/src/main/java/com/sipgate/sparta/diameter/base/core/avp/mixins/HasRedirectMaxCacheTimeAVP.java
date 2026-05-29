@@ -31,7 +31,7 @@ public interface HasRedirectMaxCacheTimeAVP extends AVPContainer {
     default long getRedirectMaxCacheTime() {
         final AVP redirectMaxCacheTimeAVP = findAVP(new AVPKey(DiameterConstants.AVP_REDIRECT_MAX_CACHE_TIME, 0));
         if (redirectMaxCacheTimeAVP != null) {
-            return redirectMaxCacheTimeAVP.getDataAsLong();
+            return redirectMaxCacheTimeAVP.getDataAsUnsignedInt();
         }
         return -1;
     }

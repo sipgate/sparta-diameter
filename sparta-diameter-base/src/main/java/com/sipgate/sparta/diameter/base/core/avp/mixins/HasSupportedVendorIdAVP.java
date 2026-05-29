@@ -31,7 +31,7 @@ public interface HasSupportedVendorIdAVP extends AVPContainer {
     default long getSupportedVendorId() {
         final AVP supportedVendorIdAVP = findAVP(new AVPKey(DiameterConstants.AVP_SUPPORTED_VENDOR_ID, 0));
         if (supportedVendorIdAVP != null) {
-            return supportedVendorIdAVP.getDataAsLong();
+            return supportedVendorIdAVP.getDataAsUnsignedInt();
         }
         return -1;
     }

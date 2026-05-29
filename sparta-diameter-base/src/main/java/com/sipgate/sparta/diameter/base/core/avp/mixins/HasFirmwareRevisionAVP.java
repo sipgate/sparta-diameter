@@ -31,7 +31,7 @@ public interface HasFirmwareRevisionAVP extends AVPContainer {
     default long getFirmwareRevision() {
         final AVP firmwareRevisionAVP = findAVP(new AVPKey(DiameterConstants.AVP_FIRMWARE_REVISION, 0));
         if (firmwareRevisionAVP != null) {
-            return firmwareRevisionAVP.getDataAsLong();
+            return firmwareRevisionAVP.getDataAsUnsignedInt();
         }
         return -1;
     }

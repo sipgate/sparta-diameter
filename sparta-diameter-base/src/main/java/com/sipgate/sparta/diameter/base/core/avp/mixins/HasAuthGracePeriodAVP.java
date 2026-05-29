@@ -31,7 +31,7 @@ public interface HasAuthGracePeriodAVP extends AVPContainer {
     default long getAuthGracePeriod() {
         final AVP authGracePeriodAVP = findAVP(new AVPKey(DiameterConstants.AVP_AUTH_GRACE_PERIOD, 0));
         if (authGracePeriodAVP != null) {
-            return authGracePeriodAVP.getDataAsLong();
+            return authGracePeriodAVP.getDataAsUnsignedInt();
         }
         return -1;
     }

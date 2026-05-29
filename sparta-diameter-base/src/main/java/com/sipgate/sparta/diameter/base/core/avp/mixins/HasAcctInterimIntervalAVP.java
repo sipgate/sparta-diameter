@@ -31,7 +31,7 @@ public interface HasAcctInterimIntervalAVP extends AVPContainer {
     default long getAcctInterimInterval() {
         final AVP acctInterimIntervalAVP = findAVP(new AVPKey(DiameterConstants.AVP_ACCT_INTERIM_INTERVAL, 0));
         if (acctInterimIntervalAVP != null) {
-            return acctInterimIntervalAVP.getDataAsLong();
+            return acctInterimIntervalAVP.getDataAsUnsignedInt();
         }
         return -1;
     }

@@ -31,7 +31,7 @@ public interface HasVendorIdAVP extends AVPContainer {
     default long getVendorId() {
         final AVP vendorIdAVP = findAVP(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0));
         if (vendorIdAVP != null) {
-            return vendorIdAVP.getDataAsLong();
+            return vendorIdAVP.getDataAsUnsignedInt();
         }
         return -1;
     }

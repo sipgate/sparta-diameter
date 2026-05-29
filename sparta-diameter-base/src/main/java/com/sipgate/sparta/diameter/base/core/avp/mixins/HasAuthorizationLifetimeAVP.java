@@ -31,7 +31,7 @@ public interface HasAuthorizationLifetimeAVP extends AVPContainer {
     default long getAuthorizationLifetime() {
         final AVP authorizationLifetimeAVP = findAVP(new AVPKey(DiameterConstants.AVP_AUTHORIZATION_LIFETIME, 0));
         if (authorizationLifetimeAVP != null) {
-            return authorizationLifetimeAVP.getDataAsLong();
+            return authorizationLifetimeAVP.getDataAsUnsignedInt();
         }
         return -1;
     }

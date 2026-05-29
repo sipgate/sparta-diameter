@@ -31,7 +31,7 @@ public interface HasSessionBindingAVP extends AVPContainer {
     default long getSessionBinding() {
         final AVP sessionBindingAVP = findAVP(new AVPKey(DiameterConstants.AVP_SESSION_BINDING, 0));
         if (sessionBindingAVP != null) {
-            return sessionBindingAVP.getDataAsLong();
+            return sessionBindingAVP.getDataAsUnsignedInt();
         }
         return -1;
     }
