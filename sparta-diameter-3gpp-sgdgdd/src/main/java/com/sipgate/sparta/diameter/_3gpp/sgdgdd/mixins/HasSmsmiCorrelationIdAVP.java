@@ -15,13 +15,13 @@ import java.util.List;
  * Grouped — used in the context of MSISDN-less SMS delivery in IMS. V flag only.
  * </p>
  */
-public interface HasSmsMiCorrelationIdAVP extends AVPContainer {
+public interface HasSmsmiCorrelationIdAVP extends AVPContainer {
 
-    default void setSmsMiCorrelationId(final List<AVP> avps) {
+    default void setSmsmiCorrelationId(final List<AVP> avps) {
         setAVP(AVP.create(new AVPKey(SgdGddConstants.AVP_SMSMI_CORRELATION_ID, _3gppConstants.VENDOR_ID_3GPP), avps));
     }
 
-    default AVPContainer getSmsMiCorrelationId() {
+    default AVPContainer getSmsmiCorrelationId() {
         final var avp = findAVP(new AVPKey(SgdGddConstants.AVP_SMSMI_CORRELATION_ID, _3gppConstants.VENDOR_ID_3GPP));
         return avp instanceof final GroupedAVP grouped ? grouped : null;
     }

@@ -11,20 +11,15 @@ import com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins.HasSmDeliveryStartTimeAVP
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins.HasSmDeliveryTimerAVP;
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins.HasSmRpUiAVP;
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins.HasSmsGmscAddressAVP;
-import com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins.HasSmsMiCorrelationIdAVP;
+import com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins.HasSmsmiCorrelationIdAVP;
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.mixins.HasTfrFlagsAVP;
 import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.core.OutgoingRequest;
-import com.sipgate.sparta.diameter.base.core.avp.mixins.HasAuthSessionStateAVP;
-import com.sipgate.sparta.diameter.base.core.avp.mixins.HasDestinationHostAVP;
-import com.sipgate.sparta.diameter.base.core.avp.mixins.HasDestinationRealmAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasProxyInfoAVPs;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasRouteRecordAVPs;
-import com.sipgate.sparta.diameter.base.core.avp.mixins.HasSessionIdAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasUserNameAVP;
-import com.sipgate.sparta.diameter.base.core.avp.mixins.HasVendorSpecificApplicationIdAVP;
 import com.sipgate.sparta.diameter.ietf.drmp.mixins.HasDrmpAVP;
 
 /**
@@ -34,7 +29,8 @@ public interface MtForwardShortMessageRequest
         extends _3gppRequest,
                 HasDrmpAVP,
                 HasUserNameAVP,
-                HasSmsMiCorrelationIdAVP,
+                HasSupportedFeaturesAVPs,
+                HasSmsmiCorrelationIdAVP,
                 HasScAddressAVP, HasSmRpUiAVP,
                 HasMmeNumberForMtSmsAVP, HasSgsnNumberAVP,
                 HasTfrFlagsAVP, HasSmDeliveryTimerAVP, HasSmDeliveryStartTimeAVP,
