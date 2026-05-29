@@ -28,6 +28,7 @@
   </scm>
 
     <modules>
+        <module>sparta-diameter-spec</module>
         <module>sparta-diameter-base</module>
         <module>sparta-diameter-ietf-drmp</module>
         <module>sparta-diameter-3gpp-common</module>
@@ -78,6 +79,11 @@
                 <artifactId>awaitility</artifactId>
                 <version>4.3.0</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.sipgate</groupId>
+                <artifactId>sparta-diameter-spec</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.sipgate</groupId>
