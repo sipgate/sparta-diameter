@@ -68,8 +68,14 @@ Out of Scope (eigene Story/Spec, kein hartes Kriterium laut AWBD-585): UAR/UAA, 
       encodiert → decodiert werden kann (Round-Trip).
 - [ ] Keine AVP-Duplikate: gemeinsame AVPs werden aus `base`/`drmp`/`3gpp-common` referenziert.
 - [ ] `createAnswer` setzt `Auth-Session-State = NO_STATE_MAINTAINED` (TS 29.229 §5.3).
-- [ ] Tests (AssertJ, `it_<behavior>`, GIVEN/WHEN/THEN) für Provider, Factory und je
-      Command-Paar mindestens ein Encode→Decode-Round-Trip.
+- [ ] Tests (AssertJ, `it_<behavior>`, GIVEN/WHEN/THEN) für Provider, Factory und ein
+      modulübergreifender AVP-Level Encode→Decode-Round-Trip, der die Registrierung aller
+      verschachtelten AVPs über alle vier Module hinweg beweist.
+      *(Ein Message-Wire-Round-Trip pro Command-Paar ist aus dem cxdx-Testpaket nicht möglich,
+      da `Command.writeTo` package-private zu `base.core` ist; das vollständige Message-Encoding
+      wird durch die Transport-Schicht abgedeckt. Der AVP-Level-Round-Trip über `AVP.writeTo`/
+      `AVP.readFrom` prüft denselben rekursiven Grouped-Encode/Decode-Pfad und ist der
+      kritische Registrierungs-Nachweis.)*
 
 ## Out of Scope (begründet)
 

@@ -664,13 +664,13 @@ class CxDxAVPProviderTest {
     }
 
     @Test
-    void it_defines_all_51_cxdx_avps_as_3gpp_vendor() {
+    void it_defines_all_53_cxdx_avps_as_3gpp_vendor() {
         // GIVEN the Cx/Dx provider
         // WHEN definitions are collected
         final var defs = provider.getDefinitions();
 
-        // THEN there are 51 definitions, all vendor 3GPP
-        assertThat(defs).hasSize(51);
+        // THEN there are 53 definitions, all vendor 3GPP
+        assertThat(defs).hasSize(53);
         assertThat(defs).allSatisfy(def -> {
             assertThat(def.vendorSpecific()).isTrue();
             assertThat(def.vendorId()).isEqualTo(_3gppConstants.VENDOR_ID_3GPP);
@@ -788,7 +788,7 @@ public final class CxDxAVPProvider implements AVPProvider {
 }
 ```
 
-- [ ] **Step 4: Run, verify it passes** — `mvn -q -pl sparta-diameter-3gpp-cxdx -am test` → PASS (both tests green; count is 51).
+- [ ] **Step 4: Run, verify it passes** — `mvn -q -pl sparta-diameter-3gpp-cxdx -am test` → PASS (both tests green; count is 53).
 
 - [ ] **Step 5: Commit**
 
