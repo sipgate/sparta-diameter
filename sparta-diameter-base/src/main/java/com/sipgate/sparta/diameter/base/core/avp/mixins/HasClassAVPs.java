@@ -19,11 +19,11 @@ import java.util.List;
  */
 public interface HasClassAVPs extends AVPContainer {
 
-    default void addClassAVP(final byte[] classValue) {
+    default void addClass(final byte[] classValue) {
         addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_CLASS, 0), classValue));
     }
 
-    default List<byte[]> getClassAVPs() {
+    default List<byte[]> getClasses() {
         final List<byte[]> result = new ArrayList<>();
         for (final AVP avp : findAVPs(new AVPKey(DiameterConstants.AVP_CLASS, 0))) {
             result.add(avp.getData());
@@ -31,14 +31,14 @@ public interface HasClassAVPs extends AVPContainer {
         return result;
     }
 
-    default byte[] getFirstClassAVP() {
-        final List<byte[]> all = getClassAVPs();
+    default byte[] getFirstClass() {
+        final List<byte[]> all = getClasses();
         return all.isEmpty() ? null : all.get(0);
     }
 
-    default void addAllClassAVPs(final Collection<byte[]> classValues) {
+    default void addAllClasses(final Collection<byte[]> classValues) {
         for (final byte[] value : classValues) {
-            addClassAVP(value);
+            addClass(value);
         }
     }
 }

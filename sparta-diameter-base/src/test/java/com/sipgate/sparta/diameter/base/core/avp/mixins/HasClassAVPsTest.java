@@ -17,13 +17,13 @@ class HasClassAVPsTest {
         final var v2 = new byte[]{4, 5, 6};
 
         // WHEN
-        str.addClassAVP(v1);
-        str.addClassAVP(v2);
+        str.addClass(v1);
+        str.addClass(v2);
 
         // THEN
-        assertThat(str.getClassAVPs()).hasSize(2);
-        assertThat(str.getClassAVPs().get(0)).isEqualTo(v1);
-        assertThat(str.getClassAVPs().get(1)).isEqualTo(v2);
+        assertThat(str.getClasses()).hasSize(2);
+        assertThat(str.getClasses().get(0)).isEqualTo(v1);
+        assertThat(str.getClasses().get(1)).isEqualTo(v2);
     }
 
     @Test
@@ -32,7 +32,7 @@ class HasClassAVPsTest {
         final var str = new SessionTerminationRequest.Out();
 
         // WHEN / THEN
-        assertThat(str.getClassAVPs()).isEmpty();
+        assertThat(str.getClasses()).isEmpty();
     }
 
     @Test
@@ -43,11 +43,11 @@ class HasClassAVPsTest {
         final var v2 = new byte[]{0xB};
 
         // WHEN
-        str.addClassAVP(v1);
-        str.addClassAVP(v2);
+        str.addClass(v1);
+        str.addClass(v2);
 
         // THEN
-        assertThat(str.getFirstClassAVP()).isEqualTo(v1);
+        assertThat(str.getFirstClass()).isEqualTo(v1);
     }
 
     @Test
@@ -56,7 +56,7 @@ class HasClassAVPsTest {
         final var str = new SessionTerminationRequest.Out();
 
         // WHEN / THEN
-        assertThat(str.getFirstClassAVP()).isNull();
+        assertThat(str.getFirstClass()).isNull();
     }
 
     @Test
@@ -67,9 +67,9 @@ class HasClassAVPsTest {
         final var v2 = new byte[]{2};
 
         // WHEN
-        str.addAllClassAVPs(List.of(v1, v2));
+        str.addAllClasses(List.of(v1, v2));
 
         // THEN
-        assertThat(str.getClassAVPs()).hasSize(2);
+        assertThat(str.getClasses()).hasSize(2);
     }
 }
