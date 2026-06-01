@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Reusable JUnit 5 test class that verifies a module's AVP mixin accessors against an RFC AVP table.
@@ -85,6 +86,11 @@ public abstract class AvpSpecTestBase {
         final String base = methodBase(def.attributeName());
         final Class<AVPContainer> single = tryLoad(mixinsPackage() + "." + singleMixinName(base));
         final Class<AVPContainer> multi = tryLoad(mixinsPackage() + "." + multiMixinName(base));
+        if (single == null && multi == null) {
+            fail("at least one kind of mixin must exist");
+            return;
+        }
+
         final Type<?> shape = shapeOf(def);
         final boolean grouped = "Grouped".equals(def.valueType());
 
