@@ -1,0 +1,105 @@
+[ {
+  "vendorId" : 10415,
+  "avpCode" : 3100,
+  "attributeName" : "IP-SM-GW-Number",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3101,
+  "attributeName" : "IP-SM-GW-Name",
+  "valueType" : "DiameterIdentity",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3102,
+  "attributeName" : "User-Identifier",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3103,
+  "attributeName" : "Service-ID",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3104,
+  "attributeName" : "SCS-Identity",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3105,
+  "attributeName" : "Service-Parameters",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3106,
+  "attributeName" : "T4-Parameters",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3107,
+  "attributeName" : "Service-Data",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3108,
+  "attributeName" : "T4-Data",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3109,
+  "attributeName" : "HSS-Cause",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3110,
+  "attributeName" : "SIR-Flags",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3111,
+  "attributeName" : "External-Identifier",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3112,
+  "attributeName" : "IP-SM-GW-Realm",
+  "valueType" : "DiameterIdentity",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+} ]

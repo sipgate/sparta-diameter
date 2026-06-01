@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Named;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.reflections.Reflections;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -23,11 +24,8 @@ import java.math.BigInteger;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,8 +37,21 @@ public abstract class AvpSpecTestBase {
 
     protected abstract String mixinsPackage();
 
-    protected static Stream<Arguments> named(final Set<AvpDef> defs) {
-        return defs.stream().map(d -> Arguments.of(Named.of(d.attributeName(), d)));
+    protected static Stream<Arguments> named(final Stream<AvpDef> defs) {
+        return defs.map(d -> Arguments.of(Named.of(d.attributeName(), d)));
+    }
+
+    protected static Stream<AvpDef> getImplementedAvpDefs(final String mixinsPackage, final Set<AvpDef> avpDefs) {
+        final var interfaces = new Reflections(mixinsPackage).getSubTypesOf(AVPContainer.class);
+
+        final var implementedMixins = interfaces.stream()
+            .map(Class::getSimpleName)
+            .map(n -> n.replaceFirst("^Has(.*)AVP", "$1"))
+            .collect(Collectors.toSet());
+
+        // We only want to see the AVPs that we have implemented. The Commands tests verify that all required AVPs
+        // have been implemented.
+        return avpDefs.stream().filter(avpDef -> implementedMixins.contains(methodBase(avpDef.attributeName())));
     }
 
     protected int exampleEnumValueFor(final AvpDef def) {
@@ -110,7 +121,8 @@ public abstract class AvpSpecTestBase {
             if (in == null) {
                 throw new IllegalStateException(resourceName + " not found on the test classpath");
             }
-            return mapper.readValue(in, new TypeReference<Set<AvpDef>>() {});
+            return mapper.readValue(in, new TypeReference<Set<AvpDef>>() {
+            });
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -200,12 +212,12 @@ public abstract class AvpSpecTestBase {
         final var name = getSingleName(base);
         assertThat(methods).as("%s missing set%s(%s)", label, name, shape.setterParam.getSimpleName()).anyMatch(m ->
             m.getName().equals("set" + name)
-                && m.getParameterCount() == 1
-                && m.getParameterTypes()[0] == shape.setterParam);
+            && m.getParameterCount() == 1
+            && m.getParameterTypes()[0] == shape.setterParam);
         assertThat(methods).as("%s missing get%s(): %s", label, name, shape.getterReturn.getSimpleName()).anyMatch(m ->
             m.getName().equals("get" + name)
-                && m.getParameterCount() == 0
-                && shape.getterReturn.isAssignableFrom(m.getReturnType()));
+            && m.getParameterCount() == 0
+            && shape.getterReturn.isAssignableFrom(m.getReturnType()));
     }
 
     private static String getSingleName(final String base) {
@@ -221,12 +233,12 @@ public abstract class AvpSpecTestBase {
         final String plural = pluralize(base);
         assertThat(methods).as("%s missing list getter get%s returning List", label, plural).anyMatch(m ->
             m.getName().equals("get" + plural)
-                && m.getParameterCount() == 0
-                && List.class.isAssignableFrom(m.getReturnType()));
+            && m.getParameterCount() == 0
+            && List.class.isAssignableFrom(m.getReturnType()));
         assertThat(methods).as("%s missing bulk setter addAll%s accepting Collection", label, plural).anyMatch(m ->
             m.getName().equals("addAll" + plural)
-                && m.getParameterCount() == 1
-                && Collection.class.isAssignableFrom(m.getParameterTypes()[0]));
+            && m.getParameterCount() == 1
+            && Collection.class.isAssignableFrom(m.getParameterTypes()[0]));
     }
 
     /**
@@ -237,16 +249,16 @@ public abstract class AvpSpecTestBase {
         final String plural = pluralize(base);
         assertThat(methods).as("%s missing add%s(%s)", label, base, shape.setterParam.getSimpleName()).anyMatch(m ->
             m.getName().equals("add" + base)
-                && m.getParameterCount() == 1
-                && m.getParameterTypes()[0] == shape.setterParam);
+            && m.getParameterCount() == 1
+            && m.getParameterTypes()[0] == shape.setterParam);
         assertThat(methods).as("%s missing get%s(): List", label, plural).anyMatch(m ->
             m.getName().equals("get" + plural)
-                && m.getParameterCount() == 0
-                && List.class.isAssignableFrom(m.getReturnType()));
+            && m.getParameterCount() == 0
+            && List.class.isAssignableFrom(m.getReturnType()));
         assertThat(methods).as("%s missing addAll%s(Collection)", label, plural).anyMatch(m ->
             m.getName().equals("addAll" + plural)
-                && m.getParameterCount() == 1
-                && Collection.class.isAssignableFrom(m.getParameterTypes()[0]));
+            && m.getParameterCount() == 1
+            && Collection.class.isAssignableFrom(m.getParameterTypes()[0]));
     }
 
     /**
@@ -258,7 +270,8 @@ public abstract class AvpSpecTestBase {
 
     private Type<?> shapeOf(final AvpDef def) {
         return switch (def.valueType()) {
-            case "OctetString" -> new Type<>(byte[].class, byte[].class, new byte[]{'o', 'c', 't', 'e', 't', '-', 's', 't', 'r', 'i', 'n', 'g'});
+            case "OctetString" ->
+                new Type<>(byte[].class, byte[].class, new byte[]{'o', 'c', 't', 'e', 't', '-', 's', 't', 'r', 'i', 'n', 'g'});
             case "Integer32" -> new Type<>(int.class, int.class, -32);
             case "Integer64" -> new Type<>(long.class, long.class, -64L);
             case "Unsigned32" -> new Type<>(long.class, long.class, 32L);

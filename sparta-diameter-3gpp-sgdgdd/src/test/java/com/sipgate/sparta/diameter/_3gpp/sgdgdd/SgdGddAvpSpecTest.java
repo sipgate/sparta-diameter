@@ -12,7 +12,7 @@ public class SgdGddAvpSpecTest extends AvpSpecTestBase {
     private static final Set<AvpDef> AVP_DEFS = loadAvpDefs("/sgdgdd-avps.json");
 
     static Stream<Arguments> provideAvpDefs() {
-        return named(AVP_DEFS);
+        return named(AVP_DEFS.stream());
     }
 
     @Override

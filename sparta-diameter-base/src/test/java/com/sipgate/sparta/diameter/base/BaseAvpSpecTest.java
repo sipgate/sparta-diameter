@@ -92,7 +92,7 @@ public class BaseAvpSpecTest extends AvpSpecTestBase {
         """);
 
     static Stream<Arguments> provideAvpDefs() {
-        return named(AVP_DEFS);
+        return named(AVP_DEFS.stream());
     }
 
     @Override
