@@ -53,13 +53,18 @@ final class DocxAvpTableReader {
     }
 
     static List<AvpDef> read(final Path docx, final long vendorId, final List<String> tableCaptions) throws IOException {
+        try (final InputStream in = Files.newInputStream(docx)) {
+            return read(in, vendorId, tableCaptions);
+        }
+    }
+
+    static List<AvpDef> read(final InputStream in, final long vendorId, final List<String> tableCaptions) throws IOException {
         final Set<String> wanted = new HashSet<>();
         for (final String caption : tableCaptions) {
             wanted.add(normalize(caption));
         }
         final List<AvpDef> result = new ArrayList<>();
-        try (final InputStream in = Files.newInputStream(docx);
-             final XWPFDocument doc = new XWPFDocument(in)) {
+        try (final XWPFDocument doc = new XWPFDocument(in)) {
             String lastCaption = "";
             for (final IBodyElement element : doc.getBodyElements()) {
                 if (element instanceof XWPFParagraph paragraph) {
@@ -148,7 +153,7 @@ final class DocxAvpTableReader {
                                    final long vendorId) {
         final List<XWPFTableCell> cells = row.getTableCells();
         final String name = normalize(cellAt(cells, idx, COL_NAME));
-        final String codeStr = normalize(cellAt(cells, idx, COL_CODE));
+        final String codeStr = normalize(cellAt(cells, idx, COL_CODE)).replaceFirst("\\D.*", "");
         if (name.isBlank() || codeStr.isBlank()) {
             return null;
         }
