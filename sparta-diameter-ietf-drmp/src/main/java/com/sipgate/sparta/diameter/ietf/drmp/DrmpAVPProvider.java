@@ -14,7 +14,7 @@ public final class DrmpAVPProvider implements AVPProvider {
     @Override
     public Collection<AVPDefinition> getDefinitions() {
         return List.of(
-            // RFC 7944 §9.1 — Enumerated, MUST NOT set M or V flags
+            // RFC 7944 §9.1 — Enumerated, MAY set M flag (standard doesn't say), MUST NOT set V flags
             new AVPDefinition(DrmpConstants.AVP_DRMP, "DRMP", Integer.class, false, false, 0)
         );
     }

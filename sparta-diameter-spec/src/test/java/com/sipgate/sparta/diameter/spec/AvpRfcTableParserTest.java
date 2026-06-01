@@ -4,11 +4,51 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
+import static com.sipgate.sparta.diameter.spec.AvpFlagRule.MAY;
 import static com.sipgate.sparta.diameter.spec.AvpFlagRule.MUST;
 import static com.sipgate.sparta.diameter.spec.AvpFlagRule.MUST_NOT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class AvpRfcTableParserTest {
+
+    @Test
+    void it_recognizes_a_separator_line_that_uses_plus_instead_of_pipe() {
+        // GIVEN: an RFC-style table whose separator line uses '+' as the
+        // column-intersection character and contains no '|'. The data row
+        // still uses '|' as the column divider.
+        final var input = """
+            --------------------------------------------------+----+----+
+            DRMP                    301  9.1      Enumerated  | M  | V  |
+            --------------------------------------------------+----+----+
+            """;
+
+        // WHEN
+        final Set<AvpDef> actual = AvpRfcTableParser.parse(input);
+
+        // THEN
+        assertThat(actual).containsOnly(
+            new AvpDef(0, 301, "DRMP", "Enumerated", MUST, MUST_NOT, false)
+        );
+    }
+
+    @Test
+    void it_defaults_an_unset_flag_to_MAY() {
+        // GIVEN: a row where the M flag is in neither the MUST nor the
+        // MUST NOT column — matches RFC 7944's DRMP definition.
+        final var input = """
+            --------------------------------------------------+----+----+
+            DRMP                    301  9.1      Enumerated  |    | V  |
+            --------------------------------------------------+----+----+
+            """;
+
+        // WHEN
+        final Set<AvpDef> actual = AvpRfcTableParser.parse(input);
+
+        // THEN
+        assertThat(actual).containsOnly(
+            new AvpDef(0, 301, "DRMP", "Enumerated", MAY, MUST_NOT, false)
+        );
+    }
 
     @Test
     void it_parses_rfc6733_table() {

@@ -91,7 +91,7 @@ public final class AvpRfcTableParser {
     }
 
     private static boolean isSeparator(final String line) {
-        return line.matches("\\s*-{5,}.*\\|.*");
+        return line.matches("\\s*-{5,}.*[|+].*");
     }
 
     private static int leadingSpaces(final String line) {
@@ -148,10 +148,10 @@ public final class AvpRfcTableParser {
             throw new IllegalStateException("Missing Data Type in block: " + block);
         }
         if (mandatoryBit == null) {
-            throw new IllegalStateException("Missing M-bit flag rule in block: " + block);
+            mandatoryBit = AvpFlagRule.MAY;
         }
         if (vendorSpecificBit == null) {
-            throw new IllegalStateException("Missing V-bit flag rule in block: " + block);
+            vendorSpecificBit = AvpFlagRule.MAY;
         }
 
         return new AvpDef(applicationId, code, name.toString(), valueType, mandatoryBit, vendorSpecificBit, false);
