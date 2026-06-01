@@ -279,6 +279,38 @@
   "vendorSpecificBit" : "MUST",
   "mayBeEncrypted" : false
 }, {
+  "vendorId" : 0,
+  "avpCode" : 104,
+  "attributeName" : "Digest-Realm",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST_NOT",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 0,
+  "avpCode" : 111,
+  "attributeName" : "Digest-Algorithm",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST_NOT",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 0,
+  "avpCode" : 110,
+  "attributeName" : "Digest-QoP",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST_NOT",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 0,
+  "avpCode" : 121,
+  "attributeName" : "Digest-HA1",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST_NOT",
+  "mayBeEncrypted" : false
+}, {
   "vendorId" : 10415,
   "avpCode" : 637,
   "attributeName" : "UAR-Flags",
@@ -415,6 +447,22 @@
   "vendorSpecificBit" : "MUST",
   "mayBeEncrypted" : false
 }, {
+  "vendorId" : 0,
+  "avpCode" : 621,
+  "attributeName" : "OC-Supported-Features",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST_NOT",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 0,
+  "avpCode" : 623,
+  "attributeName" : "OC-OLR",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST_NOT",
+  "mayBeEncrypted" : false
+}, {
   "vendorId" : 10415,
   "avpCode" : 654,
   "attributeName" : "Initial-CSeq-Sequence-Number",
@@ -455,6 +503,14 @@
   "vendorSpecificBit" : "MUST",
   "mayBeEncrypted" : false
 }, {
+  "vendorId" : 0,
+  "avpCode" : 301,
+  "attributeName" : "DRMP",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST_NOT",
+  "mayBeEncrypted" : false
+}, {
   "vendorId" : 10415,
   "avpCode" : 659,
   "attributeName" : "RTR-Flags",
@@ -475,6 +531,22 @@
   "avpCode" : 661,
   "attributeName" : "Registration-Time-Out",
   "valueType" : "Time",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 662,
+  "attributeName" : "Alternate-Digest-Algorithm",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 663,
+  "attributeName" : "Alternate-Digest-HA1",
+  "valueType" : "UTF8String",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
   "mayBeEncrypted" : false
