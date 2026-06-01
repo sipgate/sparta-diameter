@@ -1,0 +1,265 @@
+[ {
+  "vendorId" : 10415,
+  "avpCode" : 3308,
+  "attributeName" : "SM-RP-MTI",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3309,
+  "attributeName" : "SM-RP-SMEA",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3310,
+  "attributeName" : "SRR-Flags",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3311,
+  "attributeName" : "SM-Delivery-Not-Intended",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3312,
+  "attributeName" : "MWD-Status",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3313,
+  "attributeName" : "MME-Absent-User-Diagnostic-SM",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3314,
+  "attributeName" : "MSC-Absent-User-Diagnostic-SM",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3315,
+  "attributeName" : "SGSN-Absent-User-Diagnostic SM",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3316,
+  "attributeName" : "SM-Delivery-Outcome",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3317,
+  "attributeName" : "MME-SM-Delivery-Outcome",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3318,
+  "attributeName" : "MSC-SM-Delivery-Outcome",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3319,
+  "attributeName" : "SGSN-SM-Delivery-Outcome",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3320,
+  "attributeName" : "IP-SM-GW-SM-Delivery-Outcome",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3321,
+  "attributeName" : "SM-Delivery-Cause",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3322,
+  "attributeName" : "Absent-User-Diagnostic-SM",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3323,
+  "attributeName" : "RDR-Flags",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3329,
+  "attributeName" : "Maximum-UE-Availability-Time",
+  "valueType" : "Time",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3333,
+  "attributeName" : "SMS-GMSC-Alert-Event",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3334,
+  "attributeName" : "SMSF-3GPP-Absent-User-Diagnostic-SM",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3335,
+  "attributeName" : "SMSF-Non-3GPP-Absent-User-Diagnostic-SM",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3336,
+  "attributeName" : "SMSF-3GPP-SM-Delivery-Outcome",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3337,
+  "attributeName" : "SMSF-Non-3GPP-SM-Delivery-Outcome",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3338,
+  "attributeName" : "SMSF-3GPP-Number",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3339,
+  "attributeName" : "SMSF-Non-3GPP-Number",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3340,
+  "attributeName" : "SMSF-3GPP-Name",
+  "valueType" : "DiameterIdentity",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3341,
+  "attributeName" : "SMSF-Non-3GPP-Name",
+  "valueType" : "DiameterIdentity",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3342,
+  "attributeName" : "SMSF-3GPP-Realm",
+  "valueType" : "DiameterIdentity",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3343,
+  "attributeName" : "SMSF-Non-3GPP-Realm",
+  "valueType" : "DiameterIdentity",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3344,
+  "attributeName" : "SMSF-3GPP-Address",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3345,
+  "attributeName" : "SMSF-Non-3GPP-Address",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3346,
+  "attributeName" : "SMSF-3GPP-SBI-Support-Indicator",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3347,
+  "attributeName" : "SMSF-Non-3GPP-SBI-Support-Indicator",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3348,
+  "attributeName" : "IP-SM-GW-SBI-Support-Indicator",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+} ]

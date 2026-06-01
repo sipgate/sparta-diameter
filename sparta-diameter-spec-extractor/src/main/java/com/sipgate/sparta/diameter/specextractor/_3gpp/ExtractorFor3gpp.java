@@ -48,6 +48,11 @@ public final class ExtractorFor3gpp {
             VENDOR_ID_3GPP,
             List.of("Table 6.3.3.1/1: SGd/Gdd specific Diameter AVPs")),
         new SpecSource(
+            "https://www.3gpp.org/ftp/Specs/latest/Rel-19/29_series/29338-j30.zip",
+            "sparta-diameter-3gpp-common/src/test/resources/s6c-avps.json",
+            VENDOR_ID_3GPP,
+            List.of("Table 5.3.3.1/1: S6c specific Diameter AVPs")),
+        new SpecSource(
             "https://www.3gpp.org/ftp/Specs/latest/Rel-19/29_series/29336-j10.zip",
             "sparta-diameter-3gpp-common/src/test/resources/s6ms6n-avps.json",
             VENDOR_ID_3GPP,
