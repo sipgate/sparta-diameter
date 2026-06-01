@@ -16,7 +16,7 @@ class CxDxAVPProviderTest {
 
     private final CxDxAVPProvider provider = new CxDxAVPProvider();
 
-    private Map<Integer, AVPDefinition> byCode() {
+    private Map<Long, AVPDefinition> byCode() {
         return provider.getDefinitions().stream()
             .collect(Collectors.toMap(AVPDefinition::code, Function.identity()));
     }
@@ -38,7 +38,7 @@ class CxDxAVPProviderTest {
     @Test
     void it_maps_representative_avps_to_their_spec_types_and_flags() {
         // GIVEN the definitions by code
-        final Map<Integer, AVPDefinition> byCode = byCode();
+        final Map<Long, AVPDefinition> byCode = byCode();
 
         // THEN types and M-bit match TS 29.229 Table 6.3.0.1
         assertThat(byCode.get(601).dataType()).isEqualTo(String.class);   // Public-Identity UTF8String
