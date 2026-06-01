@@ -16,7 +16,6 @@ import java.util.List;
 public record SpecSource(
         String url,
         String jsonPath,
-        long applicationId,
         long vendorId,
         List<String> tableCaptions) {
 }
