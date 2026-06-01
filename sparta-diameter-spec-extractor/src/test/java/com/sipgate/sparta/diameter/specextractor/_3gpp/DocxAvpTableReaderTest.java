@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.specextractor._3gpp;
 
 import com.sipgate.sparta.diameter.spec.AvpDef;
+import com.sipgate.sparta.diameter.spec.AvpFlagRule;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFTable;
@@ -41,6 +42,52 @@ class DocxAvpTableReaderTest {
                     assertThat(def.vendorId()).isEqualTo(VENDOR_ID);
                     assertThat(def.valueType()).isEqualTo("UTF8String");
                 });
+    }
+
+    @Test
+    void it_emits_vendor_id_zero_when_the_V_bit_must_not_be_set() throws IOException {
+        // GIVEN a docx with a captioned AVP table whose row carries "V" in the "Must not" column
+        final byte[] docx = buildDocxWithIetfDigestRealmRow();
+
+        // WHEN the reader parses it with a 3GPP vendor id
+        final List<AvpDef> defs;
+        try (final InputStream in = new ByteArrayInputStream(docx)) {
+            defs = DocxAvpTableReader.read(in, VENDOR_ID, List.of(CAPTION));
+        }
+
+        // THEN the AVP is emitted with vendor id 0, because V "must not" means it is not vendor-specific
+        assertThat(defs)
+                .singleElement()
+                .satisfies(def -> {
+                    assertThat(def.attributeName()).isEqualTo("Digest-Realm");
+                    assertThat(def.vendorSpecificBit()).isEqualTo(AvpFlagRule.MUST_NOT);
+                    assertThat(def.vendorId()).isZero();
+                });
+    }
+
+    private static byte[] buildDocxWithIetfDigestRealmRow() throws IOException {
+        try (final XWPFDocument doc = new XWPFDocument();
+             final ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            final XWPFParagraph captionParagraph = doc.createParagraph();
+            captionParagraph.createRun().setText(CAPTION);
+
+            final XWPFTable table = doc.createTable(2, 7);
+            writeHeaderRow(table.getRow(0));
+            writeIetfDigestRealmRow(table.getRow(1));
+
+            doc.write(out);
+            return out.toByteArray();
+        }
+    }
+
+    private static void writeIetfDigestRealmRow(final XWPFTableRow row) {
+        setCellText(row.getCell(0), "Digest-Realm");
+        setCellText(row.getCell(1), "104");
+        setCellText(row.getCell(2), "UTF8String");
+        setCellText(row.getCell(3), "M");
+        setCellText(row.getCell(4), "");
+        setCellText(row.getCell(5), "");
+        setCellText(row.getCell(6), "V");
     }
 
     private static byte[] buildDocxWithDigestRealmRow() throws IOException {
