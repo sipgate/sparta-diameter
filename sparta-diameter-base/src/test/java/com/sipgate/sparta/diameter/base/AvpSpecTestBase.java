@@ -47,7 +47,7 @@ public abstract class AvpSpecTestBase {
 
         final var implementedMixins = interfaces.stream()
             .map(Class::getSimpleName)
-            .map(n -> n.replaceFirst("^Has(.*)AVP", "$1"))
+            .map(n -> n.replaceFirst("^Has(.*)AVPs?", "$1"))
             .collect(Collectors.toSet());
 
         // We only want to see the AVPs that we have implemented. The Commands tests verify that all required AVPs
