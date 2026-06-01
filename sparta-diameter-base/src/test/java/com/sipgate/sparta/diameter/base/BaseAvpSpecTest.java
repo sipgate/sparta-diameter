@@ -1,10 +1,13 @@
 package com.sipgate.sparta.diameter.base;
 
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
+import com.sipgate.sparta.diameter.base.core.avp.AVPDefinition;
+import com.sipgate.sparta.diameter.base.core.avp.CoreAVPProvider;
 import com.sipgate.sparta.diameter.spec.AvpDef;
 import com.sipgate.sparta.diameter.spec.AvpRfcTableParser;
 import org.junit.jupiter.params.provider.Arguments;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -91,6 +94,8 @@ public class BaseAvpSpecTest extends AvpSpecTestBase {
            Application-Id                        |    |     |
         """);
 
+    private static final Collection<AVPDefinition> DEFINITIONS = new CoreAVPProvider().getDefinitions();
+
     static Stream<Arguments> provideAvpDefs() {
         return named(AVP_DEFS.stream());
     }
@@ -106,5 +111,10 @@ public class BaseAvpSpecTest extends AvpSpecTestBase {
             case "Auth-Session-State" -> DiameterConstants.AUTH_SESSION_STATE_MAINTAINED;
             default -> super.exampleEnumValueFor(def);
         };
+    }
+
+    @Override
+    protected Collection<AVPDefinition> getDefinitions() {
+        return DEFINITIONS;
     }
 }

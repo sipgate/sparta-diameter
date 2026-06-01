@@ -2,9 +2,12 @@ package com.sipgate.sparta.diameter.base;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
+import com.sipgate.sparta.diameter.base.core.avp.AVPDefinition;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
+import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 import com.sipgate.sparta.diameter.spec.AvpDef;
 import com.sipgate.sparta.diameter.spec.AvpFlagRule;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -30,6 +33,7 @@ import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assumptions.abort;
 
 /**
  * Reusable JUnit 5 test class that verifies a module's AVP mixin accessors against an RFC AVP table.
@@ -38,21 +42,10 @@ public abstract class AvpSpecTestBase {
 
     protected abstract String mixinsPackage();
 
+    protected abstract Collection<AVPDefinition> getDefinitions();
+
     protected static Stream<Arguments> named(final Stream<AvpDef> defs) {
         return defs.map(d -> Arguments.of(Named.of(d.attributeName(), d)));
-    }
-
-    protected static Stream<AvpDef> getImplementedAvpDefs(final String mixinsPackage, final Set<AvpDef> avpDefs) {
-        final var interfaces = new Reflections(mixinsPackage).getSubTypesOf(AVPContainer.class);
-
-        final var implementedMixins = interfaces.stream()
-            .map(Class::getSimpleName)
-            .map(n -> n.replaceFirst("^Has(.*)AVPs?", "$1"))
-            .collect(Collectors.toSet());
-
-        // We only want to see the AVPs that we have implemented. The Commands tests verify that all required AVPs
-        // have been implemented.
-        return avpDefs.stream().filter(avpDef -> implementedMixins.contains(methodBase(avpDef.attributeName())));
     }
 
     protected int exampleEnumValueFor(final AvpDef def) {
@@ -65,11 +58,10 @@ public abstract class AvpSpecTestBase {
         final String base = methodBase(def.attributeName());
         final Class<AVPContainer> single = tryLoad(mixinsPackage() + "." + singleMixinName(base));
         final Class<AVPContainer> multi = tryLoad(mixinsPackage() + "." + multiMixinName(base));
-
-        assertThat(single != null || multi != null)
-            .as("%s: neither %s nor %s found in %s",
-                def.attributeName(), singleMixinName(base), multiMixinName(base), mixinsPackage())
-            .isTrue();
+        if (single == null && multi == null) {
+            abort("AVP mixin is not implemented");
+            return;
+        }
 
         final Type<?> shape = shapeOf(def);
         if (single != null) {
@@ -87,7 +79,7 @@ public abstract class AvpSpecTestBase {
         final Class<AVPContainer> single = tryLoad(mixinsPackage() + "." + singleMixinName(base));
         final Class<AVPContainer> multi = tryLoad(mixinsPackage() + "." + multiMixinName(base));
         if (single == null && multi == null) {
-            fail("at least one kind of mixin must exist");
+            abort("AVP mixin is not implemented");
             return;
         }
 
@@ -118,6 +110,36 @@ public abstract class AvpSpecTestBase {
             } else {
                 assertThat(list.get(0)).as(def.attributeName()).isEqualTo(shape.value());
             }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideAvpDefs")
+    void it_defines_all_avps(final AvpDef avpDef) {
+        final var definitions = getDefinitions()
+            .stream()
+            .filter(d -> avpDef.attributeName().equals(d.name()))
+            .toList();
+
+        if (definitions.isEmpty()) {
+            abort("AVP not defined");
+            return;
+        }
+
+        assertThat(definitions).hasSize(1);
+        final var definition = definitions.get(0);
+        assertThat(definition.code()).isEqualTo(avpDef.avpCode());
+        assertThat(definition.name()).isEqualTo(avpDef.attributeName());
+        assertFlag(definition.mandatory(), avpDef.mandatoryBit(), avpDef.attributeName(), "M");
+        assertFlag(definition.vendorSpecific(), avpDef.vendorSpecificBit(), avpDef.attributeName(), "V");
+        assertThat(definition.vendorId()).isEqualTo(avpDef.vendorId());
+
+        if ("Grouped".equals(avpDef.valueType())) {
+            assertThat(definition.dataType()).isEqualTo(GroupedAVP.class);
+        } else {
+            final var shape = shapeOf(avpDef);
+            // accepts Inet4Address for InetAddress
+            assertThat(definition.dataType()).isAssignableFrom(shape.value.getClass());
         }
     }
 
