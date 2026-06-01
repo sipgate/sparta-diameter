@@ -339,6 +339,9 @@ public abstract class AvpSpecTestBase {
         if (base.endsWith("s")) {
             return base; // "Features" already plural
         }
+        if (base.endsWith("y")) {
+            return base.substring(0, base.length() -1) + "ies"; // "Public-Identity" -> "Public-Identities"
+        }
         return base + "s";
     }
 
