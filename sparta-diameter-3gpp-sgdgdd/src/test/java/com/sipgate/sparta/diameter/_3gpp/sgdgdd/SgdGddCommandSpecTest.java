@@ -94,6 +94,7 @@ public class SgdGddCommandSpecTest extends CommandSpecTestBase {
         *[ Route-Record ]
         """);
 
+    @SuppressWarnings("unused") // Used by methodSource in base class
     static Stream<Arguments> provideCommandDefs() {
         return named(COMMAND_DEFS);
     }

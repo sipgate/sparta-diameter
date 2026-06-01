@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 
 public class BaseAvpSpecTest extends AvpSpecTestBase {
 
+    /// from RFC 6733, §4.5 Diameter Base Protocol AVPs
     private static final Set<AvpDef> AVP_DEFS = AvpRfcTableParser.parse("""
         -----------------------------------------|----+-----|
         Acct-             85  9.8.2   Unsigned32 | M  |  V  |
