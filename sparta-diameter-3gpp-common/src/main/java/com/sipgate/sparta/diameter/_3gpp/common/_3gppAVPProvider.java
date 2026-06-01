@@ -39,7 +39,7 @@ public final class _3gppAVPProvider implements AVPProvider {
             new AVPDefinition(_3gppConstants.AVP_MME_NUMBER_FOR_MT_SMS, "MME-Number-for-MT-SMS",
                 byte[].class, false, true, _3gppConstants.VENDOR_ID_3GPP),
             new AVPDefinition(_3gppConstants.AVP_SGSN_NUMBER, "SGSN-Number",
-                byte[].class, false, true, _3gppConstants.VENDOR_ID_3GPP),
+                byte[].class, true, true, _3gppConstants.VENDOR_ID_3GPP),
 
             // 3GPP TS 29.173, SLh interface
             new AVPDefinition(_3gppConstants.AVP_SERVING_NODE, "Serving-Node",
