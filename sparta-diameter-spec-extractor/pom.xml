@@ -1,0 +1,26 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.sipgate</groupId>
+        <artifactId>sparta-diameter</artifactId>
+        <version>0.1.11-SNAPSHOT</version>
+    </parent>
+    <artifactId>sparta-diameter-spec-extractor</artifactId>
+    <name>sparta-diameter-spec-extractor</name>
+    <description>Downloads 3GPP/ETSI .docx specs and extracts AVP tables to JSON.</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.sipgate</groupId>
+            <artifactId>sparta-diameter-spec</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+    </dependencies>
+</project>
