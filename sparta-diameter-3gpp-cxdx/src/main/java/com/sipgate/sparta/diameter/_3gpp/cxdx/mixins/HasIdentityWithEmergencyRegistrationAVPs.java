@@ -8,6 +8,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /** Mixin for messages carrying zero or more Identity-with-Emergency-Registration grouped AVPs (TS 29.229 §6.3.51, code 651). */
@@ -25,5 +26,11 @@ public interface HasIdentityWithEmergencyRegistrationAVPs extends AVPContainer {
             }
         }
         return result;
+    }
+
+    default void addAllIdentityWithEmergencyRegistrations(final Collection<List<AVP>> values) {
+        for (final List<AVP> avps : values) {
+            addIdentityWithEmergencyRegistration(avps);
+        }
     }
 }

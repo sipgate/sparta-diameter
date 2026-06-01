@@ -8,6 +8,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -32,5 +33,11 @@ public interface HasScscfRestorationInfoAVPs extends AVPContainer {
             }
         }
         return result;
+    }
+
+    default void addAllScscfRestorationInfos(final Collection<List<AVP>> values) {
+        for (final List<AVP> avps : values) {
+            addScscfRestorationInfo(avps);
+        }
     }
 }

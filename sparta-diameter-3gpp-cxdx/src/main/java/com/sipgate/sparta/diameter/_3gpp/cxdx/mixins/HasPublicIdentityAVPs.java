@@ -7,6 +7,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -29,5 +30,11 @@ public interface HasPublicIdentityAVPs extends AVPContainer {
             result.add(avp.getDataAsString());
         }
         return result;
+    }
+
+    default void addAllPublicIdentities(final Collection<String> values) {
+        for (final String value : values) {
+            addPublicIdentity(value);
+        }
     }
 }
