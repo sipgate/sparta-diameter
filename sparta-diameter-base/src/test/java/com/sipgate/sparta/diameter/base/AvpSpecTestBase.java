@@ -9,7 +9,13 @@ import org.junit.jupiter.api.Named;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -95,6 +101,18 @@ public abstract class AvpSpecTestBase {
             } else {
                 assertThat(list.get(0)).as(def.attributeName()).isEqualTo(shape.value());
             }
+        }
+    }
+
+    protected static Set<AvpDef> loadAvpDefs(final String resourceName) {
+        final ObjectMapper mapper = JsonMapper.builder().build();
+        try (final InputStream in = AvpSpecTestBase.class.getResourceAsStream(resourceName)) {
+            if (in == null) {
+                throw new IllegalStateException(resourceName + " not found on the test classpath");
+            }
+            return mapper.readValue(in, new TypeReference<Set<AvpDef>>() {});
+        } catch (final IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
