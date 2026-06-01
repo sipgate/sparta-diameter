@@ -1,0 +1,513 @@
+[ {
+  "vendorId" : 10415,
+  "avpCode" : 600,
+  "attributeName" : "Visited-Network-Identifier",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 601,
+  "attributeName" : "Public-Identity",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 602,
+  "attributeName" : "Server-Name",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 603,
+  "attributeName" : "Server-Capabilities",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 604,
+  "attributeName" : "Mandatory-Capability",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 605,
+  "attributeName" : "Optional-Capability",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 606,
+  "attributeName" : "User-Data",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 607,
+  "attributeName" : "SIP-Number-Auth-Items",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 608,
+  "attributeName" : "SIP-Authentication-Scheme",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 609,
+  "attributeName" : "SIP-Authenticate",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 610,
+  "attributeName" : "SIP-Authorization",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 611,
+  "attributeName" : "SIP-Authentication-Context",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 612,
+  "attributeName" : "SIP-Auth-Data-Item",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 613,
+  "attributeName" : "SIP-Item-Number",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 614,
+  "attributeName" : "Server-Assignment-Type",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 615,
+  "attributeName" : "Deregistration-Reason",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 616,
+  "attributeName" : "Reason-Code",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 617,
+  "attributeName" : "Reason-Info",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 618,
+  "attributeName" : "Charging-Information",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 619,
+  "attributeName" : "Primary-Event-Charging-Function-Name",
+  "valueType" : "DiameterURI",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 620,
+  "attributeName" : "Secondary-Event-Charging-Function-Name",
+  "valueType" : "DiameterURI",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 621,
+  "attributeName" : "Primary-Charging-Collection-Function-Name",
+  "valueType" : "DiameterURI",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 622,
+  "attributeName" : "Secondary-Charging-Collection-Function-Name",
+  "valueType" : "DiameterURI",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 623,
+  "attributeName" : "User-Authorization-Type",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 624,
+  "attributeName" : "User-Data-Already-Available",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 625,
+  "attributeName" : "Confidentiality-Key",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 626,
+  "attributeName" : "Integrity-Key",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 628,
+  "attributeName" : "Supported-Features",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MAY",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 629,
+  "attributeName" : "Feature-List-ID",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 630,
+  "attributeName" : "Feature-List",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 631,
+  "attributeName" : "Supported-Applications",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 632,
+  "attributeName" : "Associated-Identities",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 633,
+  "attributeName" : "Originating-Request",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 634,
+  "attributeName" : "Wildcarded-Public-Identity",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 635,
+  "attributeName" : "SIP-Digest-Authenticate",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 637,
+  "attributeName" : "UAR-Flags",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 638,
+  "attributeName" : "Loose-Route-Indication",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 639,
+  "attributeName" : "SCSCF-Restoration-Info",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 640,
+  "attributeName" : "Path",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 641,
+  "attributeName" : "Contact",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 642,
+  "attributeName" : "Subscription-Info",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 643,
+  "attributeName" : "Call-ID-SIP-Header",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 644,
+  "attributeName" : "From-SIP-Header",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 645,
+  "attributeName" : "To-SIP-Header",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 646,
+  "attributeName" : "Record-Route",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 647,
+  "attributeName" : "Associated-Registered-Identities",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 648,
+  "attributeName" : "Multiple-Registration-Indication",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 649,
+  "attributeName" : "Restoration-Info",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 650,
+  "attributeName" : "Session-Priority",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 651,
+  "attributeName" : "Identity-with-Emergency-Registration",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 652,
+  "attributeName" : "Priviledged-Sender-Indication",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 653,
+  "attributeName" : "LIA-Flags",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 654,
+  "attributeName" : "Initial-CSeq-Sequence-Number",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 655,
+  "attributeName" : "SAR-Flags",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 656,
+  "attributeName" : "Allowed-WAF-WWSF-Identities",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 657,
+  "attributeName" : "WebRTC-Authentication-Function-Name",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 658,
+  "attributeName" : "WebRTC-Web-Server-Function-Name",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 659,
+  "attributeName" : "RTR-Flags",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 660,
+  "attributeName" : "P-CSCF-Subscription-Info",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 661,
+  "attributeName" : "Registration-Time-Out",
+  "valueType" : "Time",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 664,
+  "attributeName" : "Failed-PCSCF",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 665,
+  "attributeName" : "PCSCF-FQDN",
+  "valueType" : "DiameterIdentity",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 666,
+  "attributeName" : "PCSCF-IP-Address",
+  "valueType" : "Address",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 667,
+  "attributeName" : "OC-Reg-Timer-Ext",
+  "valueType" : "Unsigned32",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+} ]
