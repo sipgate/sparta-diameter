@@ -34,11 +34,16 @@
         <module>sparta-diameter-ietf-doic</module>
         <module>sparta-diameter-ietf-drmp</module>
         <module>sparta-diameter-ietf-load</module>
+        <module>sparta-diameter-ietf-mip6-integrated</module>
+        <module>sparta-diameter-ietf-mip6-split</module>
         <module>sparta-diameter-ietf-nas</module>
         <module>sparta-diameter-etsi-e2</module>
         <module>sparta-diameter-3gpp-common</module>
+        <module>sparta-diameter-3gpp-gx</module>
         <module>sparta-diameter-3gpp-s6c</module>
+        <module>sparta-diameter-3gpp-s6t</module>
         <module>sparta-diameter-3gpp-sgdgdd</module>
+        <module>sparta-diameter-3gpp-slh</module>
         <module>sparta-diameter-3gpp-s6a</module>
         <module>sparta-diameter-3gpp-cxdx</module>
     </modules>
@@ -119,6 +124,16 @@
             </dependency>
             <dependency>
                 <groupId>com.sipgate</groupId>
+                <artifactId>sparta-diameter-ietf-mip6-integrated</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sipgate</groupId>
+                <artifactId>sparta-diameter-ietf-mip6-split</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sipgate</groupId>
                 <artifactId>sparta-diameter-ietf-nas</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -130,6 +145,26 @@
             <dependency>
                 <groupId>com.sipgate</groupId>
                 <artifactId>sparta-diameter-3gpp-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sipgate</groupId>
+                <artifactId>sparta-diameter-3gpp-cxdx</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sipgate</groupId>
+                <artifactId>sparta-diameter-3gpp-gx</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sipgate</groupId>
+                <artifactId>sparta-diameter-3gpp-s6t</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sipgate</groupId>
+                <artifactId>sparta-diameter-3gpp-slh</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

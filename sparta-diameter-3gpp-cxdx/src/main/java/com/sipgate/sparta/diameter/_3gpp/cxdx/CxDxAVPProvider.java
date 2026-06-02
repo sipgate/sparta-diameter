@@ -20,7 +20,8 @@ public final class CxDxAVPProvider implements AVPProvider {
     @Override
     public Collection<AVPDefinition> getDefinitions() {
         return Arrays.asList(
-            // Codes 601-626: M,V (mandatory=true)
+            // Codes 600-626: M,V (mandatory=true)
+            new AVPDefinition(CxDxConstants.AVP_VISITED_NETWORK_IDENTIFIER, "Visited-Network-Identifier", byte[].class, true, true, V),
             new AVPDefinition(CxDxConstants.AVP_PUBLIC_IDENTITY, "Public-Identity", String.class, true, true, V),
             new AVPDefinition(CxDxConstants.AVP_SERVER_NAME, "Server-Name", String.class, true, true, V),
             new AVPDefinition(CxDxConstants.AVP_USER_DATA, "User-Data", byte[].class, true, true, V),

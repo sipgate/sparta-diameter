@@ -14,6 +14,7 @@ public final class CxDxConstants {
     public static final int CMD_REGISTRATION_TERMINATION = 304;
 
     // Cx/Dx-specific AVP codes (TS 29.229 Table 6.3.0.1). Vendor 3GPP (10415).
+    public static final int AVP_VISITED_NETWORK_IDENTIFIER = 600;
     public static final int AVP_PUBLIC_IDENTITY = 601;
     public static final int AVP_SERVER_NAME = 602;
     public static final int AVP_USER_DATA = 606;

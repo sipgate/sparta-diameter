@@ -63,6 +63,11 @@ public final class ExtractorFor3gpp {
             VENDOR_ID_3GPP,
             List.of("Table 7.3.1/1: S6a/S6d, S7a/S7d and S13/S13' specific DiameterAVPs")),
         new SpecSource(
+            "https://www.3gpp.org/ftp/Specs/latest/Rel-19/29_series/29272-j50.zip",
+            "sparta-diameter-3gpp-s6a/src/test/resources/s6as6d-s7as7d-s13-avps.json",
+            VENDOR_ID_3GPP,
+            List.of("Table 7.3.1/1: S6a/S6d, S7a/S7d and S13/S13' specific DiameterAVPs")),
+        new SpecSource(
             "https://www.3gpp.org/ftp/Specs/latest/Rel-19/29_series/29229-j10.zip",
             "sparta-diameter-3gpp-common/src/test/resources/cxdx-avps.json",
             VENDOR_ID_3GPP,
@@ -71,7 +76,22 @@ public final class ExtractorFor3gpp {
             "https://www.3gpp.org/ftp/Specs/latest/Rel-19/29_series/29229-j10.zip",
             "sparta-diameter-3gpp-cxdx/src/test/resources/cxdx-avps.json",
             VENDOR_ID_3GPP,
-            List.of("Table 6.3.0.1: Diameter Multimedia Application AVPs"))
+            List.of("Table 6.3.0.1: Diameter Multimedia Application AVPs")),
+        new SpecSource(
+            "https://www.3gpp.org/ftp/Specs/latest/Rel-19/29_series/29212-j10.zip",
+            "sparta-diameter-3gpp-gx/src/test/resources/gx-avps.json",
+            VENDOR_ID_3GPP,
+            List.of("Table 5.3.0.1: Gx specific Diameter AVPs")),
+        new SpecSource(
+            "https://www.3gpp.org/ftp/Specs/latest/Rel-19/29_series/29336-j10.zip",
+            "sparta-diameter-3gpp-s6t/src/test/resources/s6t-avps.json",
+            VENDOR_ID_3GPP,
+            List.of("Table 8.4.1-1: S6t specific Diameter AVPs")),
+        new SpecSource(
+            "https://www.3gpp.org/ftp/Specs/latest/Rel-19/29_series/29173-j00.zip",
+            "sparta-diameter-3gpp-slh/src/test/resources/slh-avps.json",
+            VENDOR_ID_3GPP,
+            List.of("Table 6.4.1/1: SLh specific Diameter AVPs"))
     );
 
     private static final Path REPO_ROOT = findRepoRoot();
