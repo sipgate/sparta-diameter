@@ -8,6 +8,8 @@ import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -84,6 +86,49 @@ class DocxAvpTableReaderTest {
                     assertThat(def.avpCode()).isEqualTo(104L);
                     assertThat(def.valueType()).isEqualTo("UTF8String");
                 });
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Enumerate", "Enumarated"})
+    void it_rewrites_spec_typos_of_Enumerated(final String typo) throws IOException {
+        // GIVEN a docx whose row has a known typo for "Enumerated" as its value type
+        final byte[] docx = buildDocxWithValueType(typo);
+
+        // WHEN the reader parses it
+        final List<AvpDef> defs;
+        try (final InputStream in = new ByteArrayInputStream(docx)) {
+            defs = DocxAvpTableReader.read(in, VENDOR_ID, List.of(CAPTION));
+        }
+
+        // THEN the typo is corrected to the canonical "Enumerated"
+        assertThat(defs)
+                .singleElement()
+                .satisfies(def -> assertThat(def.valueType()).isEqualTo("Enumerated"));
+    }
+
+    private static byte[] buildDocxWithValueType(final String valueType) throws IOException {
+        try (final XWPFDocument doc = new XWPFDocument();
+             final ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            final XWPFParagraph captionParagraph = doc.createParagraph();
+            captionParagraph.createRun().setText(CAPTION);
+
+            final XWPFTable table = doc.createTable(2, 7);
+            writeHeaderRow(table.getRow(0));
+            writeAlertReasonRow(table.getRow(1), valueType);
+
+            doc.write(out);
+            return out.toByteArray();
+        }
+    }
+
+    private static void writeAlertReasonRow(final XWPFTableRow row, final String valueType) {
+        setCellText(row.getCell(0), "Alert-Reason");
+        setCellText(row.getCell(1), "1434");
+        setCellText(row.getCell(2), valueType);
+        setCellText(row.getCell(3), "M,V");
+        setCellText(row.getCell(4), "");
+        setCellText(row.getCell(5), "");
+        setCellText(row.getCell(6), "");
     }
 
     private static byte[] buildDocxWithAnnotatedValueTypeHeader() throws IOException {

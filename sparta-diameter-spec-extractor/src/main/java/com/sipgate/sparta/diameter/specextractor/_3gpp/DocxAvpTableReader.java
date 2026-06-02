@@ -128,6 +128,16 @@ final class DocxAvpTableReader {
         return normalize(s).replaceAll("\\s*\\(.*\\)\\s*$", "").trim();
     }
 
+    // Spec typos seen in the wild: TS 29.272 spells "Enumerated" as "Enumerate"
+    // for Alert-Reason; TS 29.212 spells it "Enumarated" for some AVPs.
+    private static final Map<String, String> VALUE_TYPE_TYPO_FIXES = Map.of(
+            "Enumerate", "Enumerated",
+            "Enumarated", "Enumerated");
+
+    private static String fixValueTypeTypos(final String valueType) {
+        return VALUE_TYPE_TYPO_FIXES.getOrDefault(valueType, valueType);
+    }
+
     private static List<AvpDef> parseTable(final XWPFTable table, final long vendorId) {
         final int headerRowIndex = findHeaderRowIndex(table);
         if (headerRowIndex < 0) {
@@ -169,7 +179,7 @@ final class DocxAvpTableReader {
         } catch (final NumberFormatException e) {
             return null;
         }
-        final String valueType = normalize(cellAt(cells, idx, COL_TYPE));
+        final String valueType = fixValueTypeTypos(normalize(cellAt(cells, idx, COL_TYPE)));
         final AvpFlagRule mandatoryBit = determineFlagRule(cells, idx, 'M');
         final AvpFlagRule vendorSpecificBit = determineFlagRule(cells, idx, 'V');
         final boolean mayBeEncrypted = "Yes".equalsIgnoreCase(normalize(cellAt(cells, idx, COL_MAY_ENCRYPT)));

@@ -1,6 +1,7 @@
 package com.sipgate.sparta.diameter.spec;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -38,11 +39,17 @@ import java.util.Set;
  */
 public final class AvpRfcTableParser {
 
-    private static final Set<String> KNOWN_TYPES = Set.of(
-            "OctetString", "Integer32", "Integer64", "Unsigned32", "Unsigned64",
-            "Float32", "Float64", "Grouped", "Address", "Time", "UTF8String",
-            "DiameterIdentity", "DiameterURI", "Enumerated", "IPFilterRule", "QoSFilterRule",
-            "DiamIdent", "DiamURI", "IPFltrRule", "QoSFltrRule");
+    // Canonical AvpDef types plus the abbreviated forms used in RFC 4005
+    // tables (expanded back to the canonical name via expandAlias).
+    private static final Set<String> KNOWN_TYPES;
+    static {
+        final Set<String> all = new HashSet<>(AvpDef.KNOWN_TYPES);
+        all.add("DiamIdent");
+        all.add("DiamURI");
+        all.add("IPFltrRule");
+        all.add("QoSFltrRule");
+        KNOWN_TYPES = Set.copyOf(all);
+    }
 
     private AvpRfcTableParser() {
     }
