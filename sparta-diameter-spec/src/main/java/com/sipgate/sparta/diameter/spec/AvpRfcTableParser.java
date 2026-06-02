@@ -6,9 +6,19 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Parses an AVP definition table in RFC 6733 §4.5 format
- * ({@code Attribute Name | AVP Code | Section Defined | Data Type |
- * MUST | MUST NOT}).
+ * Parses an AVP definition table from a Diameter RFC. Two flag-column
+ * layouts are supported:
+ *
+ * <ul>
+ *   <li>RFC 6733 §4.5: {@code | MUST | MUST NOT |} — two columns.</li>
+ *   <li>RFC 4005 §6:   {@code | MUST | MAY | SHLD NOT | MUST NOT | Encr |}
+ *       — five columns. The {@code Encr} column carries {@code Y}
+ *       when the AVP may be encrypted.</li>
+ * </ul>
+ *
+ * <p>The layout is detected per data row from the number of
+ * pipe-separated segments, so the same parser handles either RFC
+ * without a hint.
  *
  * <p>The dashed separator line
  * ({@code   ---...---|----+-----|}) toggles between HEADER and DATA
@@ -23,9 +33,6 @@ import java.util.Set;
  * (RFC 6733 §4.5) is the awkward case — name + flags on line 1, code
  * + section + type on line 2 — and is handled by collecting tokens
  * across all lines of a block.
- *
- * <p>RFC 6733 §4.5 has no May-Encrypt column (the P flag is reserved),
- * so {@link AvpDef#mayBeEncrypted()} is always {@code false} here.
  */
 public final class AvpRfcTableParser {
 
@@ -33,7 +40,7 @@ public final class AvpRfcTableParser {
             "OctetString", "Integer32", "Integer64", "Unsigned32", "Unsigned64",
             "Float32", "Float64", "Grouped", "Address", "Time", "UTF8String",
             "DiameterIdentity", "DiameterURI", "Enumerated", "IPFilterRule", "QoSFilterRule",
-            "DiamIdent", "DiamURI");
+            "DiamIdent", "DiamURI", "IPFltrRule", "QoSFltrRule");
 
     private AvpRfcTableParser() {
     }
@@ -108,6 +115,7 @@ public final class AvpRfcTableParser {
         String valueType = null;
         AvpFlagRule mandatoryBit = null;
         AvpFlagRule vendorSpecificBit = null;
+        boolean mayBeEncrypted = false;
 
         for (final String line : block) {
             final int firstPipe = line.indexOf('|');
@@ -128,15 +136,34 @@ public final class AvpRfcTableParser {
             }
             if (firstPipe >= 0) {
                 final String[] columns = line.substring(firstPipe + 1).split("\\|", -1);
-                if (columns.length >= 1) {
-                    final Set<Character> flags = parseFlagChars(columns[0]);
+                // Trailing empty segment after the closing pipe doesn't count.
+                final int flagCount = columns.length - 1;
+                final int mustIdx;
+                final int mustNotIdx;
+                final int encrIdx;
+                if (flagCount >= 5) {
+                    // RFC 4005: MUST | MAY | SHLD NOT | MUST NOT | Encr
+                    mustIdx = 0;
+                    mustNotIdx = 3;
+                    encrIdx = 4;
+                } else {
+                    // RFC 6733: MUST | MUST NOT
+                    mustIdx = 0;
+                    mustNotIdx = 1;
+                    encrIdx = -1;
+                }
+                if (flagCount > mustIdx) {
+                    final Set<Character> flags = parseFlagChars(columns[mustIdx]);
                     if (flags.contains('M')) mandatoryBit = AvpFlagRule.MUST;
                     if (flags.contains('V')) vendorSpecificBit = AvpFlagRule.MUST;
                 }
-                if (columns.length >= 2) {
-                    final Set<Character> flags = parseFlagChars(columns[1]);
+                if (flagCount > mustNotIdx) {
+                    final Set<Character> flags = parseFlagChars(columns[mustNotIdx]);
                     if (flags.contains('M')) mandatoryBit = AvpFlagRule.MUST_NOT;
                     if (flags.contains('V')) vendorSpecificBit = AvpFlagRule.MUST_NOT;
+                }
+                if (encrIdx >= 0 && flagCount > encrIdx && columns[encrIdx].indexOf('Y') >= 0) {
+                    mayBeEncrypted = true;
                 }
             }
         }
@@ -154,13 +181,15 @@ public final class AvpRfcTableParser {
             vendorSpecificBit = AvpFlagRule.MAY;
         }
 
-        return new AvpDef(applicationId, code, name.toString(), valueType, mandatoryBit, vendorSpecificBit, false);
+        return new AvpDef(applicationId, code, name.toString(), valueType, mandatoryBit, vendorSpecificBit, mayBeEncrypted);
     }
 
     private static String expandAlias(final String dataType) {
         return switch (dataType) {
             case "DiamIdent" -> "DiameterIdentity";
             case "DiamURI" -> "DiameterURI";
+            case "IPFltrRule" -> "IPFilterRule";
+            case "QoSFltrRule" -> "QoSFilterRule";
             default -> dataType;
         };
     }
