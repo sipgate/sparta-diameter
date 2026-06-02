@@ -21,9 +21,11 @@ import java.util.Set;
  * without a hint.
  *
  * <p>The dashed separator line
- * ({@code   ---...---|----+-----|}) toggles between HEADER and DATA
- * regions. Page headers, footers, and box-drawing lines between two
- * separators are skipped; data rows between two separators are parsed.
+ * ({@code   ---...---|----+-----|}) marks the start of the data
+ * region. Anything before the first separator (page headers, column
+ * titles, box-drawing lines) is skipped. Subsequent separators just
+ * delimit row blocks — RFC 6733 / RFC 4005 use one closing separator
+ * after all rows; RFC 7683 puts a separator between every row.
  *
  * <p>Row blocks are detected by indentation. The row-start indent is
  * taken from the first separator line (so the parser self-calibrates
@@ -57,17 +59,17 @@ public final class AvpRfcTableParser {
         }
         final Set<AvpDef> result = new LinkedHashSet<>();
         final List<String> currentBlock = new ArrayList<>();
-        boolean inData = false;
+        boolean started = false;
         for (final String line : lines) {
             if (isSeparator(line)) {
                 if (!currentBlock.isEmpty()) {
                     result.add(buildAvpDef(currentBlock, applicationId));
                     currentBlock.clear();
                 }
-                inData = !inData;
+                started = true;
                 continue;
             }
-            if (!inData) {
+            if (!started) {
                 continue;
             }
             if (line.isBlank() || !line.contains("|")) {
