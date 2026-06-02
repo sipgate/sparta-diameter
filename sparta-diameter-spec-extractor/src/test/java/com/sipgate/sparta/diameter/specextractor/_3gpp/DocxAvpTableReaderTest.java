@@ -65,6 +65,52 @@ class DocxAvpTableReaderTest {
                 });
     }
 
+    @Test
+    void it_matches_a_header_cell_whose_label_carries_a_trailing_parenthetical_annotation() throws IOException {
+        // GIVEN a docx whose "Value Type" header cell is labelled "Value Type (NOTE 2)" (as in TS 29.212)
+        final byte[] docx = buildDocxWithAnnotatedValueTypeHeader();
+
+        // WHEN the reader parses it
+        final List<AvpDef> defs;
+        try (final InputStream in = new ByteArrayInputStream(docx)) {
+            defs = DocxAvpTableReader.read(in, VENDOR_ID, List.of(CAPTION));
+        }
+
+        // THEN the table is still recognised and the value type is read out of the annotated column
+        assertThat(defs)
+                .singleElement()
+                .satisfies(def -> {
+                    assertThat(def.attributeName()).isEqualTo("Digest-Realm");
+                    assertThat(def.avpCode()).isEqualTo(104L);
+                    assertThat(def.valueType()).isEqualTo("UTF8String");
+                });
+    }
+
+    private static byte[] buildDocxWithAnnotatedValueTypeHeader() throws IOException {
+        try (final XWPFDocument doc = new XWPFDocument();
+             final ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            final XWPFParagraph captionParagraph = doc.createParagraph();
+            captionParagraph.createRun().setText(CAPTION);
+
+            final XWPFTable table = doc.createTable(2, 7);
+            writeHeaderRowWithAnnotatedValueType(table.getRow(0));
+            writeIetfDigestRealmRow(table.getRow(1));
+
+            doc.write(out);
+            return out.toByteArray();
+        }
+    }
+
+    private static void writeHeaderRowWithAnnotatedValueType(final XWPFTableRow row) {
+        setCellText(row.getCell(0), "Attribute Name");
+        setCellText(row.getCell(1), "AVP Code");
+        setCellText(row.getCell(2), "Value Type (NOTE 2)");
+        setCellText(row.getCell(3), "Must");
+        setCellText(row.getCell(4), "May");
+        setCellText(row.getCell(5), "Should not");
+        setCellText(row.getCell(6), "Must not");
+    }
+
     private static byte[] buildDocxWithIetfDigestRealmRow() throws IOException {
         try (final XWPFDocument doc = new XWPFDocument();
              final ByteArrayOutputStream out = new ByteArrayOutputStream()) {

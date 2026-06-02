@@ -113,13 +113,19 @@ final class DocxAvpTableReader {
     private static Set<String> headerSet(final XWPFTableRow row) {
         final Set<String> result = new HashSet<>();
         for (final XWPFTableCell cell : row.getTableCells()) {
-            result.add(normalize(cell.getText()));
+            result.add(canonicalHeader(cell.getText()));
         }
         return result;
     }
 
     private static String normalize(final String s) {
         return s == null ? "" : s.replaceAll("\\s+", " ").trim();
+    }
+
+    // Strips a trailing parenthetical annotation like "(NOTE 2)" so that
+    // e.g. "Value Type (NOTE 2)" matches the canonical "Value Type" header.
+    private static String canonicalHeader(final String s) {
+        return normalize(s).replaceAll("\\s*\\(.*\\)\\s*$", "").trim();
     }
 
     private static List<AvpDef> parseTable(final XWPFTable table, final long vendorId) {
@@ -143,7 +149,7 @@ final class DocxAvpTableReader {
         final Map<String, Integer> result = new HashMap<>();
         final List<XWPFTableCell> cells = headerRow.getTableCells();
         for (int i = 0; i < cells.size(); i++) {
-            result.put(normalize(cells.get(i).getText()), i);
+            result.put(canonicalHeader(cells.get(i).getText()), i);
         }
         return result;
     }
