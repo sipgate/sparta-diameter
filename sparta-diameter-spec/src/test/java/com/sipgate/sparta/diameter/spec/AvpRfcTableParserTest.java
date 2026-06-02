@@ -51,6 +51,38 @@ class AvpRfcTableParserTest {
     }
 
     @Test
+    void it_parses_rfc4005_table() {
+        // GIVEN: representative rows from RFC 4005 §6 — five flag
+        // columns (MUST, MAY, SHLD NOT, MUST NOT, Encr) instead of
+        // RFC 6733's two; short-form IPFltrRule / QoSFltrRule type
+        // aliases; the Configuration-Token row carries P,V in MUST
+        // NOT; QoS-Filter-Rule leaves every column empty.
+        final var input = """
+            -----------------------------------------|----+-----+----+-----|----|
+            Service-Type       6   6.1    Enumerated | M  |  P  |    |  V  | Y  |
+            NAS-Filter-Rule  400   6.6    IPFltrRule | M  |  P  |    |  V  | Y  |
+            Configuration-    78   6.8    OctetString| M  |     |    | P,V |    |
+              Token                                  |    |     |    |     |    |
+            QoS-Filter-Rule  407   6.9    QoSFltrRule|    |     |    |     |    |
+            Framed-           13  6.10.4  Enumerated | M  |  P  |    |  V  | Y  |
+              Compression                            |    |     |    |     |    |
+            -----------------------------------------|----+-----+----+-----|----|
+            """;
+
+        // WHEN
+        final Set<AvpDef> actual = AvpRfcTableParser.parse(input);
+
+        // THEN
+        assertThat(actual).containsOnly(
+            new AvpDef(0, 6, "Service-Type", "Enumerated", MUST, MUST_NOT, true),
+            new AvpDef(0, 400, "NAS-Filter-Rule", "IPFilterRule", MUST, MUST_NOT, true),
+            new AvpDef(0, 78, "Configuration-Token", "OctetString", MUST, MUST_NOT, false),
+            new AvpDef(0, 407, "QoS-Filter-Rule", "QoSFilterRule", MAY, MAY, false),
+            new AvpDef(0, 13, "Framed-Compression", "Enumerated", MUST, MUST_NOT, true)
+        );
+    }
+
+    @Test
     void it_parses_rfc6733_table() {
         // GIVEN: representative rows from RFC 6733 §4.5 — single-line,
         // multi-line name, "V,M" comma-separated mustNot column,
