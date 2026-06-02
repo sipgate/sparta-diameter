@@ -11,7 +11,6 @@ import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.core.OutgoingRequest;
-import com.sipgate.sparta.diameter.base.core.avp.mixins.HasDestinationRealmAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasProxyInfoAVPs;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasRouteRecordAVPs;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasUserNameAVP;
@@ -20,7 +19,7 @@ import com.sipgate.sparta.diameter.ietf.drmp.mixins.HasDrmpAVP;
 /** Registration-Termination-Request (RTR) — 3GPP TS 29.229 §6.1.9. */
 public interface RegistrationTerminationRequest
         extends _3gppRequest,
-                HasDrmpAVP, HasDestinationRealmAVP, HasUserNameAVP, HasAssociatedIdentitiesAVP,
+                HasDrmpAVP, HasUserNameAVP, HasAssociatedIdentitiesAVP,
                 HasSupportedFeaturesAVPs, HasPublicIdentityAVPs, HasDeregistrationReasonAVP, HasRtrFlagsAVP,
                 HasProxyInfoAVPs, HasRouteRecordAVPs {
 

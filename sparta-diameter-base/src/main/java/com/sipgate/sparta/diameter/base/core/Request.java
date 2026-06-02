@@ -2,7 +2,6 @@ package com.sipgate.sparta.diameter.base.core;
 
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasDestinationHostAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasDestinationRealmAVP;
-import com.sipgate.sparta.diameter.base.core.avp.mixins.HasSessionIdAVP;
 
 /**
  * Base class for all Diameter request messages.

@@ -17,8 +17,6 @@ import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.core.OutgoingRequest;
-import com.sipgate.sparta.diameter.base.core.avp.mixins.HasDestinationHostAVP;
-import com.sipgate.sparta.diameter.base.core.avp.mixins.HasDestinationRealmAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasProxyInfoAVPs;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasRouteRecordAVPs;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasUserNameAVP;
@@ -27,7 +25,7 @@ import com.sipgate.sparta.diameter.ietf.drmp.mixins.HasDrmpAVP;
 /** Server-Assignment-Request (SAR) — 3GPP TS 29.229 §6.1.3. */
 public interface ServerAssignmentRequest
         extends _3gppRequest,
-                HasDrmpAVP, HasDestinationHostAVP, HasDestinationRealmAVP, HasUserNameAVP,
+                HasDrmpAVP, HasUserNameAVP,
                 HasSupportedFeaturesAVPs, HasPublicIdentityAVPs, HasWildcardedPublicIdentityAVP,
                 HasServerNameAVP, HasServerAssignmentTypeAVP, HasUserDataAlreadyAvailableAVP,
                 HasScscfRestorationInfoAVP, HasMultipleRegistrationIndicationAVP, HasSessionPriorityAVP,
