@@ -18,12 +18,15 @@ import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
 import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasRouteRecordAVPs;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasUserNameAVP;
+import com.sipgate.sparta.diameter.ietf.doic.mixins.HasOcOlrAVP;
+import com.sipgate.sparta.diameter.ietf.doic.mixins.HasOcSupportedFeaturesAVP;
 import com.sipgate.sparta.diameter.ietf.drmp.mixins.HasDrmpAVP;
 
 /** Server-Assignment-Answer (SAA) — 3GPP TS 29.229 §6.1.4. */
 public interface ServerAssignmentAnswer
         extends _3gppAnswer,
-                HasDrmpAVP, HasUserNameAVP, HasUserDataAVP, HasChargingInformationAVP,
+                HasDrmpAVP, HasUserNameAVP, HasOcSupportedFeaturesAVP, HasOcOlrAVP,
+                HasUserDataAVP, HasChargingInformationAVP,
                 HasAssociatedIdentitiesAVP, HasLooseRouteIndicationAVP, HasScscfRestorationInfoAVPs,
                 HasAssociatedRegisteredIdentitiesAVP, HasServerNameAVP, HasWildcardedPublicIdentityAVP,
                 HasPriviledgedSenderIndicationAVP, HasAllowedWafWwsfIdentitiesAVP,

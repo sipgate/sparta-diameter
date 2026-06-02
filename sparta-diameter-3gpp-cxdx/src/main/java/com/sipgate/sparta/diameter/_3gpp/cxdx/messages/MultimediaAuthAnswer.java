@@ -11,12 +11,15 @@ import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
 import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasRouteRecordAVPs;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasUserNameAVP;
+import com.sipgate.sparta.diameter.ietf.doic.mixins.HasOcOlrAVP;
+import com.sipgate.sparta.diameter.ietf.doic.mixins.HasOcSupportedFeaturesAVP;
 import com.sipgate.sparta.diameter.ietf.drmp.mixins.HasDrmpAVP;
 
 /** Multimedia-Auth-Answer (MAA) — 3GPP TS 29.229 §6.1.8. */
 public interface MultimediaAuthAnswer
         extends _3gppAnswer,
-                HasDrmpAVP, HasUserNameAVP, HasPublicIdentityAVP, HasSipNumberAuthItemsAVP,
+                HasDrmpAVP, HasUserNameAVP, HasOcSupportedFeaturesAVP, HasOcOlrAVP,
+                HasPublicIdentityAVP, HasSipNumberAuthItemsAVP,
                 HasSipAuthDataItemAVPs, HasRouteRecordAVPs {
 
     final class In extends IncomingAnswer implements MultimediaAuthAnswer {

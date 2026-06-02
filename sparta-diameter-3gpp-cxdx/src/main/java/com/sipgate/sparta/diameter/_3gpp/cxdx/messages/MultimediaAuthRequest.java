@@ -14,11 +14,12 @@ import com.sipgate.sparta.diameter.base.core.OutgoingRequest;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasProxyInfoAVPs;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasRouteRecordAVPs;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasUserNameAVP;
+import com.sipgate.sparta.diameter.ietf.doic.mixins.HasOcSupportedFeaturesAVP;
 import com.sipgate.sparta.diameter.ietf.drmp.mixins.HasDrmpAVP;
 
 /** Multimedia-Auth-Request (MAR) — 3GPP TS 29.229 §6.1.7. */
 public interface MultimediaAuthRequest
-        extends _3gppRequest, HasDrmpAVP, HasUserNameAVP,
+        extends _3gppRequest, HasDrmpAVP, HasUserNameAVP, HasOcSupportedFeaturesAVP,
                 HasSupportedFeaturesAVPs, HasPublicIdentityAVP, HasSipAuthDataItemAVP,
                 HasSipNumberAuthItemsAVP, HasServerNameAVP,
                 HasProxyInfoAVPs, HasRouteRecordAVPs {

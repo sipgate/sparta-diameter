@@ -31,6 +31,7 @@
         <module>sparta-diameter-spec</module>
         <module>sparta-diameter-spec-extractor</module>
         <module>sparta-diameter-base</module>
+        <module>sparta-diameter-ietf-doic</module>
         <module>sparta-diameter-ietf-drmp</module>
         <module>sparta-diameter-ietf-nas</module>
         <module>sparta-diameter-etsi-e2</module>
@@ -99,6 +100,11 @@
                 <version>${project.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.sipgate</groupId>
+                <artifactId>sparta-diameter-ietf-doic</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.sipgate</groupId>
