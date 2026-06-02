@@ -75,7 +75,13 @@ public final class CxDxAVPProvider implements AVPProvider {
             new AVPDefinition(CxDxConstants.AVP_ALTERNATE_DIGEST_HA1, "Alternate-Digest-HA1", String.class, false, true, V),
             new AVPDefinition(CxDxConstants.AVP_FAILED_PCSCF, "Failed-PCSCF", GroupedAVP.class, false, true, V),
             new AVPDefinition(CxDxConstants.AVP_PCSCF_FQDN, "PCSCF-FQDN", String.class, false, true, V),
-            new AVPDefinition(CxDxConstants.AVP_PCSCF_IP_ADDRESS, "PCSCF-IP-Address", InetAddress.class, false, true, V)
+            new AVPDefinition(CxDxConstants.AVP_PCSCF_IP_ADDRESS, "PCSCF-IP-Address", InetAddress.class, false, true, V),
+
+            // re-used AVPs in Cx/Dx base on Radius Digest Authentication (RFC 5090)
+            new AVPDefinition(CxDxConstants.AVP_DIGEST_REALM, "Digest-Realm", String.class, true, false, 0),
+            new AVPDefinition(CxDxConstants.AVP_DIGEST_QOP, "Digest-QoP", String.class, true, false, 0),
+            new AVPDefinition(CxDxConstants.AVP_DIGEST_ALGORITHM, "Digest-Algorithm", String.class, true, false, 0),
+            new AVPDefinition(CxDxConstants.AVP_DIGEST_HA1, "Digest-HA1", String.class, true, false, 0)
         );
     }
 }

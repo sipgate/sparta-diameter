@@ -68,6 +68,12 @@ public final class CxDxConstants {
     public static final int AVP_PCSCF_FQDN = 665;
     public static final int AVP_PCSCF_IP_ADDRESS = 666;
 
+    // re-used AVPs in Cx/Dx base on Radius Digest Authentication (RFC 5090)
+    public static final int AVP_DIGEST_REALM = 104;
+    public static final int AVP_DIGEST_QOP = 110;
+    public static final int AVP_DIGEST_ALGORITHM = 111;
+    public static final int AVP_DIGEST_HA1 = 121;
+
     // Server-Assignment-Type values (TS 29.229 §6.3.15)
     public static final int SERVER_ASSIGNMENT_NO_ASSIGNMENT = 0;
     public static final int SERVER_ASSIGNMENT_REGISTRATION = 1;

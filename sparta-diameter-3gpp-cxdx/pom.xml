@@ -20,10 +20,6 @@
         </dependency>
         <dependency>
             <groupId>com.sipgate</groupId>
-            <artifactId>sparta-diameter-ietf-radius-digest-authentication</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.sipgate</groupId>
             <artifactId>sparta-diameter-ietf-nas</artifactId>
         </dependency>
         <dependency>
