@@ -83,6 +83,45 @@ class AvpRfcTableParserTest {
     }
 
     @Test
+    void it_parses_a_table_with_a_separator_between_every_row() {
+        // GIVEN: RFC 7683 §7.8 lays out the AVP table with a separator
+        // line between every data row, not just bracketing the data
+        // block. One of the rows wraps its name across two lines.
+        final var input = """
+            --------------------------------------------------+----+----+
+            OC-Supported-Features  621   7.1      Grouped     |    | V  |
+            --------------------------------------------------+----+----+
+            OC-Feature-Vector      622   7.2      Unsigned64  |    | V  |
+            --------------------------------------------------+----+----+
+            OC-OLR                 623   7.3      Grouped     |    | V  |
+            --------------------------------------------------+----+----+
+            OC-Sequence-Number     624   7.4      Unsigned64  |    | V  |
+            --------------------------------------------------+----+----+
+            OC-Validity-Duration   625   7.5      Unsigned32  |    | V  |
+            --------------------------------------------------+----+----+
+            OC-Report-Type         626   7.6      Enumerated  |    | V  |
+            --------------------------------------------------+----+----+
+            OC-Reduction                                      |    |    |
+              -Percentage          627   7.7      Unsigned32  |    | V  |
+            --------------------------------------------------+----+----+
+            """;
+
+        // WHEN
+        final Set<AvpDef> actual = AvpRfcTableParser.parse(input);
+
+        // THEN
+        assertThat(actual).containsOnly(
+            new AvpDef(0, 621, "OC-Supported-Features", "Grouped", MAY, MUST_NOT, false),
+            new AvpDef(0, 622, "OC-Feature-Vector", "Unsigned64", MAY, MUST_NOT, false),
+            new AvpDef(0, 623, "OC-OLR", "Grouped", MAY, MUST_NOT, false),
+            new AvpDef(0, 624, "OC-Sequence-Number", "Unsigned64", MAY, MUST_NOT, false),
+            new AvpDef(0, 625, "OC-Validity-Duration", "Unsigned32", MAY, MUST_NOT, false),
+            new AvpDef(0, 626, "OC-Report-Type", "Enumerated", MAY, MUST_NOT, false),
+            new AvpDef(0, 627, "OC-Reduction-Percentage", "Unsigned32", MAY, MUST_NOT, false)
+        );
+    }
+
+    @Test
     void it_parses_rfc6733_table() {
         // GIVEN: representative rows from RFC 6733 §4.5 — single-line,
         // multi-line name, "V,M" comma-separated mustNot column,
