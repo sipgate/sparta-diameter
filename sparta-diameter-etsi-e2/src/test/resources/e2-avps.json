@@ -1,0 +1,65 @@
+[ {
+  "vendorId" : 13019,
+  "avpCode" : 350,
+  "attributeName" : "Location-Information",
+  "valueType" : "Grouped",
+  "mandatoryBit" : "MAY",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : true
+}, {
+  "vendorId" : 13019,
+  "avpCode" : 351,
+  "attributeName" : "RACS-Contact-Point",
+  "valueType" : "DiameterIdentity",
+  "mandatoryBit" : "MAY",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : true
+}, {
+  "vendorId" : 13019,
+  "avpCode" : 352,
+  "attributeName" : "Terminal-Type",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MAY",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : true
+}, {
+  "vendorId" : 13019,
+  "avpCode" : 353,
+  "attributeName" : "Requested-Information",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : true
+}, {
+  "vendorId" : 13019,
+  "avpCode" : 354,
+  "attributeName" : "Event-Type",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MAY",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : true
+}, {
+  "vendorId" : 13019,
+  "avpCode" : 355,
+  "attributeName" : "Civic-Location",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : true
+}, {
+  "vendorId" : 13019,
+  "avpCode" : 356,
+  "attributeName" : "Geospatial-Location",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : true
+}, {
+  "vendorId" : 13019,
+  "avpCode" : 500,
+  "attributeName" : "Line-Identifier",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : true
+} ]
