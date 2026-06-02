@@ -1,4 +1,4 @@
-package com.sipgate.sparta.diameter.ietf.diameternas;
+package com.sipgate.sparta.diameter.ietf.nas;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVPDefinition;
 import com.sipgate.sparta.diameter.base.core.avp.AVPProvider;

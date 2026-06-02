@@ -1,4 +1,4 @@
-package com.sipgate.sparta.diameter.ietf.diameternas;
+package com.sipgate.sparta.diameter.ietf.nas;
 
 /**
  * Framed-* AVP codes (IETF RFC 7155, which obsoletes RFC 4005).

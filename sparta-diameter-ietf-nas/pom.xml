@@ -5,8 +5,8 @@
         <artifactId>sparta-diameter</artifactId>
         <version>0.1.12-SNAPSHOT</version>
     </parent>
-    <artifactId>sparta-diameter-ietf-diameter-nas</artifactId>
-    <name>sparta-diameter-ietf-diameter-nas</name>
+    <artifactId>sparta-diameter-ietf-nas</artifactId>
+    <name>sparta-diameter-ietf-nas</name>
     <description>RFC 7155 — Diameter Network Access Server Application (Framed-* AVPs)</description>
 
     <dependencies>
