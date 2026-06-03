@@ -3,7 +3,7 @@
     <parent>
         <groupId>com.sipgate</groupId>
         <artifactId>sparta-diameter</artifactId>
-        <version>0.1.12-SNAPSHOT</version>
+        <version>0.1.12</version>
     </parent>
     <artifactId>sparta-diameter-ietf-mip6-integrated</artifactId>
     <name>sparta-diameter-ietf-mip6-integrated</name>
