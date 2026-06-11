@@ -21,6 +21,7 @@ public final class S6aConstants {
     // S6a/S6d AVP codes (TS 29.272 §7.3). All vendor-specific (3GPP, 10415).
     public static final int AVP_SUBSCRIPTION_DATA = 1400;
     public static final int AVP_TERMINAL_INFORMATION = 1401;
+    public static final int AVP_IMEI = 1402;
     public static final int AVP_ULR_FLAGS = 1405;
     public static final int AVP_ULA_FLAGS = 1406;
     public static final int AVP_VISITED_PLMN_ID = 1407;

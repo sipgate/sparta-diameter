@@ -25,6 +25,7 @@ public final class S6aAVPProvider implements AVPProvider {
             // TS 29.272 §7.3 — 3GPP vendor-specific AVPs, M and V bits set
             new AVPDefinition(S6aConstants.AVP_SUBSCRIPTION_DATA, "Subscription-Data", GroupedAVP.class, true, true, V),
             new AVPDefinition(S6aConstants.AVP_TERMINAL_INFORMATION, "Terminal-Information", GroupedAVP.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_IMEI, "IMEI", String.class, true, true, V),
             new AVPDefinition(S6aConstants.AVP_ULR_FLAGS, "ULR-Flags", Long.class, true, true, V),
             new AVPDefinition(S6aConstants.AVP_ULA_FLAGS, "ULA-Flags", Long.class, true, true, V),
             new AVPDefinition(S6aConstants.AVP_VISITED_PLMN_ID, "Visited-PLMN-Id", byte[].class, true, true, V),
