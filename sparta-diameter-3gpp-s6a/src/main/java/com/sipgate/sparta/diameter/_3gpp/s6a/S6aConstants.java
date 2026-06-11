@@ -22,21 +22,44 @@ public final class S6aConstants {
     public static final int AVP_SUBSCRIPTION_DATA = 1400;
     public static final int AVP_TERMINAL_INFORMATION = 1401;
     public static final int AVP_IMEI = 1402;
+    public static final int AVP_SOFTWARE_VERSION = 1403;
+
     public static final int AVP_ULR_FLAGS = 1405;
     public static final int AVP_ULA_FLAGS = 1406;
     public static final int AVP_VISITED_PLMN_ID = 1407;
     public static final int AVP_REQUESTED_EUTRAN_AUTHENTICATION_INFO = 1408;
     public static final int AVP_REQUESTED_UTRAN_GERAN_AUTHENTICATION_INFO = 1409;
+    public static final int AVP_NUMBER_OF_REQUESTED_VECTORS = 1410;
+    public static final int AVP_RE_SYNCHRONIZATION_INFO = 1411;
     public static final int AVP_AUTHENTICATION_INFO = 1413;
+    public static final int AVP_E_UTRAN_VECTOR = 1414;
+    public static final int AVP_UTRAN_VECTOR = 1415;
+    public static final int AVP_NETWORK_ACCESS_MODE = 1417;
+    public static final int AVP_ITEM_NUMBER = 1419;
     public static final int AVP_CANCELLATION_TYPE = 1420;
     public static final int AVP_DSR_FLAGS = 1421;
     public static final int AVP_DSA_FLAGS = 1422;
     public static final int AVP_CONTEXT_IDENTIFIER = 1423;
+    public static final int AVP_SUBSCRIBER_STATUS = 1424;
+    public static final int AVP_APN_OI_REPLACEMENT = 1427;
+    public static final int AVP_ALL_APN_CONFIGURATIONS_INCLUDED_INDICATOR = 1428;
+    public static final int AVP_APN_CONFIGURATION_PROFILE = 1429;
+    public static final int AVP_APN_CONFIGURATION = 1430;
+    public static final int AVP_EPS_SUBSCRIBED_QOS_PROFILE = 1431;
+    public static final int AVP_VPLMN_DYNAMIC_ADDRESS_ALLOWED = 1432;
     public static final int AVP_ALERT_REASON = 1434;
+    public static final int AVP_AMBR = 1435;
+    public static final int AVP_PDN_GW_ALLOCATION_TYPE = 1438;
+    public static final int AVP_RAT_FREQUENCY_SELECTION_PRIORITY_ID = 1440;
     public static final int AVP_IDA_FLAGS = 1441;
     public static final int AVP_PUA_FLAGS = 1442;
     public static final int AVP_NOR_FLAGS = 1443;
     public static final int AVP_USER_ID = 1444;
+    public static final int AVP_RAND = 1447;
+    public static final int AVP_XRES = 1448;
+    public static final int AVP_AUTN = 1449;
+    public static final int AVP_KASME = 1450;
+    public static final int AVP_PDN_TYPE = 1456;
     public static final int AVP_TRACE_REFERENCE = 1459;
     public static final int AVP_SS_CODE = 1476;
     public static final int AVP_TS_CODE = 1487;
@@ -45,9 +68,11 @@ public final class S6aConstants {
     public static final int AVP_HOMOGENEOUS_SUPPORT_OF_IMS_VOICE_OVER_PS_SESSIONS = 1493;
     public static final int AVP_LAST_UE_ACTIVITY_TIME = 1494;
     public static final int AVP_EPS_USER_STATE = 1495;
+    public static final int AVP_ACTIVE_APN = 1612;
+    public static final int AVP_SIPTO_PERMISSION = 1613;
     public static final int AVP_ERROR_DIAGNOSTIC = 1614;
     public static final int AVP_UE_SRVCC_CAPABILITY = 1615;
-    public static final int AVP_ACTIVE_APN = 1612;
+    public static final int AVP_LIPA_PERMISSION = 1618;
     public static final int AVP_PUR_FLAGS = 1635;
     public static final int AVP_EQUIVALENT_PLMN_LIST = 1637;
     public static final int AVP_CLR_FLAGS = 1638;
@@ -70,6 +95,17 @@ public final class S6aConstants {
     public static final int AVP_MAXIMUM_UE_AVAILABILITY_TIME = 3329;
     /** Emergency-Services — 3GPP TS 29.272 §7.3.221. */
     public static final int AVP_EMERGENCY_SERVICES = 3370;
+
+    // TS 29.212 (Gx) AVP codes
+    public static final int AVP_MAX_REQUESTED_BANDWIDTH_DL = 515;
+    public static final int AVP_MAX_REQUESTED_BANDWIDTH_UL = 516;
+    public static final int AVP_QOS_CLASS_IDENTIFIER = 1028;
+    public static final int AVP_ALLOCATION_RETENTION_PRIORITY = 1034;
+    public static final int AVP_PRIORITY_LEVEL = 1046;
+    public static final int AVP_PRE_EMPTION_CAPABILITY = 1047;
+    public static final int AVP_PRE_EMPTION_VULNERABILITY = 1048;
+
+    public static final int AVP_CHARGING_CHARACTERISTICS_3GPP = 13;
 
     // Cancellation-Type values (TS 29.272 §7.3.24)
     public static final int CANCELLATION_TYPE_MME_UPDATE_PROCEDURE = 0;
