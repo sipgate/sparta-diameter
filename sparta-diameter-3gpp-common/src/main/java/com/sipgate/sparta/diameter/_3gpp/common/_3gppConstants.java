@@ -35,6 +35,7 @@ public final class _3gppConstants {
     // Experimental Result value shared across multiple 3GPP interfaces (e.g. Cx/Dx, S6c, SGd/Gdd)
     // Carried in Experimental-Result AVP; distinct from RFC 6733 Result-Code 5001 (AVP_UNSUPPORTED)
     public static final long EXP_RES_DIAMETER_ERROR_USER_UNKNOWN = 5001L;
+    public static final long EXP_RES_DIAMETER_ERROR_IDENTITIES_DONT_MATCH = 5002L;
 
     private _3gppConstants() {}
 }
