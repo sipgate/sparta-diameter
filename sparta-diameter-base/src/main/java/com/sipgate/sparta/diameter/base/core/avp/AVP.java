@@ -868,13 +868,12 @@ public class AVP {
         final var key = new AVPKey(code, vendorId);
         final AVPDefinition definition = registry.get(key);
         if (definition == null) {
+            LOGGER.warn("AVP unsupported: {}", key);
             if (mandatory) {
                 // RFC 6733 §1.3.4: unrecognized AVP with M-bit set MUST trigger 5001
                 throw new AVPParseException(DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED,
                     new AVP(code, vendorSpecific, mandatory, protectedAVP, vendorId, data));
             }
-
-            LOGGER.warn("AVP unsupported: {}", key);
         } else if (definition.dataType().equals(GroupedAVP.class)) {
             // Parse grouped AVP
             final ByteBuffer dataBuffer = ByteBuffer.wrap(data);
