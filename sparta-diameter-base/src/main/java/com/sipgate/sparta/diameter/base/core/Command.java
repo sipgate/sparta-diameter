@@ -328,8 +328,8 @@ public abstract class Command implements
 
                 // the exception from parseAVPs doesn't know about the context so we must enrich it here.
                 throw new AVPParseException(e.getResultCode(),
-                        commandCode, proxiable, applicationId, hopByHop, endToEnd,
-                        e.getOffendingAvp(), sessionId);
+                    commandCode, proxiable, applicationId, hopByHop, endToEnd,
+                    e.getOffendingAvp(), sessionId, e);
             }
 
             final IncomingCommand command = DiameterMessageFactory.createForParsing(

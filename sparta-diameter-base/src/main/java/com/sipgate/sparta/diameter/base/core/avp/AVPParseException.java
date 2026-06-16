@@ -38,9 +38,16 @@ public class AVPParseException extends DiameterResultCodeException {
     public AVPParseException(final long resultCode, final int commandCode,
             final boolean proxiable, final int applicationId,
             final HopByHopId hopByHop, final EndToEndId endToEnd,
-            final AVP offendingAvp, final String sessionId) {
-        super(resultCode, commandCode, proxiable, applicationId, hopByHop, endToEnd, sessionId);
+            final AVP offendingAvp, final String sessionId, final Throwable cause) {
+        super(resultCode, commandCode, proxiable, applicationId, hopByHop, endToEnd, sessionId, cause);
         this.offendingAvp = offendingAvp;
+    }
+
+    public AVPParseException(final long resultCode, final int commandCode,
+            final boolean proxiable, final int applicationId,
+            final HopByHopId hopByHop, final EndToEndId endToEnd,
+            final AVP offendingAvp, final String sessionId) {
+        this(resultCode, commandCode, proxiable, applicationId, hopByHop, endToEnd, offendingAvp, sessionId, null);
     }
 
     /**

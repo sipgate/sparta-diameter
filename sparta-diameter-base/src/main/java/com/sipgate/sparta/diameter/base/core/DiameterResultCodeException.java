@@ -35,7 +35,11 @@ public class DiameterResultCodeException extends DiameterException {
      * @param sessionId     the session id avp value from the parsed message, if parsed already
      */
     public DiameterResultCodeException(final long resultCode, final int commandCode, final boolean proxiable, final int applicationId, final HopByHopId hopByHop, final EndToEndId endToEnd, final String sessionId) {
-        super("Diameter protocol error: result code " + resultCode);
+        this(resultCode, commandCode, proxiable, applicationId, hopByHop, endToEnd, sessionId, null);
+    }
+
+    public DiameterResultCodeException(final long resultCode, final int commandCode, final boolean proxiable, final int applicationId, final HopByHopId hopByHop, final EndToEndId endToEnd, final String sessionId, final Throwable cause) {
+        super("Diameter protocol error: result code " + resultCode, cause);
         this.resultCode = resultCode;
         this.commandCode = commandCode;
         this.proxiable = proxiable;
