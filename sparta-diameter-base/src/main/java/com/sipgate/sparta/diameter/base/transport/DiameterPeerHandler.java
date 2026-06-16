@@ -8,6 +8,7 @@ import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.DecoderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,8 +72,12 @@ final class DiameterPeerHandler extends SimpleChannelInboundHandler<IncomingComm
     }
 
     @Override
-    public void exceptionCaught(final ChannelHandlerContext ctx, final Throwable cause) {
+    public void exceptionCaught(final ChannelHandlerContext ctx, Throwable cause) {
         final var peer = new DiameterPeer(ctx.channel(), transportMeters);
+        if(cause instanceof final DecoderException e) {
+            LOGGER.debug("Rewriting DecoderException: {}", e.getMessage());
+            cause = e.getCause() != null ? e.getCause() : e;
+        }
         if (cause instanceof final DiameterException e) {
             listener.onParseError(peer, e);
         } else {
