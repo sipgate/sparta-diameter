@@ -1,9 +1,14 @@
 package com.sipgate.sparta.diameter.base.core.avp;
 
+import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,5 +53,23 @@ class GroupedAVPTest {
         assertThat(underTest.isProtected()).isFalse();
         assertThat(underTest.getVendorId()).isEqualTo(vendorId);
         assertThat(underTest.getAVPs()).containsExactly(child);
+    }
+
+    @Test
+    void it_serializes_avps_that_are_added_after_constructor() throws IOException, AVPParseException {
+        // GIVEN: no AVP in constructor
+        final var groupedAvp = new GroupedAVP(new AVPKey(DiameterConstants.AVP_PROXY_INFO, 0), false, List.of());
+
+        // WHEN: child AVP is added
+        final var avp = new AVP(0, false, new byte[]{'a', 'v', 'p'});
+        groupedAvp.addAVP(avp);
+
+        // WHEN: grouped avp is encoded
+        final var baos = new ByteArrayOutputStream();
+        groupedAvp.writeTo(new DataOutputStream(baos));
+
+        // THEN: child AVP is decoded
+        final var decodedGroupedAvp = (GroupedAVP) AVP.readFrom(ByteBuffer.wrap(baos.toByteArray()));
+        assertThat(decodedGroupedAvp.getAVPs()).usingRecursiveFieldByFieldElementComparator().containsExactly(avp);
     }
 }

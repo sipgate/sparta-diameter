@@ -197,8 +197,8 @@ public abstract class Command implements
     protected int getMessageLength() {
         int length = 20; // Diameter header is 20 bytes
         for (final AVP avp : avps) {
-            length += avp.getLength();
-            final int padding = (4 - (avp.getLength() % 4)) % 4;
+            length += avp.calculateLength();
+            final int padding = (4 - (avp.calculateLength() % 4)) % 4;
             length += padding;
         }
         return length;
@@ -366,8 +366,8 @@ public abstract class Command implements
         while (bytesRead < remainingLength) {
             final AVP avp = AVP.readFrom(byteBuffer);
             avps.add(avp);
-            final int padding = (4 - (avp.getLength() % 4)) % 4;
-            bytesRead += avp.getLength() + padding;
+            final int padding = (4 - (avp.calculateLength() % 4)) % 4;
+            bytesRead += avp.calculateLength() + padding;
         }
     }
 

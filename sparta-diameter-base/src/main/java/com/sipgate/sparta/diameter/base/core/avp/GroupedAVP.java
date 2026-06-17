@@ -1,9 +1,7 @@
 package com.sipgate.sparta.diameter.base.core.avp;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,7 +40,9 @@ public class GroupedAVP extends AVP implements AVPContainer {
      */
     public GroupedAVP(final long code, final boolean vendorSpecific, final boolean mandatory, final boolean protectedAVP,
                       final long vendorId, final List<AVP> avps) {
-        super(code, vendorSpecific, mandatory, protectedAVP, vendorId, serializeAVPs(avps));
+        // When we mutate our list of AVPs, then data had to be updated everytime. Instead, we don't use the data field
+        // but serialize the data only when we actually call writeTo.
+        super(code, vendorSpecific, mandatory, protectedAVP, vendorId, null);
         this.avps = new ArrayList<>(avps);
     }
 
@@ -111,28 +111,33 @@ public class GroupedAVP extends AVP implements AVPContainer {
         return result;
     }
 
-    /**
-     * Serializes the list of AVPs into a byte array.
-     *
-     * @param avps The list of AVPs to serialize.
-     * @return The serialized byte array.
-     */
-    private static byte[] serializeAVPs(final List<AVP> avps) {
-        if (avps == null || avps.isEmpty()) {
-            return new byte[0];
+    @Override
+    public int calculateLength() {
+        if (data.length > 0) {
+            throw new IllegalStateException("data must not be set");
         }
 
-        try {
-            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            final DataOutputStream dos = new DataOutputStream(baos);
+        // use header length from super, and add the length of all children
+        // using super only works because data.length == 0
+        return super.calculateLength() + avps.stream().mapToInt(avp -> {
+            final var length = avp.calculateLength();
+            final var padding = (4 - (length % 4)) % 4;
+            return length + padding;
+        }).sum();
+    }
 
-            for (final AVP avp : avps) {
-                avp.writeTo(dos);
-            }
+    @Override
+    protected void writeDataTo(final DataOutputStream outputStream) throws IOException {
+        if (data.length > 0) {
+            throw new IllegalStateException("data must not be set");
+        }
 
-            return baos.toByteArray();
-        } catch (final IOException e) {
-            throw new UncheckedIOException("Failed to serialize AVPs", e);
+        if (avps == null || avps.isEmpty()) {
+            return;
+        }
+
+        for (final AVP avp : avps) {
+            avp.writeTo(outputStream);
         }
     }
 }

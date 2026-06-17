@@ -37,7 +37,7 @@ public class AVP {
     private final boolean mandatory;
     private final boolean protectedAVP;
     private final long vendorId;
-    private final byte[] data;
+    protected final byte[] data;
 
     // Factory functionality merged from AVPFactory
     private static final Map<AVPKey, AVPDefinition> registry = new ConcurrentHashMap<>();
@@ -331,7 +331,7 @@ public class AVP {
     }
 
 
-    public int getLength() {
+    public int calculateLength() {
         int length = 8; // AVP header is 8 bytes minimum
         if (vendorSpecific) {
             length += 4; // Vendor-Id field
@@ -358,7 +358,7 @@ public class AVP {
         outputStream.writeByte(flags);
 
         // Length (3 bytes) - includes header + data
-        final int length = getLength();
+        final int length = calculateLength();
         outputStream.writeByte((length >> 16) & 0xFF);
         outputStream.writeByte((length >> 8) & 0xFF);
         outputStream.writeByte(length & 0xFF);
@@ -369,14 +369,19 @@ public class AVP {
         }
 
         // Data
-        outputStream.write(data);
+        writeDataTo(outputStream);
 
         // Padding to 4-byte boundary
-        final int padding = (4 - (data.length % 4)) % 4;
+        final int padding = (4 - (length % 4)) % 4;
         for (int i = 0; i < padding; i++) {
             outputStream.writeByte(0);
         }
     }
+
+    protected void writeDataTo(final DataOutputStream outputStream) throws IOException {
+        outputStream.write(data);
+    }
+
     /**
      * Creates an AVP with a 32-bit signed integer value.
      *
@@ -904,7 +909,7 @@ public class AVP {
         sb.append(" <Code: 0x").append(Long.toHexString(code).toLowerCase());
         sb.append(", Flags: 0x").append(Integer.toHexString(getFlagsValue()).toLowerCase());
         sb.append(" (").append(getFlagsString()).append(")");
-        sb.append(", Length: ").append(getLength());
+        sb.append(", Length: ").append(calculateLength());
         sb.append(", Val: ").append(getValueString()).append(">");
 
         return sb.toString();
