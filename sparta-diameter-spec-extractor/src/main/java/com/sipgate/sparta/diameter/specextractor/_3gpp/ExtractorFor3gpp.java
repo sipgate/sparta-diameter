@@ -91,7 +91,19 @@ public final class ExtractorFor3gpp {
             "https://www.3gpp.org/ftp/Specs/latest/Rel-19/29_series/29173-j00.zip",
             "sparta-diameter-3gpp-slh/src/test/resources/slh-avps.json",
             VENDOR_ID_3GPP,
-            List.of("Table 6.4.1/1: SLh specific Diameter AVPs"))
+            List.of("Table 6.4.1/1: SLh specific Diameter AVPs")),
+        new SpecSource(
+            "https://www.3gpp.org/ftp/Specs/latest/Rel-19/29_series/29061-j10.zip",
+            "sparta-diameter-3gpp-s6a/src/test/resources/gi-sgi-avps.json",
+            VENDOR_ID_3GPP,
+            List.of("Table 9a: Gi/Sgi specific AVPs")
+        ),
+        new SpecSource(
+            "https://www.3gpp.org/ftp/Specs/latest/Rel-19/29_series/29214-j30.zip",
+            "sparta-diameter-3gpp-rx/src/test/resources/rx-avps.json",
+            VENDOR_ID_3GPP,
+            List.of("Table 5.3.0.1: Rx specific Diameter AVPs ")
+        )
     );
 
     private static final Path REPO_ROOT = findRepoRoot();
