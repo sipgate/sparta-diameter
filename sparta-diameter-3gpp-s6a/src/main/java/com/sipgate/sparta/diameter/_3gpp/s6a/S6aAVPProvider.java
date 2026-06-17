@@ -27,6 +27,7 @@ public final class S6aAVPProvider implements AVPProvider {
             new AVPDefinition(S6aConstants.AVP_TERMINAL_INFORMATION, "Terminal-Information", GroupedAVP.class, true, true, V),
             new AVPDefinition(S6aConstants.AVP_IMEI, "IMEI", String.class, true, true, V),
             new AVPDefinition(S6aConstants.AVP_SOFTWARE_VERSION, "Software-Version", String.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_QOS_SUBSCRIBED, "QoS-Subscribed", byte[].class, true, true, V),
             new AVPDefinition(S6aConstants.AVP_ULR_FLAGS, "ULR-Flags", Long.class, true, true, V),
             new AVPDefinition(S6aConstants.AVP_ULA_FLAGS, "ULA-Flags", Long.class, true, true, V),
             new AVPDefinition(S6aConstants.AVP_VISITED_PLMN_ID, "Visited-PLMN-Id", byte[].class, true, true, V),

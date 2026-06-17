@@ -23,7 +23,7 @@ public final class S6aConstants {
     public static final int AVP_TERMINAL_INFORMATION = 1401;
     public static final int AVP_IMEI = 1402;
     public static final int AVP_SOFTWARE_VERSION = 1403;
-
+    public static final int AVP_QOS_SUBSCRIBED = 1404;
     public static final int AVP_ULR_FLAGS = 1405;
     public static final int AVP_ULA_FLAGS = 1406;
     public static final int AVP_VISITED_PLMN_ID = 1407;
