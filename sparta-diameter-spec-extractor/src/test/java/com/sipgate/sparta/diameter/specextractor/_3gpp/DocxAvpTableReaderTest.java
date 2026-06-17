@@ -89,6 +89,27 @@ class DocxAvpTableReaderTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = {
+        "Sponsored-Connectivity-Data (NOTE 4)",
+        "Sponsored-Connectivity-Data (NOTE 4)",
+    })
+    void it_strips_a_trailing_NOTE_annotation_from_the_attribute_name(final String name) throws IOException {
+        // GIVEN a docx whose name cell reads "Sponsored-Connectivity-Data (NOTE 4)" with a non-breaking space (as in TS 29.214)
+        final byte[] docx = buildDocxWithName(name);
+
+        // WHEN the reader parses it
+        final List<AvpDef> defs;
+        try (final InputStream in = new ByteArrayInputStream(docx)) {
+            defs = DocxAvpTableReader.read(in, VENDOR_ID, List.of(CAPTION));
+        }
+
+        // THEN the footnote marker and non-breaking space are dropped from the name
+        assertThat(defs)
+                .singleElement()
+                .satisfies(def -> assertThat(def.attributeName()).isEqualTo("Sponsored-Connectivity-Data"));
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"Enumerate", "Enumarated"})
     void it_rewrites_spec_typos_of_Enumerated(final String typo) throws IOException {
         // GIVEN a docx whose row has a known typo for "Enumerated" as its value type
@@ -104,6 +125,28 @@ class DocxAvpTableReaderTest {
         assertThat(defs)
                 .singleElement()
                 .satisfies(def -> assertThat(def.valueType()).isEqualTo("Enumerated"));
+    }
+
+    private static byte[] buildDocxWithName(final String name) throws IOException {
+        try (final XWPFDocument doc = new XWPFDocument();
+             final ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            final XWPFParagraph captionParagraph = doc.createParagraph();
+            captionParagraph.createRun().setText(CAPTION);
+
+            final XWPFTable table = doc.createTable(2, 7);
+            writeHeaderRow(table.getRow(0));
+            final XWPFTableRow row = table.getRow(1);
+            setCellText(row.getCell(0), name);
+            setCellText(row.getCell(1), "530");
+            setCellText(row.getCell(2), "Grouped");
+            setCellText(row.getCell(3), "V");
+            setCellText(row.getCell(4), "");
+            setCellText(row.getCell(5), "");
+            setCellText(row.getCell(6), "M");
+
+            doc.write(out);
+            return out.toByteArray();
+        }
     }
 
     private static byte[] buildDocxWithValueType(final String valueType) throws IOException {

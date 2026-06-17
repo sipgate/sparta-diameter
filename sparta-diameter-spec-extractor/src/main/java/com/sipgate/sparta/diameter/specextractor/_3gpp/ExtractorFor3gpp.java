@@ -174,8 +174,8 @@ public final class ExtractorFor3gpp {
     private static void writeJson(final List<AvpDef> defs, final Path target) throws IOException {
         Files.createDirectories(target.getParent());
         final ObjectMapper mapper = JsonMapper.builder()
-                .enable(SerializationFeature.INDENT_OUTPUT)
-                .build();
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .build();
         mapper.writeValue(target.toFile(), defs);
     }
 

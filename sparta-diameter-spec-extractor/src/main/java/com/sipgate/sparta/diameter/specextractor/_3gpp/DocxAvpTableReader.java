@@ -118,14 +118,20 @@ final class DocxAvpTableReader {
         return result;
     }
 
+    // The non-breaking space (U+00A0) is common in 3GPP tables but is not matched by \s.
     private static String normalize(final String s) {
-        return s == null ? "" : s.replaceAll("\\s+", " ").trim();
+        return s == null ? "" : s.replaceAll("[\\s\\u00A0]+", " ").trim();
     }
 
-    // Strips a trailing parenthetical annotation like "(NOTE 2)" so that
-    // e.g. "Value Type (NOTE 2)" matches the canonical "Value Type" header.
+    // Strips a trailing parenthetical annotation like "(NOTE 2)" so that e.g. "Value Type (NOTE 2)"
+    // matches the canonical "Value Type" header and "Sponsored-Connectivity-Data (NOTE 4)" yields a
+    // clean AVP name.
+    private static String stripTrailingAnnotation(final String s) {
+        return s.replaceAll("\\s*\\(.*\\)\\s*$", "").trim();
+    }
+
     private static String canonicalHeader(final String s) {
-        return normalize(s).replaceAll("\\s*\\(.*\\)\\s*$", "").trim();
+        return stripTrailingAnnotation(normalize(s));
     }
 
     // Spec typos seen in the wild: TS 29.272 spells "Enumerated" as "Enumerate"
@@ -168,7 +174,7 @@ final class DocxAvpTableReader {
                                    final Map<String, Integer> idx,
                                    final long vendorId) {
         final List<XWPFTableCell> cells = row.getTableCells();
-        final String name = normalize(cellAt(cells, idx, COL_NAME));
+        final String name = stripTrailingAnnotation(normalize(cellAt(cells, idx, COL_NAME)));
         final String codeStr = normalize(cellAt(cells, idx, COL_CODE)).replaceFirst("\\D.*", "");
         if (name.isBlank() || codeStr.isBlank()) {
             return null;
