@@ -1,0 +1,44 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.sipgate</groupId>
+        <artifactId>sparta-diameter</artifactId>
+        <version>0.1.13-SNAPSHOT</version>
+    </parent>
+    <artifactId>sparta-diameter-3gpp-rx</artifactId>
+    <name>sparta-diameter-3gpp-rx</name>
+    <description>TS 29.214 — Rx (AF/PCRF) AVPs reused by other 3GPP interfaces</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.sipgate</groupId>
+            <artifactId>sparta-diameter-3gpp-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sipgate</groupId>
+            <artifactId>sparta-diameter-spec</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sipgate</groupId>
+            <artifactId>sparta-diameter-base</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

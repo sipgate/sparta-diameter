@@ -141,11 +141,6 @@ public final class S6aConstants {
     /** Emergency-Services — 3GPP TS 29.273. */
     public static final int AVP_EMERGENCY_SERVICES = 3370;
 
-    // TS 29.214 (Rx) AVP codes, referenced from EPS-Subscribed-QoS-Profile. QCI/ARP/Priority-Level/
-    // Pre-emption AVPs are defined by TS 29.212 (Gx) and live in GxConstants.
-    public static final int AVP_MAX_REQUESTED_BANDWIDTH_DL = 515;
-    public static final int AVP_MAX_REQUESTED_BANDWIDTH_UL = 516;
-
     // 3GPP-Charging-Characteristics — TS 29.061 (Gi/Sgi) §16.4.7.2.
     public static final int AVP_CHARGING_CHARACTERISTICS_3GPP = 13;
 

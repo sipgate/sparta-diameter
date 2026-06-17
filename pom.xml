@@ -40,6 +40,7 @@
         <module>sparta-diameter-etsi-e2</module>
         <module>sparta-diameter-3gpp-common</module>
         <module>sparta-diameter-3gpp-gx</module>
+        <module>sparta-diameter-3gpp-rx</module>
         <module>sparta-diameter-3gpp-s6c</module>
         <module>sparta-diameter-3gpp-s6t</module>
         <module>sparta-diameter-3gpp-sgdgdd</module>
@@ -155,6 +156,11 @@
             <dependency>
                 <groupId>com.sipgate</groupId>
                 <artifactId>sparta-diameter-3gpp-gx</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sipgate</groupId>
+                <artifactId>sparta-diameter-3gpp-rx</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
