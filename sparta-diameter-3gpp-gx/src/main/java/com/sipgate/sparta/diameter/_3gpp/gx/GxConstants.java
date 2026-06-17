@@ -8,6 +8,7 @@ public final class GxConstants {
 
     public static final int AVP_RAT_TYPE = 1032;
     public static final int AVP_ACCESS_NETWORK_CHARGING_IDENTIFIER_GX = 1022;
+    public static final int AVP_ALLOCATION_RETENTION_PRIORITY = 1034;
     public static final int AVP_BEARER_CONTROL_MODE = 1023;
     public static final int AVP_BEARER_IDENTIFIER = 1020;
     public static final int AVP_BEARER_OPERATION = 1021;
@@ -27,7 +28,10 @@ public final class GxConstants {
     public static final int AVP_OFFLINE = 1008;
     public static final int AVP_ONLINE = 1009;
     public static final int AVP_PCC_RULE_STATUS = 1019;
+    public static final int AVP_PRE_EMPTION_CAPABILITY = 1047;
+    public static final int AVP_PRE_EMPTION_VULNERABILITY = 1048;
     public static final int AVP_PRECEDENCE = 1010;
+    public static final int AVP_PRIORITY_LEVEL = 1046;
     public static final int AVP_QOS_CLASS_IDENTIFIER = 1028;
     public static final int AVP_QOS_INFORMATION = 1016;
     public static final int AVP_QOS_NEGOTIATION = 1029;

@@ -146,11 +146,6 @@ public final class S6aAVPProvider implements AVPProvider {
 
             new AVPDefinition(S6aConstants.AVP_MAX_REQUESTED_BANDWIDTH_DL, "Max-Requested-Bandwidth-DL", Long.class, true, true, V),
             new AVPDefinition(S6aConstants.AVP_MAX_REQUESTED_BANDWIDTH_UL, "Max-Requested-Bandwidth-UL", Long.class, true, true, V),
-            new AVPDefinition(S6aConstants.AVP_QOS_CLASS_IDENTIFIER, "QoS-Class-Identifier", Integer.class, true, true, V),
-            new AVPDefinition(S6aConstants.AVP_ALLOCATION_RETENTION_PRIORITY, "Allocation-Retention-Priority", GroupedAVP.class, true, true, V),
-            new AVPDefinition(S6aConstants.AVP_PRIORITY_LEVEL, "Priority-Level", Long.class, true, true, V),
-            new AVPDefinition(S6aConstants.AVP_PRE_EMPTION_CAPABILITY, "Pre-emption-Capability", Integer.class, true, true, V),
-            new AVPDefinition(S6aConstants.AVP_PRE_EMPTION_VULNERABILITY, "Pre-emption-Vulnerability", Integer.class, true, true, V),
             new AVPDefinition(S6aConstants.AVP_CHARGING_CHARACTERISTICS_3GPP, "3GPP-Charging-Characteristics", byte[].class, true, true, V)
         );
     }
