@@ -1,18 +1,12 @@
 package com.sipgate.sparta.diameter.base;
 
-import com.sipgate.sparta.diameter.base.core.avp.AVP;
-import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
-import com.sipgate.sparta.diameter.base.core.avp.AVPDefinition;
-import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
-import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
+import com.sipgate.sparta.diameter.base.core.avp.*;
 import com.sipgate.sparta.diameter.spec.AvpDef;
 import com.sipgate.sparta.diameter.spec.AvpFlagRule;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.reflections.Reflections;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -28,7 +22,6 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -122,7 +115,11 @@ public abstract class AvpSpecTestBase {
             .toList();
 
         if (definitions.isEmpty()) {
-            abort("AVP not defined");
+            if(avpDef.mandatoryBit().equals(AvpFlagRule.MUST)) {
+                fail("AVP not defined but is mandatory.");
+            } else {
+                abort("AVP not defined but since it's not mandatory we can ignore this.");
+            }
             return;
         }
 
