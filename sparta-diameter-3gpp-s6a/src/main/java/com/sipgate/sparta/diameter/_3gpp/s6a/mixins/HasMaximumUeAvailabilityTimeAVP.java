@@ -7,7 +7,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import java.util.Date;
 
-/** Mixin for messages carrying the Maximum-UE-Availability-Time AVP (3GPP TS 29.272 §7.3.198, code 3329). */
+/** Mixin for messages carrying the Maximum-UE-Availability-Time AVP (3GPP TS 29.338 §5.3.3.22, code 3329). */
 public interface HasMaximumUeAvailabilityTimeAVP extends AVPContainer {
 
     default void setMaximumUeAvailabilityTime(final Date value) {

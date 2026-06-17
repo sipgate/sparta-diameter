@@ -295,8 +295,7 @@ public abstract class AvpSpecTestBase {
 
     private Type<?> shapeOf(final AvpDef def) {
         return switch (def.valueType()) {
-            case "OctetString" ->
-                new Type<>(byte[].class, byte[].class, new byte[]{'o', 'c', 't', 'e', 't', '-', 's', 't', 'r', 'i', 'n', 'g'});
+            case "OctetString" -> new Type<>(byte[].class, byte[].class, new byte[]{'o','c','t','e','t','-','s','t','r','i','n','g'});
             case "Integer32" -> new Type<>(int.class, int.class, -32);
             case "Integer64" -> new Type<>(long.class, long.class, -64L);
             case "Unsigned32" -> new Type<>(long.class, long.class, 32L);
@@ -309,6 +308,9 @@ public abstract class AvpSpecTestBase {
             case "UTF8String" -> new Type<>(String.class, String.class, "UTF-8");
             case "DiameterIdentity", "DiamIdent" -> new Type<>(String.class, String.class, "diameter-identity");
             case "DiameterURI", "DiamURI" -> new Type<>(String.class, String.class, "diameter-uri");
+            // IPFilterRule / QoSFilterRule are ASCII rule strings (RFC 6733 / RFC 4005)
+            case "IPFilterRule", "IPFltrRule" -> new Type<>(String.class, String.class, "permit in ip from any to any");
+            case "QoSFilterRule", "QoSFltrRule" -> new Type<>(String.class, String.class, "tag");
             case "Enumerated" -> new Type<>(int.class, int.class, exampleEnumValueFor(def));
             case "Grouped" -> new Type<>(List.class, AVPContainer.class, List.<AVP>of());
             default -> throw new IllegalArgumentException("Unknown valueType: " + def.valueType());

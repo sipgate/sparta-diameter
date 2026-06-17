@@ -644,16 +644,19 @@ public class AVP {
     }
 
     /**
-     * Registers all AVP definitions from the given provider.
+     * Registers all AVP definitions from the given provider. Re-registering an identical definition
+     * (same key, name, type and flags) is a no-op, so a common AVP may be declared by several
+     * providers (e.g. an interface-specific provider and the shared 3GPP provider). Only a genuine
+     * conflict — two different definitions for the same (code, vendorId) — is rejected.
      *
      * @param provider The AVP provider to register
-     * @throws IllegalStateException if a duplicate (code, vendorId) is detected
+     * @throws IllegalStateException if two different definitions share a (code, vendorId)
      */
     public static void registerProvider(final AVPProvider provider) {
         for (final AVPDefinition definition : provider.getDefinitions()) {
             final var key = new AVPKey(definition.code(), definition.vendorId());
             final var existing = registry.putIfAbsent(key, definition);
-            if (existing != null) {
+            if (existing != null && !existing.equals(definition)) {
                 throw new IllegalStateException(String.format(
                     "Duplicate AVP registration for key (code=%d, vendorId=%d): '%s' conflicts with already-registered '%s'",
                     key.code(), key.vendorId(), definition.name(), existing.name()));

@@ -5,6 +5,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPDefinition;
 import com.sipgate.sparta.diameter.base.core.avp.AVPProvider;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 
+import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -94,7 +95,52 @@ public final class S6aAVPProvider implements AVPProvider {
             new AVPDefinition(S6aConstants.AVP_SF_ULR_TIMESTAMP, "SF-ULR-Timestamp", Date.class, false, true, V),
             new AVPDefinition(S6aConstants.AVP_SF_PROVISIONAL_INDICATION, "SF-Provisional-Indication", Integer.class, false, true, V),
 
-            new AVPDefinition(S6aConstants.AVP_SUPPORTED_SERVICES, "Supported-Services", GroupedAVP.class, false, true, V),
+            // TS 29.272 §7.3 — additional mandatory (M-bit) AVPs
+            new AVPDefinition(S6aConstants.AVP_GERAN_VECTOR, "GERAN-Vector", GroupedAVP.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_HPLMN_ODB, "HPLMN-ODB", Long.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_OPERATOR_DETERMINED_BARRING, "Operator-Determined-Barring", Long.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_ACCESS_RESTRICTION_DATA, "Access-Restriction-Data", Long.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_STN_SR, "STN-SR", byte[].class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_CSG_SUBSCRIPTION_DATA, "CSG-Subscription-Data", GroupedAVP.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_CSG_ID, "CSG-Id", Long.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_EXPIRATION_DATE, "Expiration-Date", Date.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_EQUIPMENT_STATUS, "Equipment-Status", Integer.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_REGIONAL_SUBSCRIPTION_ZONE_CODE, "Regional-Subscription-Zone-Code", byte[].class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_TRACE_COLLECTION_ENTITY, "Trace-Collection-Entity", InetAddress.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_KC, "Kc", byte[].class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_SRES, "SRES", byte[].class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_ROAMING_RESTRICTED_DUE_TO_UNSUPPORTED_FEATURE, "Roaming-Restricted-Due-To-Unsupported-Feature", Integer.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_TRACE_DATA, "Trace-Data", GroupedAVP.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_TRACE_DEPTH, "Trace-Depth", Integer.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_TRACE_NE_TYPE_LIST, "Trace-NE-Type-List", byte[].class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_TRACE_INTERFACE_LIST, "Trace-Interface-List", byte[].class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_TRACE_EVENT_LIST, "Trace-Event-List", byte[].class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_OMC_ID, "OMC-Id", byte[].class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_GPRS_SUBSCRIPTION_DATA, "GPRS-Subscription-Data", GroupedAVP.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_COMPLETE_DATA_LIST_INCLUDED_INDICATOR, "Complete-Data-List-Included-Indicator", Integer.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_PDP_CONTEXT, "PDP-Context", GroupedAVP.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_PDP_TYPE, "PDP-Type", byte[].class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_3GPP2_MEID, "3GPP2-MEID", byte[].class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_SPECIFIC_APN_INFO, "Specific-APN-Info", GroupedAVP.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_LCS_INFO, "LCS-Info", GroupedAVP.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_GMLC_NUMBER, "GMLC-Number", byte[].class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_LCS_PRIVACYEXCEPTION, "LCS-PrivacyException", GroupedAVP.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_SS_STATUS, "SS-Status", byte[].class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_NOTIFICATION_TO_UE_USER, "Notification-To-UE-User", Integer.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_EXTERNAL_CLIENT, "External-Client", GroupedAVP.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_CLIENT_IDENTITY, "Client-Identity", byte[].class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_GMLC_RESTRICTION, "GMLC-Restriction", Integer.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_PLMN_CLIENT, "PLMN-Client", Integer.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_SERVICE_TYPE, "Service-Type", GroupedAVP.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_SERVICETYPEIDENTITY, "ServiceTypeIdentity", Long.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_MO_LR, "MO-LR", GroupedAVP.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_TELESERVICE_LIST, "Teleservice-List", GroupedAVP.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_CALL_BARRING_INFO, "Call-Barring-Info", GroupedAVP.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_SGSN_NUMBER, "SGSN-Number", byte[].class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_UVR_FLAGS, "UVR-Flags", Long.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_UVA_FLAGS, "UVA-Flags", Long.class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_VPLMN_CSG_SUBSCRIPTION_DATA, "VPLMN-CSG-Subscription-Data", GroupedAVP.class, true, true, V),
+
             new AVPDefinition(S6aConstants.AVP_MAXIMUM_UE_AVAILABILITY_TIME, "Maximum-UE-Availability-Time", Date.class, false, true, V),
             new AVPDefinition(S6aConstants.AVP_EMERGENCY_SERVICES, "Emergency-Services", Integer.class, false, true, V),
 

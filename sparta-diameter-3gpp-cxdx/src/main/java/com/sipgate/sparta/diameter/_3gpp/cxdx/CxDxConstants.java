@@ -17,6 +17,9 @@ public final class CxDxConstants {
     public static final int AVP_VISITED_NETWORK_IDENTIFIER = 600;
     public static final int AVP_PUBLIC_IDENTITY = 601;
     public static final int AVP_SERVER_NAME = 602;
+    public static final int AVP_SERVER_CAPABILITIES = 603;
+    public static final int AVP_MANDATORY_CAPABILITY = 604;
+    public static final int AVP_OPTIONAL_CAPABILITY = 605;
     public static final int AVP_USER_DATA = 606;
     public static final int AVP_SIP_NUMBER_AUTH_ITEMS = 607;
     public static final int AVP_SIP_AUTHENTICATION_SCHEME = 608;
@@ -34,10 +37,12 @@ public final class CxDxConstants {
     public static final int AVP_SECONDARY_EVENT_CHARGING_FUNCTION_NAME = 620;
     public static final int AVP_PRIMARY_CHARGING_COLLECTION_FUNCTION_NAME = 621;
     public static final int AVP_SECONDARY_CHARGING_COLLECTION_FUNCTION_NAME = 622;
+    public static final int AVP_USER_AUTHORIZATION_TYPE = 623;
     public static final int AVP_USER_DATA_ALREADY_AVAILABLE = 624;
     public static final int AVP_CONFIDENTIALITY_KEY = 625;
     public static final int AVP_INTEGRITY_KEY = 626;
     public static final int AVP_ASSOCIATED_IDENTITIES = 632;
+    public static final int AVP_ORIGINATING_REQUEST = 633;
     public static final int AVP_WILDCARDED_PUBLIC_IDENTITY = 634;
     public static final int AVP_SIP_DIGEST_AUTHENTICATE = 635;
     public static final int AVP_LOOSE_ROUTE_INDICATION = 638;

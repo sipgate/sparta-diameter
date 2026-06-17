@@ -6,7 +6,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 
-/** Mixin for messages carrying the Emergency-Services AVP (3GPP TS 29.272 §7.3.221, code 3370). */
+/** Mixin for messages carrying the Emergency-Services AVP (3GPP TS 29.273, code 3370). */
 public interface HasEmergencyServicesAVP extends AVPContainer {
 
     default void setEmergencyServices(final int value) {

@@ -8,7 +8,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 
 import java.net.InetAddress;
 
-/** Mixin for messages carrying the GMLC-Address AVP (3GPP TS 29.173 §6.4.5, code 2405). */
+/** Mixin for messages carrying the GMLC-Address AVP (3GPP TS 29.173 §6.4.7, code 2405). */
 public interface HasGmlcAddressAVP extends AVPContainer {
 
     default void setGmlcAddress(final InetAddress value) {

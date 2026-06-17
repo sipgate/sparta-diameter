@@ -35,35 +35,76 @@ public final class S6aConstants {
     public static final int AVP_AUTHENTICATION_INFO = 1413;
     public static final int AVP_E_UTRAN_VECTOR = 1414;
     public static final int AVP_UTRAN_VECTOR = 1415;
+    public static final int AVP_GERAN_VECTOR = 1416;
     public static final int AVP_NETWORK_ACCESS_MODE = 1417;
+    public static final int AVP_HPLMN_ODB = 1418;
     public static final int AVP_ITEM_NUMBER = 1419;
     public static final int AVP_CANCELLATION_TYPE = 1420;
     public static final int AVP_DSR_FLAGS = 1421;
     public static final int AVP_DSA_FLAGS = 1422;
     public static final int AVP_CONTEXT_IDENTIFIER = 1423;
     public static final int AVP_SUBSCRIBER_STATUS = 1424;
+    public static final int AVP_OPERATOR_DETERMINED_BARRING = 1425;
+    public static final int AVP_ACCESS_RESTRICTION_DATA = 1426;
     public static final int AVP_APN_OI_REPLACEMENT = 1427;
     public static final int AVP_ALL_APN_CONFIGURATIONS_INCLUDED_INDICATOR = 1428;
     public static final int AVP_APN_CONFIGURATION_PROFILE = 1429;
     public static final int AVP_APN_CONFIGURATION = 1430;
     public static final int AVP_EPS_SUBSCRIBED_QOS_PROFILE = 1431;
     public static final int AVP_VPLMN_DYNAMIC_ADDRESS_ALLOWED = 1432;
+    public static final int AVP_STN_SR = 1433;
     public static final int AVP_ALERT_REASON = 1434;
     public static final int AVP_AMBR = 1435;
+    public static final int AVP_CSG_SUBSCRIPTION_DATA = 1436;
+    public static final int AVP_CSG_ID = 1437;
     public static final int AVP_PDN_GW_ALLOCATION_TYPE = 1438;
+    public static final int AVP_EXPIRATION_DATE = 1439;
     public static final int AVP_RAT_FREQUENCY_SELECTION_PRIORITY_ID = 1440;
     public static final int AVP_IDA_FLAGS = 1441;
     public static final int AVP_PUA_FLAGS = 1442;
     public static final int AVP_NOR_FLAGS = 1443;
     public static final int AVP_USER_ID = 1444;
+    public static final int AVP_EQUIPMENT_STATUS = 1445;
+    public static final int AVP_REGIONAL_SUBSCRIPTION_ZONE_CODE = 1446;
     public static final int AVP_RAND = 1447;
     public static final int AVP_XRES = 1448;
     public static final int AVP_AUTN = 1449;
     public static final int AVP_KASME = 1450;
+    public static final int AVP_TRACE_COLLECTION_ENTITY = 1452;
+    public static final int AVP_KC = 1453;
+    public static final int AVP_SRES = 1454;
     public static final int AVP_PDN_TYPE = 1456;
+    public static final int AVP_ROAMING_RESTRICTED_DUE_TO_UNSUPPORTED_FEATURE = 1457;
+    public static final int AVP_TRACE_DATA = 1458;
     public static final int AVP_TRACE_REFERENCE = 1459;
+    public static final int AVP_TRACE_DEPTH = 1462;
+    public static final int AVP_TRACE_NE_TYPE_LIST = 1463;
+    public static final int AVP_TRACE_INTERFACE_LIST = 1464;
+    public static final int AVP_TRACE_EVENT_LIST = 1465;
+    public static final int AVP_OMC_ID = 1466;
+    public static final int AVP_GPRS_SUBSCRIPTION_DATA = 1467;
+    public static final int AVP_COMPLETE_DATA_LIST_INCLUDED_INDICATOR = 1468;
+    public static final int AVP_PDP_CONTEXT = 1469;
+    public static final int AVP_PDP_TYPE = 1470;
+    public static final int AVP_3GPP2_MEID = 1471;
+    public static final int AVP_SPECIFIC_APN_INFO = 1472;
+    public static final int AVP_LCS_INFO = 1473;
+    public static final int AVP_GMLC_NUMBER = 1474;
+    public static final int AVP_LCS_PRIVACYEXCEPTION = 1475;
     public static final int AVP_SS_CODE = 1476;
+    public static final int AVP_SS_STATUS = 1477;
+    public static final int AVP_NOTIFICATION_TO_UE_USER = 1478;
+    public static final int AVP_EXTERNAL_CLIENT = 1479;
+    public static final int AVP_CLIENT_IDENTITY = 1480;
+    public static final int AVP_GMLC_RESTRICTION = 1481;
+    public static final int AVP_PLMN_CLIENT = 1482;
+    public static final int AVP_SERVICE_TYPE = 1483;
+    public static final int AVP_SERVICETYPEIDENTITY = 1484;
+    public static final int AVP_MO_LR = 1485;
+    public static final int AVP_TELESERVICE_LIST = 1486;
     public static final int AVP_TS_CODE = 1487;
+    public static final int AVP_CALL_BARRING_INFO = 1488;
+    public static final int AVP_SGSN_NUMBER = 1489;
     public static final int AVP_IDR_FLAGS = 1490;
     public static final int AVP_IMS_VOICE_OVER_PS_SESSIONS_SUPPORTED = 1492;
     public static final int AVP_HOMOGENEOUS_SUPPORT_OF_IMS_VOICE_OVER_PS_SESSIONS = 1493;
@@ -77,6 +118,9 @@ public final class S6aConstants {
     public static final int AVP_PUR_FLAGS = 1635;
     public static final int AVP_EQUIVALENT_PLMN_LIST = 1637;
     public static final int AVP_CLR_FLAGS = 1638;
+    public static final int AVP_UVR_FLAGS = 1639;
+    public static final int AVP_UVA_FLAGS = 1640;
+    public static final int AVP_VPLMN_CSG_SUBSCRIPTION_DATA = 1641;
     public static final int AVP_LOCAL_TIME_ZONE = 1649;
     public static final int AVP_SMS_REGISTER_REQUEST = 1648;
     public static final int AVP_SGS_MME_IDENTITY = 1664;
@@ -92,9 +136,9 @@ public final class S6aConstants {
 
     /** Supported-Services — 3GPP TS 29.272 §7.3.199. */
     public static final int AVP_SUPPORTED_SERVICES = 3143;
-    /** Maximum-UE-Availability-Time — 3GPP TS 29.272 §7.3.198. */
+    /** Maximum-UE-Availability-Time — 3GPP TS 29.338 §5.3.3.22. */
     public static final int AVP_MAXIMUM_UE_AVAILABILITY_TIME = 3329;
-    /** Emergency-Services — 3GPP TS 29.272 §7.3.221. */
+    /** Emergency-Services — 3GPP TS 29.273. */
     public static final int AVP_EMERGENCY_SERVICES = 3370;
 
     // TS 29.212 (Gx) AVP codes

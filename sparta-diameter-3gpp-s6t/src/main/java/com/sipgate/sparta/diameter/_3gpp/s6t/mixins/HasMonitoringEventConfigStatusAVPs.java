@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-/** Mixin for messages carrying zero or more Monitoring-Event-Config-Status grouped AVPs (3GPP TS 29.336 §8.4.21, code 3142). */
+/** Mixin for messages carrying zero or more Monitoring-Event-Config-Status grouped AVPs (3GPP TS 29.336 §8.4.24, code 3142). */
 public interface HasMonitoringEventConfigStatusAVPs extends AVPContainer {
 
     default void addMonitoringEventConfigStatus(final List<AVP> avps) {
