@@ -31,6 +31,7 @@ public final class S6aConstants {
     public static final int AVP_REQUESTED_UTRAN_GERAN_AUTHENTICATION_INFO = 1409;
     public static final int AVP_NUMBER_OF_REQUESTED_VECTORS = 1410;
     public static final int AVP_RE_SYNCHRONIZATION_INFO = 1411;
+    public static final int AVP_IMMEDIATE_RESPONSE_PREFERRED = 1412;
     public static final int AVP_AUTHENTICATION_INFO = 1413;
     public static final int AVP_E_UTRAN_VECTOR = 1414;
     public static final int AVP_UTRAN_VECTOR = 1415;

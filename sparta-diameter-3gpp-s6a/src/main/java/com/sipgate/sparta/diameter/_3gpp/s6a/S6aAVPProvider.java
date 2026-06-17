@@ -34,6 +34,7 @@ public final class S6aAVPProvider implements AVPProvider {
             new AVPDefinition(S6aConstants.AVP_REQUESTED_UTRAN_GERAN_AUTHENTICATION_INFO, "Requested-UTRAN-GERAN-Authentication-Info", GroupedAVP.class, true, true, V),
             new AVPDefinition(S6aConstants.AVP_NUMBER_OF_REQUESTED_VECTORS, "Number-Of-Requested-Vectors", Long.class, true, true, V),
             new AVPDefinition(S6aConstants.AVP_RE_SYNCHRONIZATION_INFO, "Re-Synchronization-Info", byte[].class, true, true, V),
+            new AVPDefinition(S6aConstants.AVP_IMMEDIATE_RESPONSE_PREFERRED, "Immediate-Response-Preferred", Long.class, true, true, V),
             new AVPDefinition(S6aConstants.AVP_AUTHENTICATION_INFO, "Authentication-Info", GroupedAVP.class, true, true, V),
             new AVPDefinition(S6aConstants.AVP_E_UTRAN_VECTOR, "E-UTRAN-Vector", GroupedAVP.class, true, true, V),
             new AVPDefinition(S6aConstants.AVP_UTRAN_VECTOR, "UTRAN-Vector", GroupedAVP.class, true, true, V),
