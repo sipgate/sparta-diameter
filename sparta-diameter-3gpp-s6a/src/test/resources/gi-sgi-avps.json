@@ -1,0 +1,241 @@
+[ {
+  "vendorId" : 10415,
+  "avpCode" : 1,
+  "attributeName" : "3GPP-IMSI",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 2,
+  "attributeName" : "3GPP-Charging-Id",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 3,
+  "attributeName" : "3GPP-PDP-Type",
+  "valueType" : "Enumerated",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 4,
+  "attributeName" : "3GPP-CG-Address",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 5,
+  "attributeName" : "3GPP-GPRS-Negotiated-QoS-Profile",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 6,
+  "attributeName" : "3GPP-SGSN-Address",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 7,
+  "attributeName" : "3GPP-GGSN-Address",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 8,
+  "attributeName" : "3GPP-IMSI-MCC-MNC",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 9,
+  "attributeName" : "3GPP-GGSN-MCC-MNC",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 10,
+  "attributeName" : "3GPP-NSAPI",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 12,
+  "attributeName" : "3GPP-Selection-Mode",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 13,
+  "attributeName" : "3GPP-Charging-Characteristics",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 14,
+  "attributeName" : "3GPP-CG-IPv6-Address",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 15,
+  "attributeName" : "3GPP-SGSN-IPv6-Address",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 16,
+  "attributeName" : "3GPP-GGSN-IPv6-Address",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 17,
+  "attributeName" : "3GPP-IPv6-DNS-Servers",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 18,
+  "attributeName" : "3GPP-SGSN-MCC-MNC",
+  "valueType" : "UTF8String",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 20,
+  "attributeName" : "3GPP-IMEISV",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 21,
+  "attributeName" : "3GPP-RAT-Type",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 22,
+  "attributeName" : "3GPP-User-Location-Info",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 23,
+  "attributeName" : "3GPP-MS-TimeZone",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 24,
+  "attributeName" : "3GPP-CAMEL-Charging-Info",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 25,
+  "attributeName" : "3GPP-Packet-Filter",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 26,
+  "attributeName" : "3GPP-Negotiated-DSCP",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 27,
+  "attributeName" : "3GPP-Allocate-IP-Type",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 29,
+  "attributeName" : "TWAN-Identifier",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 30,
+  "attributeName" : "3GPP-User-Location-Info-Time",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 31,
+  "attributeName" : "3GPP-Secondary-RAT-Usage",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 32,
+  "attributeName" : "3GPP-UE-Local-IP-Address",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+}, {
+  "vendorId" : 10415,
+  "avpCode" : 33,
+  "attributeName" : "3GPP-UE-Source-Port",
+  "valueType" : "OctetString",
+  "mandatoryBit" : "MUST_NOT",
+  "vendorSpecificBit" : "MUST",
+  "mayBeEncrypted" : false
+} ]

@@ -144,7 +144,7 @@ public final class S6aAVPProvider implements AVPProvider {
             new AVPDefinition(S6aConstants.AVP_MAXIMUM_UE_AVAILABILITY_TIME, "Maximum-UE-Availability-Time", Date.class, false, true, V),
             new AVPDefinition(S6aConstants.AVP_EMERGENCY_SERVICES, "Emergency-Services", Integer.class, false, true, V),
 
-            new AVPDefinition(S6aConstants.AVP_CHARGING_CHARACTERISTICS_3GPP, "3GPP-Charging-Characteristics", byte[].class, true, true, V)
+            new AVPDefinition(S6aConstants.AVP_CHARGING_CHARACTERISTICS_3GPP, "3GPP-Charging-Characteristics", String.class, false, true, V)
         );
     }
 }
