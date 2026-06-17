@@ -188,7 +188,9 @@ final class DocxAvpTableReader {
         final String valueType = fixValueTypeTypos(normalize(cellAt(cells, idx, COL_TYPE)));
         final AvpFlagRule mandatoryBit = determineFlagRule(cells, idx, 'M');
         final AvpFlagRule vendorSpecificBit = determineFlagRule(cells, idx, 'V');
-        final boolean mayBeEncrypted = "Yes".equalsIgnoreCase(normalize(cellAt(cells, idx, COL_MAY_ENCRYPT)));
+        // Tables spell this column's affirmative as either "Yes" or a bare "Y" (e.g. TS 29.061 Table 9a).
+        final String mayEncryptCell = normalize(cellAt(cells, idx, COL_MAY_ENCRYPT));
+        final boolean mayBeEncrypted = mayEncryptCell.equalsIgnoreCase("Yes") || mayEncryptCell.equalsIgnoreCase("Y");
         // V "must not" means the AVP is not vendor-specific — it belongs to IETF (vendor 0), even when listed in a 3GPP table.
         final long effectiveVendorId = vendorSpecificBit == AvpFlagRule.MUST_NOT ? 0L : vendorId;
         return new AvpDef(effectiveVendorId, code, name, valueType, mandatoryBit, vendorSpecificBit, mayBeEncrypted);

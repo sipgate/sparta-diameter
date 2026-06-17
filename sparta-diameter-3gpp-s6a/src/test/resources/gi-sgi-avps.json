@@ -5,7 +5,7 @@
   "valueType" : "UTF8String",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 2,
@@ -13,7 +13,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 3,
@@ -21,7 +21,7 @@
   "valueType" : "Enumerated",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 4,
@@ -29,7 +29,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 5,
@@ -37,7 +37,7 @@
   "valueType" : "UTF8String",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 6,
@@ -45,7 +45,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 7,
@@ -53,7 +53,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 8,
@@ -61,7 +61,7 @@
   "valueType" : "UTF8String",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 9,
@@ -69,7 +69,7 @@
   "valueType" : "UTF8String",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 10,
@@ -77,7 +77,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 12,
@@ -85,7 +85,7 @@
   "valueType" : "UTF8String",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 13,
@@ -93,7 +93,7 @@
   "valueType" : "UTF8String",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 14,
@@ -101,7 +101,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 15,
@@ -109,7 +109,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 16,
@@ -117,7 +117,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 17,
@@ -125,7 +125,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 18,
@@ -133,7 +133,7 @@
   "valueType" : "UTF8String",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 20,
@@ -141,7 +141,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 21,
@@ -149,7 +149,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 22,
@@ -157,7 +157,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 23,
@@ -165,7 +165,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 24,
@@ -173,7 +173,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 25,
@@ -181,7 +181,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 26,
@@ -189,7 +189,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 27,
@@ -197,7 +197,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 29,
@@ -205,7 +205,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 30,
@@ -213,7 +213,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 31,
@@ -221,7 +221,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 32,
@@ -229,7 +229,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 33,
@@ -237,5 +237,5 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 } ]

@@ -5,7 +5,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 572,
@@ -13,7 +13,7 @@
   "valueType" : "Grouped",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 574,
@@ -21,7 +21,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 500,
@@ -29,7 +29,7 @@
   "valueType" : "Enumerated",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 501,
@@ -37,7 +37,7 @@
   "valueType" : "Address",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 502,
@@ -45,7 +45,7 @@
   "valueType" : "Grouped",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 503,
@@ -53,7 +53,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 526,
@@ -61,7 +61,7 @@
   "valueType" : "Grouped",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 504,
@@ -69,7 +69,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 505,
@@ -77,7 +77,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 551,
@@ -85,7 +85,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 529,
@@ -93,7 +93,7 @@
   "valueType" : "Enumerated",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 532,
@@ -101,7 +101,7 @@
   "valueType" : "UTF8String",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 565,
@@ -109,7 +109,7 @@
   "valueType" : "Grouped",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 524,
@@ -117,7 +117,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 552,
@@ -125,7 +125,7 @@
   "valueType" : "Unsigned64",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 567,
@@ -133,7 +133,7 @@
   "valueType" : "Float32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 568,
@@ -141,7 +141,7 @@
   "valueType" : "Float32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 554,
@@ -149,7 +149,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 555,
@@ -157,7 +157,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 556,
@@ -165,7 +165,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 557,
@@ -173,7 +173,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 558,
@@ -181,7 +181,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 559,
@@ -189,7 +189,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 560,
@@ -197,7 +197,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 561,
@@ -205,7 +205,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 507,
@@ -213,7 +213,7 @@
   "valueType" : "IPFilterRule",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 509,
@@ -221,7 +221,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 510,
@@ -229,7 +229,7 @@
   "valueType" : "Grouped",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 511,
@@ -237,7 +237,7 @@
   "valueType" : "Enumerated",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 512,
@@ -245,7 +245,7 @@
   "valueType" : "Enumerated",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 566,
@@ -253,7 +253,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 538,
@@ -261,7 +261,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 580,
@@ -269,7 +269,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 579,
@@ -277,7 +277,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 563,
@@ -285,7 +285,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MAY",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 564,
@@ -293,7 +293,7 @@
   "valueType" : "Enumerated",
   "mandatoryBit" : "MAY",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 537,
@@ -301,7 +301,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 581,
@@ -309,7 +309,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 570,
@@ -317,7 +317,7 @@
   "valueType" : "Grouped",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 571,
@@ -325,7 +325,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 515,
@@ -333,7 +333,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 516,
@@ -341,7 +341,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 543,
@@ -349,7 +349,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 544,
@@ -357,7 +357,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 547,
@@ -365,7 +365,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 562,
@@ -373,7 +373,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 517,
@@ -381,7 +381,7 @@
   "valueType" : "Grouped",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 518,
@@ -389,7 +389,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 549,
@@ -397,7 +397,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 519,
@@ -405,7 +405,7 @@
   "valueType" : "Grouped",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 520,
@@ -413,7 +413,7 @@
   "valueType" : "Enumerated",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 545,
@@ -437,7 +437,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 535,
@@ -445,7 +445,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 582,
@@ -453,7 +453,7 @@
   "valueType" : "Enumerated",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 528,
@@ -461,7 +461,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 575,
@@ -469,7 +469,7 @@
   "valueType" : "Grouped",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 576,
@@ -477,7 +477,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 577,
@@ -485,7 +485,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 584,
@@ -493,7 +493,7 @@
   "valueType" : "Enumerated",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 569,
@@ -501,7 +501,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 550,
@@ -509,7 +509,7 @@
   "valueType" : "Enumerated",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 553,
@@ -517,7 +517,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 536,
@@ -525,7 +525,7 @@
   "valueType" : "Enumerated",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 541,
@@ -533,7 +533,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 533,
@@ -541,7 +541,7 @@
   "valueType" : "Enumerated",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 521,
@@ -549,7 +549,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 522,
@@ -557,7 +557,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 548,
@@ -565,7 +565,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 525,
@@ -573,7 +573,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 527,
@@ -581,7 +581,7 @@
   "valueType" : "Enumerated",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 583,
@@ -589,7 +589,7 @@
   "valueType" : "OctetString",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 539,
@@ -597,7 +597,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 540,
@@ -605,7 +605,7 @@
   "valueType" : "Unsigned32",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 513,
@@ -613,7 +613,7 @@
   "valueType" : "Enumerated",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 523,
@@ -621,7 +621,7 @@
   "valueType" : "Enumerated",
   "mandatoryBit" : "MUST",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 531,
@@ -629,7 +629,7 @@
   "valueType" : "UTF8String",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 530,
@@ -637,7 +637,7 @@
   "valueType" : "Grouped",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 542,
@@ -645,7 +645,7 @@
   "valueType" : "Enumerated",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 }, {
   "vendorId" : 10415,
   "avpCode" : 578,
@@ -653,5 +653,5 @@
   "valueType" : "Grouped",
   "mandatoryBit" : "MUST_NOT",
   "vendorSpecificBit" : "MUST",
-  "mayBeEncrypted" : false
+  "mayBeEncrypted" : true
 } ]

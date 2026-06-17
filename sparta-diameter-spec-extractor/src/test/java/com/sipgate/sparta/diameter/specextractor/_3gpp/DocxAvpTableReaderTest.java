@@ -109,6 +109,84 @@ class DocxAvpTableReaderTest {
                 .satisfies(def -> assertThat(def.attributeName()).isEqualTo("Sponsored-Connectivity-Data"));
     }
 
+    @Test
+    void it_reads_a_single_letter_Y_in_the_May_Encrypt_column_as_encryptable() throws IOException {
+        // GIVEN a docx whose "May Encr." cell holds "Y" (as in TS 29.061 Table 9a), not "Yes"
+        final byte[] docx = buildDocxWithMayEncryptColumn("Y");
+
+        // WHEN the reader parses it
+        final List<AvpDef> defs;
+        try (final InputStream in = new ByteArrayInputStream(docx)) {
+            defs = DocxAvpTableReader.read(in, VENDOR_ID, List.of(CAPTION));
+        }
+
+        // THEN the AVP is flagged as encryptable
+        assertThat(defs)
+                .singleElement()
+                .satisfies(def -> assertThat(def.mayBeEncrypted()).isTrue());
+    }
+
+    @Test
+    void it_reads_a_single_letter_N_in_the_May_Encrypt_column_as_not_encryptable() throws IOException {
+        // GIVEN a docx whose "May Encr." cell holds "N"
+        final byte[] docx = buildDocxWithMayEncryptColumn("N");
+
+        // WHEN the reader parses it
+        final List<AvpDef> defs;
+        try (final InputStream in = new ByteArrayInputStream(docx)) {
+            defs = DocxAvpTableReader.read(in, VENDOR_ID, List.of(CAPTION));
+        }
+
+        // THEN the AVP is not flagged as encryptable
+        assertThat(defs)
+                .singleElement()
+                .satisfies(def -> assertThat(def.mayBeEncrypted()).isFalse());
+    }
+
+    // Mirrors TS 29.061 Table 9a: Attribute Name | AVP Code | Section defined |
+    // Value Type | Must | May | Should not | Must not | May Encr. | Applicable
+    // Reference Points. The 3GPP-IMSI row has V in May, M in Must not, "Y" in May Encr.
+    private static byte[] buildDocxWithMayEncryptColumn(final String mayEncryptCell) throws IOException {
+        try (final XWPFDocument doc = new XWPFDocument();
+             final ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            final XWPFParagraph captionParagraph = doc.createParagraph();
+            captionParagraph.createRun().setText(CAPTION);
+
+            final XWPFTable table = doc.createTable(2, 10);
+            writeHeaderRowWithMayEncrypt(table.getRow(0));
+            writeImsiRowWithMayEncrypt(table.getRow(1), mayEncryptCell);
+
+            doc.write(out);
+            return out.toByteArray();
+        }
+    }
+
+    private static void writeHeaderRowWithMayEncrypt(final XWPFTableRow row) {
+        setCellText(row.getCell(0), "Attribute Name");
+        setCellText(row.getCell(1), "AVP Code");
+        setCellText(row.getCell(2), "Section defined");
+        setCellText(row.getCell(3), "Value Type");
+        setCellText(row.getCell(4), "Must");
+        setCellText(row.getCell(5), "May");
+        setCellText(row.getCell(6), "Should not");
+        setCellText(row.getCell(7), "Must not");
+        setCellText(row.getCell(8), "May Encr.");
+        setCellText(row.getCell(9), "Applicable Reference Points");
+    }
+
+    private static void writeImsiRowWithMayEncrypt(final XWPFTableRow row, final String mayEncryptCell) {
+        setCellText(row.getCell(0), "3GPP-IMSI");
+        setCellText(row.getCell(1), "1");
+        setCellText(row.getCell(2), "16.4.7");
+        setCellText(row.getCell(3), "UTF8String");
+        setCellText(row.getCell(4), "");
+        setCellText(row.getCell(5), "V");
+        setCellText(row.getCell(6), "");
+        setCellText(row.getCell(7), "M");
+        setCellText(row.getCell(8), mayEncryptCell);
+        setCellText(row.getCell(9), "Gi, Sgi");
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"Enumerate", "Enumarated"})
     void it_rewrites_spec_typos_of_Enumerated(final String typo) throws IOException {
