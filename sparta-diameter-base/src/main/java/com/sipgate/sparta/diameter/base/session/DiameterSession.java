@@ -108,14 +108,14 @@ public abstract class DiameterSession {
     }
 
     private ChannelFuture send(final DiameterPeer peer, final OutgoingAnswer answer) {
-        answer.setOriginHost(config.getOriginHost());
-        answer.setOriginRealm(config.getOriginRealm());
+        if (answer.getOriginHost() == null) answer.setOriginHost(config.getOriginHost());
+        if (answer.getOriginRealm() == null) answer.setOriginRealm(config.getOriginRealm());
         return peer.send(answer);
     }
 
     ChannelFuture send(final OutgoingRequest<?> request, final HopByHopId hopByHop, final EndToEndId endToEnd) {
-        request.setOriginHost(config.getOriginHost());
-        request.setOriginRealm(config.getOriginRealm());
+        if (request.getOriginHost() == null) request.setOriginHost(config.getOriginHost());
+        if (request.getOriginRealm() == null) request.setOriginRealm(config.getOriginRealm());
         return peer.send(request, hopByHop, endToEnd);
     }
 
