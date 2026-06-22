@@ -24,6 +24,14 @@ public final class _3gppConstants {
     public static final int AVP_MME_NUMBER_FOR_MT_SMS = 1645;
     public static final int AVP_SGSN_NUMBER = 1489;
 
+    // 3GPP TS 29.212 §5.3.31 — shared access AVP
+    public static final int AVP_RAT_TYPE = 1032;
+    // 3GPP TS 29.272 §7.3 — shared subscription AVPs
+    public static final int AVP_ACTIVE_APN = 1612;
+    public static final int AVP_LOCAL_TIME_ZONE = 1649;
+    // 3GPP TS 29.273 — shared access AVP
+    public static final int AVP_EMERGENCY_SERVICES = 3370;
+
     // 3GPP TS 29.173, SLh interface
     public static final int AVP_SERVING_NODE = 2401;
 
