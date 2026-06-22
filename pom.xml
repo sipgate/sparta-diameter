@@ -47,6 +47,7 @@
         <module>sparta-diameter-3gpp-slh</module>
         <module>sparta-diameter-3gpp-s6a</module>
         <module>sparta-diameter-3gpp-cxdx</module>
+        <module>sparta-diameter-3gpp-swx</module>
     </modules>
 
     <properties>
