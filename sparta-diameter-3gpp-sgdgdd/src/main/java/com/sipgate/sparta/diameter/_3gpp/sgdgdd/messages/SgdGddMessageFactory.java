@@ -10,6 +10,9 @@ public final class SgdGddMessageFactory implements DiameterPackageFactory {
                                             final boolean isRequest,
                                             final HopByHopId hopByHop, final EndToEndId endToEnd,
                                             final boolean retransmitted) {
+        if (applicationId != SgdGddConstants.APP_ID_SGD_GDD) {
+            return null;
+        }
         return switch (commandCode) {
             case SgdGddConstants.CMD_MO_FORWARD_SHORT_MESSAGE -> isRequest
                     ? new MoForwardShortMessageRequest.In(hopByHop, endToEnd, retransmitted)
@@ -24,6 +27,9 @@ public final class SgdGddMessageFactory implements DiameterPackageFactory {
     @Override
     public OutgoingAnswer createAnswer(final int commandCode, final int applicationId,
                                           final HopByHopId hopByHop, final EndToEndId endToEnd) {
+        if (applicationId != SgdGddConstants.APP_ID_SGD_GDD) {
+            return null;
+        }
         final var outgoingAnswer = switch (commandCode) {
             case SgdGddConstants.CMD_MO_FORWARD_SHORT_MESSAGE ->
                 new MoForwardShortMessageAnswer.Out(hopByHop, endToEnd);

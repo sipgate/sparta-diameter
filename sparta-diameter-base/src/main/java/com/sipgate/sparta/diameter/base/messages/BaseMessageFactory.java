@@ -9,6 +9,12 @@ import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
 
 public final class BaseMessageFactory implements DiameterPackageFactory {
 
+    // No application-id guard here, by design (see AGENTS.md "Diameter Message Factories").
+    // Base command codes (257–282) live in the IANA-reserved base range that no 3GPP application
+    // shares, so there is no cross-app stealing risk. ASR/ASA, RAR/RAA, STR/STA, ACR/ACA are
+    // application-agnostic per RFC 6733 and may legally carry any application-id, so a blanket
+    // `applicationId == 0` check would be semantically wrong and would block vendor-app usage.
+
     @Override
     public IncomingCommand createForParsing(final int commandCode, final int applicationId,
                                             final boolean isRequest,
