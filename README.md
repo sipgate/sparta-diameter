@@ -57,6 +57,96 @@ Requires Java 17–24. **Java 25 is not supported** — compilation hangs or thr
 | `sparta-diameter-3gpp-cxdx` | Cx/Dx interfaces (IMS HSS) |
 | `sparta-diameter-3gpp-sgdgdd` | SGd/Gdd interfaces (SMS delivery via MO/MT) |
 
+## Module Dependencies
+
+```mermaid
+graph TD
+    subgraph foundation["Foundation"]
+        spec["spec<br/>(CCF parser, AVP table model)"]
+        base["base<br/>(core, avp, transport, session, base messages)"]
+    end
+
+    subgraph ietf["IETF / ETSI extensions (RFCs)"]
+        doic["ietf-doic"]
+        drmp["ietf-drmp"]
+        load["ietf-load"]
+        mip6i["ietf-mip6-integrated"]
+        mip6s["ietf-mip6-split"]
+        nas["ietf-nas"]
+        e2["etsi-e2"]
+    end
+
+    common["3gpp-common<br/>(shared 3GPP AVPs, constants, mixins)"]
+
+    subgraph protocols["3GPP protocol interfaces"]
+        gx["3gpp-gx"]
+        rx["3gpp-rx"]
+        s6t["3gpp-s6t"]
+        s6c["3gpp-s6c"]
+        sgdgdd["3gpp-sgdgdd"]
+        slh["3gpp-slh"]
+        cxdx["3gpp-cxdx"]
+        swx["3gpp-swx"]
+    end
+
+    subgraph aggregator["aggregator"]
+        s6a["3gpp-s6a"]
+    end
+
+    base --> spec
+    common --> base
+    doic --> base
+    drmp --> base
+    load --> base
+    mip6i --> base
+    mip6s --> base
+    nas --> base
+    e2 --> base
+
+    gx --> common
+    rx --> common
+    s6t --> common
+    s6c --> common
+    slh --> common
+    sgdgdd --> common
+    sgdgdd --> drmp
+    cxdx --> common
+    cxdx --> doic
+    cxdx --> drmp
+    cxdx --> load
+    cxdx --> nas
+    cxdx --> e2
+    swx --> common
+    swx --> doic
+    swx --> drmp
+    swx --> load
+    swx --> mip6i
+    swx --> mip6s
+    swx --> nas
+    swx --> e2
+    swx --> gx
+    swx --> s6a
+    swx --> cxdx
+
+    s6a --> common
+    s6a --> cxdx
+    s6a --> gx
+    s6a --> rx
+    s6a --> s6t
+    s6a --> slh
+    s6a --> doic
+    s6a --> drmp
+    s6a --> load
+    s6a --> mip6i
+    s6a --> mip6s
+```
+
+- **Foundation:** `spec` (CCF parser, AVP-table model) → `base` (core, avp, transport, session, base messages).
+- **IETF/ETSI extensions** each depend only on `base`.
+- **`3gpp-common`** is the single shared 3GPP layer (shared AVPs, constants, mixins) on `base`.
+- **Protocol modules** depend on `common` (and pick IETF modules as their command-code format requires). `swx` additionally depends on `gx`, `s6a`, and `cxdx` and reuses their shared AVP accessors rather than duplicating them.
+- **`3gpp-s6a` is an aggregator:** it pulls `cxdx`, `gx`, `rx`, `s6t`, `slh` + IETF + mip6 because an S6a/S6d HSS typically co-deploys them.
+
 ## Development Status
 
 - ✅ Core infrastructure: message parsing and serialization
