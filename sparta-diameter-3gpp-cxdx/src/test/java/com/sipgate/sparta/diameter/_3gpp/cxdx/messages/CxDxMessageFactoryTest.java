@@ -33,6 +33,22 @@ class CxDxMessageFactoryTest {
     }
 
     @Test
+    void it_returns_null_for_a_foreign_application_id() {
+        // GIVEN a foreign application id (SWx = 16777265 shares command codes 301/303/304/305 with Cx/Dx)
+        final int swxApplicationId = 16777265;
+
+        // WHEN
+        final var parsed = factory.createForParsing(
+                CxDxConstants.CMD_SERVER_ASSIGNMENT, swxApplicationId, true, hopByHop, endToEnd, false);
+        final var answer = factory.createAnswer(
+                CxDxConstants.CMD_SERVER_ASSIGNMENT, swxApplicationId, hopByHop, endToEnd);
+
+        // THEN: the factory declines so SWx messages are not stolen (see AGENTS.md "Diameter Message Factories")
+        assertThat(parsed).isNull();
+        assertThat(answer).isNull();
+    }
+
+    @Test
     void it_builds_answers_with_auth_session_state_not_maintained() {
         // GIVEN/WHEN an answer is created
         final var saa = factory.createAnswer(CxDxConstants.CMD_SERVER_ASSIGNMENT, CxDxConstants.APP_ID_CX_DX, hopByHop, endToEnd);
