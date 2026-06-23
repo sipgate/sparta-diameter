@@ -103,7 +103,12 @@ public final class ExtractorFor3gpp {
             "sparta-diameter-3gpp-rx/src/test/resources/rx-avps.json",
             VENDOR_ID_3GPP,
             List.of("Table 5.3.0.1: Rx specific Diameter AVPs ")
-        )
+        ),
+        new SpecSource(
+            "https://www.3gpp.org/ftp/Specs/latest/Rel-19/29_series/29273-j20.zip",
+            "sparta-diameter-3gpp-swx/src/test/resources/swx-avps.json",
+            VENDOR_ID_3GPP,
+            List.of("Table 8.2.3.0/1: Diameter SWx AVPs"))
     );
 
     private static final Path REPO_ROOT = findRepoRoot();

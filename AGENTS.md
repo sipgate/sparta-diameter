@@ -56,3 +56,26 @@ com.sipgate.sparta.diameter._3gpp.sgdgdd
 com.sipgate.sparta.diameter._3gpp.s6a
 com.sipgate.sparta.diameter._3gpp.cxdx
 ```
+
+## Diameter Message Factories
+
+A `DiameterPackageFactory` dispatches an incoming message by `(commandCode, applicationId)`. `DiameterMessageFactory` iterates every registered factory and the **first non-null result wins** — factory order is not guaranteed (discovered via `reflections`), so two factories must never both claim the same `(code, app-id)`.
+
+**Rule:** a factory that dispatches by command-code MUST check `applicationId` first and return `null` if the app-id is not one it owns. Command codes are NOT globally unique across applications: 3GPP apps share codes across app-ids (Cx/Dx app-id `16777216` and SWx app-id `16777265` both use MAR 303 / SAR 301 / RTR 304 / PPR 305). A factory that ignores `applicationId` will steal another application's messages and return the wrong type, surfacing as a `ClassCastException` only when both modules are on the classpath — invisible in per-module tests (the SWx module has no `cxdx` dependency, so the bug never fired in its own tests).
+
+**Required pattern** (see `SwxMessageFactory`, `CxDxMessageFactory`):
+
+```java
+public IncomingCommand createForParsing(final int commandCode, final int applicationId, ...) {
+    if (applicationId != XxConstants.APP_ID_XX) {
+        return null;
+    }
+    return switch (commandCode) { ... };
+}
+```
+
+Apply the same guard in `createAnswer`.
+
+**Scope of the rule:** every factory whose command codes are application-specific (Cx/Dx, SWx, S6a, SgdGdd, …). The base-protocol factory is the documented exception, not an example to copy: CER/CEA, DWR/DWA, DPR/DPA are app-id 0, while ASR/ASA, RAR/RAA, STR/STA, ACR/ACA are application-agnostic per RFC 6733 (valid with any app-id) — do not blanket-check it without verifying those semantics.
+
+**Review check:** for any new or changed factory, ask "does this check app-id before matching command-code?". If it does not and the codes are app-specific, it is a latent bug — even if no other application currently shares the codes.

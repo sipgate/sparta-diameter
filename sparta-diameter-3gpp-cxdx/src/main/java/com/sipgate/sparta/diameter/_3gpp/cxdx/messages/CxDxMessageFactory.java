@@ -10,6 +10,9 @@ public final class CxDxMessageFactory implements DiameterPackageFactory {
                                             final boolean isRequest,
                                             final HopByHopId hopByHop, final EndToEndId endToEnd,
                                             final boolean retransmitted) {
+        if (applicationId != CxDxConstants.APP_ID_CX_DX) {
+            return null;
+        }
         return switch (commandCode) {
             case CxDxConstants.CMD_SERVER_ASSIGNMENT -> isRequest
                     ? new ServerAssignmentRequest.In(hopByHop, endToEnd, retransmitted)
@@ -27,6 +30,9 @@ public final class CxDxMessageFactory implements DiameterPackageFactory {
     @Override
     public OutgoingAnswer createAnswer(final int commandCode, final int applicationId,
                                        final HopByHopId hopByHop, final EndToEndId endToEnd) {
+        if (applicationId != CxDxConstants.APP_ID_CX_DX) {
+            return null;
+        }
         final var outgoingAnswer = switch (commandCode) {
             case CxDxConstants.CMD_SERVER_ASSIGNMENT -> new ServerAssignmentAnswer.Out(hopByHop, endToEnd);
             case CxDxConstants.CMD_MULTIMEDIA_AUTH -> new MultimediaAuthAnswer.Out(hopByHop, endToEnd);

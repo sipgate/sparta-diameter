@@ -11,6 +11,9 @@ public final class S6aMessageFactory implements DiameterPackageFactory {
                                             final boolean isRequest,
                                             final HopByHopId hopByHop, final EndToEndId endToEnd,
                                             final boolean retransmitted) {
+        if (applicationId != S6aConstants.APP_ID_S6A_S6D) {
+            return null;
+        }
         return switch (commandCode) {
             case S6aConstants.CMD_UPDATE_LOCATION -> isRequest
                     ? new UpdateLocationRequest.In(hopByHop, endToEnd, retransmitted)
@@ -43,6 +46,9 @@ public final class S6aMessageFactory implements DiameterPackageFactory {
     @Override
     public OutgoingAnswer createAnswer(final int commandCode, final int applicationId,
                                        final HopByHopId hopByHop, final EndToEndId endToEnd) {
+        if (applicationId != S6aConstants.APP_ID_S6A_S6D) {
+            return null;
+        }
         final var outgoingAnswer = switch (commandCode) {
             case S6aConstants.CMD_UPDATE_LOCATION -> new UpdateLocationAnswer.Out(hopByHop, endToEnd);
             case S6aConstants.CMD_CANCEL_LOCATION -> new CancelLocationAnswer.Out(hopByHop, endToEnd);

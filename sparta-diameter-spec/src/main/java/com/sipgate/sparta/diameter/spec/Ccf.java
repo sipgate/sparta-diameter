@@ -187,7 +187,16 @@ final class Ccf {
                     while (i < input.length() && Character.isDigit(input.charAt(i))) {
                         i++;
                     }
-                    out.add(new Token(Type.NUMBER, input.substring(start, i), start));
+                    if (i < input.length() && Character.isLetter(input.charAt(i))) {
+                        // digit-prefixed AVP name (e.g. 3GPP-AAA-Server-Name) — scan as NAME
+                        while (i < input.length()
+                                && (Character.isLetterOrDigit(input.charAt(i)) || input.charAt(i) == '-')) {
+                            i++;
+                        }
+                        out.add(new Token(Type.NAME, input.substring(start, i), start));
+                    } else {
+                        out.add(new Token(Type.NUMBER, input.substring(start, i), start));
+                    }
                 } else if (Character.isLetter(c)) {
                     final int start = i;
                     while (i < input.length()

@@ -371,4 +371,21 @@ class CommandCodeFormatParserTest {
             )
         );
     }
+
+    @Test
+    void it_parses_a_digit_prefixed_avp_name() {
+        // GIVEN: a CCF whose AVP name starts with a digit (3GPP-AAA-Server-Name, TS 29.273)
+        final var input = """
+            < Test-Request > ::= < Diameter Header: 999, REQ, PXY, 16777265 >
+            { 3GPP-AAA-Server-Name }
+            """;
+
+        // WHEN
+        final var parsed = CommandCodeFormatParser.parse(input).iterator().next();
+
+        // THEN: the digit-prefixed name is scanned as a single NAME token, not split into NUMBER + NAME
+        assertThat(parsed.required())
+            .extracting(AvpRule::avpName)
+            .containsExactly("3GPP-AAA-Server-Name");
+    }
 }
