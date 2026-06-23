@@ -343,13 +343,7 @@ public final class _3gppAVPProvider implements AVPProvider {
             new AVPDefinition(_3gppConstants.AVP_SM_DELIVERY_CAUSE, "SM-Delivery-Cause",
                 Integer.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
             new AVPDefinition(_3gppConstants.AVP_ABSENT_USER_DIAGNOSTIC_SM, "Absent-User-Diagnostic-SM",
-                Long.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
-
-            // 3GPP TS 29.212 §5.3.31, 3GPP TS 29.272 §7.3, 3GPP TS 29.273 — shared AVPs promoted for SWx reuse
-            new AVPDefinition(_3gppConstants.AVP_RAT_TYPE, "RAT-Type", Integer.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
-            new AVPDefinition(_3gppConstants.AVP_ACTIVE_APN, "Active-APN", GroupedAVP.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
-            new AVPDefinition(_3gppConstants.AVP_LOCAL_TIME_ZONE, "Local-Time-Zone", GroupedAVP.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
-            new AVPDefinition(_3gppConstants.AVP_EMERGENCY_SERVICES, "Emergency-Services", Integer.class, false, true, _3gppConstants.VENDOR_ID_3GPP)
+                Long.class, true, true, _3gppConstants.VENDOR_ID_3GPP)
         );
     }
 }

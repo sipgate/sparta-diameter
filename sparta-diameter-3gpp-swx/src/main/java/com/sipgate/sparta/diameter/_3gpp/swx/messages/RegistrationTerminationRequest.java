@@ -1,8 +1,8 @@
 package com.sipgate.sparta.diameter._3gpp.swx.messages;
 
 import com.sipgate.sparta.diameter._3gpp.common._3gppRequest;
-import com.sipgate.sparta.diameter._3gpp.swx.mixins.HasDeregistrationReasonAVP;
-import com.sipgate.sparta.diameter._3gpp.swx.mixins.HasSupportedFeaturesAVPs;
+import com.sipgate.sparta.diameter._3gpp.common.mixins.HasDeregistrationReasonAVP;
+import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSupportedFeaturesAVPs;
 import com.sipgate.sparta.diameter._3gpp.swx.SwxConstants;
 import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;

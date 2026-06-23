@@ -1,13 +1,13 @@
 package com.sipgate.sparta.diameter._3gpp.swx.messages;
 
 import com.sipgate.sparta.diameter._3gpp.common._3gppRequest;
-import com.sipgate.sparta.diameter._3gpp.swx.mixins.HasActiveApnAVPs;
-import com.sipgate.sparta.diameter._3gpp.swx.mixins.HasContextIdentifierAVP;
-import com.sipgate.sparta.diameter._3gpp.swx.mixins.HasEmergencyServicesAVP;
-import com.sipgate.sparta.diameter._3gpp.swx.mixins.HasServerAssignmentTypeAVP;
-import com.sipgate.sparta.diameter._3gpp.swx.mixins.HasSupportedFeaturesAVPs;
-import com.sipgate.sparta.diameter._3gpp.swx.mixins.HasTerminalInformationAVP;
-import com.sipgate.sparta.diameter._3gpp.swx.mixins.HasVisitedNetworkIdentifierAVP;
+import com.sipgate.sparta.diameter._3gpp.s6a.mixins.HasActiveApnAVPs;
+import com.sipgate.sparta.diameter._3gpp.common.mixins.HasContextIdentifierAVP;
+import com.sipgate.sparta.diameter._3gpp.s6a.mixins.HasEmergencyServicesAVP;
+import com.sipgate.sparta.diameter._3gpp.common.mixins.HasServerAssignmentTypeAVP;
+import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSupportedFeaturesAVPs;
+import com.sipgate.sparta.diameter._3gpp.common.mixins.HasTerminalInformationAVP;
+import com.sipgate.sparta.diameter._3gpp.common.mixins.HasVisitedNetworkIdentifierAVP;
 import com.sipgate.sparta.diameter._3gpp.swx.SwxConstants;
 import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;

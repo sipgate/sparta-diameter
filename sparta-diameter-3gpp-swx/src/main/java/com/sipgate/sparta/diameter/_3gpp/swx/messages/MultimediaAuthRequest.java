@@ -1,12 +1,12 @@
 package com.sipgate.sparta.diameter._3gpp.swx.messages;
 
 import com.sipgate.sparta.diameter._3gpp.common._3gppRequest;
-import com.sipgate.sparta.diameter._3gpp.swx.mixins.HasRatTypeAVP;
-import com.sipgate.sparta.diameter._3gpp.swx.mixins.HasSipAuthDataItemAVP;
-import com.sipgate.sparta.diameter._3gpp.swx.mixins.HasSipNumberAuthItemsAVP;
-import com.sipgate.sparta.diameter._3gpp.swx.mixins.HasSupportedFeaturesAVPs;
-import com.sipgate.sparta.diameter._3gpp.swx.mixins.HasTerminalInformationAVP;
-import com.sipgate.sparta.diameter._3gpp.swx.mixins.HasVisitedNetworkIdentifierAVP;
+import com.sipgate.sparta.diameter._3gpp.gx.mixins.HasRatTypeAVP;
+import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSipAuthDataItemAVP;
+import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSipNumberAuthItemsAVP;
+import com.sipgate.sparta.diameter._3gpp.common.mixins.HasSupportedFeaturesAVPs;
+import com.sipgate.sparta.diameter._3gpp.common.mixins.HasTerminalInformationAVP;
+import com.sipgate.sparta.diameter._3gpp.common.mixins.HasVisitedNetworkIdentifierAVP;
 import com.sipgate.sparta.diameter._3gpp.swx.SwxConstants;
 import com.sipgate.sparta.diameter._3gpp.swx.mixins.HasAaaFailureIndicationAVP;
 import com.sipgate.sparta.diameter._3gpp.swx.mixins.HasAnTrustedAVP;

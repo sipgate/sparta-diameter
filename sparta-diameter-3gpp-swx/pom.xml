@@ -16,6 +16,18 @@
         </dependency>
         <dependency>
             <groupId>com.sipgate</groupId>
+            <artifactId>sparta-diameter-3gpp-gx</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sipgate</groupId>
+            <artifactId>sparta-diameter-3gpp-s6a</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sipgate</groupId>
+            <artifactId>sparta-diameter-3gpp-cxdx</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.sipgate</groupId>
             <artifactId>sparta-diameter-ietf-doic</artifactId>
         </dependency>
         <dependency>
