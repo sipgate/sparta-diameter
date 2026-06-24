@@ -1,5 +1,6 @@
 package com.sipgate.sparta.diameter._3gpp.swx.messages;
 
+import com.sipgate.sparta.diameter._3gpp.common._3gppConstants;
 import com.sipgate.sparta.diameter._3gpp.swx.SwxConstants;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.DiameterPackageFactory;
@@ -7,6 +8,9 @@ import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
 import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
+import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
+import java.util.List;
 
 public final class SwxMessageFactory implements DiameterPackageFactory {
 
@@ -51,6 +55,12 @@ public final class SwxMessageFactory implements DiameterPackageFactory {
         if (outgoingAnswer != null) {
             // TS 29.273 §8 reuses Cx/Dx semantics: sessions are not state-maintained.
             outgoingAnswer.setAuthSessionState(DiameterConstants.AUTH_SESSION_STATE_NOT_MAINTAINED);
+            // §8.2.2.x ABNF marks Vendor-Specific-Application-Id mandatory on every answer.
+            // Vendor-Id/Auth-Application-Id are Unsigned32 (Long); cast to long so AVP.create binds
+            // the Unsigned32 overload (VENDOR_ID_3GPP is int — the int overload would throw).
+            outgoingAnswer.setVendorSpecificApplicationId(List.of(
+                AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), (long) _3gppConstants.VENDOR_ID_3GPP),
+                AVP.create(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0), (long) applicationId)));
         }
         return outgoingAnswer;
     }
