@@ -29,11 +29,21 @@ public interface InsertSubscriberDataAnswer
         In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(S6aConstants.CMD_INSERT_SUBSCRIBER_DATA, true, S6aConstants.APP_ID_S6A_S6D, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Insert-Subscriber-Data Answer";
+        }
     }
 
     final class Out extends OutgoingAnswer implements InsertSubscriberDataAnswer {
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(S6aConstants.CMD_INSERT_SUBSCRIBER_DATA, true, S6aConstants.APP_ID_S6A_S6D, hopByHop, endToEnd);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Insert-Subscriber-Data Answer";
         }
     }
 }

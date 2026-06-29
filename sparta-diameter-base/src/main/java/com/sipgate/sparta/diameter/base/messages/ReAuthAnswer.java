@@ -24,6 +24,11 @@ public interface ReAuthAnswer
             super(DiameterConstants.CMD_RE_AUTH, true,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Re-Auth Answer";
+        }
     }
 
     final class Out extends OutgoingAnswer
@@ -32,6 +37,11 @@ public interface ReAuthAnswer
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_RE_AUTH, true,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Re-Auth Answer";
         }
     }
 }

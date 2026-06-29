@@ -23,6 +23,11 @@ public interface DeviceWatchdogAnswer
             super(DiameterConstants.CMD_DEVICE_WATCHDOG, false,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Device-Watchdog Answer";
+        }
     }
 
     final class Out extends OutgoingAnswer
@@ -31,6 +36,11 @@ public interface DeviceWatchdogAnswer
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_DEVICE_WATCHDOG, false,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Device-Watchdog Answer";
         }
     }
 }

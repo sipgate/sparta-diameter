@@ -22,11 +22,21 @@ public interface PushProfileRequest
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(SwxConstants.CMD_PUSH_PROFILE, false, retransmitted, SwxConstants.APP_ID_SWX, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Push-Profile Request";
+        }
     }
 
     final class Out extends OutgoingRequest<PushProfileAnswer.In> implements PushProfileRequest {
         public Out() {
             super(SwxConstants.CMD_PUSH_PROFILE, false, SwxConstants.APP_ID_SWX);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Push-Profile Request";
         }
     }
 }

@@ -40,11 +40,21 @@ public interface UpdateLocationRequest
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(S6aConstants.CMD_UPDATE_LOCATION, true, retransmitted, S6aConstants.APP_ID_S6A_S6D, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Update-Location Request";
+        }
     }
 
     final class Out extends OutgoingRequest<UpdateLocationAnswer.In> implements UpdateLocationRequest {
         public Out() {
             super(S6aConstants.CMD_UPDATE_LOCATION, true, S6aConstants.APP_ID_S6A_S6D);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Update-Location Request";
         }
     }
 }

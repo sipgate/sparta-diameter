@@ -21,11 +21,21 @@ public interface RegistrationTerminationAnswer
         In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(CxDxConstants.CMD_REGISTRATION_TERMINATION, true, CxDxConstants.APP_ID_CX_DX, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Registration-Termination Answer";
+        }
     }
 
     final class Out extends OutgoingAnswer implements RegistrationTerminationAnswer {
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(CxDxConstants.CMD_REGISTRATION_TERMINATION, true, CxDxConstants.APP_ID_CX_DX, hopByHop, endToEnd);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Registration-Termination Answer";
         }
     }
 }

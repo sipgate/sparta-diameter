@@ -21,6 +21,11 @@ public interface DisconnectPeerRequest
             super(DiameterConstants.CMD_DISCONNECT_PEER, false, retransmitted,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Disconnect-Peer Request";
+        }
     }
 
     final class Out extends OutgoingRequest<DisconnectPeerAnswer.In>
@@ -29,6 +34,11 @@ public interface DisconnectPeerRequest
         public Out() {
             super(DiameterConstants.CMD_DISCONNECT_PEER, false,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Disconnect-Peer Request";
         }
     }
 }

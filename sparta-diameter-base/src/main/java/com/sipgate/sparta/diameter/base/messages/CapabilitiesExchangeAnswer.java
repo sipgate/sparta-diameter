@@ -25,6 +25,11 @@ public interface CapabilitiesExchangeAnswer
             super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Capabilities-Exchange Answer";
+        }
     }
 
     final class Out extends OutgoingAnswer
@@ -33,6 +38,11 @@ public interface CapabilitiesExchangeAnswer
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Capabilities-Exchange Answer";
         }
     }
 }

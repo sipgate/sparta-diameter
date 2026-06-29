@@ -87,11 +87,13 @@ graph TD
         slh["3gpp-slh"]
         cxdx["3gpp-cxdx"]
         swx["3gpp-swx"]
+
+
+        subgraph aggregator["aggregator"]
+            s6a["3gpp-s6a"]
+        end
     end
 
-    subgraph aggregator["aggregator"]
-        s6a["3gpp-s6a"]
-    end
 
     base --> spec
     common --> base

@@ -19,11 +19,21 @@ public interface PushProfileAnswer
         In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(SwxConstants.CMD_PUSH_PROFILE, true, SwxConstants.APP_ID_SWX, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Push-Profile Answer";
+        }
     }
 
     final class Out extends OutgoingAnswer implements PushProfileAnswer {
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(SwxConstants.CMD_PUSH_PROFILE, true, SwxConstants.APP_ID_SWX, hopByHop, endToEnd);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Push-Profile Answer";
         }
     }
 }

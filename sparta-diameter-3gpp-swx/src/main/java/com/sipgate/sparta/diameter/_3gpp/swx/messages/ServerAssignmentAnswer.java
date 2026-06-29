@@ -24,11 +24,21 @@ public interface ServerAssignmentAnswer
         In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(SwxConstants.CMD_SERVER_ASSIGNMENT, true, SwxConstants.APP_ID_SWX, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Server-Assignment Answer";
+        }
     }
 
     final class Out extends OutgoingAnswer implements ServerAssignmentAnswer {
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(SwxConstants.CMD_SERVER_ASSIGNMENT, true, SwxConstants.APP_ID_SWX, hopByHop, endToEnd);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Server-Assignment Answer";
         }
     }
 }

@@ -27,6 +27,11 @@ public interface AccountingAnswer
             super(DiameterConstants.CMD_ACCOUNTING, true,
                   DiameterConstants.APP_DIAMETER_BASE_ACCOUNTING, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Accounting Answer";
+        }
     }
 
     final class Out extends OutgoingAnswer
@@ -35,6 +40,11 @@ public interface AccountingAnswer
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_ACCOUNTING, true,
                   DiameterConstants.APP_DIAMETER_BASE_ACCOUNTING, hopByHop, endToEnd);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Accounting Answer";
         }
     }
 }

@@ -20,11 +20,21 @@ public interface RegistrationTerminationRequest
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(SwxConstants.CMD_REGISTRATION_TERMINATION, true, retransmitted, SwxConstants.APP_ID_SWX, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Registration-Termination Request";
+        }
     }
 
     final class Out extends OutgoingRequest<RegistrationTerminationAnswer.In> implements RegistrationTerminationRequest {
         public Out() {
             super(SwxConstants.CMD_REGISTRATION_TERMINATION, true, SwxConstants.APP_ID_SWX);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Registration-Termination Request";
         }
     }
 }

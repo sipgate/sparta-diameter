@@ -26,11 +26,21 @@ public interface AuthenticationInformationRequest
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(S6aConstants.CMD_AUTHENTICATION_INFORMATION, true, retransmitted, S6aConstants.APP_ID_S6A_S6D, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Authentication-Information Request";
+        }
     }
 
     final class Out extends OutgoingRequest<AuthenticationInformationAnswer.In> implements AuthenticationInformationRequest {
         public Out() {
             super(S6aConstants.CMD_AUTHENTICATION_INFORMATION, true, S6aConstants.APP_ID_S6A_S6D);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Authentication-Information Request";
         }
     }
 }

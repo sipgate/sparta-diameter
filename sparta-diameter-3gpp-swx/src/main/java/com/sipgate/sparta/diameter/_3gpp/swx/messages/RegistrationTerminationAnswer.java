@@ -17,11 +17,21 @@ public interface RegistrationTerminationAnswer
         In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(SwxConstants.CMD_REGISTRATION_TERMINATION, true, SwxConstants.APP_ID_SWX, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Registration-Termination Answer";
+        }
     }
 
     final class Out extends OutgoingAnswer implements RegistrationTerminationAnswer {
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(SwxConstants.CMD_REGISTRATION_TERMINATION, true, SwxConstants.APP_ID_SWX, hopByHop, endToEnd);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Registration-Termination Answer";
         }
     }
 }

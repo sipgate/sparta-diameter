@@ -24,6 +24,11 @@ public interface AbortSessionAnswer
             super(DiameterConstants.CMD_ABORT_SESSION, true,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Abort-Session Answer";
+        }
     }
 
     final class Out extends OutgoingAnswer
@@ -32,6 +37,11 @@ public interface AbortSessionAnswer
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_ABORT_SESSION, true,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Abort-Session Answer";
         }
     }
 }

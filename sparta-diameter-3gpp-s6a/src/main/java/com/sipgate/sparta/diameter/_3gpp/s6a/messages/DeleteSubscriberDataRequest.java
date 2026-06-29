@@ -29,11 +29,21 @@ public interface DeleteSubscriberDataRequest
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(S6aConstants.CMD_DELETE_SUBSCRIBER_DATA, true, retransmitted, S6aConstants.APP_ID_S6A_S6D, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Delete-Subscriber-Data Request";
+        }
     }
 
     final class Out extends OutgoingRequest<DeleteSubscriberDataAnswer.In> implements DeleteSubscriberDataRequest {
         public Out() {
             super(S6aConstants.CMD_DELETE_SUBSCRIBER_DATA, true, S6aConstants.APP_ID_S6A_S6D);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Delete-Subscriber-Data Request";
         }
     }
 }

@@ -31,11 +31,21 @@ public interface ServerAssignmentRequest
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(SwxConstants.CMD_SERVER_ASSIGNMENT, true, retransmitted, SwxConstants.APP_ID_SWX, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Server-Assignment Request";
+        }
     }
 
     final class Out extends OutgoingRequest<ServerAssignmentAnswer.In> implements ServerAssignmentRequest {
         public Out() {
             super(SwxConstants.CMD_SERVER_ASSIGNMENT, true, SwxConstants.APP_ID_SWX);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Server-Assignment Request";
         }
     }
 }

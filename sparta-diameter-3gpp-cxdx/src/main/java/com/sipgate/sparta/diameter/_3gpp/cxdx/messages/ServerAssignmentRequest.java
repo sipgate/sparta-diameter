@@ -37,11 +37,21 @@ public interface ServerAssignmentRequest
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(CxDxConstants.CMD_SERVER_ASSIGNMENT, true, retransmitted, CxDxConstants.APP_ID_CX_DX, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Server-Assignment Request";
+        }
     }
 
     final class Out extends OutgoingRequest<ServerAssignmentAnswer.In> implements ServerAssignmentRequest {
         public Out() {
             super(CxDxConstants.CMD_SERVER_ASSIGNMENT, true, CxDxConstants.APP_ID_CX_DX);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Server-Assignment Request";
         }
     }
 }

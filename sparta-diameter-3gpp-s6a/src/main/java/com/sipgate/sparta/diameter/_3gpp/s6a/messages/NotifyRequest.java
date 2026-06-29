@@ -34,11 +34,21 @@ public interface NotifyRequest
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(S6aConstants.CMD_NOTIFY, true, retransmitted, S6aConstants.APP_ID_S6A_S6D, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Notify Request";
+        }
     }
 
     final class Out extends OutgoingRequest<NotifyAnswer.In> implements NotifyRequest {
         public Out() {
             super(S6aConstants.CMD_NOTIFY, true, S6aConstants.APP_ID_S6A_S6D);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Notify Request";
         }
     }
 }

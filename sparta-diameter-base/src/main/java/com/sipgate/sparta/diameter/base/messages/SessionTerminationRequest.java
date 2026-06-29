@@ -24,6 +24,11 @@ public interface SessionTerminationRequest
             super(DiameterConstants.CMD_SESSION_TERMINATION, true, retransmitted,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Session-Termination Request";
+        }
     }
 
     final class Out extends OutgoingRequest<SessionTerminationAnswer.In>
@@ -32,6 +37,11 @@ public interface SessionTerminationRequest
         public Out() {
             super(DiameterConstants.CMD_SESSION_TERMINATION, true,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Session-Termination Request";
         }
     }
 }

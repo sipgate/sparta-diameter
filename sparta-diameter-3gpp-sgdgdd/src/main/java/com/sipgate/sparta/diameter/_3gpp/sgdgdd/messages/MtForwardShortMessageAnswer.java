@@ -41,6 +41,11 @@ public interface MtForwardShortMessageAnswer
             super(SgdGddConstants.CMD_MT_FORWARD_SHORT_MESSAGE, true,
                   SgdGddConstants.APP_ID_SGD_GDD, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "MT-Forward-Short-Message Answer";
+        }
     }
 
     final class Out extends OutgoingAnswer
@@ -49,6 +54,11 @@ public interface MtForwardShortMessageAnswer
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(SgdGddConstants.CMD_MT_FORWARD_SHORT_MESSAGE, true,
                   SgdGddConstants.APP_ID_SGD_GDD, hopByHop, endToEnd);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "MT-Forward-Short-Message Answer";
         }
     }
 }

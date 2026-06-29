@@ -32,6 +32,11 @@ public sealed interface ErrorAnswer
                   final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(commandCode, false, true, applicationId, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Error Answer";
+        }
     }
 
     /**
@@ -39,11 +44,15 @@ public sealed interface ErrorAnswer
      * protocol error to the peer.
      */
     final class Out extends OutgoingAnswer implements ErrorAnswer {
-
         Out(final int commandCode, final boolean proxiable,
             final int applicationId,
             final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(commandCode, proxiable, true, applicationId, hopByHop, endToEnd);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Error Answer";
         }
     }
 }

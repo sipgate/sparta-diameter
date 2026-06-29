@@ -23,11 +23,21 @@ public interface PurgeUeAnswer
         In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(S6aConstants.CMD_PURGE_UE, true, S6aConstants.APP_ID_S6A_S6D, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Purge-UE Answer";
+        }
     }
 
     final class Out extends OutgoingAnswer implements PurgeUeAnswer {
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(S6aConstants.CMD_PURGE_UE, true, S6aConstants.APP_ID_S6A_S6D, hopByHop, endToEnd);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Purge-UE Answer";
         }
     }
 }

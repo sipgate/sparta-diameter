@@ -24,11 +24,21 @@ public interface ResetRequest
         In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(S6aConstants.CMD_RESET, true, retransmitted, S6aConstants.APP_ID_S6A_S6D, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Reset Request";
+        }
     }
 
     final class Out extends OutgoingRequest<ResetAnswer.In> implements ResetRequest {
         public Out() {
             super(S6aConstants.CMD_RESET, true, S6aConstants.APP_ID_S6A_S6D);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Reset Request";
         }
     }
 }

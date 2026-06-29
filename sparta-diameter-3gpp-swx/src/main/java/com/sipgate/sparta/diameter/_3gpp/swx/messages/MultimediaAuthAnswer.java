@@ -25,11 +25,21 @@ public interface MultimediaAuthAnswer
         In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(SwxConstants.CMD_MULTIMEDIA_AUTH, true, SwxConstants.APP_ID_SWX, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Multimedia-Auth Answer";
+        }
     }
 
     final class Out extends OutgoingAnswer implements MultimediaAuthAnswer {
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(SwxConstants.CMD_MULTIMEDIA_AUTH, true, SwxConstants.APP_ID_SWX, hopByHop, endToEnd);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Multimedia-Auth Answer";
         }
     }
 }

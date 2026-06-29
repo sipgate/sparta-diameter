@@ -26,6 +26,11 @@ public interface AccountingRequest
             super(DiameterConstants.CMD_ACCOUNTING, true, retransmitted,
                   DiameterConstants.APP_DIAMETER_BASE_ACCOUNTING, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Accounting Request";
+        }
     }
 
     final class Out extends OutgoingRequest<AccountingAnswer.In>
@@ -34,6 +39,11 @@ public interface AccountingRequest
         public Out() {
             super(DiameterConstants.CMD_ACCOUNTING, true,
                   DiameterConstants.APP_DIAMETER_BASE_ACCOUNTING);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Accounting Request";
         }
     }
 }

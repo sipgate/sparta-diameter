@@ -24,6 +24,11 @@ public interface CapabilitiesExchangeRequest
             super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false, retransmitted,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Capabilities-Exchange Request";
+        }
     }
 
     final class Out extends OutgoingRequest<CapabilitiesExchangeAnswer.In>
@@ -32,6 +37,11 @@ public interface CapabilitiesExchangeRequest
         public Out() {
             super(DiameterConstants.CMD_CAPABILITIES_EXCHANGE, false,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Capabilities-Exchange Request";
         }
     }
 }

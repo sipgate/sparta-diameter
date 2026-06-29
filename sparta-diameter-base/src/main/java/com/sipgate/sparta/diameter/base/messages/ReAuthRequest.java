@@ -23,6 +23,11 @@ public interface ReAuthRequest
             super(DiameterConstants.CMD_RE_AUTH, true, retransmitted,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Re-Auth Request";
+        }
     }
 
     final class Out extends OutgoingRequest<ReAuthAnswer.In>
@@ -31,6 +36,11 @@ public interface ReAuthRequest
         public Out() {
             super(DiameterConstants.CMD_RE_AUTH, true,
                   DiameterConstants.APP_DIAMETER_COMMON_MESSAGES);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Re-Auth Request";
         }
     }
 }

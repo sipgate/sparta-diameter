@@ -27,11 +27,21 @@ public interface MultimediaAuthAnswer
         In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(CxDxConstants.CMD_MULTIMEDIA_AUTH, true, CxDxConstants.APP_ID_CX_DX, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Multimedia-Auth Answer";
+        }
     }
 
     final class Out extends OutgoingAnswer implements MultimediaAuthAnswer {
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(CxDxConstants.CMD_MULTIMEDIA_AUTH, true, CxDxConstants.APP_ID_CX_DX, hopByHop, endToEnd);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Multimedia-Auth Answer";
         }
     }
 }

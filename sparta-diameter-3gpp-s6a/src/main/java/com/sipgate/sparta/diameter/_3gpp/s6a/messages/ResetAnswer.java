@@ -19,11 +19,21 @@ public interface ResetAnswer
         In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(S6aConstants.CMD_RESET, true, S6aConstants.APP_ID_S6A_S6D, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "Reset Answer";
+        }
     }
 
     final class Out extends OutgoingAnswer implements ResetAnswer {
         Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(S6aConstants.CMD_RESET, true, S6aConstants.APP_ID_S6A_S6D, hopByHop, endToEnd);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "Reset Answer";
         }
     }
 }

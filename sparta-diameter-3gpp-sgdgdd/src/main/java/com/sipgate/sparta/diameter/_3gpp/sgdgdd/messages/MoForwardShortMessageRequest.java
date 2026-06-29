@@ -39,6 +39,11 @@ public interface MoForwardShortMessageRequest
             super(SgdGddConstants.CMD_MO_FORWARD_SHORT_MESSAGE, true, retransmitted,
                 SgdGddConstants.APP_ID_SGD_GDD, hopByHop, endToEnd);
         }
+
+        @Override
+        public String getCommandName() {
+            return "MO-Forward-Short-Message Request";
+        }
     }
 
     final class Out extends OutgoingRequest<MoForwardShortMessageAnswer.In>
@@ -47,6 +52,11 @@ public interface MoForwardShortMessageRequest
         public Out() {
             super(SgdGddConstants.CMD_MO_FORWARD_SHORT_MESSAGE, true,
                   SgdGddConstants.APP_ID_SGD_GDD);
+        }
+
+        @Override
+        public String getCommandName() {
+            return "MO-Forward-Short-Message Request";
         }
     }
 }
