@@ -123,12 +123,28 @@ public final class DiameterMessageFactory {
                 request.hopByHopId(),
                 request.endToEndId(),
                 request.getSessionId(),
-                resultCode
+            errorAnswer -> errorAnswer.setResultCode(resultCode)
         );
     }
 
+    public static ErrorAnswer.Out createErrorAnswer(
+        final IncomingRequest<?> request,
+        final Consumer<ErrorAnswer.Out> initializer
+    ) {
+        return createErrorAnswer(
+            request.getCommandCode(),
+            request.isProxiable(),
+            request.getApplicationId(),
+            request.hopByHopId(),
+            request.endToEndId(),
+            request.getSessionId(),
+            initializer
+        );
+    }
+
+
     public static ErrorAnswer.Out createErrorAnswer(final DiameterResultCodeException cause) {
-        return createErrorAnswer(cause.getCommandCode(), cause.isProxiable(), cause.getApplicationId(), cause.getHopByHop(), cause.getEndToEnd(), cause.getSessionId(), cause.getResultCode());
+        return createErrorAnswer(cause.getCommandCode(), cause.isProxiable(), cause.getApplicationId(), cause.getHopByHop(), cause.getEndToEnd(), cause.getSessionId(), errorAnswer -> errorAnswer.setResultCode(cause.getResultCode()));
     }
 
     private static ErrorAnswer.Out createErrorAnswer(
@@ -138,14 +154,15 @@ public final class DiameterMessageFactory {
         final HopByHopId hopByHop,
         final EndToEndId endToEnd,
         final String sessionId,
-        final long resultCode
+        final Consumer<ErrorAnswer.Out> initializer
     ) {
         final var errorAnswer= new ErrorAnswer.Out(commandCode, isProxiable, applicationId, hopByHop, endToEnd);
         if (sessionId != null) {
             errorAnswer.unshiftAvp(AVP.create(new AVPKey(DiameterConstants.AVP_SESSION_ID, 0), sessionId));
         }
-        errorAnswer.setResultCode(resultCode);
+        initializer.accept(errorAnswer);
         return errorAnswer;
+
     }
 
     /**
@@ -172,6 +189,18 @@ public final class DiameterMessageFactory {
                     AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), vendorId),
                     AVP.create(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE, 0), experimentalResultCode)
                 ));
+        });
+    }
+
+    public static ErrorAnswer.Out createExperimentalErrorAnswer(
+        final IncomingRequest<?> request,
+        final long vendorId,
+        final long experimentalResultCode) {
+        return createErrorAnswer(request, errorAnswer -> {
+            errorAnswer.setExperimentalResult(List.of(
+                AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), vendorId),
+                AVP.create(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE, 0), experimentalResultCode)
+            ));
         });
     }
 
