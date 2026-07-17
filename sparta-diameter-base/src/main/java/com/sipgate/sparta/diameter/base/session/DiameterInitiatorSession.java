@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -67,6 +69,7 @@ public final class DiameterInitiatorSession extends DiameterSession {
                 return;
             }
 
+            err = extractEffectiveCause(err);
             if (err instanceof final DiameterErrorAnswerException e) {
                 LOGGER.info("CER rejected with {}", ResultCodeUtil.describeResultCode(e.getAnswer()));
             } else {
@@ -77,6 +80,13 @@ public final class DiameterInitiatorSession extends DiameterSession {
                 closePeer();
             }
         });
+    }
+
+    private static Throwable extractEffectiveCause(final Throwable wrapper) {
+        if (wrapper instanceof CompletionException || wrapper instanceof ExecutionException) {
+            return wrapper.getCause() == null ? wrapper : wrapper.getCause();
+        }
+        return wrapper;
     }
 
     @Override

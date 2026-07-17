@@ -29,19 +29,14 @@ import io.netty.channel.ChannelFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UncheckedIOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 /**
  * Shared state and helpers for initiator- and responder-side Diameter sessions.
@@ -228,6 +223,7 @@ public abstract class DiameterSession {
             meters.stopHandlerTimer(handlerSample, commandCode, applicationId);
             // Keep this if even though nobody throws DiameterErrorAnswerException inside this lib. This is a way for
             // applications to indicate a diameter business error.
+            err = extractEffectiveCause(err);
             if (err instanceof final DiameterErrorAnswerException e && e.getAnswer() instanceof final ErrorAnswer.Out out) {
                 send(out);
                 meters.recordHandlerError(commandCode, applicationId, err);
@@ -238,6 +234,13 @@ public abstract class DiameterSession {
                 send(answer);
             }
         });
+    }
+
+    private static Throwable extractEffectiveCause(final Throwable wrapper) {
+        if (wrapper instanceof CompletionException || wrapper instanceof ExecutionException) {
+            return wrapper.getCause() == null ? wrapper : wrapper.getCause();
+        }
+        return wrapper;
     }
 
     protected <A extends Answer> CompletableFuture<A> sendAndTrack(
