@@ -1,10 +1,14 @@
 package com.sipgate.sparta.diameter._3gpp.sgdgdd.messages;
 
+import com.sipgate.sparta.diameter._3gpp.common._3gppConstants;
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.SgdGddConstants;
+import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
 import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
+import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,6 +26,31 @@ class SgdGddMessageFactoryTest {
             .isInstanceOf(MoForwardShortMessageRequest.In.class);
         assertThat(factory.createForParsing(SgdGddConstants.CMD_MT_FORWARD_SHORT_MESSAGE, SgdGddConstants.APP_ID_SGD_GDD, false, hopByHop, endToEnd, false))
             .isInstanceOf(MtForwardShortMessageAnswer.In.class);
+    }
+
+    @Test
+    void it_stamps_every_answer_with_auth_session_state_and_vendor_specific_application_id() {
+        for (final int commandCode : new int[]{
+            SgdGddConstants.CMD_MO_FORWARD_SHORT_MESSAGE,
+            SgdGddConstants.CMD_MT_FORWARD_SHORT_MESSAGE}
+        ) {
+            // WHEN
+            final var answer = factory.createAnswer(
+                commandCode, SgdGddConstants.APP_ID_SGD_GDD, hopByHop, endToEnd);
+
+            // THEN both AVPs the OFA/TFA ABNFs require are present (TS 29.338 §4.5, §6.3.2)
+            assertThat(answer.findAVP(new AVPKey(DiameterConstants.AVP_AUTH_SESSION_STATE, 0)).getDataAsInt())
+                .as("Auth-Session-State of command %d", commandCode)
+                .isEqualTo(DiameterConstants.AUTH_SESSION_STATE_NOT_MAINTAINED);
+
+            final var vsai = (AVPContainer) answer.findAVP(
+                new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0));
+            assertThat(vsai).as("Vendor-Specific-Application-Id of command %d", commandCode).isNotNull();
+            assertThat(vsai.findAVP(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0)).getDataAsUnsignedInt())
+                .as("Vendor-Id").isEqualTo(_3gppConstants.VENDOR_ID_3GPP);
+            assertThat(vsai.findAVP(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0)).getDataAsUnsignedInt())
+                .as("Auth-Application-Id").isEqualTo(SgdGddConstants.APP_ID_SGD_GDD);
+        }
     }
 
     @Test

@@ -1,7 +1,11 @@
 package com.sipgate.sparta.diameter._3gpp.s6a.messages;
 
+import com.sipgate.sparta.diameter._3gpp.common._3gppConstants;
 import com.sipgate.sparta.diameter._3gpp.s6a.S6aConstants;
 import com.sipgate.sparta.diameter.base.core.*;
+import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
+import java.util.List;
 
 /** Message factory for S6a/S6d commands defined in 3GPP TS 29.272. */
 public final class S6aMessageFactory implements DiameterPackageFactory {
@@ -65,6 +69,10 @@ public final class S6aMessageFactory implements DiameterPackageFactory {
             /// 3GPP TS 29.272 §7.1.4: S6a/S6d sessions are implicitly terminated;
             /// the server sets Auth-Session-State to NO_STATE_MAINTAINED in every response.
             outgoingAnswer.setAuthSessionState(DiameterConstants.AUTH_SESSION_STATE_NOT_MAINTAINED);
+            // §7.2.x: the answer ABNFs carry Vendor-Specific-Application-Id; MMEs expect it back.
+            outgoingAnswer.setVendorSpecificApplicationId(List.of(
+                AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), (long) _3gppConstants.VENDOR_ID_3GPP),
+                AVP.create(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0), (long) applicationId)));
         }
 
         return outgoingAnswer;

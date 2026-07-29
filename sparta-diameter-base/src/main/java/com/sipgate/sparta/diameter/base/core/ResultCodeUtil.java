@@ -1,5 +1,6 @@
 package com.sipgate.sparta.diameter.base.core;
 
+import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 
 /**
@@ -30,25 +31,26 @@ public final class ResultCodeUtil {
     }
 
     /**
-     * Formats the result code from an {@link ErrorAnswer} for logging.
+     * Formats the result code of an answer for logging.
      * <p>
      * Prefers the Experimental-Result-Code nested inside the Experimental-Result
-     * grouped AVP. Falls back to the top-level Result-Code.
+     * grouped AVP. Falls back to the top-level Result-Code. Takes any {@link Answer}: a 3GPP
+     * Experimental-Result travels in a regular answer, not only in an {@link ErrorAnswer}.
      * </p>
      *
-     * @param answer The error answer to extract from
+     * @param answer The answer to extract from
      * @return A human-readable string like "Result-Code 3002" or "Experimental-Result-Code 5001"
      */
-    public static String describeResultCode(final ErrorAnswer answer) {
-        final var experimentalResult = answer.getExperimentalResult();
-        if (experimentalResult == null) {
+    public static String describeResultCode(final Answer answer) {
+        final var experimentalResult = answer.findAVP(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT, 0));
+        if (!(experimentalResult instanceof final AVPContainer group)) {
             return "Result-Code " + answer.getResultCode();
         }
-        final var avp = experimentalResult.findAVP(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE, 0));
+        final var avp = group.findAVP(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE, 0));
         if (avp == null) {
             return "Result-Code " + answer.getResultCode();
         }
-        final var vendorIdAvp = experimentalResult.findAVP(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0));
+        final var vendorIdAvp = group.findAVP(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0));
         final var vendorId = vendorIdAvp == null ? 0L : vendorIdAvp.getDataAsUnsignedInt();
         return "Experimental-Result-Code " + avp.getDataAsUnsignedInt() + " (Vendor-Id " + vendorId + ")";
     }

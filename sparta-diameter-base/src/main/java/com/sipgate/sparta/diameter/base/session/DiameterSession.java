@@ -224,7 +224,9 @@ public abstract class DiameterSession {
             // Keep this if even though nobody throws DiameterErrorAnswerException inside this lib. This is a way for
             // applications to indicate a diameter business error.
             err = extractEffectiveCause(err);
-            if (err instanceof final DiameterErrorAnswerException e && e.getAnswer() instanceof final ErrorAnswer.Out out) {
+            // The carried answer is an ErrorAnswer.Out for protocol errors and a regular typed
+            // answer for an Experimental-Result (RFC 6733 §7.6 - no E-bit on those).
+            if (err instanceof final DiameterErrorAnswerException e && e.getAnswer() instanceof final OutgoingAnswer out) {
                 send(out);
                 meters.recordHandlerError(commandCode, applicationId, err);
             } else if (err != null) {

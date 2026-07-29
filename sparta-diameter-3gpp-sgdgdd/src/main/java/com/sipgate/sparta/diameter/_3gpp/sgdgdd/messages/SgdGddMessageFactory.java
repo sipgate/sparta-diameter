@@ -1,7 +1,11 @@
 package com.sipgate.sparta.diameter._3gpp.sgdgdd.messages;
 
+import com.sipgate.sparta.diameter._3gpp.common._3gppConstants;
 import com.sipgate.sparta.diameter._3gpp.sgdgdd.SgdGddConstants;
 import com.sipgate.sparta.diameter.base.core.*;
+import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
+import java.util.List;
 
 public final class SgdGddMessageFactory implements DiameterPackageFactory {
 
@@ -46,6 +50,10 @@ public final class SgdGddMessageFactory implements DiameterPackageFactory {
             /// 3GPP TS 29.338 §4.5 request implementers to send an Auth-Session-State AVP with the value
             /// `NO_STATE_MAINTAINED` to make that non-usage known (i.e. to diameter proxies/relays).
             outgoingAnswer.setAuthSessionState(DiameterConstants.AUTH_SESSION_STATE_NOT_MAINTAINED);
+            /// 3GPP TS 29.338 §6.3.2.1/§6.3.2.2: the OFA/TFA ABNFs carry Vendor-Specific-Application-Id.
+            outgoingAnswer.setVendorSpecificApplicationId(List.of(
+                AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), (long) _3gppConstants.VENDOR_ID_3GPP),
+                AVP.create(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0), (long) applicationId)));
         }
 
         return outgoingAnswer;

@@ -1,5 +1,6 @@
 package com.sipgate.sparta.diameter.base.session;
 
+import com.sipgate.sparta.diameter.base.core.Answer;
 import com.sipgate.sparta.diameter.base.core.ErrorAnswer;
 
 /**
@@ -26,13 +27,22 @@ import com.sipgate.sparta.diameter.base.core.ErrorAnswer;
  */
 public final class DiameterErrorAnswerException extends Exception {
 
-    private final ErrorAnswer answer;
+    private final Answer answer;
 
-    public DiameterErrorAnswerException(final ErrorAnswer answer) {
+    public DiameterErrorAnswerException(final Answer answer) {
         this.answer = answer;
     }
 
-    public ErrorAnswer getAnswer() {
+    /**
+     * The answer this exception carries.
+     * <p>
+     * Inbound: the {@link ErrorAnswer.In} a peer sent instead of the expected answer.
+     * Outbound: the answer a request handler wants sent instead of the normal one - either an
+     * {@link ErrorAnswer.Out} for protocol errors (E-bit, RFC 6733 §7.2) or a regular typed
+     * answer carrying an Experimental-Result (§7.6), which must not have the E-bit set.
+     * </p>
+     */
+    public Answer getAnswer() {
         return answer;
     }
 }
