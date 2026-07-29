@@ -1,5 +1,6 @@
 package com.sipgate.sparta.diameter.base.core;
 
+import com.sipgate.sparta.diameter.base.core.avp.mixins.HasAuthSessionStateAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasErrorMessageAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasErrorReportingHostAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasExperimentalResultAVP;
@@ -8,6 +9,7 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginStateIdAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasProxyInfoAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasResultCodeAVP;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasSessionIdAVP;
+import com.sipgate.sparta.diameter.base.core.avp.mixins.HasVendorSpecificApplicationIdAVP;
 
 /**
  * Error Answer message as defined in RFC 6733 §7.2.
@@ -19,7 +21,8 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.HasSessionIdAVP;
 public sealed interface ErrorAnswer
         extends HasResultCodeAVP, HasSessionIdAVP, HasOriginStateIdAVP,
                 HasErrorMessageAVP, HasErrorReportingHostAVP,
-                HasFailedAVP, HasExperimentalResultAVP, HasProxyInfoAVP
+                HasFailedAVP, HasExperimentalResultAVP, HasProxyInfoAVP,
+                HasAuthSessionStateAVP, HasVendorSpecificApplicationIdAVP
         permits ErrorAnswer.In, ErrorAnswer.Out {
 
     /**

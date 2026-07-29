@@ -1,7 +1,10 @@
 package com.sipgate.sparta.diameter.base.core;
 
+import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogAnswer;
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogRequest;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -164,6 +167,53 @@ class DiameterMessageFactoryTest {
                 assertThat(answer).isInstanceOf(ErrorAnswer.class);
                 assertThat(answer.getSessionId()).isNull();
             }
+        }
+    }
+
+    @Nested
+    class ErrorAnswerMirrorsRequestAvps {
+        private DeviceWatchdogRequest.In request;
+
+        @BeforeEach
+        void setUp() {
+            request = spy((DeviceWatchdogRequest.In) DiameterMessageFactory.createForParsing(
+                DiameterConstants.CMD_DEVICE_WATCHDOG, 0, true, true, false, HOP, END, false));
+        }
+
+        @Test
+        void it_copies_auth_session_state_and_vendor_specific_application_id() {
+            // GIVEN a request carrying both AVPs, as every 3GPP peer sends them
+            // (stubbed: a wire-parsed incoming command cannot be mutated)
+            when(request.findAVP(new AVPKey(DiameterConstants.AVP_AUTH_SESSION_STATE, 0)))
+                .thenReturn(AVP.create(
+                    new AVPKey(DiameterConstants.AVP_AUTH_SESSION_STATE, 0),
+                    DiameterConstants.AUTH_SESSION_STATE_NOT_MAINTAINED));
+            when(request.findAVP(new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0)))
+                .thenReturn(AVP.create(
+                    new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0),
+                    List.of(AVP.create(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0), 16777251L))));
+
+            // WHEN
+            final var answer = DiameterMessageFactory.createErrorAnswer(request, RES_DIAMETER_SUCCESS);
+
+            // THEN the E-bit answer is not truncated - the MME needs both
+            assertThat(answer.getAuthSessionState())
+                .isEqualTo(DiameterConstants.AUTH_SESSION_STATE_NOT_MAINTAINED);
+            assertThat(answer.getVendorSpecificApplicationId()).isNotNull();
+            assertThat(answer.getVendorSpecificApplicationId()
+                .findAVP(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0)).getDataAsUnsignedInt())
+                .isEqualTo(16777251L);
+        }
+
+        @Test
+        void it_omits_what_the_request_did_not_carry() {
+            // GIVEN a request without those AVPs (e.g. a base-protocol command)
+            // WHEN
+            final var answer = DiameterMessageFactory.createErrorAnswer(request, RES_DIAMETER_SUCCESS);
+
+            // THEN nothing is invented
+            assertThat(answer.getAuthSessionState()).isEqualTo(-1);
+            assertThat(answer.getVendorSpecificApplicationId()).isNull();
         }
     }
 

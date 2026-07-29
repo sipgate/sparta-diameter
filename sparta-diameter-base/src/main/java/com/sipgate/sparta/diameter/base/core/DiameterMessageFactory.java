@@ -116,15 +116,7 @@ public final class DiameterMessageFactory {
     public static ErrorAnswer.Out createErrorAnswer(
             final IncomingRequest<?> request,
             final long resultCode) {
-        return createErrorAnswer(
-                request.getCommandCode(),
-                request.isProxiable(),
-                request.getApplicationId(),
-                request.hopByHopId(),
-                request.endToEndId(),
-                request.getSessionId(),
-            errorAnswer -> errorAnswer.setResultCode(resultCode)
-        );
+        return createErrorAnswer(request, errorAnswer -> errorAnswer.setResultCode(resultCode));
     }
 
     public static ErrorAnswer.Out createErrorAnswer(
@@ -138,8 +130,32 @@ public final class DiameterMessageFactory {
             request.hopByHopId(),
             request.endToEndId(),
             request.getSessionId(),
-            initializer
+            errorAnswer -> {
+                mirrorSessionAvps(request, errorAnswer);
+                initializer.accept(errorAnswer);
+            }
         );
+    }
+
+    /**
+     * Copies the session-scoped AVPs of the request onto an E-bit answer.
+     * <p>
+     * An {@link ErrorAnswer.Out} is built without the per-application factory, so it misses what
+     * that factory would add - for S6a/Cx that is Auth-Session-State and Vendor-Specific-Application-Id.
+     * 3GPP peers expect both on answers (Auth-Session-State must match the request per RFC 6733
+     * §8.11), and without them an MME sees a truncated AIA/ULA.
+     * </p>
+     */
+    private static void mirrorSessionAvps(final IncomingRequest<?> request, final ErrorAnswer.Out errorAnswer) {
+        for (final var code : new int[]{
+            DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID,
+            DiameterConstants.AVP_AUTH_SESSION_STATE}
+        ) {
+            final var avp = request.findAVP(new AVPKey(code, 0));
+            if (avp != null) {
+                errorAnswer.setAVP(avp);
+            }
+        }
     }
 
 
