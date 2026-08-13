@@ -32,5 +32,17 @@ bin/
 # Python
 
 .venv/
+__pycache__/
 
 /cache/
+
+### Maven release plugin ###
+release.properties
+pom.xml.releaseBackup
+pom.xml.tag
+pom.xml.next
+
+### JVM crash and misc ###
+*.log
+hs_err_pid*
+replay_pid*
