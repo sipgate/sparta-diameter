@@ -36,7 +36,7 @@ See the [Modules](#modules) table for the full list of artifacts.
 
 ## Java Version
 
-Requires Java 17–24. **Java 25 is not supported** — compilation hangs or throws `OutOfMemoryError`.
+Java 17 or newer works; CI verifies 17, 21, 24 and 25.
 
 ## Project Goals
 
