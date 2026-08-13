@@ -33,4 +33,14 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <!--
+      Development-only tool: it downloads 3GPP/ETSI .docx files and is of no use to consumers,
+      so it is not published. The parent's central-publishing-maven-plugin configuration keeps
+      it out of the Central bundle via excludeArtifacts; maven.deploy.skip covers builds where
+      the deploy profile (and with it that plugin) is not active.
+    -->
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
 </project>
