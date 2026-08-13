@@ -1,5 +1,9 @@
 # Sparta Diameter
 
+[![Build](https://github.com/sipgate/sparta-diameter/actions/workflows/publish-snapshot.yml/badge.svg?branch=main)](https://github.com/sipgate/sparta-diameter/actions/workflows/publish-snapshot.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/com.sipgate/sparta-diameter-base)](https://central.sonatype.com/namespace/com.sipgate)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 > ⚠️ **Work in Progress**
 >
 > This library is in active development. API surfaces may change between releases.
@@ -16,20 +20,20 @@ Maven:
 <dependency>
     <groupId>com.sipgate</groupId>
     <artifactId>sparta-diameter-3gpp-sgdgdd</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.12</version>
 </dependency>
 ```
 
 Gradle (Kotlin DSL):
 
 ```kotlin
-implementation("com.sipgate:sparta-diameter-3gpp-sgdgdd:0.1.0")
+implementation("com.sipgate:sparta-diameter-3gpp-sgdgdd:0.1.12")
 ```
 
 Gradle (Groovy DSL):
 
 ```groovy
-implementation 'com.sipgate:sparta-diameter-3gpp-sgdgdd:0.1.0'
+implementation 'com.sipgate:sparta-diameter-3gpp-sgdgdd:0.1.12'
 ```
 
 See the [Modules](#modules) table for the full list of artifacts.
@@ -48,14 +52,42 @@ Java 17 or newer works; CI verifies 17, 21, 24 and 25.
 
 ## Modules
 
+Foundation:
+
 | Module | Contents |
 |--------|----------|
-| `sparta-diameter-base` | Core protocol, transport layer, session management |
-| `sparta-diameter-3gpp-common` | Shared 3GPP constants and AVP mixins |
-| `sparta-diameter-3gpp-s6a` | S6a interface (HSS–MME) |
-| `sparta-diameter-3gpp-s6c` | S6c interface (SMS/MWD) |
-| `sparta-diameter-3gpp-cxdx` | Cx/Dx interfaces (IMS HSS) |
-| `sparta-diameter-3gpp-sgdgdd` | SGd/Gdd interfaces (SMS delivery via MO/MT) |
+| `sparta-diameter-spec` | RFC 6733 §3.2 Command Code Format (CCF) parser |
+| `sparta-diameter-base` | RFC 6733 base protocol: core, AVPs, transport, session, base messages |
+
+IETF / ETSI extensions — AVP definitions only, no commands:
+
+| Module | Contents |
+|--------|----------|
+| `sparta-diameter-ietf-doic` | RFC 7683 — Diameter Overload Indication Conveyance (DOIC) |
+| `sparta-diameter-ietf-drmp` | RFC 7944 — Diameter Routing Message Priority (DRMP) |
+| `sparta-diameter-ietf-load` | RFC 8583 — Diameter Load Information Conveyance |
+| `sparta-diameter-ietf-mip6-integrated` | RFC 5778 — Diameter Mobile IPv6, integrated scenario |
+| `sparta-diameter-ietf-mip6-split` | RFC 5447 — Diameter Mobile IPv6, split scenario |
+| `sparta-diameter-ietf-nas` | RFC 7155 — Network Access Server application (`Framed-*` AVPs) |
+| `sparta-diameter-etsi-e2` | ETSI ES 283 035 — TISPAN NASS e2 (`Line-Identifier` AVP) |
+
+3GPP:
+
+| Module | Contents |
+|--------|----------|
+| `sparta-diameter-3gpp-common` | Shared 3GPP AVPs, constants, mixins and result codes |
+| `sparta-diameter-3gpp-s6a` | TS 29.272 — S6a/S6d (MME/SGSN to HSS); also the aggregator module |
+| `sparta-diameter-3gpp-cxdx` | TS 29.228/29.229 — Cx/Dx (I-CSCF/S-CSCF to HSS) |
+| `sparta-diameter-3gpp-swx` | TS 29.273 §8 — SWx (3GPP AAA Server to HSS) |
+| `sparta-diameter-3gpp-sgdgdd` | TS 29.338 §6 — SGd/Gdd (MME/SGSN to SMS-SC) |
+| `sparta-diameter-3gpp-s6c` | TS 29.338 §5 — S6c (HSS to SMS-SC/Router); constants only |
+| `sparta-diameter-3gpp-gx` | TS 29.212 — Gx (PCEF/PCRF) AVPs reused by other interfaces |
+| `sparta-diameter-3gpp-rx` | TS 29.214 — Rx (AF/PCRF) AVPs reused by other interfaces |
+| `sparta-diameter-3gpp-s6t` | TS 29.336 — AVPs reused by other interfaces, no commands |
+| `sparta-diameter-3gpp-slh` | TS 29.173 — SLh AVPs reused by other interfaces |
+
+`sparta-diameter-spec-extractor` is a development-only tool that downloads 3GPP/ETSI `.docx`
+specifications and extracts their AVP tables to JSON. It is not published to Maven Central.
 
 ## Module Dependencies
 
@@ -156,8 +188,13 @@ graph TD
 - ✅ Netty-based transport (`DiameterNode`, `DiameterPeer`)
 - ✅ Session layer with capability negotiation, watchdog, reconnect timer (Tc)
 - ✅ SGd/Gdd: MO-Forward-Short-Message, MT-Forward-Short-Message
-- 🚧 S6a, Cx/Dx: constants and AVP definitions in progress
-- 🚧 Comprehensive test coverage
+- ✅ S6a/S6d: AIR/AIA, ULR/ULA, CLR/CLA, IDR/IDA, DSR/DSA, PUR/PUA, RSR/RSA, NOR/NOA
+- ✅ Cx/Dx: MAR/MAA, SAR/SAA, RTR/RTA
+- ✅ SWx: MAR/MAA, SAR/SAA, RTR/RTA, PPR/PPA
+- ✅ AVP definitions for Gx, Rx, S6t, SLh and the IETF/ETSI extensions above
+- ✅ Comprehensive test coverage of the implemented features
+- 🚧 S6c: constants only, no commands yet
+- 🚧 Full AVP coverage of the referenced 3GPP/ETSI specs (the spec-conformance tests skip unimplemented AVPs — currently about half)
 
 ## Usage
 
@@ -248,8 +285,7 @@ try (final var node = new DiameterNode()) {
 ### Sending a Request
 
 ```java
-final var request = DiameterMessageFactory.createRequest(
-    MtForwardShortMessageRequest.Out.class);
+final var request = new MtForwardShortMessageRequest.Out();
 request.setDestinationHost("hss.example.com");
 request.setDestinationRealm("example.com");
 request.setSmRpUi(encodedPdu);
@@ -266,7 +302,7 @@ final var originHost = request.getOriginHost();   // String
 final var resultCode = answer.getResultCode();    // long
 
 // Grouped AVP access
-final var userIdentifier = request.getUserIdentifier(); // GroupedAVP
+final var userIdentifier = request.getUserIdentifier(); // AVPContainer, null if absent
 final var avp = userIdentifier.findAVP(
     new AVPKey(_3gppConstants.AVP_MSISDN, _3gppConstants.VENDOR_ID_3GPP));
 ```
@@ -280,7 +316,7 @@ final var avp = userIdentifier.findAVP(
 | `DiameterResponderSession` | Inbound session: handles CER, watchdog, routes requests to handlers |
 | `DiameterInitiatorSession` | Outbound session: sends CER, handles reconnect via Tc timer |
 | `DiameterNodeConfig` | Node identity, declared capabilities, protocol timers (TWINIT, Tc) |
-| `DiameterMessageFactory` | Creates requests, answers, and error answers; auto-discovers message factories |
+| `DiameterMessageFactory` | Parses incoming messages, creates answers and error answers; auto-discovers message factories |
 | `DiameterRequestHandler` | `CompletableFuture<Answer> handle(IncomingRequest)` — registered via `session.setHandler` |
 | `GenericCommand` | Fallback for unknown command codes or application IDs |
 
@@ -288,12 +324,38 @@ final var avp = userIdentifier.findAVP(
 
 See [docs/metrics.md](docs/metrics.md) for the full list of meters and their tags.
 
+## Building
+
+There is no Maven wrapper — use your own `mvn`. The toolchain is pinned in
+[`.sdkmanrc`](.sdkmanrc) (Java 17.0.18-zulu, Maven 3.9.14); with
+[SDKMAN!](https://sdkman.io/) installed, run `sdk env` to activate it.
+
+```shell
+mvn clean verify
+```
+
+For a local peer to talk to, the repository ships a Python-based Diameter server:
+
+```shell
+docker compose up diameter-server   # listens on localhost:3868
+```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for conventions and the development workflow, and
+[AGENTS.md](AGENTS.md) for the coding rules enforced in review. Architecture decisions live in
+[`ADR/`](ADR); requirements for planned features live in [`specs/`](specs).
+
+To report a security issue, see [SECURITY.md](SECURITY.md).
+
 ## Preparing a new release
 
 We're using the [Maven release plugin](https://maven.apache.org/maven-release/maven-release-plugin/index.html).
 When ready, run `mvn release:prepare` and follow the instructions. This will create, tag and push a new release.
 
 We skip `release:perform` — the actual build and deploy to Maven Central happens in GitHub Actions when the tag lands (see `.github/workflows/publish-release.yml`). After a successful prepare, run `mvn release:clean` to remove `release.properties` and POM backups; otherwise the next `release:prepare` will try to resume the previous run.
+
+Pushes to `main` publish a `-SNAPSHOT` via `.github/workflows/publish-snapshot.yml`.
 
 ## License
 
