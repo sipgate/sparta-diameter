@@ -1,0 +1,43 @@
+name: Feature request
+description: Propose a message, AVP, interface or capability
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check [`specs/`](https://github.com/sipgate/sparta-diameter/tree/main/specs) first — several
+        features are already specified and waiting for implementation.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What should exist
+      description: The command, AVP, interface or capability you need.
+    validations:
+      required: true
+
+  - type: input
+    id: spec
+    attributes:
+      label: Defining specification
+      description: RFC or 3GPP TS, with section number.
+      placeholder: "RFC 6733 §6.1.3, or 3GPP TS 29.272 §7.2.3"
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Use case
+      description: What are you building, and what does the absence of this block?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: contribute
+    attributes:
+      label: Would you be willing to implement it?
+      options:
+        - "Yes"
+        - "Yes, with guidance"
+        - "No"
+    validations:
+      required: true

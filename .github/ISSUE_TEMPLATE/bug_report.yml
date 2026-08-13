@@ -1,0 +1,87 @@
+name: Bug report
+description: Something behaves differently than the RFC or the documentation says
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do not report security vulnerabilities here — see
+        [SECURITY.md](https://github.com/sipgate/sparta-diameter/blob/main/SECURITY.md).
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Module
+      description: Which artifact is affected?
+      options:
+        - sparta-diameter-base
+        - sparta-diameter-spec
+        - sparta-diameter-3gpp-common
+        - sparta-diameter-3gpp-s6a
+        - sparta-diameter-3gpp-cxdx
+        - sparta-diameter-3gpp-swx
+        - sparta-diameter-3gpp-sgdgdd
+        - sparta-diameter-3gpp-s6c
+        - sparta-diameter-3gpp-gx
+        - sparta-diameter-3gpp-rx
+        - sparta-diameter-3gpp-s6t
+        - sparta-diameter-3gpp-slh
+        - an IETF or ETSI extension module
+        - not sure
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: "0.1.12"
+    validations:
+      required: true
+
+  - type: input
+    id: java
+    attributes:
+      label: Java version
+      description: Output of `java -version`
+      placeholder: "17.0.18-zulu"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: If an RFC or 3GPP specification defines this, cite the section.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: A failing test is ideal. Otherwise, the steps and the code you called.
+      render: java
+
+  - type: textarea
+    id: message
+    attributes:
+      label: Message capture
+      description: >
+        For decoding, encoding or routing problems, a capture of the offending message is far more
+        useful than a description of it. Drag a zipped PCAP into this field (GitHub inserts a
+        link — .pcap must be zipped first) or paste a hex dump. Remove or replace anything you
+        cannot share.
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or stack trace
+      render: text
