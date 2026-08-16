@@ -41,26 +41,29 @@ Not everything warrants a unit test — POJOs and configuration classes generall
 Formatting follows [`.editorconfig`](.editorconfig) (LF, UTF-8, 120 columns, 4-space Java) but is
 not enforced by the build; please configure your editor to respect it.
 
-## Architecture decisions and specs
+## Architecture decisions
 
-- [`ADR/`](ADR) holds architecture decision records. Read the relevant ones before making
-  structural changes. The format is defined in
-  [ADR-0001](ADR/0001-adr-format.md); anything with a "Rejected alternatives" section belongs here.
-- [`specs/`](specs) holds per-feature requirements for planned work, structured per
-  [ADR-0002](ADR/0002-spec-driven-development.md). Load only the spec for the feature you are
-  working on.
+[`ADR/`](ADR) holds architecture decision records. Read the relevant ones before making
+structural or behavioural changes, and respect the decisions they document — logging, the
+metrics API, session-layer design, and so on. The format is defined in
+[ADR-0001](ADR/0001-adr-format.md).
 
-If your change is a trade-off at a crossroads, add an ADR alongside the code.
+[`specs/`](specs) holds per-feature requirements for planned work, per
+[ADR-0002](ADR/0002-spec-driven-development.md). This is a workflow for AI-agent-assisted
+development and does not apply to human contributors.
 
 ## Commits and pull requests
 
-- Semantic commit subjects with a scope in brackets: `fix(transport): reset Tc timer on CEA`.
+- [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) with a scope in brackets:
+  `fix(transport): reset Tc timer on CEA`.
 - Subject at most 50 characters, body wrapped at 72.
 - Explain **why** in the body; the diff already shows what.
 - Small, atomic commits. Each one should make sense on its own and leave the build working.
 
-Open the pull request against `main`. CI runs `mvn clean verify` on Java 17, 21, 24 and 25, plus a
-`-P deploy` build that produces the sources and javadoc jars — all must pass. Describe what changed and why, and reference the relevant ADR or spec if there is one.
+Open the pull request against `main`. CI runs the checks defined in
+[verify-pull-request.yml](.github/workflows/verify-pull-request.yml) — a `mvn clean verify` across
+the supported Java versions, plus a `-P deploy` build that produces the sources and javadoc jars —
+all must pass. Describe what changed and why, and reference the relevant ADR or spec if there is one.
 
 ## Reporting bugs
 

@@ -78,7 +78,7 @@ body:
         For decoding, encoding or routing problems, a capture of the offending message is far more
         useful than a description of it. Drag a zipped PCAP into this field (GitHub inserts a
         link — .pcap must be zipped first) or paste a hex dump. Remove or replace anything you
-        cannot share.
+        cannot share, including personally identifiable information (PII).
 
   - type: textarea
     id: logs

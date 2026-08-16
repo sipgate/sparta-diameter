@@ -40,15 +40,16 @@ See the [Modules](#modules) table for the full list of artifacts.
 
 ## Java Version
 
-Java 17 or newer works; CI verifies 17, 21, 24 and 25.
+Java 17 or newer works; see [verify-pull-request.yml](.github/workflows/verify-pull-request.yml) for
+the versions CI verifies against.
 
 ## Project Goals
 
 - RFC 6733 compliant Diameter message handling
-- Implement the messages needed for our HSS and related applications
+- Implement anything that is needed by sipgate's HSS (`sparta-hss`) to perform its function
 - Unknown messages are handled as `GenericCommand` and can still be processed
 - Framework for building Diameter applications, including a potential DRA
-- Open-sourced alongside our sparta-HSS project
+- Open-sourced alongside sipgate's `sparta-hss` project
 
 ## Modules
 
