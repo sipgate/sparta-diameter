@@ -20,20 +20,20 @@ Maven:
 <dependency>
     <groupId>com.sipgate</groupId>
     <artifactId>sparta-diameter-3gpp-sgdgdd</artifactId>
-    <version>0.1.12</version>
+    <version>0.1.13</version>
 </dependency>
 ```
 
 Gradle (Kotlin DSL):
 
 ```kotlin
-implementation("com.sipgate:sparta-diameter-3gpp-sgdgdd:0.1.12")
+implementation("com.sipgate:sparta-diameter-3gpp-sgdgdd:0.1.13")
 ```
 
 Gradle (Groovy DSL):
 
 ```groovy
-implementation 'com.sipgate:sparta-diameter-3gpp-sgdgdd:0.1.12'
+implementation 'com.sipgate:sparta-diameter-3gpp-sgdgdd:0.1.13'
 ```
 
 See the [Modules](#modules) table for the full list of artifacts.

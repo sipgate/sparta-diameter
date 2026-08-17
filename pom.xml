@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.sipgate</groupId>
     <artifactId>sparta-diameter</artifactId>
-    <version>0.1.14-SNAPSHOT</version>
+    <version>0.1.13-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>sparta-diameter</name>
     <description>Java library for the Diameter protocol by sipgate</description>
