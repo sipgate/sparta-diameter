@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: maven-central-publish
+  group: maven-central-publish-snapshot
   cancel-in-progress: false
 
 jobs:
@@ -18,7 +18,11 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
+      - name: Check for SNAPSHOT version
+        id: version
+        run: echo "version=$(grep -m1 '<version>' pom.xml | sed -E 's/.*<version>(.*)<\/version>.*/\1/')" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-java@v5
+        if: endsWith(steps.version.outputs.version, '-SNAPSHOT')
         with:
           distribution: "zulu"
           java-version: "17"
@@ -27,6 +31,7 @@ jobs:
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
       - name: Build, Test, Sign and Deploy Snapshot to Maven Central
+        if: endsWith(steps.version.outputs.version, '-SNAPSHOT')
         env:
           MAVEN_GPG_KEY: ${{ secrets.MAVEN_GPG_KEY }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
