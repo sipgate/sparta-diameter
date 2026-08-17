@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: maven-central-publish
+  group: maven-central-publish-release
   cancel-in-progress: false
 
 jobs:
