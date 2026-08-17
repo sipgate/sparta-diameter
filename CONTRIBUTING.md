@@ -65,6 +65,15 @@ Open the pull request against `main`. CI runs the checks defined in
 the supported Java versions, plus a `-P deploy` build that produces the sources and javadoc jars —
 all must pass. Describe what changed and why, and reference the relevant ADR or spec if there is one.
 
+### Merging
+
+- No merge commits on `main`: rebase or squash so every commit on `main` has a single parent.
+  A history with merge commits is a hassle to navigate later.
+- Rewriting `main`'s history, including force pushes, is not allowed. `git pull --rebase` is fine
+  for keeping your own branch up to date before it merges.
+- Anything goes on your own branch — rebase, force-push, amend — as long as it ends up on `main`
+  satisfying the two rules above.
+
 ## Reporting bugs
 
 Use the issue templates. For decoding problems, a packet capture or hex dump of the offending
