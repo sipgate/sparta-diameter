@@ -22,6 +22,10 @@ import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogAnswer;
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogRequest;
 import com.sipgate.sparta.diameter.base.messages.DisconnectPeerRequest;
 import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
+import com.sipgate.sparta.diameter.base.session.relay.RelayedAnswer;
+import com.sipgate.sparta.diameter.base.session.relay.RelayTranslation;
+import com.sipgate.sparta.diameter.base.session.relay.RelayTranslationStore;
+import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginStateIdAVP;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -40,10 +44,31 @@ import java.util.concurrent.*;
 
 /**
  * Shared state and helpers for initiator- and responder-side Diameter sessions.
+ * <p>
+ * The relay path (RFC 6733 §6.1.9 request forwarding and §6.2.2 answer forwarding) is
+ * implemented here instead of in a dedicated {@code DiameterRelaySession} subtype:
+ * relay state is inherently per-connection state (fresh hop-by-hop identifiers, the
+ * pending-request map, and the answer dispatch all live on the session that owns the
+ * egress connection), so every session can act as the egress side of a relay hop.
+ * See {@link com.sipgate.sparta.diameter.base.session.relay} for the relay-specific
+ * types ({@code RelayTranslation}, {@code RelayTranslationStore}, {@code LoopDetector}).
+ * </p>
  */
 public abstract class DiameterSession {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DiameterSession.class);
+
+    /**
+     * Last known Origin-State-Id per remote Origin-Host (RFC 6733 §8.6/§8.16).
+     * <p>
+     * Sessions are per-connection instances and are never reused across reconnects
+     * (ADR-0004), so the memory needed to detect a peer restart across a reconnect
+     * cannot live on the session. It is keyed by the remote Origin-Host and therefore
+     * valid process-wide: a given remote host can only be reachable through one node
+     * identity. See {@link #recordRemoteOriginStateId(String, long)}.
+     * </p>
+     */
+    private static final ConcurrentHashMap<String, Long> REMOTE_ORIGIN_STATE_IDS = new ConcurrentHashMap<>();
 
     public void onConnected(final DiameterPeer peer) {
         this.peer = peer;
@@ -66,9 +91,18 @@ public abstract class DiameterSession {
     private Future<?> twTimer;
 
     private static final Future<Void> NO_TIMEOUT_TASK = CompletableFuture.completedFuture(null);
-
     private final ConcurrentHashMap<HopByHopId, PendingRequest<?>> pendingRequests =
             new ConcurrentHashMap<>();
+
+    /**
+     * Relay translations for requests forwarded through this session's connection,
+     * keyed by the outbound hop-by-hop identifier this session minted. See
+     * {@link RelayTranslationStore} for the cleanup contract: every translation is
+     * paired with a pending request under the same key, so the per-request timeout
+     * already scheduled on the peer's event loop (plus write failures and connection
+     * loss) removes both halves — no separate cleanup timer is needed.
+     */
+    private final RelayTranslationStore relayTranslations = new RelayTranslationStore();
 
     private final Map<Class<? extends IncomingCommand>, DiameterRequestHandler<?, ?>> handlers = new HashMap<>();
 
@@ -112,6 +146,132 @@ public abstract class DiameterSession {
         if (request.getOriginHost() == null) request.setOriginHost(config.getOriginHost());
         if (request.getOriginRealm() == null) request.setOriginRealm(config.getOriginRealm());
         return peer.send(request, hopByHop, endToEnd);
+    }
+
+    /**
+     * The peer this session is connected to; {@code null} before {@code onConnected}.
+     *
+     * <p>Exposed because relay orchestration spans two sessions: the session that
+     * received a request passes its own peer as {@code upstreamPeer} to
+     * {@link #relay(DiameterSession, IncomingRequest, OutgoingRequest)} on the
+     * egress session.</p>
+     */
+    public DiameterPeer peer() {
+        return peer;
+    }
+
+    /**
+     * Forwards a received request to the peer of {@code outboundSession} as a relay hop
+     * (RFC 6733 §6.1.9) and returns a future that completes when the downstream answer
+     * arrives.
+     *
+     * <p><strong>Placement note (why this lives on {@code DiameterSession}):</strong>
+     * relay state is inherently per-connection — the outbound hop-by-hop identifier must
+     * be unique on the egress connection (RFC 6733 §3), and the answer dispatch
+     * ({@code complete}) runs on the session that owns that connection. A dedicated
+     * {@code DiameterRelaySession} subtype would either duplicate the
+     * initiator/responder capability state machines or be an empty marker class.
+     * Every session can therefore act as the egress side of a relay hop; the
+     * relay-specific types live in
+     * {@link com.sipgate.sparta.diameter.base.session.relay}.</p>
+     *
+     * <p><strong>Identifier semantics:</strong> a fresh hop-by-hop identifier is minted
+     * from the egress session's {@link DiameterIdentifiers}; the end-to-end identifier
+     * of the original request is preserved on the wire unchanged (RFC 6733 §3). When
+     * the downstream answer arrives, it is forwarded to the upstream peer with the
+     * original hop-by-hop identifier restored (RFC 6733 §6.2.2) via
+     * {@link #sendAnswerRestored(IncomingAnswer)}, and the returned future completes
+     * with the downstream answer.</p>
+     *
+     * <p><strong>Non-mutation guarantee:</strong> the forwarded request object is never
+     * modified. In particular, {@code relay} bypasses the fill-if-absent Origin-Host /
+     * Origin-Realm stamping that {@code send(OutgoingRequest, ...)} performs: forwarded
+     * requests already carry the original Origin AVPs per RFC 6733 §6.1.9 (all other
+     * AVPs are forwarded unchanged as well), so stamping our own identity would be a
+     * protocol violation. The application is responsible for appending a
+     * Route-Record AVP before calling {@code relay} (see
+     * {@code specs/loop-detection/01-requirements.md}).</p>
+     *
+     * @param upstreamSession the session on whose connection {@code received} arrived;
+                        the restored answer is sent to its peer
+     * @param received       the original inbound request; source of the preserved
+                        end-to-end identifier and the hop-by-hop identifier to restore
+     * @param forward        the outbound request built by the application; never mutated
+     * @return a future that completes with the downstream answer (including E-bit error
+            answers), or exceptionally with {@code TimeoutException} /
+            {@code DiameterErrorAnswerException} semantics mirroring {@link #send}
+     * @throws NullPointerException if any argument is {@code null}
+     */
+    public CompletableFuture<IncomingAnswer> relay(
+            final DiameterSession upstreamSession,
+            final IncomingRequest<?> received,
+            final OutgoingRequest<?> forward) {
+        Objects.requireNonNull(upstreamSession, "upstreamSession must not be null");
+        Objects.requireNonNull(received, "received must not be null");
+        Objects.requireNonNull(forward, "forward must not be null");
+
+        final CompletableFuture<IncomingAnswer> future = new CompletableFuture<>();
+        if (peerState != PeerState.I_OPEN && peerState != PeerState.R_OPEN) {
+            future.completeExceptionally(
+                    new IllegalStateException("Cannot relay in state: " + peerState));
+            return future;
+        }
+
+        final HopByHopId outboundHopByHop = identifiers.nextHopByHop();
+        // RFC 6733 §3: the end-to-end identifier of the original request is preserved.
+        final EndToEndId endToEnd = received.endToEndId();
+        final int commandCode = forward.getCommandCode();
+        final int applicationId = forward.getApplicationId();
+
+        startTracking(future, commandCode, applicationId, outboundHopByHop, config.getRequestTimeout());
+        relayTranslations.put(outboundHopByHop, new RelayTranslation(
+                upstreamSession.peer(),
+                received.hopByHopId(),
+                endToEnd,
+                System.currentTimeMillis()));
+
+        // Deliberately NOT via send(request, hopByHop, endToEnd): that helper stamps
+        // absent Origin-Host/Origin-Realm with our own identity, which would mutate the
+        // forwarded request and misrepresent its origin (RFC 6733 §6.1.9).
+        peer.send(forward, outboundHopByHop, endToEnd).addListener(writeResult -> {
+            if (!writeResult.isSuccess()) {
+                fail(outboundHopByHop, writeResult.cause());
+            }
+        });
+        return future;
+    }
+
+    /**
+     * Forwards a downstream answer upstream with the original hop-by-hop identifier
+     * restored (RFC 6733 §6.2.2). Looks up the relay translation by the answer's
+     * hop-by-hop identifier; on a hit, removes the translation, sends the answer —
+     * with all AVPs unchanged, including the downstream origin's Origin-Host and
+     * Origin-Realm — to the upstream peer, and completes the future returned by
+     * {@link #relay(DiameterSession, IncomingRequest, OutgoingRequest)}.
+     *
+     * <p>Called automatically from the answer dispatch ({@code complete}) after the
+     * pending-request map is checked. Public so applications that intercept answers
+     * themselves can trigger the same restoration.</p>
+     *
+     * @param downstreamAnswer the answer received from the downstream peer
+     * @return {@code true} if a relay translation matched and the answer was forwarded
+     */
+    public boolean sendAnswerRestored(final IncomingAnswer downstreamAnswer) {
+        Objects.requireNonNull(downstreamAnswer, "downstreamAnswer must not be null");
+        final RelayTranslation translation = relayTranslations.remove(downstreamAnswer.hopByHopId());
+        if (translation == null) {
+            return false;
+        }
+        final OutgoingAnswer restored = RelayedAnswer.of(downstreamAnswer, translation.originalHopByHop());
+        // Fill-if-absent origin stamping is intentionally skipped: a relayed answer
+        // carries the answering endpoint's identity (RFC 6733 §6.2.2), not ours.
+        translation.upstreamPeer().send(restored).addListener(future -> {
+            if (!future.isSuccess()) {
+                LOGGER.warn("Failed to send restored answer upstream (hbh {}): {}",
+                        translation.originalHopByHop(), future.cause());
+            }
+        });
+        return true;
     }
 
     /**
@@ -256,9 +416,24 @@ public abstract class DiameterSession {
             final OutgoingRequest<A> request, final HopByHopId hopByHop, final EndToEndId endToEnd,
             final Duration timeout) {
         final CompletableFuture<A> future = new CompletableFuture<>();
-        final int commandCode = request.getCommandCode();
-        final int applicationId = request.getApplicationId();
+        startTracking(future, request.getCommandCode(), request.getApplicationId(), hopByHop, timeout);
+        send(request, hopByHop, endToEnd).addListener(writeResult -> {
+            if (!writeResult.isSuccess()) {
+                fail(hopByHop, writeResult.cause());
+            }
+        });
+        return future;
+    }
 
+    /**
+     * Registers a pending request for the given hop-by-hop identifier: schedules the
+     * request timeout (unless {@code timeout} is {@link Duration#ZERO}, mirroring the
+     * DWR exception from ADR-0004) and starts the request duration timer sample.
+     * Shared by {@code sendAndTrack} and {@code relay}.
+     */
+    private <A> void startTracking(final CompletableFuture<A> future, final int commandCode,
+                                   final int applicationId, final HopByHopId hopByHop,
+                                   final Duration timeout) {
         final Future<?> timeoutTask;
         if (timeout.isZero()) {
             timeoutTask = NO_TIMEOUT_TASK;
@@ -271,13 +446,6 @@ public abstract class DiameterSession {
 
         final Timer.Sample timerSample = meters.startTimer();
         pendingRequests.put(hopByHop, new PendingRequest<>(future, timeoutTask, timerSample, commandCode, applicationId));
-
-        send(request, hopByHop, endToEnd).addListener(writeResult -> {
-            if (!writeResult.isSuccess()) {
-                fail(hopByHop, writeResult.cause());
-            }
-        });
-        return future;
     }
 
     protected void cancel(final HopByHopId hopByHop) {
@@ -370,23 +538,37 @@ public abstract class DiameterSession {
     /**
      * Matches an incoming answer to a pending request by hop-by-hop identifier
      * and completes the corresponding future.
+     *
+     * <p>Dispatch order: the pending-request map is checked first (the existing
+     * mechanism is untouched — a pending hit behaves exactly as before); the relay
+     * translation store is consulted afterwards, so a relayed answer both completes
+     * the future returned by {@code relay} and is forwarded upstream with its
+     * original hop-by-hop identifier restored (RFC 6733 §6.2.2). An answer matching
+     * neither is logged as unsolicited.</p>
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected void complete(final IncomingAnswer answer) {
 
         final PendingRequest pending = pendingRequests.remove(answer.hopByHopId());
-        if (pending == null) {
-            LOGGER.warn("found no pending request for answer with hop-by-hop id: {}", answer.hopByHopId());
+        if (pending != null) {
+            pending.timeoutTask.cancel(false);
+            meters.stopRequestTimer(pending.timerSample, pending.commandCode, pending.applicationId);
+            if (answer instanceof final ErrorAnswer.In errorAnswer) {
+                final var cause = new DiameterErrorAnswerException(errorAnswer);
+                meters.recordOutgoingRequestError(pending.commandCode, pending.applicationId, cause);
+                pending.future.completeExceptionally(cause);
+            } else {
+                pending.future.complete(answer);
+            }
+        }
+
+        if (relayTranslations.contains(answer.hopByHopId())) {
+            sendAnswerRestored(answer);
             return;
         }
-        pending.timeoutTask.cancel(false);
-        meters.stopRequestTimer(pending.timerSample, pending.commandCode, pending.applicationId);
-        if (answer instanceof final ErrorAnswer.In errorAnswer) {
-            final var cause = new DiameterErrorAnswerException(errorAnswer);
-            meters.recordOutgoingRequestError(pending.commandCode, pending.applicationId, cause);
-            pending.future.completeExceptionally(cause);
-        } else {
-            pending.future.complete(answer);
+
+        if (pending == null) {
+            LOGGER.warn("found no pending request for answer with hop-by-hop id: {}", answer.hopByHopId());
         }
     }
 
@@ -400,6 +582,11 @@ public abstract class DiameterSession {
         if (pending == null) {
             return;
         }
+        // Also drop a relay translation under the same key (no-op for plain requests):
+        // every relay entry is paired with a pending entry, so request timeout, write
+        // failure, and connection loss clean up both halves together. A late answer
+        // after that finds neither and is logged as unsolicited.
+        relayTranslations.remove(hopByHop);
         meters.recordOutgoingRequestError(pending.commandCode, pending.applicationId, cause);
         pending.timeoutTask.cancel(false);
         pending.future.completeExceptionally(cause);
@@ -407,6 +594,8 @@ public abstract class DiameterSession {
 
     /**
      * Populates origin, host IP, vendor, product, and application AVPs on a CER.
+     * Stamps the configured Origin-State-Id (RFC 6733 §8.16) when the application
+     * supplied one.
      */
     protected void populateCapabilityAvps(final CapabilitiesExchangeRequest.Out cer) {
         cer.setVendorId(config.getVendorId());
@@ -418,10 +607,13 @@ public abstract class DiameterSession {
         for (final DiameterNodeConfig.VendorSpecificApp app : config.getCapabilities().vendorSpecificApplications()) {
             cer.addVendorSpecificApplicationId(buildVendorSpecificAppIdAVPs(app));
         }
+        stampOriginStateId(cer);
     }
 
     /**
      * Populates origin, host IP, vendor, product, and application AVPs on a CEA.
+     * Stamps the configured Origin-State-Id (RFC 6733 §8.16) when the application
+     * supplied one.
      */
     protected void populateCapabilityAvps(final CapabilitiesExchangeAnswer.Out cea) {
         cea.setVendorId(config.getVendorId());
@@ -433,6 +625,57 @@ public abstract class DiameterSession {
         for (final DiameterNodeConfig.VendorSpecificApp app : config.getCapabilities().vendorSpecificApplications()) {
             cea.addVendorSpecificApplicationId(buildVendorSpecificAppIdAVPs(app));
         }
+        stampOriginStateId(cea);
+    }
+
+    private void stampOriginStateId(final HasOriginStateIdAVP message) {
+        if (config.getOriginStateId() != 0L) {
+            message.setOriginStateId(config.getOriginStateId());
+        }
+    }
+
+    /**
+     * Records the Origin-State-Id a peer presented in its CER or CEA and detects peer
+     * restarts (RFC 6733 §8.6/§8.16): a strictly higher value than the last known one
+     * means the peer restarted with loss of state — sessions established before the
+     * restart are no longer valid. Emits a WARN log on detection.
+     *
+     * <p>The last known values are kept per remote Origin-Host across session
+     * instances (sessions are per-connection and never reused across reconnects,
+     * ADR-0004). Absent values ({@code -1} from the AVP mixin) are ignored; a lower
+     * value than previously seen (a misbehaving peer, RFC 6733 §8.16 mandates
+     * monotonic increase) is recorded without a restart warning.</p>
+     *
+     * @param remoteOriginHost    the Origin-Host the peer presented
+     * @param remoteOriginStateId the Origin-State-Id the peer presented, or -1 if absent
+     */
+    protected static void recordRemoteOriginStateId(final String remoteOriginHost, final long remoteOriginStateId) {
+        if (remoteOriginHost == null || remoteOriginStateId < 0) {
+            return;
+        }
+        REMOTE_ORIGIN_STATE_IDS.compute(remoteOriginHost, (host, previous) -> {
+            if (previous != null && remoteOriginStateId > previous) {
+                LOGGER.warn(
+                        "peer restart detected for {}: Origin-State-Id increased from {} to {}; "
+                                + "sessions established before the restart are no longer valid",
+                        host, previous, remoteOriginStateId);
+            }
+            return remoteOriginStateId;
+        });
+    }
+
+    /**
+     * Last known Origin-State-Id for a remote Origin-Host, or -1 if none was recorded
+     * yet. Test seam for the process-wide restart-detection memory.
+     */
+    static long lastKnownRemoteOriginStateId(final String remoteOriginHost) {
+        final Long last = REMOTE_ORIGIN_STATE_IDS.get(remoteOriginHost);
+        return last == null ? -1L : last;
+    }
+
+    /** Test seam: clears the process-wide peer restart memory (see {@link #recordRemoteOriginStateId}). */
+    static void clearPeerRestartMemoryForTests() {
+        REMOTE_ORIGIN_STATE_IDS.clear();
     }
 
     private static List<AVP> buildVendorSpecificAppIdAVPs(final DiameterNodeConfig.VendorSpecificApp app) {

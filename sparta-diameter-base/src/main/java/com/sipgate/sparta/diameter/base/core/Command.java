@@ -116,7 +116,7 @@ public abstract class Command implements
      *
      * @return A copy of the list of AVPs.
      */
-    protected List<AVP> getAVPs() { return new ArrayList<>(avps); }
+    public List<AVP> getAVPs() { return new ArrayList<>(avps); }
 
     /**
      * Adds an AVP to this command at first position (RFX 6733 requires that Session-Id AVP is the first)

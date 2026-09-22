@@ -304,6 +304,24 @@
                 </plugins>
             </build>
         </profile>
+
+        <!-- Restricted environments (e.g. sandboxed CI, nono) block the JVM self-attach that
+             Mockito's inline mock maker needs. Loading the byte-buddy agent upfront via
+             -javaagent avoids the attach entirely. Activate with -Psandbox-tests. -->
+        <profile>
+            <id>sandbox-tests</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <argLine>-javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/1.17.8/byte-buddy-agent-1.17.8.jar</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
     <build>
