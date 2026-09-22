@@ -127,8 +127,9 @@ public final class DiameterNode implements Closeable {
      * Starts listening for incoming Diameter connections on the given port.
      *
      * @param transport the wire transport; see the class Javadoc for the SCTP pipeline
-     * @throws IllegalArgumentException for {@link Transport#SCTP} when {@code serverLocalAddresses}
-     *                                  is null or empty (multi-homing requires at least one address)
+     * @throws NullPointerException for {@link Transport#SCTP} when {@code serverLocalAddresses}
+     *                              is null (the 3-arg overload forwards null; the 5-arg
+     *                              overload throws IllegalArgumentException when it is empty)
      */
     public ChannelFuture listen(final int port, final Supplier<DiameterResponderSession> factory,
                                 final Transport transport) {
