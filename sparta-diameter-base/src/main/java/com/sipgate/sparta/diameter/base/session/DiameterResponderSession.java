@@ -1,9 +1,10 @@
 package com.sipgate.sparta.diameter.base.session;
 
+import com.sipgate.sparta.diameter.base.core.Command;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
-import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
+import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
@@ -66,6 +67,7 @@ public final class DiameterResponderSession extends DiameterSession {
     }
 
     private void handleCer(final CapabilitiesExchangeRequest.In cer) {
+        recordRemoteOriginStateId(cer.getOriginHost(), cer.getOriginStateId());
         final List<Long> remoteAuthIds = cer.getAuthApplicationIds();
         final List<Long> remoteAcctIds = cer.getAcctApplicationIds();
         final List<Long> remoteVendorSpecificAppIds = extractVendorSpecificAppIds(cer);
@@ -105,5 +107,21 @@ public final class DiameterResponderSession extends DiameterSession {
         final CapabilitiesExchangeAnswer.Out cea = DiameterMessageFactory.createAnswer(cer, resultCode);
         populateCapabilityAvps(cea);
         return cea;
+    }
+
+    /**
+     * Test seam for Origin-State-Id stamping assertions, mirroring the
+     * {@code getWatchdogState()} seam pattern on {@code DiameterSession}.
+     */
+    CapabilitiesExchangeAnswer.Out buildCeaForTest() throws Exception {
+        final java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        final CapabilitiesExchangeRequest.Out cerOut = new CapabilitiesExchangeRequest.Out();
+        cerOut.addAuthApplicationId(5L);
+        cerOut.writeTo(new java.io.DataOutputStream(baos),
+                new com.sipgate.sparta.diameter.base.core.HopByHopId(1),
+                new com.sipgate.sparta.diameter.base.core.EndToEndId(2));
+        final CapabilitiesExchangeRequest.In cer = (CapabilitiesExchangeRequest.In)
+                Command.parseMessage(java.nio.ByteBuffer.wrap(baos.toByteArray()));
+        return buildCea(cer, DiameterConstants.RES_DIAMETER_SUCCESS);
     }
 }

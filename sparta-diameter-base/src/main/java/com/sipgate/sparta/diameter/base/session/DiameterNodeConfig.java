@@ -43,13 +43,19 @@ public final class DiameterNodeConfig {
     private final Duration twinit;
     private final Duration tc;
     private final Duration requestTimeout;
+    private final long originStateId;
 
     /**
-     * Creates a config with explicit timer values.
+     * Creates a config with explicit timer values and an Origin-State-Id.
      *
      * @param twinit         watchdog timer initial value; must be at least 6 seconds (RFC 3539 §3.4.1)
      * @param tc             reconnect timer
      * @param requestTimeout per-request answer timeout
+     * @param originStateId  Origin-State-Id stamped into CER/CEA (RFC 6733 §8.16);
+                        0 omits the AVP. The application supplies the value (e.g. epoch
+                        seconds of the boot that last reset the node's state); the
+                        library never generates it. MUST be strictly higher after every
+                        restart with loss of previous state.
      */
     public DiameterNodeConfig(
             final String originHost,
@@ -60,7 +66,8 @@ public final class DiameterNodeConfig {
             final Capabilities capabilities,
             final Duration twinit,
             final Duration tc,
-            final Duration requestTimeout) {
+            final Duration requestTimeout,
+            final long originStateId) {
         if (originHost == null || originHost.isEmpty()) {
             throw new IllegalArgumentException("originHost is required");
         }
@@ -88,6 +95,29 @@ public final class DiameterNodeConfig {
         this.twinit = twinit;
         this.tc = tc;
         this.requestTimeout = requestTimeout;
+        this.originStateId = originStateId;
+    }
+
+    /**
+     * Creates a config with explicit timer values and no Origin-State-Id (the AVP is
+     * omitted from CER/CEA; RFC 6733 §8.16).
+     *
+     * @param twinit         watchdog timer initial value; must be at least 6 seconds (RFC 3539 §3.4.1)
+     * @param tc             reconnect timer
+     * @param requestTimeout per-request answer timeout
+     */
+    public DiameterNodeConfig(
+            final String originHost,
+            final String originRealm,
+            final List<InetAddress> hostIpAddresses,
+            final long vendorId,
+            final String productName,
+            final Capabilities capabilities,
+            final Duration twinit,
+            final Duration tc,
+            final Duration requestTimeout) {
+        this(originHost, originRealm, hostIpAddresses, vendorId, productName, capabilities,
+                twinit, tc, requestTimeout, 0L);
     }
 
     /**
@@ -120,6 +150,16 @@ public final class DiameterNodeConfig {
             final String productName,
             final Capabilities capabilities) {
         this(originHost, originRealm, hostIpAddresses, vendorId, productName, capabilities, TWINIT_DEFAULT, TC_RECOMMENDED);
+    }
+
+    /**
+     * The configured Origin-State-Id (RFC 6733 §8.16); 0 means "not configured" — the
+     * AVP is omitted from CER/CEA so peers cannot infer session termination from us.
+     *
+     * @return the application-supplied Origin-State-Id, or 0
+     */
+    public long getOriginStateId() {
+        return originStateId;
     }
 
     public String getOriginHost() {

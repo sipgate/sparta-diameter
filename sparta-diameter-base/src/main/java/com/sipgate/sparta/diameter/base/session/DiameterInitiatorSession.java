@@ -150,6 +150,7 @@ public final class DiameterInitiatorSession extends DiameterSession {
     }
 
     private void handleCea(final CapabilitiesExchangeAnswer.In cea) {
+        recordRemoteOriginStateId(cea.getOriginHost(), cea.getOriginStateId());
         if (cea.getResultCode() == DiameterConstants.RES_DIAMETER_SUCCESS) {
             peerState = PeerState.I_OPEN;
             startWatchdog();
@@ -163,5 +164,13 @@ public final class DiameterInitiatorSession extends DiameterSession {
             new CapabilitiesExchangeRequest.Out();
         populateCapabilityAvps(cer);
         return cer;
+    }
+
+    /**
+     * Test seam for Origin-State-Id stamping assertions, mirroring the
+     * {@code getWatchdogState()} seam pattern on {@code DiameterSession}.
+     */
+    CapabilitiesExchangeRequest.Out buildCerForTest() {
+        return buildCer();
     }
 }
