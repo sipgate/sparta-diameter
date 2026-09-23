@@ -23,8 +23,13 @@ import java.util.ArrayList;
 import java.util.List;
 /**
  * Diameter session for the responder (R-) side of a connection.
+ *
+ * <p>Subclassable (not final) so routing agents can bind a configured peer
+ * identity at capabilities-exchange time via {@link #onCapabilitiesExchange};
+ * request-time binding alone never sees peers that only answer (an HSS behind
+ * a relay).</p>
  */
-public final class DiameterResponderSession extends DiameterSession {
+public class DiameterResponderSession extends DiameterSession {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DiameterResponderSession.class);
 
@@ -66,6 +71,23 @@ public final class DiameterResponderSession extends DiameterSession {
         }
     }
 
+    /**
+     * Application hook fired after a SUCCESSFUL capabilities exchange: the CEA
+     * has been sent, the peer is in {@link PeerState#R_OPEN} and the watchdog is
+     * running. Routing agents bind the connection to a configured peer identity
+     * ({@code cer.getOriginHost()}) here — BEFORE any application request
+     * arrives; inbound peers that only answer (e.g. an HSS behind a relay)
+     * would never be bound by request-time tracking.
+     *
+     * <p>Default: no-op. Exceptions from overrides propagate like from
+     * {@link #onMessage}.</p>
+     *
+     * @param cer the capabilities exchange request of the now-open peer
+     */
+    protected void onCapabilitiesExchange(final CapabilitiesExchangeRequest.In cer) {
+        // no-op
+    }
+
     private void handleCer(final CapabilitiesExchangeRequest.In cer) {
         recordRemoteOriginStateId(cer.getOriginHost(), cer.getOriginStateId());
         final List<Long> remoteAuthIds = cer.getAuthApplicationIds();
@@ -77,6 +99,7 @@ public final class DiameterResponderSession extends DiameterSession {
             send(buildCea(cer, DiameterConstants.RES_DIAMETER_SUCCESS));
             peerState = PeerState.R_OPEN;
             startWatchdog();
+            onCapabilitiesExchange(cer);
         } else {
             LOGGER.warn("capabilities exchange did not find any common application");
             LOGGER.debug(
@@ -93,7 +116,7 @@ public final class DiameterResponderSession extends DiameterSession {
             final AVP authAppAvp = container.findAVP(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0));
             if (authAppAvp != null) {
                 appIds.add(authAppAvp.getDataAsUnsignedInt());
-                }
+            }
             final AVP acctAppAvp = container.findAVP(new AVPKey(DiameterConstants.AVP_ACCT_APPLICATION_ID, 0));
             if (acctAppAvp != null) {
                 appIds.add(acctAppAvp.getDataAsUnsignedInt());
