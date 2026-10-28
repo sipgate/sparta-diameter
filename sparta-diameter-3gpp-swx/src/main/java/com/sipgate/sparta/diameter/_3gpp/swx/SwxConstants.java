@@ -31,5 +31,15 @@ public final class SwxConstants {
     public static final int AVP_ERP_AUTHORIZATION = 1541;
     public static final int AVP_3GPP_AAA_SERVER_NAME = 318;
 
+    // SWx-specific Error codes (TS 29.273 § 10.3)
+    public static final int EXP_RES_DIAMETER_ERROR_USER_NO_NON_3GPP_SUBSCRIPTION = 5450;
+    public static final int EXP_RES_DIAMETER_ERROR_USER_NO_APN_SUBSCRIPTION = 5451;
+    public static final int EXP_RES_DIAMETER_ERROR_RAT_TYPE_NOT_ALLOWED = 5452;
+    public static final int EXP_RES_DIAMETER_ERROR_LATE_OVERLAPPING_REQUEST = 5453;
+    public static final int EXP_RES_DIAMETER_ERROR_TIMED_OUT_REQUEST = 5454;
+    public static final int EXP_RES_DIAMETER_ERROR_ILLEGAL_EQUIPMENT = 5554; // sic!
+    public static final int EXP_RES_DIAMETER_ERROR_TRUSTED_NON_3GPP_ACCESS_NOT_ALLOWED = 5455;
+    public static final int EXP_RES_DIAMETER_ERROR_UNTRUSTED_NON_3GPP_ACCESS_NOT_ALLOWED = 5456;
+
     private SwxConstants() {}
 }
