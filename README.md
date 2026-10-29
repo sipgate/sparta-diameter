@@ -345,16 +345,17 @@ docker compose up diameter-server   # listens on localhost:3868
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for conventions and the development workflow, and
 [AGENTS.md](AGENTS.md) for the coding rules enforced in review. Architecture decisions live in
-[`ADR/`](ADR); requirements for planned features live in [`specs/`](specs).
+[`ADR/`](ADR); requirements for planned features live in [`specs/`](specs). Notable changes are
+collected in [CHANGELOG.md](CHANGELOG.md).
 
 To report a security issue, see [SECURITY.md](SECURITY.md).
 
-## Preparing a new release
+## Releasing
 
-We're using the [Maven release plugin](https://maven.apache.org/maven-release/maven-release-plugin/index.html).
-When ready, run `mvn release:prepare` and follow the instructions. This will create, tag and push a new release.
-
-We skip `release:perform` — the actual build and deploy to Maven Central happens in GitHub Actions when the tag lands (see `.github/workflows/publish-release.yml`). After a successful prepare, run `mvn release:clean` to remove `release.properties` and POM backups; otherwise the next `release:prepare` will try to resume the previous run.
+Releases are cut with the [Release: cut a new version](.github/workflows/release.yml) workflow —
+see [RELEASING.md](RELEASING.md). It moves the `[Unreleased]` section of
+[CHANGELOG.md](CHANGELOG.md) into a dated section, versions every POM and tags the release;
+pushing the tag triggers the Maven Central publish.
 
 Pushes to `main` publish a `-SNAPSHOT` via `.github/workflows/publish-snapshot.yml`.
 
