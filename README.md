@@ -69,8 +69,14 @@ IETF / ETSI extensions — AVP definitions only, no commands:
 | `sparta-diameter-ietf-load` | RFC 8583 — Diameter Load Information Conveyance |
 | `sparta-diameter-ietf-mip6-integrated` | RFC 5778 — Diameter Mobile IPv6, integrated scenario |
 | `sparta-diameter-ietf-mip6-split` | RFC 5447 — Diameter Mobile IPv6, split scenario |
-| `sparta-diameter-ietf-nas` | RFC 7155 — Network Access Server application (`Framed-*` AVPs) |
+| `sparta-diameter-ietf-nas` | RFC 7155 — Network Access Server application (`Framed-*` and `Called-Station-Id` AVPs) |
 | `sparta-diameter-etsi-e2` | ETSI ES 283 035 — TISPAN NASS e2 (`Line-Identifier` AVP) |
+
+IETF application with commands:
+
+| Module | Contents |
+|--------|----------|
+| `sparta-diameter-ietf-cc` | RFC 4006 — Diameter Credit-Control Application (CCR/CCA, command 272, app id 4) |
 
 3GPP:
 
@@ -82,6 +88,7 @@ IETF / ETSI extensions — AVP definitions only, no commands:
 | `sparta-diameter-3gpp-swx` | TS 29.273 §8 — SWx (3GPP AAA Server to HSS) |
 | `sparta-diameter-3gpp-sgdgdd` | TS 29.338 §6 — SGd/Gdd (MME/SGSN to SMS-SC) |
 | `sparta-diameter-3gpp-s6c` | TS 29.338 §5 — S6c (HSS to SMS-SC/Router); constants only |
+| `sparta-diameter-3gpp-gy` | TS 32.299 — Gy/Ro Service-Information and PS-Information AVPs (used inside Credit-Control messages) |
 | `sparta-diameter-3gpp-gx` | TS 29.212 — Gx (PCEF/PCRF) AVPs reused by other interfaces |
 | `sparta-diameter-3gpp-rx` | TS 29.214 — Rx (AF/PCRF) AVPs reused by other interfaces |
 | `sparta-diameter-3gpp-s6t` | TS 29.336 — AVPs reused by other interfaces, no commands |
@@ -106,6 +113,7 @@ graph TD
         mip6i["ietf-mip6-integrated"]
         mip6s["ietf-mip6-split"]
         nas["ietf-nas"]
+        cc["ietf-cc"]
         e2["etsi-e2"]
     end
 
@@ -113,6 +121,7 @@ graph TD
 
     subgraph protocols["3GPP protocol interfaces"]
         gx["3gpp-gx"]
+        gy["3gpp-gy"]
         rx["3gpp-rx"]
         s6t["3gpp-s6t"]
         s6c["3gpp-s6c"]
@@ -136,9 +145,11 @@ graph TD
     mip6i --> base
     mip6s --> base
     nas --> base
+    cc --> base
     e2 --> base
 
     gx --> common
+    gy --> common
     rx --> common
     s6t --> common
     s6c --> common
@@ -188,6 +199,7 @@ graph TD
 - ✅ RFC 6733 base messages: CER/CEA, DWR/DWA, DPR/DPA, ACR/ACA, STR/STA, ASR/ASA, RAR/RAA
 - ✅ Netty-based transport (`DiameterNode`, `DiameterPeer`)
 - ✅ Session layer with capability negotiation, watchdog, reconnect timer (Tc)
+- ✅ RFC 4006 Credit-Control: CCR/CCA
 - ✅ SGd/Gdd: MO-Forward-Short-Message, MT-Forward-Short-Message
 - ✅ S6a/S6d: AIR/AIA, ULR/ULA, CLR/CLA, IDR/IDA, DSR/DSA, PUR/PUA, RSR/RSA, NOR/NOA
 - ✅ Cx/Dx: MAR/MAA, SAR/SAA, RTR/RTA
