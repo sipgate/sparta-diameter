@@ -26,6 +26,20 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 class AVPTest {
 
     @Test
+    void it_prints_the_full_value_of_an_eight_byte_avp_registered_as_unsigned32() {
+        // GIVEN an Integer64-style payload on an AVP whose definition is Long
+        final long value = -5_000_000_000L;
+        final byte[] eightBytes = ByteBuffer.allocate(Long.BYTES).putLong(value).array();
+        final AVP avp = AVP.createRaw(new AVPKey(DiameterConstants.AVP_SESSION_TIMEOUT, 0), false, true, false, eightBytes);
+
+        // WHEN
+        final String printed = avp.toString();
+
+        // THEN
+        assertThat(printed).contains(String.valueOf(value));
+    }
+
+    @Test
     void it_creates_integer_avp_with_correct_flags() {
         // GIVEN
         final long resultCode = DiameterConstants.RES_DIAMETER_SUCCESS; // Result-Code is Unsigned32 (Long in Java)

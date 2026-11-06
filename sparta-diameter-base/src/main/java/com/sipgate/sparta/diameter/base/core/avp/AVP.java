@@ -941,7 +941,7 @@ public class AVP {
             } else if (dataType.equals(Integer.class)) {
                 return String.valueOf(getDataAsInt());
             } else if (dataType.equals(Long.class)) {
-                return String.valueOf(getDataAsUnsignedInt());
+                return data.length == Long.BYTES ? String.valueOf(getDataAsLong()) : String.valueOf(getDataAsUnsignedInt());
             } else if (dataType.equals(InetAddress.class)) {
                 final InetAddress addr = getDataAsIPAddress();
                 final int family = addr instanceof Inet4Address ? 1 : 2;
