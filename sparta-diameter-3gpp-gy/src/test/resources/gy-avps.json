@@ -1,0 +1,83 @@
+[
+  {
+    "vendorId": 10415,
+    "avpCode": 2,
+    "attributeName": "3GPP-Charging-Id",
+    "valueType": "OctetString",
+    "mandatoryBit": "MUST_NOT",
+    "vendorSpecificBit": "MUST",
+    "mayBeEncrypted": true
+  },
+  {
+    "vendorId": 10415,
+    "avpCode": 8,
+    "attributeName": "3GPP-IMSI-MCC-MNC",
+    "valueType": "UTF8String",
+    "mandatoryBit": "MUST_NOT",
+    "vendorSpecificBit": "MUST",
+    "mayBeEncrypted": true
+  },
+  {
+    "vendorId": 10415,
+    "avpCode": 18,
+    "attributeName": "3GPP-SGSN-MCC-MNC",
+    "valueType": "UTF8String",
+    "mandatoryBit": "MUST_NOT",
+    "vendorSpecificBit": "MUST",
+    "mayBeEncrypted": true
+  },
+  {
+    "vendorId": 10415,
+    "avpCode": 21,
+    "attributeName": "3GPP-RAT-Type",
+    "valueType": "OctetString",
+    "mandatoryBit": "MUST_NOT",
+    "vendorSpecificBit": "MUST",
+    "mayBeEncrypted": true
+  },
+  {
+    "vendorId": 10415,
+    "avpCode": 22,
+    "attributeName": "3GPP-User-Location-Info",
+    "valueType": "OctetString",
+    "mandatoryBit": "MUST_NOT",
+    "vendorSpecificBit": "MUST",
+    "mayBeEncrypted": true
+  },
+  {
+    "vendorId": 10415,
+    "avpCode": 23,
+    "attributeName": "3GPP-MS-TimeZone",
+    "valueType": "OctetString",
+    "mandatoryBit": "MUST_NOT",
+    "vendorSpecificBit": "MUST",
+    "mayBeEncrypted": true
+  },
+  {
+    "vendorId": 10415,
+    "avpCode": 873,
+    "attributeName": "Service-Information",
+    "valueType": "Grouped",
+    "mandatoryBit": "MUST",
+    "vendorSpecificBit": "MUST",
+    "mayBeEncrypted": false
+  },
+  {
+    "vendorId": 10415,
+    "avpCode": 874,
+    "attributeName": "PS-Information",
+    "valueType": "Grouped",
+    "mandatoryBit": "MUST",
+    "vendorSpecificBit": "MUST",
+    "mayBeEncrypted": false
+  },
+  {
+    "vendorId": 10415,
+    "avpCode": 1227,
+    "attributeName": "PDP-Address",
+    "valueType": "Address",
+    "mandatoryBit": "MUST",
+    "vendorSpecificBit": "MUST",
+    "mayBeEncrypted": false
+  }
+]
