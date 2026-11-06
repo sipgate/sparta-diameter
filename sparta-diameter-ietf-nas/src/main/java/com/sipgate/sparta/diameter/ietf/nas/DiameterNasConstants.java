@@ -1,7 +1,7 @@
 package com.sipgate.sparta.diameter.ietf.nas;
 
 /**
- * Framed-* AVP codes (IETF RFC 7155, which obsoletes RFC 4005).
+ * NAS AVP codes (IETF RFC 7155, which obsoletes RFC 4005).
  * <p>
  * Imported into Cx/Dx by 3GPP TS 29.229 §6.3.53–6.3.55 inside SIP-Auth-Data-Item.
  * Vendor 0. Note Framed-Interface-Id is Unsigned64 (RFC 7155 §4.4.10.5.5).
@@ -31,6 +31,7 @@ public final class DiameterNasConstants {
     public static final int AVP_FRAMED_APPLETALK_LINK = 37;  // Unsigned32
     public static final int AVP_FRAMED_APPLETALK_NETWORK = 38; // Unsigned32
     public static final int AVP_FRAMED_APPLETALK_ZONE = 39;  // OctetString
+    public static final int AVP_CALLED_STATION_ID = 30;      // UTF8String
     public static final int AVP_PORT_LIMIT = 62;             // Unsigned32
     public static final int AVP_LOGIN_LAT_PORT = 63;         // OctetString
     public static final int AVP_ARAP_FEATURES = 71;          // OctetString

@@ -38,6 +38,7 @@ public final class DiameterNasAVPProvider implements AVPProvider {
             new AVPDefinition(DiameterNasConstants.AVP_FRAMED_APPLETALK_LINK, "Framed-Appletalk-Link", Long.class, true, false, 0),
             new AVPDefinition(DiameterNasConstants.AVP_FRAMED_APPLETALK_NETWORK, "Framed-Appletalk-Network", Long.class, true, false, 0),
             new AVPDefinition(DiameterNasConstants.AVP_FRAMED_APPLETALK_ZONE, "Framed-Appletalk-Zone", byte[].class, true, false, 0),
+            new AVPDefinition(DiameterNasConstants.AVP_CALLED_STATION_ID, "Called-Station-Id", String.class, true, false, 0),
             new AVPDefinition(DiameterNasConstants.AVP_PORT_LIMIT, "Port-Limit", Long.class, true, false, 0),
             new AVPDefinition(DiameterNasConstants.AVP_LOGIN_LAT_PORT, "Login-LAT-Port", byte[].class, true, false, 0),
             new AVPDefinition(DiameterNasConstants.AVP_ARAP_FEATURES, "ARAP-Features", byte[].class, true, false, 0),

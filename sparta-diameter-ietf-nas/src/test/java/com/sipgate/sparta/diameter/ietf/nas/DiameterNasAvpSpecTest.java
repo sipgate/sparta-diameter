@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 
 public class DiameterNasAvpSpecTest extends AvpSpecTestBase {
 
-    /// from RFC 4005, §6.  NAS Authorization AVPs
+    /// from RFC 4005, §4.  NAS Session AVPs (Called-Station-Id) and §6.  NAS Authorization AVPs
     /// We use the obsolete RFC here because RFC 7155 doesn't have an overview table including AVP codes
     private static final Set<AvpDef> AVP_DEFS = AvpRfcTableParser.parse("""
        -----------------------------------------|----+-----+----+-----|----|
@@ -61,6 +61,7 @@ public class DiameterNasAvpSpecTest extends AvpSpecTestBase {
        Login-LAT-Node    35  6.17.2  OctetString| M  |  P  |    |  V  | Y  |
        Login-LAT-Group   36  6.17.3  OctetString| M  |  P  |    |  V  | Y  |
        Login-LAT-Port    63  6.17.4  OctetString| M  |  P  |    |  V  | Y  |
+       Called-Station-Id 30   4.5    UTF8String | M  |  P  |    |  V  | Y  |
        -----------------------------------------|----+-----+----+-----|----|
        """);
 
