@@ -16,5 +16,13 @@ public final class GyConstants {
     public static final int AVP_PS_INFORMATION = 874; // Grouped
     public static final int AVP_PDP_ADDRESS = 1227; // Address
 
+    public static final int AVP_3GPP_PDP_TYPE = 3; // Enumerated
+    public static final int AVP_3GPP_NSAPI = 10; // OctetString
+    public static final int AVP_3GPP_SELECTION_MODE = 12; // UTF8String
+    public static final int AVP_GGSN_ADDRESS = 847; // Address
+    public static final int AVP_REPORTING_REASON = 872; // Enumerated
+    public static final int AVP_SGSN_ADDRESS = 1228; // Address
+    public static final int AVP_AOC_REQUEST_TYPE = 2055; // Enumerated
+
     private GyConstants() {}
 }

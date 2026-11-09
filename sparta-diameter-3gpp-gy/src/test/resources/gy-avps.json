@@ -79,5 +79,68 @@
     "mandatoryBit": "MUST",
     "vendorSpecificBit": "MUST",
     "mayBeEncrypted": false
+  },
+  {
+    "vendorId": 10415,
+    "avpCode": 3,
+    "attributeName": "3GPP-PDP-Type",
+    "valueType": "Enumerated",
+    "mandatoryBit": "MUST_NOT",
+    "vendorSpecificBit": "MUST",
+    "mayBeEncrypted": true
+  },
+  {
+    "vendorId": 10415,
+    "avpCode": 10,
+    "attributeName": "3GPP-NSAPI",
+    "valueType": "OctetString",
+    "mandatoryBit": "MUST_NOT",
+    "vendorSpecificBit": "MUST",
+    "mayBeEncrypted": true
+  },
+  {
+    "vendorId": 10415,
+    "avpCode": 12,
+    "attributeName": "3GPP-Selection-Mode",
+    "valueType": "UTF8String",
+    "mandatoryBit": "MUST_NOT",
+    "vendorSpecificBit": "MUST",
+    "mayBeEncrypted": true
+  },
+  {
+    "vendorId": 10415,
+    "avpCode": 847,
+    "attributeName": "GGSN-Address",
+    "valueType": "Address",
+    "mandatoryBit": "MUST",
+    "vendorSpecificBit": "MUST",
+    "mayBeEncrypted": true
+  },
+  {
+    "vendorId": 10415,
+    "avpCode": 872,
+    "attributeName": "Reporting-Reason",
+    "valueType": "Enumerated",
+    "mandatoryBit": "MUST",
+    "vendorSpecificBit": "MUST",
+    "mayBeEncrypted": true
+  },
+  {
+    "vendorId": 10415,
+    "avpCode": 1228,
+    "attributeName": "SGSN-Address",
+    "valueType": "Address",
+    "mandatoryBit": "MUST",
+    "vendorSpecificBit": "MUST",
+    "mayBeEncrypted": true
+  },
+  {
+    "vendorId": 10415,
+    "avpCode": 2055,
+    "attributeName": "AoC-Request-Type",
+    "valueType": "Enumerated",
+    "mandatoryBit": "MUST",
+    "vendorSpecificBit": "MUST",
+    "mayBeEncrypted": true
   }
 ]
