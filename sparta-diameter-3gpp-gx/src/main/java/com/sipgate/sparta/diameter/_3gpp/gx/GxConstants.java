@@ -1,8 +1,8 @@
 package com.sipgate.sparta.diameter._3gpp.gx;
 
 /**
- * Constants for the Gx Diameter interface (3GPP TS 29.212). Limited to AVPs that other
- * interfaces (e.g. S6a in TS 29.272) reference; no command messages.
+ * Constants for the Gx Diameter interface (3GPP TS 29.212): the application id and the AVPs of the
+ * credit-control and re-auth commands, which other interfaces (e.g. S6a in TS 29.272) also reference.
  */
 public final class GxConstants {
 
@@ -45,6 +45,25 @@ public final class GxConstants {
     public static final int AVP_TFT_FILTER = 1012;
     public static final int AVP_TFT_PACKET_FILTER_INFORMATION = 1013;
     public static final int AVP_TOS_TRAFFIC_CLASS = 1014;
+
+    public static final int APP_ID_GX = 16777238;
+    public static final int AVP_3GPP_CHARGING_CHARACTERISTICS = 13; // UTF8String
+    public static final int AVP_3GPP_SGSN_MCC_MNC = 18; // UTF8String
+    public static final int AVP_3GPP_USER_LOCATION_INFO = 22; // OctetString
+    public static final int AVP_3GPP_MS_TIMEZONE = 23; // OctetString
+    public static final int AVP_ACCESS_NETWORK_CHARGING_ADDRESS = 501; // Address
+    public static final int AVP_ACCESS_NETWORK_CHARGING_IDENTIFIER_VALUE = 503; // OctetString
+    public static final int AVP_FLOW_DESCRIPTION = 507; // IPFilterRule
+    public static final int AVP_FLOW_STATUS = 511; // Enumerated
+    public static final int AVP_MAX_REQUESTED_BANDWIDTH_DL = 515; // Unsigned32
+    public static final int AVP_MAX_REQUESTED_BANDWIDTH_UL = 516; // Unsigned32
+    public static final int AVP_APN_AGGREGATE_MAX_BITRATE_DL = 1040; // Unsigned32
+    public static final int AVP_APN_AGGREGATE_MAX_BITRATE_UL = 1041; // Unsigned32
+    public static final int AVP_DEFAULT_EPS_BEARER_QOS = 1049; // Grouped
+    public static final int AVP_AN_GW_ADDRESS = 1050; // Address
+    public static final int AVP_FLOW_INFORMATION = 1058; // Grouped
+    public static final int AVP_FLOW_DIRECTION = 1080; // Enumerated
+    public static final int AVP_AN_TRUSTED = 1503; // Enumerated
 
     private GxConstants() {}
 }

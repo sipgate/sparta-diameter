@@ -5,11 +5,16 @@ import com.sipgate.sparta.diameter.base.core.avp.AVPDefinition;
 import com.sipgate.sparta.diameter.base.core.avp.AVPProvider;
 import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
 
+import java.net.InetAddress;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-/** Provides AVP definitions defined by 3GPP TS 29.212 (Gx) that are reused on other interfaces. */
+/**
+ * Provides AVP definitions of 3GPP TS 29.212 (Gx), including those that are reused on other interfaces, and the AVPs
+ * that PCEFs such as Open5GS add to Gx messages. The Rx, S6a, SWx and Gy modules define some of these too; the
+ * definitions are identical, which {@code AVP.registerProvider} accepts.
+ */
 public final class GxAVPProvider implements AVPProvider {
 
     @Override
@@ -53,7 +58,24 @@ public final class GxAVPProvider implements AVPProvider {
             new AVPDefinition(GxConstants.AVP_SESSION_RELEASE_CAUSE, "Session-Release-Cause", Integer.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
             new AVPDefinition(GxConstants.AVP_TFT_FILTER, "TFT-Filter", String.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
             new AVPDefinition(GxConstants.AVP_TFT_PACKET_FILTER_INFORMATION, "TFT-Packet-Filter-Information", GroupedAVP.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
-            new AVPDefinition(GxConstants.AVP_TOS_TRAFFIC_CLASS, "ToS-Traffic-Class", byte[].class, true, true, _3gppConstants.VENDOR_ID_3GPP)
+            new AVPDefinition(GxConstants.AVP_TOS_TRAFFIC_CLASS, "ToS-Traffic-Class", byte[].class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(GxConstants.AVP_3GPP_CHARGING_CHARACTERISTICS, "3GPP-Charging-Characteristics", String.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(GxConstants.AVP_3GPP_SGSN_MCC_MNC, "3GPP-SGSN-MCC-MNC", String.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(GxConstants.AVP_3GPP_USER_LOCATION_INFO, "3GPP-User-Location-Info", byte[].class, false, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(GxConstants.AVP_3GPP_MS_TIMEZONE, "3GPP-MS-TimeZone", byte[].class, false, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(GxConstants.AVP_ACCESS_NETWORK_CHARGING_ADDRESS, "Access-Network-Charging-Address", InetAddress.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(GxConstants.AVP_ACCESS_NETWORK_CHARGING_IDENTIFIER_VALUE, "Access-Network-Charging-Identifier-Value", byte[].class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(GxConstants.AVP_FLOW_DESCRIPTION, "Flow-Description", String.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(GxConstants.AVP_FLOW_STATUS, "Flow-Status", Integer.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(GxConstants.AVP_MAX_REQUESTED_BANDWIDTH_DL, "Max-Requested-Bandwidth-DL", Long.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(GxConstants.AVP_MAX_REQUESTED_BANDWIDTH_UL, "Max-Requested-Bandwidth-UL", Long.class, true, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(GxConstants.AVP_APN_AGGREGATE_MAX_BITRATE_DL, "APN-Aggregate-Max-Bitrate-DL", Long.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(GxConstants.AVP_APN_AGGREGATE_MAX_BITRATE_UL, "APN-Aggregate-Max-Bitrate-UL", Long.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(GxConstants.AVP_DEFAULT_EPS_BEARER_QOS, "Default-EPS-Bearer-QoS", GroupedAVP.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(GxConstants.AVP_AN_GW_ADDRESS, "AN-GW-Address", InetAddress.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(GxConstants.AVP_FLOW_INFORMATION, "Flow-Information", GroupedAVP.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(GxConstants.AVP_FLOW_DIRECTION, "Flow-Direction", Integer.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
+            new AVPDefinition(GxConstants.AVP_AN_TRUSTED, "AN-Trusted", Integer.class, false, true, _3gppConstants.VENDOR_ID_3GPP)
         );
     }
 }
