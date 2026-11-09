@@ -30,7 +30,7 @@ import com.sipgate.sparta.diameter.base.messages.ReAuthAnswer;
  * <p>
  * {@code GxMessageFactory} does not parse it: the base factory handles every RAR and RAA regardless of the
  * application id (RFC 6733 §8.3), so an incoming Gx RAR is a base {@code ReAuthRequest.In} and the answer to
- * {@link Out} is a base {@code ReAuthAnswer.In}. {@link In} exists for tests and tools that build one directly.
+ * {@link Out} is a base {@code ReAuthAnswer.In}. {@link In} is public so that tests and tools can build one directly.
  * </p>
  */
 public interface GxReAuthRequest
@@ -44,7 +44,7 @@ public interface GxReAuthRequest
     final class In extends IncomingRequest<GxReAuthAnswer.Out>
             implements GxReAuthRequest {
 
-        In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
+        public In(final HopByHopId hopByHop, final EndToEndId endToEnd, final boolean retransmitted) {
             super(DiameterConstants.CMD_RE_AUTH, true, retransmitted, GxConstants.APP_ID_GX, hopByHop, endToEnd);
         }
 

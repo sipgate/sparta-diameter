@@ -18,7 +18,7 @@ import com.sipgate.sparta.diameter.base.core.avp.mixins.HasSessionIdAVP;
 
 /**
  * Gx Re-Auth-Answer (RAA) — 3GPP TS 29.212 §5.6.5, with the Gx application id in the header. As for
- * {@link GxReAuthRequest}, the base factory parses and creates the RAA on the wire; this type is for tests and tools
+ * {@link GxReAuthRequest}, the base factory parses and creates the RAA on the wire; its constructors are public for tests and tools
  * that build one directly.
  */
 public interface GxReAuthAnswer
@@ -30,7 +30,7 @@ public interface GxReAuthAnswer
     final class In extends IncomingAnswer
             implements GxReAuthAnswer {
 
-        In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
+        public In(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_RE_AUTH, true, GxConstants.APP_ID_GX, hopByHop, endToEnd);
         }
 
@@ -43,7 +43,7 @@ public interface GxReAuthAnswer
     final class Out extends OutgoingAnswer
             implements GxReAuthAnswer {
 
-        Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
+        public Out(final HopByHopId hopByHop, final EndToEndId endToEnd) {
             super(DiameterConstants.CMD_RE_AUTH, true, GxConstants.APP_ID_GX, hopByHop, endToEnd);
         }
 
