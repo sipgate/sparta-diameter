@@ -143,7 +143,7 @@ public abstract class Command implements
     /**
      * Adds or updates an AVP in this command, ensuring uniqueness by AVP code.
      * If an AVP with the same code already exists, it will be replaced.
-     * Otherwise, the AVP will be added.
+     * Otherwise, the AVP will be added; a Session-Id is added at first position, where RFC 6733 §8.8 wants it.
      *
      * @param avp The AVP to add or update.
      */
@@ -153,7 +153,11 @@ public abstract class Command implements
             throw new UnsupportedOperationException("Cannot mutate a wire-parsed incoming command");
         }
         avps.removeIf(avp::isSameKey);
-        avps.add(avp);
+        if (avp.isSameKey(new AVPKey(DiameterConstants.AVP_SESSION_ID, 0))) {
+            avps.add(0, avp);
+        } else {
+            avps.add(avp);
+        }
     }
 
     /**
