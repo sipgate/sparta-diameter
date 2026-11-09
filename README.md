@@ -89,7 +89,7 @@ IETF application with commands:
 | `sparta-diameter-3gpp-sgdgdd` | TS 29.338 §6 — SGd/Gdd (MME/SGSN to SMS-SC) |
 | `sparta-diameter-3gpp-s6c` | TS 29.338 §5 — S6c (HSS to SMS-SC/Router); constants only |
 | `sparta-diameter-3gpp-gy` | TS 32.299 — Gy/Ro Service-Information and PS-Information AVPs (used inside Credit-Control messages) |
-| `sparta-diameter-3gpp-gx` | TS 29.212 — Gx (PCEF/PCRF) AVPs reused by other interfaces |
+| `sparta-diameter-3gpp-gx` | TS 29.212 — Gx (PCEF/PCRF): Credit-Control and Re-Auth commands and AVPs (some reused by other interfaces) |
 | `sparta-diameter-3gpp-rx` | TS 29.214 — Rx (AF/PCRF) AVPs reused by other interfaces |
 | `sparta-diameter-3gpp-s6t` | TS 29.336 — AVPs reused by other interfaces, no commands |
 | `sparta-diameter-3gpp-slh` | TS 29.173 — SLh AVPs reused by other interfaces |
@@ -149,6 +149,7 @@ graph TD
     e2 --> base
 
     gx --> common
+    gx --> cc
     gy --> common
     rx --> common
     s6t --> common
