@@ -52,6 +52,7 @@ public interface MoForwardShortMessageRequest
         public Out() {
             super(SgdGddConstants.CMD_MO_FORWARD_SHORT_MESSAGE, true,
                   SgdGddConstants.APP_ID_SGD_GDD);
+            setVendorSpecificApplicationId(SgdGddVendorSpecificApplicationId.children());
         }
 
         @Override

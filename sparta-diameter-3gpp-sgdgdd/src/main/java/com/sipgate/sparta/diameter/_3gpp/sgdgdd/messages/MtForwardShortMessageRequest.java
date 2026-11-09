@@ -57,6 +57,7 @@ public interface MtForwardShortMessageRequest
         public Out() {
             super(SgdGddConstants.CMD_MT_FORWARD_SHORT_MESSAGE, true,
                   SgdGddConstants.APP_ID_SGD_GDD);
+            setVendorSpecificApplicationId(SgdGddVendorSpecificApplicationId.children());
         }
 
         @Override
