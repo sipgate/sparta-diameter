@@ -63,7 +63,8 @@ class GxAVPProviderTest {
         assertDefined(definitions, 1050, "AN-GW-Address", InetAddress.class, false);
         assertDefined(definitions, 1058, "Flow-Information", GroupedAVP.class, false);
         assertDefined(definitions, 1080, "Flow-Direction", Integer.class, false);
-        assertDefined(definitions, 1503, "AN-Trusted", Integer.class, false);
+        // TS 29.273 table 5.2.3.1/1 (STa, section 5.2.3.9): M and V
+        assertDefined(definitions, 1503, "AN-Trusted", Integer.class, true);
     }
 
     private static void assertDefined(

@@ -63,7 +63,7 @@ public final class GxConstants {
     public static final int AVP_AN_GW_ADDRESS = 1050; // Address
     public static final int AVP_FLOW_INFORMATION = 1058; // Grouped
     public static final int AVP_FLOW_DIRECTION = 1080; // Enumerated
-    public static final int AVP_AN_TRUSTED = 1503; // Enumerated
+    public static final int AVP_AN_TRUSTED = 1503; // Enumerated, TS 29.273 section 5.2.3.9; Open5GS adds it to Gx messages
 
     private GxConstants() {}
 }

@@ -35,7 +35,6 @@ public class GxCommandSpecTest extends CommandSpecTestBase {
         [ QoS-Information ]
         [ Default-EPS-Bearer-QoS ]
         [ AN-GW-Address ]
-        [ AN-Trusted ]
         *[ Proxy-Info ]
         *[ Route-Record ]
         *[ AVP ]

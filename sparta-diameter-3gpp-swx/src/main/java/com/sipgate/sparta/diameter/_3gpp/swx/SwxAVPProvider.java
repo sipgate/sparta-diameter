@@ -19,7 +19,7 @@ public final class SwxAVPProvider implements AVPProvider {
             new AVPDefinition(SwxConstants.AVP_NON_3GPP_USER_DATA, "Non-3GPP-User-Data", GroupedAVP.class, true, true, V),
             new AVPDefinition(SwxConstants.AVP_NON_3GPP_IP_ACCESS, "Non-3GPP-IP-Access", Integer.class, true, true, V),
             new AVPDefinition(SwxConstants.AVP_NON_3GPP_IP_ACCESS_APN, "Non-3GPP-IP-Access-APN", Integer.class, true, true, V),
-            new AVPDefinition(SwxConstants.AVP_AN_TRUSTED, "AN-Trusted", Integer.class, false, true, V),
+            new AVPDefinition(SwxConstants.AVP_AN_TRUSTED, "AN-Trusted", Integer.class, true, true, V),
             new AVPDefinition(SwxConstants.AVP_ANID, "ANID", String.class, true, true, V),
             new AVPDefinition(SwxConstants.AVP_TRACE_INFO, "Trace-Info", GroupedAVP.class, false, true, V),
             new AVPDefinition(SwxConstants.AVP_PPR_FLAGS, "PPR-Flags", Long.class, false, true, V),

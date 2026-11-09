@@ -75,7 +75,7 @@ public final class GxAVPProvider implements AVPProvider {
             new AVPDefinition(GxConstants.AVP_AN_GW_ADDRESS, "AN-GW-Address", InetAddress.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
             new AVPDefinition(GxConstants.AVP_FLOW_INFORMATION, "Flow-Information", GroupedAVP.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
             new AVPDefinition(GxConstants.AVP_FLOW_DIRECTION, "Flow-Direction", Integer.class, false, true, _3gppConstants.VENDOR_ID_3GPP),
-            new AVPDefinition(GxConstants.AVP_AN_TRUSTED, "AN-Trusted", Integer.class, false, true, _3gppConstants.VENDOR_ID_3GPP)
+            new AVPDefinition(GxConstants.AVP_AN_TRUSTED, "AN-Trusted", Integer.class, true, true, _3gppConstants.VENDOR_ID_3GPP)
         );
     }
 }

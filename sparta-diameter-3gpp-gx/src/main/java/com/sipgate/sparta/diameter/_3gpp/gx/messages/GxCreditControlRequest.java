@@ -2,7 +2,6 @@ package com.sipgate.sparta.diameter._3gpp.gx.messages;
 
 import com.sipgate.sparta.diameter._3gpp.gx.GxConstants;
 import com.sipgate.sparta.diameter._3gpp.gx.mixins.HasAnGwAddressAVP;
-import com.sipgate.sparta.diameter._3gpp.gx.mixins.HasAnTrustedAVP;
 import com.sipgate.sparta.diameter._3gpp.gx.mixins.HasBearerIdentifierAVP;
 import com.sipgate.sparta.diameter._3gpp.gx.mixins.HasBearerOperationAVP;
 import com.sipgate.sparta.diameter._3gpp.gx.mixins.HasDefaultEpsBearerQosAVP;
@@ -42,7 +41,7 @@ public interface GxCreditControlRequest
                 HasSubscriptionIdAVPs, HasNetworkRequestSupportAVP,
                 HasBearerIdentifierAVP, HasBearerOperationAVP,
                 HasIpCanTypeAVP, HasRatTypeAVP, HasTerminationCauseAVP, HasUserEquipmentInfoAVP,
-                HasQosInformationAVP, HasDefaultEpsBearerQosAVP, HasAnGwAddressAVP, HasAnTrustedAVP {
+                HasQosInformationAVP, HasDefaultEpsBearerQosAVP, HasAnGwAddressAVP {
 
     final class In extends IncomingRequest<GxCreditControlAnswer.Out>
             implements GxCreditControlRequest {
