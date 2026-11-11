@@ -41,6 +41,10 @@ public final class RelayForwardRequest extends OutgoingRequest implements HasRou
     public RelayForwardRequest(final IncomingRequest<?> received) {
         super(Objects.requireNonNull(received, "received must not be null").getCommandCode(),
                 received.isProxiable(), received.getApplicationId());
+        if (received.isRetransmitted()) {
+            // RFC 6733 §3: a relay forwards a retransmission with the T flag still set.
+            setRetransmissionFlag();
+        }
         final List<AVP> avps = received.getAVPs();
         for (int i = 0; i < avps.size(); i++) {
             addAVP(avps.get(i));
