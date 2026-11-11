@@ -625,11 +625,33 @@ class DiameterResponderSessionTest {
         // WHEN
         session.onParseError(peer, cause);
 
-        // THEN
-        final ArgumentCaptor<ErrorAnswer.Out> captor = ArgumentCaptor.forClass(ErrorAnswer.Out.class);
+        // THEN — 5001 is a permanent failure, not a protocol error: no E-bit (RFC 6733 §7.1)
+        final ArgumentCaptor<OutgoingAnswer> captor = ArgumentCaptor.forClass(OutgoingAnswer.class);
         verify(peer).send(captor.capture());
-        assertThat(captor.getValue().getFailedAVP()).isNotNull();
-        assertThat(captor.getValue().getFailedAVP().findAVPs(offendingKey)).containsExactly(offending);
+        assertThat(captor.getValue().isError()).isFalse();
+        assertThat(captor.getValue().getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED);
+        final AVP failedAvp = captor.getValue().findAVP(new AVPKey(DiameterConstants.AVP_FAILED_AVP, 0));
+        assertThat(failedAvp).isInstanceOf(GroupedAVP.class);
+        assertThat(((GroupedAVP) failedAvp).findAVPs(offendingKey)).containsExactly(offending);
+        verify(peer, never()).close();
+    }
+
+    @Test
+    void it_drops_an_unparseable_answer_without_answering_it() throws Exception {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_AUTH_APP);
+        final AVP offending = AVP.createRaw(new AVPKey(999, 0), true, true, false, new byte[0]);
+        final AVPParseException cause = new AVPParseException(
+                DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED, false,
+                316, true, 16777251, new HopByHopId(1), new EndToEndId(2), offending, null, null);
+
+        // WHEN
+        session.onParseError(peer, cause);
+
+        // THEN — never an answer to an answer
+        verify(peer, never()).send(any(OutgoingAnswer.class));
         verify(peer, never()).close();
     }
 
@@ -647,7 +669,7 @@ class DiameterResponderSessionTest {
         session.onParseError(peer, cause);
 
         // THEN — error answer sent, then channel closed immediately (stop(), no DPR)
-        verify(peer).send(any(ErrorAnswer.Out.class));
+        verify(peer).send(any(OutgoingAnswer.class));
         verify(peer).close();
         assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
     }
@@ -669,6 +691,116 @@ class DiameterResponderSessionTest {
         verify(peer).close();
         verify(peer, never()).send(any(OutgoingAnswer.class));
         assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
+    }
+
+    // -------------------------------------------------------------------------
+    // Repeated CER on an open connection
+    // -------------------------------------------------------------------------
+
+    @Test
+    void it_keeps_a_single_watchdog_timer_when_a_second_CER_arrives_on_an_open_connection() throws Exception {
+        // GIVEN — every scheduled Tw timer is a distinct future
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        final EventLoop eventLoop = mock(EventLoop.class);
+        when(peer.eventLoop()).thenReturn(eventLoop);
+        final List<ScheduledFuture<?>> timers = new java.util.ArrayList<>();
+        when(eventLoop.schedule(any(Runnable.class), anyLong(), any(TimeUnit.class))).thenAnswer(inv -> {
+            final ScheduledFuture<?> timer = mock(ScheduledFuture.class);
+            timers.add(timer);
+            return timer;
+        });
+        final List<CapabilitiesExchangeRequest.In> reExchanges = new java.util.ArrayList<>();
+        final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_AUTH_APP) {
+            @Override
+            protected void onCapabilitiesReExchange(final CapabilitiesExchangeRequest.In cer) {
+                reExchanges.add(cer);
+            }
+        };
+        session.onConnected(peer);
+        session.onMessage(buildIncomingCer(5L));
+        assertThat(reExchanges).isEmpty();
+
+        // WHEN — the peer sends a second CER on the already open connection
+        final CapabilitiesExchangeRequest.In secondCer = buildIncomingCer(5L);
+        session.onMessage(secondCer);
+
+        // THEN — the first Tw timer was cancelled before the new one started: one DWR chain only
+        assertThat(timers).hasSize(2);
+        verify(timers.get(0)).cancel(false);
+        verify(timers.get(1), never()).cancel(false);
+        assertThat(session.getPeerState()).isEqualTo(PeerState.R_OPEN);
+        assertThat(reExchanges).containsExactly(secondCer);
+        verify(peer, Mockito.times(2)).send(any(CapabilitiesExchangeAnswer.Out.class));
+    }
+
+    // -------------------------------------------------------------------------
+    // Behaviour toggles
+    // -------------------------------------------------------------------------
+
+    @Test
+    void it_keeps_the_transport_open_after_DPA_when_configured() throws Exception {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        stubEventLoop(peer);
+        final DiameterResponderSession session = new DiameterResponderSession(
+                CONFIG_WITH_AUTH_APP.withBehaviour(new DiameterNodeConfig.Behaviour(false, true)));
+        session.onConnected(peer);
+        session.onMessage(buildIncomingCer(5L));
+        final DisconnectPeerRequest.In dpr = (DisconnectPeerRequest.In)
+                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, true, false, new HopByHopId(10), new EndToEndId(20), false);
+
+        // WHEN
+        session.onMessage(dpr);
+
+        // THEN — DPA sent, transport left for the peer to close
+        verify(peer).send(any(DisconnectPeerAnswer.Out.class));
+        verify(peer, never()).close();
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSING);
+    }
+
+    @Test
+    void it_sends_an_E_bit_parse_error_answer_without_Failed_AVP_when_configured() throws Exception {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        final DiameterResponderSession session = new DiameterResponderSession(
+                CONFIG_WITH_AUTH_APP.withBehaviour(new DiameterNodeConfig.Behaviour(true, false)));
+        final AVP offending = AVP.createRaw(new AVPKey(999, 0), true, true, false, new byte[0]);
+        final AVPParseException cause = new AVPParseException(
+                DiameterConstants.RES_DIAMETER_INVALID_AVP_LENGTH,
+                280, true, 0, new HopByHopId(1), new EndToEndId(2), offending, null);
+
+        // WHEN
+        session.onParseError(peer, cause);
+
+        // THEN
+        final ArgumentCaptor<OutgoingAnswer> captor = ArgumentCaptor.forClass(OutgoingAnswer.class);
+        verify(peer).send(captor.capture());
+        assertThat(captor.getValue().isError()).isTrue();
+        assertThat(captor.getValue().getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_INVALID_AVP_LENGTH);
+        assertThat(captor.getValue().findAVP(new AVPKey(DiameterConstants.AVP_FAILED_AVP, 0))).isNull();
+        verify(peer, never()).close();
+    }
+
+    // -------------------------------------------------------------------------
+    // Host-IP-Address
+    // -------------------------------------------------------------------------
+
+    @Test
+    void it_advertises_every_configured_host_ip_address_in_the_CEA() throws Exception {
+        // GIVEN — an SCTP multi-homed node
+        final InetAddress second = InetAddress.getByName("10.0.0.2");
+        final DiameterResponderSession session = new DiameterResponderSession(new DiameterNodeConfig(
+                "dra.example.com", "example.com", List.of(LOCALHOST, second), 0L, "sparta",
+                new DiameterNodeConfig.Capabilities(List.of(5L), List.of(), List.of(), List.of())));
+
+        // WHEN
+        final CapabilitiesExchangeAnswer.Out cea = session.buildCeaForTest();
+
+        // THEN — RFC 6733 §5.3.5: all addresses, in configured order
+        assertThat(cea.getHostIpAddresses()).containsExactly(LOCALHOST, second);
     }
 
     // -------------------------------------------------------------------------

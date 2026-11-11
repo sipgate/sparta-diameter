@@ -387,13 +387,17 @@ public abstract class DiameterSession {
     }
 
     /**
-     * Handles a peer-initiated DPR: sends a DPA and closes the channel.
+     * Handles a peer-initiated DPR: sends a DPA and closes the channel — or, with
+     * {@link DiameterNodeConfig.Behaviour#keepTransportOpenAfterDpa()}, leaves the channel
+     * open (state {@link PeerState#CLOSING}) until the peer closes it.
      */
     protected void handleInboundDpr(final DisconnectPeerRequest.In dpr) {
         stopWatchdog();
         peerState = PeerState.CLOSING;
-        send(DiameterMessageFactory.createAnswer(dpr, DiameterConstants.RES_DIAMETER_SUCCESS))
-            .addListener(ignored -> closePeer());
+        final ChannelFuture sent = send(DiameterMessageFactory.createAnswer(dpr, DiameterConstants.RES_DIAMETER_SUCCESS));
+        if (!config.getBehaviour().keepTransportOpenAfterDpa()) {
+            sent.addListener(ignored -> closePeer());
+        }
     }
 
     protected void closePeer() {
@@ -515,7 +519,13 @@ public abstract class DiameterSession {
         fail(hopByHop, new CancellationException());
     }
 
+    /**
+     * Enters watchdog state OKAY and (re)starts the Tw timer. Idempotent: a timer that is
+     * already running (e.g. a repeated CER on an open connection) is cancelled first, so
+     * there is never more than one DWR chain per connection.
+     */
     protected void startWatchdog() {
+        stopWatchdog();
         watchdogState = WatchdogState.OKAY;
         final DiameterRequestHandler<DeviceWatchdogRequest.In, DeviceWatchdogAnswer.Out> dwrHandler =
                 dwr -> CompletableFuture.completedFuture(
@@ -563,38 +573,50 @@ public abstract class DiameterSession {
      * Handles a parse error that occurred while decoding an inbound message.
      *
      * <ul>
-     *   <li>{@link AVPParseException} — sends an error answer with a
-     *       {@code Failed-AVP} wrapping the offending AVP. The connection remains open.</li>
-     *   <li>{@link DiameterResultCodeException} — sends an error answer without
+     *   <li>An unparseable <em>answer</em> (R-bit clear) is never answered: it is dropped with a
+     *       warning. A pending request it belonged to runs into its timeout (a relayed one is
+     *       then answered upstream by the relay caller). A {@link DiameterResultCodeException}
+     *       that is not an {@link AVPParseException} still closes the connection.</li>
+     *   <li>{@link AVPParseException} — sends an answer with a {@code Failed-AVP} wrapping
+     *       the offending AVP. The connection remains open.</li>
+     *   <li>{@link DiameterResultCodeException} — sends an answer without
      *       {@code Failed-AVP}, then closes the connection immediately.</li>
      *   <li>{@link DiameterException} (base) — the byte stream is corrupt and cannot be
      *       recovered. Closes the connection; the Tc timer will schedule a reconnect on
      *       the initiator side.</li>
      * </ul>
+     *
+     * <p>The answer carries the E-bit only for protocol errors (3xxx); permanent failures
+     * such as 5001/5014 are regular answers (RFC 6733 §7.1), see
+     * {@link DiameterMessageFactory#createParseErrorAnswer}. With
+     * {@link DiameterNodeConfig.Behaviour#parseErrorAnswerWithErrorBit()} every such answer
+     * carries the E-bit and no {@code Failed-AVP}.</p>
      */
     public void onParseError(final DiameterPeer peer, final DiameterException cause) {
-        if (cause instanceof final AVPParseException avpEx) {
-            final ErrorAnswer.Out answer = buildParseErrorAnswer(avpEx);
-            answer.setFailedAVP(List.of(avpEx.getOffendingAvp()));
-            send(peer, answer);
+        if (cause instanceof final DiameterResultCodeException rcEx && !rcEx.isRequest()) {
+            LOGGER.warn("dropping unparseable answer (command {}, application {}, hop-by-hop {}): result code {}",
+                    rcEx.getCommandCode(), rcEx.getApplicationId(), rcEx.getHopByHop(), rcEx.getResultCode());
+            if (!(rcEx instanceof AVPParseException)) {
+                stop();
+            }
+        } else if (cause instanceof final AVPParseException avpEx) {
+            send(peer, DiameterMessageFactory.createParseErrorAnswer(
+                    avpEx, config.getBehaviour().parseErrorAnswerWithErrorBit()));
         } else if (cause instanceof final DiameterResultCodeException rcEx) {
-            final ErrorAnswer.Out answer = buildParseErrorAnswer(rcEx);
-            send(peer, answer);
+            send(peer, DiameterMessageFactory.createParseErrorAnswer(
+                    rcEx, config.getBehaviour().parseErrorAnswerWithErrorBit()));
             stop();
         } else {
             closePeer();
         }
     }
 
-    private ErrorAnswer.Out buildParseErrorAnswer(final DiameterResultCodeException e) {
-        return DiameterMessageFactory.createErrorAnswer(e);
-    }
-
     public PeerState getPeerState() {
         return peerState;
     }
 
-    WatchdogState getWatchdogState() {
+    /** RFC 3539 watchdog state; only {@link WatchdogState#OKAY} peers should be routed to. */
+    public WatchdogState getWatchdogState() {
         return watchdogState;
     }
 
