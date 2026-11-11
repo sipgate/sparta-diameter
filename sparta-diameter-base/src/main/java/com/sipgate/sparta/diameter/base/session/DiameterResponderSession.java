@@ -88,7 +88,26 @@ public class DiameterResponderSession extends DiameterSession {
         // no-op
     }
 
+    /**
+     * Application hook fired when a CER arrives on a connection that is already
+     * {@link PeerState#R_OPEN} (a repeated capabilities exchange), before it is
+     * processed. The CER is then handled like the first one: a CEA is sent, the watchdog
+     * is restarted (never duplicated) and {@link #onCapabilitiesExchange} fires again on
+     * success — or the connection is closed if no common application remains.
+     *
+     * <p>Default: no-op.</p>
+     *
+     * @param cer the repeated capabilities exchange request
+     */
+    protected void onCapabilitiesReExchange(final CapabilitiesExchangeRequest.In cer) {
+        // no-op
+    }
+
     private void handleCer(final CapabilitiesExchangeRequest.In cer) {
+        if (peerState == PeerState.R_OPEN) {
+            LOGGER.info("received CER on already open connection from {}", cer.getOriginHost());
+            onCapabilitiesReExchange(cer);
+        }
         recordRemoteOriginStateId(cer.getOriginHost(), cer.getOriginStateId());
         final List<Long> remoteAuthIds = cer.getAuthApplicationIds();
         final List<Long> remoteAcctIds = cer.getAcctApplicationIds();
