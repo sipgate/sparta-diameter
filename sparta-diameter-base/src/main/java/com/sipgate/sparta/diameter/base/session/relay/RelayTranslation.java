@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.base.session.relay;
 
 import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
+import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
 
 import java.util.Objects;
@@ -23,12 +24,21 @@ import java.util.Objects;
  * @param endToEnd         the end-to-end identifier of the original request; it is
  *                         preserved unchanged on the forwarded request (RFC 6733 §3)
  * @param createdAtMillis  wall-clock creation time, for diagnostics and timeout cleanup
+ * @param originalRequest  the original inbound request, handed to a
+ *                         {@link RelayAnswerHook}; {@code null} when not recorded
  */
 public record RelayTranslation(
         DiameterPeer upstreamPeer,
         HopByHopId originalHopByHop,
         EndToEndId endToEnd,
-        long createdAtMillis) {
+        long createdAtMillis,
+        IncomingRequest<?> originalRequest) {
+
+    /** Creates a translation without the original request ({@code originalRequest} is {@code null}). */
+    public RelayTranslation(final DiameterPeer upstreamPeer, final HopByHopId originalHopByHop,
+                            final EndToEndId endToEnd, final long createdAtMillis) {
+        this(upstreamPeer, originalHopByHop, endToEnd, createdAtMillis, null);
+    }
 
     public RelayTranslation {
         Objects.requireNonNull(upstreamPeer, "upstreamPeer must not be null");

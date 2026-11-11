@@ -11,7 +11,9 @@ import java.util.concurrent.CompletableFuture;
  * <p>Register one per command code via
  * {@link DiameterSession#setHandler(Class, DiameterRequestHandler)}.
  * The session invokes the handler when a matching request arrives in OPEN state
- * and sends the answer returned by the future to the peer.
+ * and sends the answer returned by the future to the peer. A relaying handler may
+ * return the future of {@link DiameterSession#relay}; its answer was already forwarded
+ * and is not sent again.
  *
  * @param <R> the incoming request type
  * @param <A> the outgoing answer type

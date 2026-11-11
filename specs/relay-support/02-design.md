@@ -44,8 +44,10 @@ Notes:
   local identity — a relayed request already carries the original origin (RFC 6733 §6.1.9);
   stamping ours would be a protocol violation. All other AVPs pass through unchanged.
 - The returned future completes with the downstream `IncomingAnswer` (including E-bit error
-  answers), or exceptionally with `TimeoutException` / `DiameterErrorAnswerException` — the same
-  error semantics as `send()`.
+  answers) after it was forwarded upstream, or exceptionally when no answer was forwarded
+  (`IllegalStateException` not open / connection lost, `TimeoutException`, write failure).
+- A request handler may return that future: `dispatchInboundRequest` sends nothing for a relayed
+  answer (it recognises the `IncomingAnswer` with the request's end-to-end identifier).
 
 ## Answer path (sequence)
 
@@ -53,16 +55,15 @@ Notes:
 Downstream answer arrives on egress session S_out
   ▼
 complete(answer)                                   // answer dispatch
-  1. pendingRequests.remove(answer.hopByHopId())   // first: normal send traffic, unchanged
-  2. relayTranslations.contains(hbh)?
-       yes → sendAnswerRestored(answer):
+  1. sendAnswerRestored(answer) — on a relay translation hit:
            translation = relayTranslations.remove(hbh)        // atomic; duplicate answers
                                                               // cannot double-forward
            restored = RelayedAnswer.of(answer, translation.originalHopByHop())
            // Origin-Host/Realm pass through (answering endpoint's identity, RFC 6733 §6.2.2)
            translation.upstreamPeer().send(restored)
              .addListener(WARN on write failure)              // review finding, fixed
-           relay() future completes with the downstream answer
+  2. pendingRequests.remove(hbh): relay() future completes normally with the answer (E-bit
+     included); a plain send() future fails with DiameterErrorAnswerException on E-bit (ADR-0009)
   3. neither map matched → logged as unsolicited
 ```
 

@@ -4,6 +4,10 @@ import com.sipgate.sparta.diameter.base.core.Command;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.base.core.EndToEndId;
+import com.sipgate.sparta.diameter.base.core.GenericCommand;
+import com.sipgate.sparta.diameter.base.core.IncomingCommand;
+import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
 import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
@@ -77,6 +81,8 @@ class DiameterSessionRelayTest {
 
     private static final HopByHopId ORIGINAL_HBH = new HopByHopId(100);
     private static final EndToEndId ORIGINAL_E2E = new EndToEndId(200);
+    private static final int UNKNOWN_COMMAND = 8388620; // e.g. an S6c/Sh command without lib types
+    private static final int UNKNOWN_APPLICATION = 16777312;
 
     @Test
     void it_relays_with_a_fresh_hop_by_hop_and_the_preserved_end_to_end() {
@@ -171,6 +177,55 @@ class DiameterSessionRelayTest {
     }
 
     @Test
+    void it_lets_the_relay_answer_hook_append_avps_before_forwarding_upstream() {
+        // GIVEN — a hook on the egress session that records its inputs and appends an AVP
+        final DiameterSessionPair up = openedSession();
+        final DiameterSessionPair egress = openedSession();
+        final List<Object> seen = new ArrayList<>();
+        final AVP appended = AVP.create(new AVPKey(DiameterConstants.AVP_ERROR_MESSAGE, 0), "hooked");
+        egress.session().setRelayAnswerHook((downstream, original, restored) -> {
+            seen.add(downstream);
+            seen.add(original);
+            restored.addAVP(appended);
+        });
+        final RelayHop hop = startRelay(up, egress);
+        final IncomingAnswer downstreamAnswer =
+                buildIncomingAnswer(hop.outbound().hopByHop(), hop.outbound().endToEnd(), null);
+
+        // WHEN
+        egress.session().onMessage(downstreamAnswer);
+
+        // THEN — the hook saw the downstream answer and the original request, and the
+        // upstream answer carries the appended AVP
+        assertThat(seen).hasSize(2);
+        assertThat(seen.get(0)).isSameAs(downstreamAnswer);
+        assertThat(((IncomingRequest<?>) seen.get(1)).hopByHopId()).isEqualTo(ORIGINAL_HBH);
+        final ArgumentCaptor<OutgoingAnswer> restored = ArgumentCaptor.forClass(OutgoingAnswer.class);
+        verify(up.peer()).send(restored.capture());
+        assertThat(restored.getValue().findAVPs(new AVPKey(DiameterConstants.AVP_ERROR_MESSAGE, 0)))
+                .containsExactly(appended);
+        assertThat(hop.future()).isCompletedWithValue(downstreamAnswer);
+    }
+
+    @Test
+    void it_still_forwards_the_answer_when_the_relay_answer_hook_throws() {
+        // GIVEN
+        final DiameterSessionPair up = openedSession();
+        final DiameterSessionPair egress = openedSession();
+        egress.session().setRelayAnswerHook((downstream, original, restored) -> {
+            throw new IllegalStateException("hook bug");
+        });
+        final RelayHop hop = startRelay(up, egress);
+
+        // WHEN
+        egress.session().onMessage(
+                buildIncomingAnswer(hop.outbound().hopByHop(), hop.outbound().endToEnd(), null));
+
+        // THEN
+        verify(up.peer()).send(any(OutgoingAnswer.class));
+    }
+
+    @Test
     void it_fails_the_relay_future_when_the_connection_is_not_open() {
         // GIVEN — egress session never connected (CLOSED)
         final DiameterSessionPair up = openedSession();
@@ -224,6 +279,157 @@ class DiameterSessionRelayTest {
         // without a translation (the answer dispatch logs them as unsolicited)
         final IncomingAnswer unknown = buildIncomingAnswer(new HopByHopId(555), new EndToEndId(666), null);
         assertThat(egress.session().sendAnswerRestored(unknown)).isFalse();
+    }
+
+    @Test
+    void it_forwards_an_E_bit_answer_upstream_and_completes_the_relay_future_with_it() {
+        // GIVEN
+        final DiameterSessionPair up = openedSession();
+        final DiameterSessionPair egress = openedSession();
+        final RelayHop hop = startRelay(up, egress);
+
+        // WHEN — the downstream peer answers with an E-bit error answer
+        final IncomingAnswer downstreamError = buildIncomingErrorAnswer(
+                hop.outbound().hopByHop(), hop.outbound().endToEnd(),
+                DiameterConstants.RES_DIAMETER_UNABLE_TO_DELIVER);
+        egress.session().onMessage(downstreamError);
+
+        // THEN — forwarding an error answer is a successful relay hop
+        assertThat(hop.future()).isCompletedWithValue(downstreamError);
+        final ArgumentCaptor<OutgoingAnswer> restored = ArgumentCaptor.forClass(OutgoingAnswer.class);
+        verify(up.peer()).send(restored.capture());
+        assertThat(restored.getValue().isError()).isTrue();
+        assertThat(restored.getValue().hopByHopId()).isEqualTo(ORIGINAL_HBH);
+        assertThat(restored.getValue().getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_UNABLE_TO_DELIVER);
+    }
+
+    @Test
+    void it_sends_a_relayed_success_answer_upstream_exactly_once_from_a_relaying_handler() {
+        // GIVEN — the upstream session relays every ASR through the egress session
+        final DiameterSessionPair up = openedSession();
+        final DiameterSessionPair egress = openedSession();
+        registerRelayingHandler(up, egress);
+        up.session().onMessage(buildIncomingRequest(ORIGINAL_HBH, ORIGINAL_E2E));
+        final Ids outbound = capturedOutbound(egress);
+
+        // WHEN
+        egress.session().onMessage(buildIncomingAnswer(outbound.hopByHop(), outbound.endToEnd(), null));
+
+        // THEN — only the relayed answer goes upstream; the handler machinery adds nothing
+        final ArgumentCaptor<OutgoingAnswer> sent = ArgumentCaptor.forClass(OutgoingAnswer.class);
+        verify(up.peer()).send(sent.capture());
+        assertThat(sent.getAllValues()).hasSize(1);
+        assertThat(sent.getValue()).isInstanceOf(RelayedAnswer.class);
+        assertThat(sent.getValue().getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_SUCCESS);
+    }
+
+    @Test
+    void it_sends_a_relayed_E_bit_answer_upstream_exactly_once_from_a_relaying_handler() {
+        // GIVEN
+        final DiameterSessionPair up = openedSession();
+        final DiameterSessionPair egress = openedSession();
+        registerRelayingHandler(up, egress);
+        up.session().onMessage(buildIncomingRequest(ORIGINAL_HBH, ORIGINAL_E2E));
+        final Ids outbound = capturedOutbound(egress);
+
+        // WHEN
+        egress.session().onMessage(buildIncomingErrorAnswer(outbound.hopByHop(), outbound.endToEnd(),
+                DiameterConstants.RES_DIAMETER_UNABLE_TO_DELIVER));
+
+        // THEN — no additional DIAMETER_UNABLE_TO_COMPLY under the same hop-by-hop id
+        final ArgumentCaptor<OutgoingAnswer> sent = ArgumentCaptor.forClass(OutgoingAnswer.class);
+        verify(up.peer()).send(sent.capture());
+        assertThat(sent.getAllValues()).hasSize(1);
+        assertThat(sent.getValue()).isInstanceOf(RelayedAnswer.class);
+        assertThat(sent.getValue().getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_UNABLE_TO_DELIVER);
+    }
+
+    @Test
+    void it_answers_exactly_once_when_the_relay_times_out_in_a_relaying_handler() {
+        // GIVEN
+        final DiameterSessionPair up = openedSession();
+        final DiameterSessionPair egress = openedSessionWithTimeout(configWithRequestTimeout(Duration.ofMillis(50)));
+        registerRelayingHandler(up, egress);
+        up.session().onMessage(buildIncomingRequest(ORIGINAL_HBH, ORIGINAL_E2E));
+        final Ids outbound = capturedOutbound(egress);
+
+        // WHEN — the request timeout fires, then a late answer arrives
+        for (final Runnable task : new ArrayList<>(egress.scheduledTasks().subList(
+                egress.taskCountAtOpen(), egress.scheduledTasks().size()))) {
+            task.run();
+        }
+        egress.session().onMessage(buildIncomingAnswer(outbound.hopByHop(), outbound.endToEnd(), null));
+
+        // THEN — one locally generated answer (the handler's failure), no relayed one
+        final ArgumentCaptor<OutgoingAnswer> sent = ArgumentCaptor.forClass(OutgoingAnswer.class);
+        verify(up.peer()).send(sent.capture());
+        assertThat(sent.getAllValues()).hasSize(1);
+        assertThat(sent.getValue()).isNotInstanceOf(RelayedAnswer.class);
+        assertThat(sent.getValue().hopByHopId()).isEqualTo(ORIGINAL_HBH);
+    }
+
+    @Test
+    void it_answers_unable_to_comply_when_a_handler_throws_synchronously() {
+        // GIVEN — a handler that throws instead of failing its future
+        final DiameterSessionPair up = openedSession();
+        up.session().setHandler(AbortSessionRequest.In.class, request -> {
+            throw new IllegalStateException("boom");
+        });
+
+        // WHEN
+        up.session().onMessage(buildIncomingRequest(ORIGINAL_HBH, ORIGINAL_E2E));
+
+        // THEN — answered like a failed future; the exception does not escape the session
+        final ArgumentCaptor<OutgoingAnswer> sent = ArgumentCaptor.forClass(OutgoingAnswer.class);
+        verify(up.peer()).send(sent.capture());
+        assertThat(sent.getValue().getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY);
+        assertThat(sent.getValue().hopByHopId()).isEqualTo(ORIGINAL_HBH);
+    }
+
+    @Test
+    void it_answers_command_unsupported_for_an_unknown_request_without_a_fallback_handler() {
+        // GIVEN — an OPEN session without any handler
+        final DiameterSessionPair up = openedSession();
+
+        // WHEN — a request of a command no factory knows arrives
+        up.session().onMessage(buildGeneric(true, ORIGINAL_HBH, ORIGINAL_E2E));
+
+        // THEN — answered instead of silently dropped
+        final ArgumentCaptor<OutgoingAnswer> sent = ArgumentCaptor.forClass(OutgoingAnswer.class);
+        verify(up.peer()).send(sent.capture());
+        assertThat(sent.getValue().getCommandCode()).isEqualTo(UNKNOWN_COMMAND);
+        assertThat(sent.getValue().hopByHopId()).isEqualTo(ORIGINAL_HBH);
+        assertThat(sent.getValue().getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED);
+        // RFC 6733 §7.1.3: 3001 is a protocol error → E-bit set
+        assertThat(sent.getValue().isError()).isTrue();
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void it_relays_an_unknown_request_through_the_fallback_handler() {
+        // GIVEN — the upstream session relays everything without a typed handler
+        final DiameterSessionPair up = openedSession();
+        final DiameterSessionPair egress = openedSession();
+        up.session().setFallbackHandler(request -> (CompletableFuture) egress.session()
+                .relay(up.session(), request, new RelayForwardRequest(request)));
+
+        // WHEN — an unknown request comes in and its (unknown) answer comes back
+        up.session().onMessage(buildGeneric(true, ORIGINAL_HBH, ORIGINAL_E2E));
+        final ArgumentCaptor<OutgoingRequest> forwarded = ArgumentCaptor.forClass(OutgoingRequest.class);
+        final ArgumentCaptor<HopByHopId> hbh = ArgumentCaptor.forClass(HopByHopId.class);
+        verify(egress.peer()).send(forwarded.capture(), hbh.capture(), any(EndToEndId.class));
+        egress.session().onMessage(buildGeneric(false, hbh.getValue(), ORIGINAL_E2E));
+
+        // THEN — the forward keeps command, application and AVPs; the answer goes upstream once
+        assertThat(forwarded.getValue().getCommandCode()).isEqualTo(UNKNOWN_COMMAND);
+        assertThat(forwarded.getValue().getApplicationId()).isEqualTo(UNKNOWN_APPLICATION);
+        assertThat(forwarded.getValue().getSessionId()).isEqualTo("generic;1");
+        final ArgumentCaptor<OutgoingAnswer> sent = ArgumentCaptor.forClass(OutgoingAnswer.class);
+        verify(up.peer()).send(sent.capture());
+        assertThat(sent.getAllValues()).hasSize(1);
+        assertThat(sent.getValue()).isInstanceOf(RelayedAnswer.class);
+        assertThat(sent.getValue().getCommandCode()).isEqualTo(UNKNOWN_COMMAND);
+        assertThat(sent.getValue().hopByHopId()).isEqualTo(ORIGINAL_HBH);
     }
 
     // ---------------------------------------------------------------------
@@ -293,6 +499,48 @@ class DiameterSessionRelayTest {
         verify(egress.peer()).send(any(OutgoingRequest.class), hbh.capture(), e2e.capture());
         Mockito.clearInvocations(up.peer(), egress.peer());
         return new RelayHop(relayed, new Ids(hbh.getValue(), e2e.getValue()));
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static void registerRelayingHandler(final DiameterSessionPair up, final DiameterSessionPair egress) {
+        up.session().setHandler(AbortSessionRequest.In.class, request -> (CompletableFuture) egress.session()
+                .relay(up.session(), request, new RelayForwardRequest(request)));
+    }
+
+    private static Ids capturedOutbound(final DiameterSessionPair egress) {
+        final ArgumentCaptor<HopByHopId> hbh = ArgumentCaptor.forClass(HopByHopId.class);
+        final ArgumentCaptor<EndToEndId> e2e = ArgumentCaptor.forClass(EndToEndId.class);
+        verify(egress.peer()).send(any(OutgoingRequest.class), hbh.capture(), e2e.capture());
+        return new Ids(hbh.getValue(), e2e.getValue());
+    }
+
+    private static IncomingAnswer buildIncomingErrorAnswer(final HopByHopId hbh, final EndToEndId e2e,
+                                                           final long resultCode) {
+        try {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            DiameterMessageFactory.createErrorAnswer(buildIncomingRequest(hbh, e2e), resultCode)
+                    .writeTo(new DataOutputStream(baos));
+            return (IncomingAnswer) Command.parseMessage(ByteBuffer.wrap(baos.toByteArray()));
+        } catch (final Exception e) {
+            throw new IllegalStateException("cannot build incoming error answer", e);
+        }
+    }
+
+    private static IncomingCommand buildGeneric(final boolean request, final HopByHopId hbh, final EndToEndId e2e) {
+        try {
+            final GenericCommand.Out out = new GenericCommand.Out(UNKNOWN_COMMAND, request, true, false, false,
+                    UNKNOWN_APPLICATION, hbh, e2e);
+            out.addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_SESSION_ID, 0), "generic;1"));
+            if (!request) {
+                out.addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_RESULT_CODE, 0),
+                        DiameterConstants.RES_DIAMETER_SUCCESS));
+            }
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            out.writeTo(new DataOutputStream(baos));
+            return Command.parseMessage(ByteBuffer.wrap(baos.toByteArray()));
+        } catch (final Exception e) {
+            throw new IllegalStateException("cannot build generic command", e);
+        }
     }
 
     private static DiameterNodeConfig configWithRequestTimeout(final Duration requestTimeout) {

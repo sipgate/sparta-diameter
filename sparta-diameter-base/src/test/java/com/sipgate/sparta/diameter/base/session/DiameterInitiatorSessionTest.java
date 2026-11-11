@@ -553,10 +553,12 @@ class DiameterInitiatorSessionTest {
         session.onMessage(rar);
 
         // THEN
-        final ArgumentCaptor<ReAuthAnswer.Out> captor = ArgumentCaptor.forClass(ReAuthAnswer.Out.class);
+        final ArgumentCaptor<ErrorAnswer.Out> captor = ArgumentCaptor.forClass(ErrorAnswer.Out.class);
         verify(peer).send(captor.capture());
         assertThat(captor.getValue().getResultCode())
                 .isEqualTo(DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED);
+        // RFC 6733 §7.1.3: 3001 is a protocol error → E-bit set
+        assertThat(captor.getValue().isError()).isTrue();
     }
 
     @Test

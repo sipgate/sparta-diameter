@@ -50,8 +50,8 @@ lives in a small value-type package (`session/relay/`) instead.
 
 `RelayTranslationStore` (per egress session, `ConcurrentHashMap<HopByHopId, RelayTranslation>`)
 maps the outbound hop-by-hop identifier to `(upstream peer, original hop-by-hop id)`. The session's
-answer dispatch (`complete`) checks the pending-request map first (unchanged behavior for normal
-`send` traffic), then the translation store; on a hit `sendAnswerRestored` sends the answer to the
+answer dispatch (`complete`) checks the translation store first, then completes the pending
+request (unchanged behavior for normal `send` traffic); on a hit `sendAnswerRestored` sends the answer to the
 upstream peer as a `RelayedAnswer` with the original hop-by-hop identifier restored — Origin-Host/
 Origin-Realm pass through untouched (they belong to the answering endpoint; RFC 6733 §6.2.2), the
 fill-if-absent origin stamping of plain `send()` is deliberately skipped.
@@ -89,8 +89,9 @@ itself); the DRA service appends the egress identity's Route-Record before each 
 - Backwards compatibility is untouched: `relay()` is additive on `DiameterSession`; all sparta-hss
   call sites (config constructor, `connect`, session constructors) compile unchanged against this
   branch (verified per commit `ccbf444`).
-- The relay future completes exceptionally on request timeout / error answers with the same
-  semantics as `send()` — applications get one error model for both paths.
+- The relay future completes normally with every forwarded downstream answer, E-bit included, and
+  exceptionally only when nothing was forwarded (timeout, write failure, connection lost, not
+  open). A request handler may return it; the handler machinery does not answer a second time.
 - Answer-path work is zero-code for the caller: as long as the request went through `relay()`, the
   `complete()` dispatch restores and forwards the answer automatically; `sendAnswerRestored` is
   public only for applications that intercept answers themselves.

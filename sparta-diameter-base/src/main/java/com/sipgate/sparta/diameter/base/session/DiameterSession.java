@@ -22,6 +22,7 @@ import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogAnswer;
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogRequest;
 import com.sipgate.sparta.diameter.base.messages.DisconnectPeerRequest;
 import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
+import com.sipgate.sparta.diameter.base.session.relay.RelayAnswerHook;
 import com.sipgate.sparta.diameter.base.session.relay.RelayedAnswer;
 import com.sipgate.sparta.diameter.base.session.relay.RelayTranslation;
 import com.sipgate.sparta.diameter.base.session.relay.RelayTranslationStore;
@@ -105,6 +106,8 @@ public abstract class DiameterSession {
     private final RelayTranslationStore relayTranslations = new RelayTranslationStore();
 
     private final Map<Class<? extends IncomingCommand>, DiameterRequestHandler<?, ?>> handlers = new HashMap<>();
+    private DiameterRequestHandler<?, ?> fallbackHandler;
+    private RelayAnswerHook relayAnswerHook;
 
     DiameterSession(final DiameterNodeConfig config, final MeterRegistry meterRegistry) {
         this.config = config;
@@ -198,8 +201,9 @@ public abstract class DiameterSession {
                         end-to-end identifier and the hop-by-hop identifier to restore
      * @param forward        the outbound request built by the application; never mutated
      * @return a future that completes with the downstream answer (including E-bit error
-            answers), or exceptionally with {@code TimeoutException} /
-            {@code DiameterErrorAnswerException} semantics mirroring {@link #send}
+            answers) after it was forwarded upstream, or exceptionally when no answer
+            was forwarded: {@code IllegalStateException} (not open, connection lost),
+            {@code TimeoutException}, or the write failure cause
      * @throws NullPointerException if any argument is {@code null}
      */
     public CompletableFuture<IncomingAnswer> relay(
@@ -228,7 +232,8 @@ public abstract class DiameterSession {
                 upstreamSession.peer(),
                 received.hopByHopId(),
                 endToEnd,
-                System.currentTimeMillis()));
+                System.currentTimeMillis(),
+                received));
 
         // Deliberately NOT via send(request, hopByHop, endToEnd): that helper stamps
         // absent Origin-Host/Origin-Realm with our own identity, which would mutate the
@@ -246,11 +251,14 @@ public abstract class DiameterSession {
      * restored (RFC 6733 §6.2.2). Looks up the relay translation by the answer's
      * hop-by-hop identifier; on a hit, removes the translation, sends the answer —
      * with all AVPs unchanged, including the downstream origin's Origin-Host and
-     * Origin-Realm — to the upstream peer, and completes the future returned by
-     * {@link #relay(DiameterSession, IncomingRequest, OutgoingRequest)}.
+     * Origin-Realm — to the upstream peer. The future returned by
+     * {@link #relay(DiameterSession, IncomingRequest, OutgoingRequest)} is completed
+     * by the answer dispatch ({@code complete}).
      *
-     * <p>Called automatically from the answer dispatch ({@code complete}) after the
-     * pending-request map is checked. Public so applications that intercept answers
+     * <p>Before the restored answer is sent, the {@link RelayAnswerHook} of this session (if
+     * one is set, see {@link #setRelayAnswerHook}) may append AVPs to it.</p>
+     *
+     * <p>Called automatically from the answer dispatch ({@code complete}). Public so applications that intercept answers
      * themselves can trigger the same restoration.</p>
      *
      * @param downstreamAnswer the answer received from the downstream peer
@@ -262,7 +270,18 @@ public abstract class DiameterSession {
         if (translation == null) {
             return false;
         }
-        final OutgoingAnswer restored = RelayedAnswer.of(downstreamAnswer, translation.originalHopByHop());
+        final RelayedAnswer restored = RelayedAnswer.of(downstreamAnswer, translation.originalHopByHop());
+        final RelayAnswerHook hook = relayAnswerHook;
+        if (hook != null) {
+            try {
+                hook.beforeForward(downstreamAnswer, translation.originalRequest(), restored);
+            } catch (final RuntimeException e) {
+                // The answer is still forwarded: losing it would turn a hook bug into a
+                // request timeout for the upstream peer.
+                LOGGER.error("relay answer hook failed (hbh {}), forwarding the answer anyway",
+                        translation.originalHopByHop(), e);
+            }
+        }
         // Fill-if-absent origin stamping is intentionally skipped: a relayed answer
         // carries the answering endpoint's identity (RFC 6733 §6.2.2), not ours.
         translation.upstreamPeer().send(restored).addListener(future -> {
@@ -286,6 +305,26 @@ public abstract class DiameterSession {
         }
         handlers.put(requestClass, handler);
         LOGGER.debug("registered handler for {}", requestClass.getName());
+    }
+
+    /**
+     * Registers a handler for every inbound request without a handler of its own type,
+     * including {@link com.sipgate.sparta.diameter.base.core.GenericRequest}s of commands no
+     * factory knows. Without it such requests are answered {@code DIAMETER_COMMAND_UNSUPPORTED}.
+     */
+    public void setFallbackHandler(
+            final DiameterRequestHandler<IncomingRequest<OutgoingAnswer>, OutgoingAnswer> handler) {
+        this.fallbackHandler = Objects.requireNonNull(handler, "handler must not be null");
+    }
+
+    /**
+     * Sets the hook invoked for every relayed answer this session forwards upstream (the
+     * egress side of {@link #relay}), right before the restored answer is sent. The hook
+     * may append AVPs to the outgoing answer (e.g. DOIC); {@code null} removes it.
+     * Default: no hook.
+     */
+    public void setRelayAnswerHook(final RelayAnswerHook hook) {
+        this.relayAnswerHook = hook;
     }
 
     /**
@@ -364,22 +403,29 @@ public abstract class DiameterSession {
     }
 
     /**
-     * Dispatches an inbound request to the registered handler, or sends
-     * {@code DIAMETER_COMMAND_UNSUPPORTED} if no handler is registered.
+     * Dispatches an inbound request to the handler registered for its type, else to the
+     * fallback handler, or sends {@code DIAMETER_COMMAND_UNSUPPORTED} if neither exists.
+     *
+     * <p>A handler that returns the future of {@link #relay} completes with the
+     * downstream {@link IncomingAnswer}, which the relay answer path has already
+     * forwarded upstream; nothing further is sent for it. A handler that throws
+     * synchronously is treated like a failed future ({@code DIAMETER_UNABLE_TO_COMPLY}).</p>
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected void dispatchInboundRequest(final IncomingRequest<? extends OutgoingAnswer> request) {
         final int commandCode = request.getCommandCode();
         final int applicationId = request.getApplicationId();
-        final DiameterRequestHandler handler = handlers.get(request.getClass());
+        final DiameterRequestHandler typed = handlers.get(request.getClass());
+        final DiameterRequestHandler handler = typed != null ? typed : fallbackHandler;
         if (handler == null) {
             LOGGER.warn("request unsupported: {}", request.getCommandName());
-            send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED));
+            // 3001 is a protocol error (RFC 6733 §7.1.3) → E-bit answer
+            send(DiameterMessageFactory.createErrorAnswer(request, DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED));
             return;
         }
         final Timer.Sample handlerSample = meters.startTimer();
-        final CompletableFuture<? extends OutgoingAnswer> future = handler.handle(request);
-        future.whenComplete((answer, err) -> {
+        final CompletableFuture<?> handled = invokeHandler(handler, request);
+        handled.whenComplete((answer, err) -> {
             meters.stopHandlerTimer(handlerSample, commandCode, applicationId);
             // Keep this if even though nobody throws DiameterErrorAnswerException inside this lib. This is a way for
             // applications to indicate a diameter business error.
@@ -392,10 +438,27 @@ public abstract class DiameterSession {
             } else if (err != null) {
                 send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
                 meters.recordHandlerError(commandCode, applicationId, err);
+            } else if (answer instanceof final IncomingAnswer relayed) {
+                // relay() preserves the end-to-end identifier; anything else was never forwarded.
+                if (!relayed.endToEndId().equals(request.endToEndId())) {
+                    LOGGER.warn("handler for {} returned a received answer that was not relayed for this request",
+                            request.getCommandName());
+                    send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
+                }
             } else {
-                send(answer);
+                send((OutgoingAnswer) answer);
             }
         });
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static CompletableFuture<?> invokeHandler(final DiameterRequestHandler handler,
+                                                      final IncomingRequest<?> request) {
+        try {
+            return handler.handle(request);
+        } catch (final RuntimeException e) {
+            return CompletableFuture.failedFuture(e);
+        }
     }
 
     private static Throwable extractEffectiveCause(final Throwable wrapper) {
@@ -539,37 +602,34 @@ public abstract class DiameterSession {
      * Matches an incoming answer to a pending request by hop-by-hop identifier
      * and completes the corresponding future.
      *
-     * <p>Dispatch order: the pending-request map is checked first (the existing
-     * mechanism is untouched — a pending hit behaves exactly as before); the relay
-     * translation store is consulted afterwards, so a relayed answer both completes
-     * the future returned by {@code relay} and is forwarded upstream with its
-     * original hop-by-hop identifier restored (RFC 6733 §6.2.2). An answer matching
-     * neither is logged as unsolicited.</p>
+     * <p>A relayed answer (one with a relay translation) is first forwarded upstream
+     * with its original hop-by-hop identifier restored (RFC 6733 §6.2.2), then the
+     * future returned by {@code relay} completes normally with it — E-bit answers
+     * included, since forwarding them is a successful relay. For plain requests an
+     * E-bit answer fails the future with {@link DiameterErrorAnswerException}
+     * (ADR-0009). An answer matching neither map is logged as unsolicited.</p>
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected void complete(final IncomingAnswer answer) {
-
+        final boolean relayed = sendAnswerRestored(answer);
         final PendingRequest pending = pendingRequests.remove(answer.hopByHopId());
-        if (pending != null) {
-            pending.timeoutTask.cancel(false);
-            meters.stopRequestTimer(pending.timerSample, pending.commandCode, pending.applicationId);
-            if (answer instanceof final ErrorAnswer.In errorAnswer) {
-                final var cause = new DiameterErrorAnswerException(errorAnswer);
-                meters.recordOutgoingRequestError(pending.commandCode, pending.applicationId, cause);
-                pending.future.completeExceptionally(cause);
-            } else {
-                pending.future.complete(answer);
+        if (pending == null) {
+            if (!relayed) {
+                LOGGER.warn("found no pending request for answer with hop-by-hop id: {}", answer.hopByHopId());
             }
-        }
-
-        if (relayTranslations.contains(answer.hopByHopId())) {
-            sendAnswerRestored(answer);
             return;
         }
-
-        if (pending == null) {
-            LOGGER.warn("found no pending request for answer with hop-by-hop id: {}", answer.hopByHopId());
+        pending.timeoutTask.cancel(false);
+        meters.stopRequestTimer(pending.timerSample, pending.commandCode, pending.applicationId);
+        if (answer instanceof final ErrorAnswer.In errorAnswer) {
+            final var cause = new DiameterErrorAnswerException(errorAnswer);
+            meters.recordOutgoingRequestError(pending.commandCode, pending.applicationId, cause);
+            if (!relayed) {
+                pending.future.completeExceptionally(cause);
+                return;
+            }
         }
+        pending.future.complete(answer);
     }
 
     private void timeout(final HopByHopId hopByHop, final long timeoutMs) {
