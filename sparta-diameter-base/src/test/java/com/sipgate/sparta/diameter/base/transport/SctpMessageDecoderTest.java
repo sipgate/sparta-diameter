@@ -64,6 +64,24 @@ class SctpMessageDecoderTest {
     }
 
     @Test
+    void it_decodes_a_sctp_message_with_unspecified_ppid_0_as_diameter() throws Exception {
+        // GIVEN: many peers send PPID 0 instead of 46
+        final EmbeddedChannel channel = newDecoder();
+        final DeviceWatchdogRequest.Out dwr = new DeviceWatchdogRequest.Out();
+
+        // WHEN
+        channel.writeInbound(diameterMessage(
+                SctpPayloadProtocolId.UNSPECIFIED, 0, true, dwr, new HopByHopId(0x10), new EndToEndId(0x20)));
+        final IncomingCommand decoded = channel.readInbound();
+
+        // THEN
+        assertThat(decoded).isInstanceOf(DeviceWatchdogRequest.In.class);
+        assertThat(decoded.hopByHopId()).isEqualTo(new HopByHopId(0x10));
+
+        channel.finish();
+    }
+
+    @Test
     void it_drops_a_sctp_message_with_foreign_ppid() throws Exception {
         // GIVEN
         final EmbeddedChannel channel = newDecoder();

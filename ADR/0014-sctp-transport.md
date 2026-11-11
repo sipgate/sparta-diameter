@@ -47,8 +47,9 @@ pipeline is otherwise a mirror of the TCP one:
 
 - Inbound: `SctpMessageCompletionHandler` reassembles fragmented SCTP messages,
   then `SctpMessageDecoder` unwraps the payload into a `ByteBuf` for the shared
-  `DiameterMessageDecoder`. Only PPID 46 (DIAMETER, cleartext, per RFC 6733 §2.1.1) is processed;
-  PPID 47 (DTLS) is dropped with a warning. The stream identifier and unordered flag are logged at
+  `DiameterMessageDecoder`. Only PPID 46 (DIAMETER, cleartext, per RFC 6733 §2.1.1) and PPID 0
+  (unspecified — sent by many peers instead of 46) are processed; PPID 47 (DTLS) and anything else
+  is dropped with a warning. The stream identifier and unordered flag are logged at
   debug level.
 - Outbound: `SctpRequestEncoder`/`SctpAnswerEncoder` wrap each message into a single `SctpMessage`
   on **stream 0 with the unordered delivery flag set** and PPID 46 — the mapping RFC 6733 §2.1.1
