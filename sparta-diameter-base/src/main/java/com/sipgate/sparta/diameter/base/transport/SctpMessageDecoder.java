@@ -19,7 +19,8 @@ import java.util.List;
  * {@code LengthFieldBasedFrameDecoder} is used.</p>
  *
  * <p>Only messages with payload protocol identifier
- * {@link SctpPayloadProtocolId#DIAMETER} are processed; anything else (e.g.
+ * {@link SctpPayloadProtocolId#DIAMETER} or {@link SctpPayloadProtocolId#UNSPECIFIED}
+ * (0 — sent by many peers instead of 46) are processed; anything else (e.g.
  * {@link SctpPayloadProtocolId#DTLS}) is dropped with a warning. The stream identifier
  * and the unordered-delivery flag are logged at debug level.</p>
  */
@@ -30,7 +31,8 @@ public final class SctpMessageDecoder extends MessageToMessageDecoder<SctpMessag
     @Override
     protected void decode(final ChannelHandlerContext ctx, final SctpMessage msg, final List<Object> out) {
         final int payloadProtocolId = msg.protocolIdentifier();
-        if (payloadProtocolId != SctpPayloadProtocolId.DIAMETER) {
+        if (payloadProtocolId != SctpPayloadProtocolId.DIAMETER
+                && payloadProtocolId != SctpPayloadProtocolId.UNSPECIFIED) {
             LOGGER.warn("dropping SCTP message with unsupported payload protocol id {} on stream {} (unordered: {})",
                     payloadProtocolId, msg.streamIdentifier(), msg.isUnordered());
             return;
@@ -41,8 +43,8 @@ public final class SctpMessageDecoder extends MessageToMessageDecoder<SctpMessag
                     msg.streamIdentifier(), msg.isUnordered());
             return;
         }
-        LOGGER.debug("processing SCTP Diameter message on stream {} (unordered: {})",
-                msg.streamIdentifier(), msg.isUnordered());
+        LOGGER.debug("processing SCTP Diameter message (payload protocol id {}) on stream {} (unordered: {})",
+                payloadProtocolId, msg.streamIdentifier(), msg.isUnordered());
         // MessageToMessageDecoder releases the (refcounted) message after decode;
         // retain the payload so it survives into the next handler.
         out.add(msg.content().retain());
