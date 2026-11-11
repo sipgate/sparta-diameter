@@ -101,15 +101,28 @@ public final class DiameterNode implements Closeable {
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
     private final DiameterTransportMeters transportMeters;
+    private final boolean relay;
 
     public DiameterNode() {
         this(new SimpleMeterRegistry());
     }
 
     public DiameterNode(final MeterRegistry meterRegistry) {
+        this(meterRegistry, false);
+    }
+
+    /**
+     * @param relay {@code true} for a relay agent (DRA): proxiable messages with an
+     *              unrecognized M-bit AVP are decoded and kept opaque instead of being
+     *              rejected with {@code DIAMETER_AVP_UNSUPPORTED} (5001) — a relay forwards
+     *              AVPs it does not understand (RFC 6733 §2.8.1, §6.1). Endpoints keep the
+     *              default {@code false} (strict).
+     */
+    public DiameterNode(final MeterRegistry meterRegistry, final boolean relay) {
         this.bossGroup = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory());
         this.workerGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
         this.transportMeters = new DiameterTransportMeters(meterRegistry);
+        this.relay = relay;
     }
 
     /**
@@ -364,7 +377,7 @@ public final class DiameterNode implements Closeable {
                             LENGTH_FIELD_LENGTH,
                             LENGTH_ADJUSTMENT,
                             INITIAL_BYTES_TO_STRIP))
-                    .addLast(new DiameterMessageDecoder(transportMeters))
+                    .addLast(new DiameterMessageDecoder(transportMeters, relay))
                     .addLast(new OutgoingAnswerEncoder())
                     .addLast(new OutgoingRequestEncoder())
                     .addLast(new DiameterPeerHandler(factory.get(), direction, transportMeters));
@@ -397,7 +410,7 @@ public final class DiameterNode implements Closeable {
             ch.pipeline()
                     .addLast(new SctpMessageCompletionHandler())
                     .addLast(new SctpMessageDecoder())
-                    .addLast(new DiameterMessageDecoder(transportMeters))
+                    .addLast(new DiameterMessageDecoder(transportMeters, relay))
                     .addLast(new SctpAnswerEncoder())
                     .addLast(new SctpRequestEncoder())
                     .addLast(new DiameterPeerHandler(factory.get(), direction, transportMeters));

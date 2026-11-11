@@ -29,7 +29,7 @@ class SctpMessageDecoderTest {
         return new EmbeddedChannel(
             new SctpMessageCompletionHandler(),
             new SctpMessageDecoder(),
-            new DiameterMessageDecoder(new DiameterTransportMeters(new SimpleMeterRegistry()))
+            new DiameterMessageDecoder(new DiameterTransportMeters(new SimpleMeterRegistry()), false)
         );
     }
 

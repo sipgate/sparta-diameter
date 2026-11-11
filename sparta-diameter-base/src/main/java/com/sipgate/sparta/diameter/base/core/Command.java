@@ -31,11 +31,13 @@ public abstract class Command implements
     // Diameter header fields
     private final int version;
     private final int commandCode;
-    private final boolean request;
-    private final boolean proxiable;
-    private final boolean error;
+    // Not final: parseMessage overwrites them with the wire header values, because typed
+    // incoming classes are constructed with class constants (e.g. proxiable=true).
+    private boolean request;
+    private boolean proxiable;
+    private boolean error;
     private boolean retransmitted;
-    private final int applicationId;
+    private int applicationId;
 
     // AVPs contained in this command
     private final List<AVP> avps;
@@ -275,18 +277,32 @@ public abstract class Command implements
 
     /**
      * Parses a Diameter message from a ByteBuffer and returns it as an {@link IncomingCommand}.
+     * Strict endpoint parsing: an unrecognized M-bit AVP in a known command fails with 5001.
      */
     public static IncomingCommand parseMessage(final ByteBuffer buffer) throws DiameterException {
+        return parseMessage(buffer, false);
+    }
+
+    /**
+     * Parses a Diameter message from a ByteBuffer and returns it as an {@link IncomingCommand}.
+     *
+     * @param relay {@code true} on a relay agent: in a proxiable (P-bit) message an unrecognized
+     *              M-bit AVP is kept opaque instead of failing with 5001 (RFC 6733 §2.8.1/§6.1:
+     *              relays forward AVPs they do not understand). Non-proxiable messages
+     *              (CER/DWR/DPR, consumed locally) stay strict.
+     */
+    public static IncomingCommand parseMessage(final ByteBuffer buffer, final boolean relay) throws DiameterException {
         final int messageLength = getMessageLength(buffer);
         if (buffer.remaining() < messageLength) {
             throw new DiameterException("Invalid Diameter message: too short");
         }
 
-        return parseMessage(buffer, messageLength);
+        return parseMessage(buffer, messageLength, relay);
     }
 
     private static IncomingCommand parseMessage(final ByteBuffer byteBuffer,
-                                                final int messageLength) throws DiameterException {
+                                                final int messageLength,
+                                                final boolean relay) throws DiameterException {
         try {
             // Read the complete 20-byte header before any error checks, so that
             // DiameterResultCodeException and AVPParseException can carry all header
@@ -311,13 +327,33 @@ public abstract class Command implements
 
             if (version != DiameterConstants.DIAMETER_VERSION) {
                 throw new DiameterResultCodeException(
-                        DiameterConstants.RES_DIAMETER_UNSUPPORTED_VERSION,
-                        commandCode, proxiable, applicationId, hopByHop, endToEnd, null);
+                        DiameterConstants.RES_DIAMETER_UNSUPPORTED_VERSION, isRequest,
+                        commandCode, proxiable, applicationId, hopByHop, endToEnd, null, null);
             }
+
+            final IncomingCommand command = DiameterMessageFactory.createForParsing(
+                    commandCode, applicationId, isRequest, proxiable, isError, hopByHop, endToEnd, isRetransmitted);
+            // Typed In classes hard-code their header flags and Application-Id; the received
+            // message must reflect what was actually on the wire (e.g. a P=0 request must not be
+            // presented as proxiable and thus relayed).
+            final Command parsed = (Command) command;
+            parsed.request = isRequest;
+            parsed.proxiable = proxiable;
+            parsed.error = isError;
+            parsed.retransmitted = isRetransmitted;
+            parsed.applicationId = applicationId;
+            // A command no factory knows is never interpreted locally: it is relayed opaquely
+            // (fallback handler) or answered 3001. Its AVPs are not ours to judge, so an
+            // unrecognized M-bit AVP must not turn it into a 5001 (RFC 6733 §2.8.1: relays do
+            // not need to understand non-routing AVPs) - e.g. SWx ANID/Non-3GPP-User-Data on a
+            // DRA without the SWx dictionary. The same holds for a known proxiable command on a
+            // relay node: it is forwarded, not interpreted.
+            final boolean opaque = command instanceof GenericRequest || command instanceof GenericAnswer.In
+                    || (relay && proxiable);
 
             final List<AVP> avps = new ArrayList<>();
             try {
-                parseAVPs(byteBuffer, messageLength - 20, avps);
+                parseAVPs(byteBuffer, messageLength - 20, avps, opaque);
             } catch (final AVPParseException e) {
                 final var sessionIdKey = new AVPKey(DiameterConstants.AVP_SESSION_ID, 0);
                 final var sessionId = avps.stream()
@@ -326,14 +362,26 @@ public abstract class Command implements
                     .map(AVP::getDataAsString)
                     .orElse(null);
 
-                // the exception from parseAVPs doesn't know about the context so we must enrich it here.
-                throw new AVPParseException(e.getResultCode(),
-                    commandCode, proxiable, applicationId, hopByHop, endToEnd,
-                    e.getOffendingAvp(), sessionId, e);
-            }
+                final var proxyInfoKey = new AVPKey(DiameterConstants.AVP_PROXY_INFO, 0);
+                final List<AVP> proxyInfos = new ArrayList<>();
+                for (final AVP avp : avps) {
+                    if (avp.isSameKey(proxyInfoKey)) {
+                        proxyInfos.add(avp);
+                    }
+                }
 
-            final IncomingCommand command = DiameterMessageFactory.createForParsing(
-                    commandCode, applicationId, isRequest, proxiable, isError, hopByHop, endToEnd, isRetransmitted);
+                // mirrored into the answer (RFC 6733 §8.11), like the typed answers do
+                final var authSessionStateKey = new AVPKey(DiameterConstants.AVP_AUTH_SESSION_STATE, 0);
+                final AVP authSessionState = avps.stream()
+                    .filter(avp -> avp.isSameKey(authSessionStateKey))
+                    .findFirst()
+                    .orElse(null);
+
+                // the exception from parseAVPs doesn't know about the context so we must enrich it here.
+                throw new AVPParseException(e.getResultCode(), isRequest,
+                    commandCode, proxiable, applicationId, hopByHop, endToEnd,
+                    e.getOffendingAvp(), sessionId, proxyInfos, authSessionState, e);
+            }
 
             for (final AVP avp : avps) {
                 ((Command) command).avps.add(avp);
@@ -356,15 +404,17 @@ public abstract class Command implements
      * @param byteBuffer      the ByteBuffer to read from
      * @param remainingLength the number of bytes remaining in the message after the header
      * @param avps will be modified within the function, filled with each parsed AVP
+     * @param acceptUnknownMandatory keep unrecognized M-bit AVPs instead of failing with 5001
      * @throws IOException       if an I/O error occurs while reading the AVPs
      * @throws AVPParseException if the first AVP in the buffer violates RFC 6733
      */
-    private static void parseAVPs(final ByteBuffer byteBuffer, final int remainingLength, final List<AVP> avps)
+    private static void parseAVPs(final ByteBuffer byteBuffer, final int remainingLength, final List<AVP> avps,
+                                  final boolean acceptUnknownMandatory)
             throws IOException, AVPParseException {
         int bytesRead = 0;
 
         while (bytesRead < remainingLength) {
-            final AVP avp = AVP.readFrom(byteBuffer);
+            final AVP avp = AVP.readFrom(byteBuffer, acceptUnknownMandatory);
             avps.add(avp);
             final int padding = (4 - (avp.calculateLength() % 4)) % 4;
             bytesRead += avp.calculateLength() + padding;

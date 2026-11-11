@@ -14,13 +14,18 @@ import java.util.List;
  * Must be placed after a {@link io.netty.handler.codec.LengthFieldBasedFrameDecoder}
  * in the pipeline so that each {@code msg} contains exactly one complete
  * Diameter message.
+ *
+ * <p>With {@code relay} set, proxiable messages are parsed leniently (see
+ * {@link Command#parseMessage(ByteBuffer, boolean)}).</p>
  */
 public final class DiameterMessageDecoder extends MessageToMessageDecoder<ByteBuf> {
 
     private final DiameterTransportMeters transportMeters;
+    private final boolean relay;
 
-    DiameterMessageDecoder(final DiameterTransportMeters transportMeters) {
+    DiameterMessageDecoder(final DiameterTransportMeters transportMeters, final boolean relay) {
         this.transportMeters = transportMeters;
+        this.relay = relay;
     }
 
     @Override
@@ -28,7 +33,7 @@ public final class DiameterMessageDecoder extends MessageToMessageDecoder<ByteBu
                           final List<Object> out) throws Exception {
         final ByteBuffer buffer = msg.nioBuffer();
         try {
-            out.add(Command.parseMessage(buffer));
+            out.add(Command.parseMessage(buffer, relay));
         } catch (final Exception e) {
             transportMeters.recordDecodeError();
             throw e;
