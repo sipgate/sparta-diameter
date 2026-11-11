@@ -487,7 +487,7 @@ public abstract class DiameterSession {
         if (peer == null) {
             LOGGER.info("disconnected");
         } else {
-            LOGGER.info("disconnected local {} and remote {}", peer.localAddress(), peer.remoteAddress());
+            LOGGER.info("disconnected local {} and remote {}", peer.localAddressesForLog(), peer.remoteAddress());
         }
 
         stopWatchdog();
