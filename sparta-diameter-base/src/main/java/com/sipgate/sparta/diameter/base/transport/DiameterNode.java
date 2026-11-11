@@ -159,15 +159,33 @@ public final class DiameterNode implements Closeable {
         if (serverLocalAddresses != null) {
             throw new IllegalArgumentException("serverLocalAddresses requires Transport.SCTP");
         }
-        return doListenTcp(port, factory);
+        return doListenTcp(new InetSocketAddress(port), factory);
     }
 
-    private ChannelFuture doListenTcp(final int port, final Supplier<DiameterResponderSession> factory) {
+    /**
+     * Starts listening for incoming Diameter connections over TCP on one local address only
+     * (instead of the wildcard address the other TCP overloads bind to).
+     *
+     * <pre>{@code
+     * node.listen(InetAddress.getByName("10.0.0.1"), 3868, () -> new DiameterResponderSession(config));
+     * }</pre>
+     *
+     * @param bindAddress the local address to bind; {@code null} binds the wildcard address
+     *                    (same as {@link #listen(int, Supplier)})
+     */
+    public ChannelFuture listen(final InetAddress bindAddress, final int port,
+                                final Supplier<DiameterResponderSession> factory) {
+        LOGGER.info("starting to listen on {}:{} over {}", bindAddress, port, Transport.TCP);
+        return doListenTcp(new InetSocketAddress(bindAddress, port), factory);
+    }
+
+    private ChannelFuture doListenTcp(final InetSocketAddress localAddress,
+                                      final Supplier<DiameterResponderSession> factory) {
         return new ServerBootstrap()
                 .group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
                 .childHandler(new TcpInitializer(factory, DiameterTransportMeters.DIRECTION_INBOUND))
-                .bind(port)
+                .bind(localAddress)
                 .addListener(f -> {
                     if (!f.isSuccess()) {
                         transportMeters.recordListenError(f.cause());
