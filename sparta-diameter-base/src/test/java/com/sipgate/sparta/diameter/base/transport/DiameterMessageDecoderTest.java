@@ -27,7 +27,7 @@ class DiameterMessageDecoderTest {
         final var meters = new DiameterTransportMeters(new SimpleMeterRegistry());
         return new EmbeddedChannel(
             new LengthFieldBasedFrameDecoder(MAX_FRAME_LENGTH, 1, 3, -4, 0),
-            new DiameterMessageDecoder(meters)
+            new DiameterMessageDecoder(meters, false)
         );
     }
 

@@ -6,7 +6,8 @@ import java.io.IOException;
 /**
  * Generic command for unknown or unsupported command codes.
  * <p>
- * {@code In} is used when an unrecognised command arrives from the wire.
+ * The parser produces {@link GenericRequest} / {@link GenericAnswer.In} for unrecognised
+ * commands; {@code In} is kept for API compatibility.
  * {@code Out} is used for relay or forwarding use cases where the caller
  * supplies the full header context explicitly.
  * </p>

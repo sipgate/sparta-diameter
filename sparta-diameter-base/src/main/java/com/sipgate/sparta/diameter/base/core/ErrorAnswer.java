@@ -33,7 +33,13 @@ public sealed interface ErrorAnswer
 
         public In(final int commandCode, final int applicationId,
                   final HopByHopId hopByHop, final EndToEndId endToEnd) {
-            super(commandCode, false, true, applicationId, hopByHop, endToEnd);
+            this(commandCode, false, applicationId, hopByHop, endToEnd);
+        }
+
+        /** Keeps the received P-bit, so a relayed error answer is forwarded unchanged. */
+        public In(final int commandCode, final boolean proxiable, final int applicationId,
+                  final HopByHopId hopByHop, final EndToEndId endToEnd) {
+            super(commandCode, proxiable, true, applicationId, hopByHop, endToEnd);
         }
 
         @Override
