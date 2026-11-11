@@ -16,8 +16,8 @@ with relay support; the design below describes the shipped code and one delibera
 - **P-bit skip**: both checks return immediately (no detection / all candidates unchanged) when
   `isProxiable()` is false — non-proxiable messages are never relayed (RFC 6733 §3), so route
   records on them are not loop evidence.
-- Both operate on *identities* (Origin-Host strings), compared with exact `String.equals` against
-  each Route-Record value.
+- Both operate on *identities* (Origin-Host strings), compared case-insensitively
+  (`equalsIgnoreCase`, DiameterIdentity is an FQDN) against each Route-Record value.
 
 ## `checkReceived(request, ownOriginHost)` — reactive detection (§6.1.3)
 

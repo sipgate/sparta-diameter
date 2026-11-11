@@ -43,6 +43,22 @@ class LoopDetectorTest {
     }
 
     @Test
+    void it_compares_identities_case_insensitively() throws Exception {
+        // GIVEN — DiameterIdentity is an FQDN; a peer may record it in another case
+        final IncomingRequest<?> request = parseRequest(proxiableRequestWithRouteRecords("DRA.Example.COM"));
+        final Map<String, DiameterPeer> candidates = new LinkedHashMap<>();
+        candidates.put("dra.example.com", mock(DiameterPeer.class));
+
+        // WHEN
+        final var verdict = LoopDetector.checkReceived(request, OWN_HOST);
+        final Map<String, DiameterPeer> remaining = LoopDetector.filterCandidates(request, candidates);
+
+        // THEN
+        assertThat(verdict).isPresent();
+        assertThat(remaining).isEmpty();
+    }
+
+    @Test
     void it_reports_no_loop_when_own_origin_host_is_not_in_a_route_record() throws Exception {
         // GIVEN
         final IncomingRequest<?> request = parseRequest(proxiableRequestWithRouteRecords("hss.example.com"));

@@ -21,6 +21,8 @@ import java.util.OptionalLong;
  * Both are skipped for non-proxiable requests (P-bit clear): those are never relayed
  * (RFC 6733 §3, P-bit definition), so route records on them are not loop evidence.</p>
  *
+ * <p>Identities are DiameterIdentity FQDNs and compared case-insensitively.</p>
+ *
  * <p>Route-Records are read via {@link HasRouteRecordAVPs}, which the proxiable base
  * request types (ASR, RAR, STR, ACR) implement; requests without that capability
  * are treated as having no route records.</p>
@@ -54,7 +56,7 @@ public final class LoopDetector {
             return OptionalLong.empty();
         }
         for (final String routeRecord : routeRecords(request)) {
-            if (ownOriginHost.equals(routeRecord)) {
+            if (ownOriginHost.equalsIgnoreCase(routeRecord)) {
                 return OptionalLong.of(DiameterConstants.RES_DIAMETER_LOOP_DETECTED);
             }
         }
@@ -102,7 +104,7 @@ public final class LoopDetector {
 
     private static boolean contains(final List<String> routeRecords, final String identity) {
         for (final String routeRecord : routeRecords) {
-            if (routeRecord.equals(identity)) {
+            if (routeRecord.equalsIgnoreCase(identity)) {
                 return true;
             }
         }
