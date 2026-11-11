@@ -83,6 +83,22 @@ class OriginStateIdTest {
     }
 
     @Test
+    void it_advertises_every_configured_host_ip_address_in_the_CER() throws Exception {
+        // GIVEN — an SCTP multi-homed node (RFC 6733 §5.3.5: all addresses MUST be listed)
+        final InetAddress second = InetAddress.getByName("10.0.0.2");
+        final DiameterNodeConfig config = new DiameterNodeConfig(
+                "dra.example.com", "example.com", java.util.List.of(LOCALHOST, second),
+                0L, "sparta", CAPABILITIES);
+        final DiameterInitiatorSession session = new DiameterInitiatorSession(config, (ignored) -> {});
+
+        // WHEN
+        final CapabilitiesExchangeRequest.Out cer = session.buildCerForTest();
+
+        // THEN
+        assertThat(cer.getHostIpAddresses()).containsExactly(LOCALHOST, second);
+    }
+
+    @Test
     void it_omits_the_origin_state_id_from_the_CER_when_not_configured() {
         // GIVEN — the value 0 means "do not allow peers to infer termination from it"
         // (RFC 6733 §8.16); default constructors create such a config
@@ -169,6 +185,20 @@ class OriginStateIdTest {
 
         // THEN — new value recorded, no restart inferred
         assertThat(DiameterSession.lastKnownRemoteOriginStateId("client-d1.example.com")).isEqualTo(3L);
+    }
+
+    @Test
+    void it_reads_an_origin_state_id_above_2_pow_31_as_unsigned() throws Exception {
+        // GIVEN — Origin-State-Id is Unsigned32; a time-based value can exceed 2^31
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        final DiameterResponderSession session = openedSession(peer);
+        final long large = 0xFFFF_FFF0L;
+
+        // WHEN
+        session.onMessage(incomingCer("client-f1.example.com", large));
+
+        // THEN — not negative, so it is recorded instead of being taken for "absent"
+        assertThat(DiameterSession.lastKnownRemoteOriginStateId("client-f1.example.com")).isEqualTo(large);
     }
 
     @Test
