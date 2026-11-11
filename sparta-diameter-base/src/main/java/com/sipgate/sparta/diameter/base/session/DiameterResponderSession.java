@@ -43,7 +43,7 @@ public class DiameterResponderSession extends DiameterSession {
 
     @Override
     public void onConnected(final DiameterPeer peer) {
-        LOGGER.info("remote {} connected to local {}", peer.remoteAddress(), peer.localAddress());
+        LOGGER.info("remote {} connected to local {}", peer.remoteAddress(), peer.localAddressesForLog());
         super.onConnected(peer);
     }
 

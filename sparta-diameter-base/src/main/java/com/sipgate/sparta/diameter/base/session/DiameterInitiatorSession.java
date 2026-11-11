@@ -60,7 +60,7 @@ public final class DiameterInitiatorSession extends DiameterSession {
 
     @Override
     public void onConnected(final DiameterPeer peer) {
-        LOGGER.info("local {} connected to remote {}", peer.localAddress(), peer.remoteAddress());
+        LOGGER.info("local {} connected to remote {}", peer.localAddressesForLog(), peer.remoteAddress());
         super.onConnected(peer);
         this.peerState = PeerState.WAIT_I_CEA;
         sendAndTrack(buildCer()).whenComplete((cea, err) -> {

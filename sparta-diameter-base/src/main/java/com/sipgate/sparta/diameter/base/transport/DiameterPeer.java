@@ -7,6 +7,7 @@ import com.sipgate.sparta.diameter.base.core.OutgoingRequest;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoop;
+import io.netty.channel.sctp.SctpChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,6 +102,18 @@ public final class DiameterPeer {
     }
 
     public SocketAddress localAddress() {
+        return channel.localAddress();
+    }
+
+    /**
+     * The local address(es) for log output. An SCTP association can have several local
+     * addresses (multi-homing, wildcard bind) and {@link #localAddress()} returns only the
+     * first of them, frequently the loopback; for SCTP this returns all of them.
+     */
+    public Object localAddressesForLog() {
+        if (channel instanceof final SctpChannel sctp) {
+            return sctp.allLocalAddresses();
+        }
         return channel.localAddress();
     }
 }
