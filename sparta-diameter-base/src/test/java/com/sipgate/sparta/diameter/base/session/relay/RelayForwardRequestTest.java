@@ -93,6 +93,35 @@ class RelayForwardRequestTest {
     }
 
     @Test
+    void it_carries_over_the_T_flag_of_a_retransmitted_request() throws Exception {
+        // GIVEN — a received retransmission (T flag set)
+        final IncomingRequest<?> received = new com.sipgate.sparta.diameter.base.core.GenericRequest(
+                99999, true, true, 16777251, new HopByHopId(1), new EndToEndId(2));
+
+        // WHEN
+        final RelayForwardRequest forward = new RelayForwardRequest(received);
+        final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        forward.writeTo(new DataOutputStream(bytes), new HopByHopId(3), new EndToEndId(2));
+
+        // THEN — RFC 6733 §3: the forwarded request still carries the T flag on the wire
+        assertThat(forward.isRetransmitted()).isTrue();
+        assertThat(bytes.toByteArray()[4] & 0x10).isEqualTo(0x10);
+    }
+
+    @Test
+    void it_leaves_the_T_flag_clear_for_a_first_transmission() {
+        // GIVEN
+        final IncomingRequest<?> received = new com.sipgate.sparta.diameter.base.core.GenericRequest(
+                99999, true, false, 16777251, new HopByHopId(1), new EndToEndId(2));
+
+        // WHEN
+        final RelayForwardRequest forward = new RelayForwardRequest(received);
+
+        // THEN
+        assertThat(forward.isRetransmitted()).isFalse();
+    }
+
+    @Test
     void it_rejects_a_null_received_request() {
         // GIVEN / WHEN / THEN
         assertThatThrownBy(() -> new RelayForwardRequest(null))
