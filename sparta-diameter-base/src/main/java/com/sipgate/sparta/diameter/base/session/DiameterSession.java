@@ -193,8 +193,7 @@ public abstract class DiameterSession {
      * requests already carry the original Origin AVPs per RFC 6733 §6.1.9 (all other
      * AVPs are forwarded unchanged as well), so stamping our own identity would be a
      * protocol violation. The application is responsible for appending a
-     * Route-Record AVP before calling {@code relay} (see
-     * {@code specs/loop-detection/01-requirements.md}).</p>
+     * Route-Record AVP before calling {@code relay} (see ADR-0015).</p>
      *
      * @param upstreamSession the session on whose connection {@code received} arrived;
                         the restored answer is sent to its peer

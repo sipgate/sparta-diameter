@@ -23,5 +23,5 @@ conformant. If retransmission is implemented it must follow these rules.
 
 Requires `specs/identifier-types/` to be complete (`HopByHopId`, `EndToEndId`,
 `OutgoingRequest` types must exist). The pending-requests map structure changes introduced here
-(`PendingRequest` record) are also a prerequisite for `specs/relay-support/` answer-path
-identifier restoration.
+(`PendingRequest` record) must keep working for the relay answer-path identifier restoration
+(ADR-0015).
