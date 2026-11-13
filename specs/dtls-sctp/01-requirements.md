@@ -45,7 +45,7 @@ Same requirements as TLS/TCP (see `specs/tls-tcp/`): MUST negotiate the three RS
 ## Acceptance criteria
 
 - `DiameterNode` accepts and initiates SCTP connections on port 3868 and DTLS/SCTP connections on port 5658.
-- Messages are sent over SCTP with the unordered flag set on stream zero by default.
+- Messages are sent over SCTP ordered on stream zero (ADR-0014: the CER/CEA and DPR/DPA state handling depends on order; this is the §2.1.1 "other approach" and also avoids the responder and DPR races).
 - PPID 46 (cleartext) and 47 (DTLS) are set on outbound SCTP packets.
 - Mutual DTLS authentication is enforced; connections without a valid client certificate are rejected.
 - The DTLS handshake failure moves the connection to the closed state.

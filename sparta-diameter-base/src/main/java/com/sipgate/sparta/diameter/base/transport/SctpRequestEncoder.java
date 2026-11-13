@@ -11,15 +11,15 @@ import java.util.List;
 
 /**
  * Outbound adapter for the SCTP transport: serializes an {@link OutgoingRequestEnvelope}
- * into a single {@link SctpMessage} on stream 0 with the unordered delivery flag set and
- * the payload protocol identifier {@link SctpPayloadProtocolId#DIAMETER}. Hop-by-hop and
+ * into a single {@link SctpMessage} on stream 0 with ordered delivery and the payload
+ * protocol identifier {@link SctpPayloadProtocolId#DIAMETER} (ordered for the same reason as
+ * {@link SctpAnswerEncoder}: CER/CEA and DPR/DPA state handling depends on it). Hop-by-hop and
  * end-to-end identifiers are stamped into the header at encode time, exactly like
  * {@link OutgoingRequestEncoder} does for TCP.
  */
 public final class SctpRequestEncoder extends MessageToMessageEncoder<OutgoingRequestEnvelope> {
 
     private static final int DIAMETER_STREAM = 0;
-    private static final boolean DIAMETER_UNORDERED = true;
 
     @Override
     protected void encode(final ChannelHandlerContext ctx, final OutgoingRequestEnvelope envelope,
@@ -34,7 +34,7 @@ public final class SctpRequestEncoder extends MessageToMessageEncoder<OutgoingRe
             buffer.release();
             throw e;
         }
-        // Netty 4.2 ctor: (protocolIdentifier, streamIdentifier, unordered, content)
-        out.add(new SctpMessage(SctpPayloadProtocolId.DIAMETER, DIAMETER_STREAM, DIAMETER_UNORDERED, buffer));
+        // Netty ctor (protocolIdentifier, streamIdentifier, content): ordered delivery
+        out.add(new SctpMessage(SctpPayloadProtocolId.DIAMETER, DIAMETER_STREAM, buffer));
     }
 }

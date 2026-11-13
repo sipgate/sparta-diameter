@@ -100,8 +100,8 @@ class SctpMessageDecoderTest {
 
     @Test
     void it_processes_an_unordered_message_on_a_nonzero_stream() throws Exception {
-        // GIVEN: the receiver must be ready for arbitrary streams (RFC 6733 §2.1.1, unordered stream-0
-        // is the default send mode, but a peer may legally send on other streams)
+        // GIVEN: the receiver must be ready for arbitrary streams and unordered delivery
+        // (RFC 6733 §2.1.1: unordered stream-0 is the recommended send mode for peers)
         final EmbeddedChannel channel = newDecoder();
         final DeviceWatchdogRequest.Out dwr = new DeviceWatchdogRequest.Out();
 
@@ -132,10 +132,10 @@ class SctpMessageDecoderTest {
         outbound.writeOutbound(new OutgoingRequestEnvelope(dwr, hopByHop, endToEnd));
         final SctpMessage wire = outbound.readOutbound();
 
-        // THEN: ...it must be stream 0, unordered, PPID 46...
+        // THEN: ...it must be stream 0, ordered, PPID 46...
         assertThat(wire.protocolIdentifier()).isEqualTo(SctpPayloadProtocolId.DIAMETER);
         assertThat(wire.streamIdentifier()).isZero();
-        assertThat(wire.isUnordered()).isTrue();
+        assertThat(wire.isUnordered()).isFalse();
 
         // ...and it must survive the full inbound decode chain as the original request
         channel.writeInbound(wire);

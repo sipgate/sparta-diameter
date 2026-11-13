@@ -45,7 +45,7 @@ import java.util.function.Supplier;
  *
  * <p><strong>SCTP</strong> (plain, no DTLS &mdash; see {@code specs/dtls-sctp}): SCTP preserves
  * message boundaries, so no length framing is needed. Diameter messages travel as
- * individual {@link io.netty.channel.sctp.SctpMessage}s on stream 0 with unordered
+ * individual {@link io.netty.channel.sctp.SctpMessage}s on stream 0 with ordered
  * delivery and the payload protocol identifier {@link SctpPayloadProtocolId#DIAMETER}
  * (46), per RFC 6733 &sect;2.1.1. Inbound, a
  * {@link io.netty.handler.codec.sctp.SctpMessageCompletionHandler} reassembles any
@@ -392,7 +392,7 @@ public final class DiameterNode implements Closeable {
      *     <li>{@link SctpMessageDecoder} unwraps {@code SctpMessage}s (PPID check) into
      *     {@code ByteBuf}s for the shared {@link DiameterMessageDecoder}</li>
      *     <li>{@link SctpAnswerEncoder}/{@link SctpRequestEncoder} wrap outgoing messages
-     *     in {@code SctpMessage}s (stream 0, unordered, PPID 46)</li>
+     *     in {@code SctpMessage}s (stream 0, ordered, PPID 46)</li>
      * </ul>
      */
     private final class SctpInitializer extends ChannelInitializer<Channel> {

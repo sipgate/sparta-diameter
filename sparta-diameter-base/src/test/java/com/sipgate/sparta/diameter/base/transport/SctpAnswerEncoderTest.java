@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Unit test for {@link SctpAnswerEncoder} and {@link SctpRequestEncoder}: both serialize
- * outgoing messages into {@link SctpMessage}s with stream 0, unordered delivery and
+ * outgoing messages into {@link SctpMessage}s with stream 0, ordered delivery and
  * PPID {@link SctpPayloadProtocolId#DIAMETER}. The encoded payload must be byte-identical
  * to the TCP encoders' output (same {@code writeTo} path).
  */
@@ -47,7 +47,7 @@ class SctpAnswerEncoderTest {
     }
 
     @Test
-    void it_wraps_an_answer_in_an_unordered_stream_zero_message_with_ppid_46() {
+    void it_wraps_an_answer_in_an_ordered_stream_zero_message_with_ppid_46() {
         // GIVEN
         final OutgoingAnswer answer = DiameterMessageFactory.createAnswer(
                 (DeviceWatchdogRequest.In) incomingDwr(), DiameterConstants.RES_DIAMETER_SUCCESS);
@@ -58,12 +58,12 @@ class SctpAnswerEncoderTest {
         // THEN
         assertThat(message.protocolIdentifier()).isEqualTo(SctpPayloadProtocolId.DIAMETER);
         assertThat(message.streamIdentifier()).isZero();
-        assertThat(message.isUnordered()).isTrue();
+        assertThat(message.isUnordered()).isFalse();
         assertThat(message.content().readableBytes()).isGreaterThanOrEqualTo(20); // Diameter header
     }
 
     @Test
-    void it_wraps_a_request_in_an_unordered_stream_zero_message_with_ppid_46() {
+    void it_wraps_a_request_in_an_ordered_stream_zero_message_with_ppid_46() {
         // GIVEN
         final DeviceWatchdogRequest.Out dwr = new DeviceWatchdogRequest.Out();
 
@@ -73,7 +73,7 @@ class SctpAnswerEncoderTest {
         // THEN
         assertThat(message.protocolIdentifier()).isEqualTo(SctpPayloadProtocolId.DIAMETER);
         assertThat(message.streamIdentifier()).isZero();
-        assertThat(message.isUnordered()).isTrue();
+        assertThat(message.isUnordered()).isFalse();
         assertThat(message.content().readableBytes()).isGreaterThanOrEqualTo(20);
     }
 
