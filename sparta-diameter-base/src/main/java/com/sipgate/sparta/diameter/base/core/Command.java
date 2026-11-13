@@ -31,19 +31,33 @@ public abstract class Command implements
     // Diameter header fields
     private final int version;
     private final int commandCode;
-    // Not final: parseMessage overwrites them with the wire header values, because typed
-    // incoming classes are constructed with class constants (e.g. proxiable=true).
-    private boolean request;
-    private boolean proxiable;
-    private boolean error;
+    private final boolean request;
+    private final boolean proxiable;
+    private final boolean error;
     private boolean retransmitted;
-    private int applicationId;
+    private final int applicationId;
 
     // AVPs contained in this command
     private final List<AVP> avps;
 
     /**
+     * Header flags and Application-Id of the message currently being parsed on this thread.
+     * Typed incoming classes pass class constants (e.g. proxiable=true) to the constructor; while
+     * {@link #parseMessage} builds the command, the first {@code Command} constructed on the thread
+     * takes these wire values instead, so a parsed message reflects what was actually received.
+     */
+    private static final ThreadLocal<WireHeader> PARSED_WIRE_HEADER = new ThreadLocal<>();
+
+    private record WireHeader(boolean request, boolean proxiable, boolean error,
+                              boolean retransmitted, int applicationId) {
+    }
+
+    /**
      * Constructs a Diameter command with the specified parameters.
+     * <p>
+     * When constructed while {@link #parseMessage} builds a received message, the header flags
+     * and Application-Id are taken from the wire instead of the given arguments.
+     * </p>
      *
      * @param commandCode   The command code of the message.
      * @param request       Indicates whether the message is a request.
@@ -56,11 +70,22 @@ public abstract class Command implements
                       final boolean error, final boolean retransmitted, final int applicationId) {
         this.version = 1; // Diameter version is always 1
         this.commandCode = commandCode;
-        this.request = request;
-        this.proxiable = proxiable;
-        this.error = error;
-        this.retransmitted = retransmitted;
-        this.applicationId = applicationId;
+        final WireHeader wireHeader = PARSED_WIRE_HEADER.get();
+        if (wireHeader != null) {
+            // consumed once: only the parsed command itself takes the wire values
+            PARSED_WIRE_HEADER.remove();
+            this.request = wireHeader.request();
+            this.proxiable = wireHeader.proxiable();
+            this.error = wireHeader.error();
+            this.retransmitted = wireHeader.retransmitted();
+            this.applicationId = wireHeader.applicationId();
+        } else {
+            this.request = request;
+            this.proxiable = proxiable;
+            this.error = error;
+            this.retransmitted = retransmitted;
+            this.applicationId = applicationId;
+        }
         this.avps = new ArrayList<>();
     }
 
@@ -331,17 +356,17 @@ public abstract class Command implements
                         commandCode, proxiable, applicationId, hopByHop, endToEnd, null, null);
             }
 
-            final IncomingCommand command = DiameterMessageFactory.createForParsing(
-                    commandCode, applicationId, isRequest, proxiable, isError, hopByHop, endToEnd, isRetransmitted);
             // Typed In classes hard-code their header flags and Application-Id; the received
             // message must reflect what was actually on the wire (e.g. a P=0 request must not be
-            // presented as proxiable and thus relayed).
-            final Command parsed = (Command) command;
-            parsed.request = isRequest;
-            parsed.proxiable = proxiable;
-            parsed.error = isError;
-            parsed.retransmitted = isRetransmitted;
-            parsed.applicationId = applicationId;
+            // presented as proxiable and thus relayed), so the constructor takes them from here.
+            final IncomingCommand command;
+            PARSED_WIRE_HEADER.set(new WireHeader(isRequest, proxiable, isError, isRetransmitted, applicationId));
+            try {
+                command = DiameterMessageFactory.createForParsing(
+                        commandCode, applicationId, isRequest, proxiable, isError, hopByHop, endToEnd, isRetransmitted);
+            } finally {
+                PARSED_WIRE_HEADER.remove();
+            }
             // A command no factory knows is never interpreted locally: it is relayed opaquely
             // (fallback handler) or answered 3001. Its AVPs are not ours to judge, so an
             // unrecognized M-bit AVP must not turn it into a 5001 (RFC 6733 §2.8.1: relays do
@@ -372,10 +397,7 @@ public abstract class Command implements
 
                 // mirrored into the answer (RFC 6733 §8.11), like the typed answers do
                 final var authSessionStateKey = new AVPKey(DiameterConstants.AVP_AUTH_SESSION_STATE, 0);
-                final AVP authSessionState = avps.stream()
-                    .filter(avp -> avp.isSameKey(authSessionStateKey))
-                    .findFirst()
-                    .orElse(null);
+                final AVP authSessionState = findFirstAVP(avps, authSessionStateKey);
 
                 // the exception from parseAVPs doesn't know about the context so we must enrich it here.
                 throw new AVPParseException(e.getResultCode(), isRequest,
@@ -392,6 +414,15 @@ public abstract class Command implements
         } catch (final IOException e) {
             throw new DiameterException("Error parsing Diameter message", e);
         }
+    }
+
+    private static AVP findFirstAVP(final List<AVP> avps, final AVPKey key) {
+        for (final AVP avp : avps) {
+            if (avp.isSameKey(key)) {
+                return avp;
+            }
+        }
+        return null;
     }
 
     /**

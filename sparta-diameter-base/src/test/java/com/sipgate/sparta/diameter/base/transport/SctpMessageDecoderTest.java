@@ -150,6 +150,7 @@ class SctpMessageDecoderTest {
 
     @Test
     void it_reports_ppid_46_as_the_diameter_payload_id() {
+        // WHEN / THEN
         assertThat(SctpPayloadProtocolId.DIAMETER).isEqualTo(46);
         assertThat(SctpPayloadProtocolId.DTLS).isEqualTo(47);
     }

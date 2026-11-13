@@ -159,7 +159,9 @@ public final class DiameterNode implements Closeable {
      *                             primary bind address, further entries are added with
      *                             {@code NioSctpServerChannel.bindAddress(InetAddress)} once the
      *                             server channel is active (the {@code sctp_bindx} equivalent).
-     *                             May be {@code null} for TCP or for SCTP without extra addresses
+     *                             Must be {@code null} for TCP and non-null, non-empty for SCTP
+     * @throws NullPointerException     for {@link Transport#SCTP} when {@code serverLocalAddresses}
+     *                                  is null
      * @throws IllegalArgumentException for {@link Transport#SCTP} when {@code serverLocalAddresses}
      *                                  is empty, or for {@link Transport#TCP} when it is non-null
      */
@@ -270,8 +272,10 @@ public final class DiameterNode implements Closeable {
      *                             (via {@code Bootstrap.localAddress(...)}, honoured by
      *                             {@code NioSctpChannel.doConnect}), further entries are added
      *                             with {@code NioSctpChannel.bindAddress(InetAddress)} once the
-     *                             channel is active. May be {@code null} for TCP or for SCTP
-     *                             without extra addresses
+     *                             channel is active. Must be {@code null} for TCP and non-null,
+     *                             non-empty for SCTP
+     * @throws NullPointerException     for {@link Transport#SCTP} when {@code clientLocalAddresses}
+     *                                  is null
      * @throws IllegalArgumentException for {@link Transport#SCTP} when {@code clientLocalAddresses}
      *                                  is empty, or for {@link Transport#TCP} when it is non-null
      */

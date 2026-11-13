@@ -33,6 +33,7 @@ class DiameterNodeSctpValidationTest {
 
     @Test
     void it_exposes_tcp_and_sctp_as_transports() {
+        // WHEN / THEN
         assertThat(DiameterNode.Transport.values()).containsExactly(
                 DiameterNode.Transport.TCP, DiameterNode.Transport.SCTP);
     }
