@@ -15,7 +15,7 @@ created: "2026-09-22"
 The Diameter Routing Agent (Yate-DRA successor) needs relay forwarding per RFC 6733 §6.1.9
 (request: minimal mutation, fresh hop-by-hop identifier, preserved end-to-end identifier, appended
 Route-Record) and §6.2.2 (answer: restore the original hop-by-hop identifier upstream). The
-original feature sketch (`specs/relay-support/01-requirements.md`) placed a dedicated
+original feature sketch (the relay-support spec, since removed) placed a dedicated
 `DiameterRelaySession` class in the session layer.
 
 Implementation showed that relay state is inherently **per-connection state**, which the session
@@ -77,12 +77,23 @@ mandatory Route-Record append).
 
 ### Loop detection
 
-`LoopDetector` implements RFC 6733 §6.1.3/§6.1.7 (see `specs/loop-detection/02-design.md`). The
+`LoopDetector` implements RFC 6733 §6.1.3/§6.1.7. The
 library contract for predictive avoidance: `filterCandidates` returns the surviving candidates as
 a map; **an empty map is the 3002 signal** — deciding and answering `DIAMETER_UNABLE_TO_DELIVER`
-is the caller's obligation, not the library's. Equally, `relay()` never appends the Route-Record:
+is the caller's obligation, not the library's. The library does not attempt alternate routes
+either; re-selection (same group, alternate groups) is routing policy of the caller. Equally, `relay()` never appends the Route-Record:
 **the caller hangs the Route-Record on** the forward frame (RFC 6733 §6.1.9: the relay identifies
 itself); the DRA service appends the egress identity's Route-Record before each hop.
+
+### Origin-State-Id restart memory is process-wide
+
+The application supplies the local Origin-State-Id in `DiameterNodeConfig` (0 omits the AVP); the
+library never generates it. The last Origin-State-Id seen per remote Origin-Host is kept in a
+`static` map on `DiameterSession`, not per session: sessions are per-connection and never reused
+across reconnects (ADR-0004), so per-session storage could never compare a peer's value with its
+previous connection. Accepted trade-off: there is no reset hook, and values survive a peer-list
+reconfiguration. A strictly higher value (peer restart, RFC 6733 §8.6/§8.16) is reported only as a
+WARN log; a restart callback with cleanup of affected sessions is left to a future feature.
 
 ## Consequences
 
@@ -107,4 +118,3 @@ itself); the DRA service appends the egress identity's Route-Record before each 
 
 - **See also:** ADR-0004 (per-connection session instances — the foundation for "relay state is
   connection state"), ADR-0014 (the SCTP transport the relay traffic rides).
-- Specs: `specs/relay-support/02-design.md` (request/answer sequence), `specs/loop-detection/02-design.md`.
