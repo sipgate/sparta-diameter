@@ -162,18 +162,11 @@ public class DiameterInitiatorSession extends DiameterSession {
         }
     }
 
-    private CapabilitiesExchangeRequest.Out buildCer() {
+    // package-private for tests
+    CapabilitiesExchangeRequest.Out buildCer() {
         final CapabilitiesExchangeRequest.Out cer =
             new CapabilitiesExchangeRequest.Out();
         populateCapabilityAvps(cer);
         return cer;
-    }
-
-    /**
-     * Test seam for Origin-State-Id stamping assertions, mirroring the
-     * {@code getWatchdogState()} seam pattern on {@code DiameterSession}.
-     */
-    CapabilitiesExchangeRequest.Out buildCerForTest() {
-        return buildCer();
     }
 }

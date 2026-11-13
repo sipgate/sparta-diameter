@@ -288,11 +288,6 @@ public final class DiameterNode implements Closeable {
         return doConnect(host, port, session, transport, clientLocalAddresses);
     }
 
-    private ChannelFuture doConnect(final String host, final int port,
-                                    final DiameterInitiatorSession session) {
-        return doConnect(host, port, session, Transport.TCP, null);
-    }
-
     private ChannelFuture doConnect(final String host, final int port, final DiameterInitiatorSession session,
                                     final Transport transport, final List<InetAddress> clientLocalAddresses) {
         LOGGER.info("connecting to {}:{} over {}", host, port, transport);

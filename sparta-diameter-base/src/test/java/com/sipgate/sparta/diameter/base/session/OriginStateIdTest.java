@@ -76,7 +76,7 @@ class OriginStateIdTest {
         final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG_WITH_STATE_ID, (ignored) -> {});
 
         // WHEN
-        final CapabilitiesExchangeRequest.Out cer = session.buildCerForTest();
+        final CapabilitiesExchangeRequest.Out cer = session.buildCer();
 
         // THEN
         assertThat(cer.getOriginStateId()).isEqualTo(123L);
@@ -92,7 +92,7 @@ class OriginStateIdTest {
         final DiameterInitiatorSession session = new DiameterInitiatorSession(config, (ignored) -> {});
 
         // WHEN
-        final CapabilitiesExchangeRequest.Out cer = session.buildCerForTest();
+        final CapabilitiesExchangeRequest.Out cer = session.buildCer();
 
         // THEN
         assertThat(cer.getHostIpAddresses()).containsExactly(LOCALHOST, second);
@@ -108,7 +108,7 @@ class OriginStateIdTest {
         final DiameterInitiatorSession session = new DiameterInitiatorSession(config, (ignored) -> {});
 
         // WHEN
-        final CapabilitiesExchangeRequest.Out cer = session.buildCerForTest();
+        final CapabilitiesExchangeRequest.Out cer = session.buildCer();
 
         // THEN
         assertThat(cer.getOriginStateId()).isEqualTo(-1L);
@@ -120,7 +120,7 @@ class OriginStateIdTest {
         final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_STATE_ID);
 
         // WHEN
-        final CapabilitiesExchangeAnswer.Out cea = session.buildCeaForTest();
+        final CapabilitiesExchangeAnswer.Out cea = session.buildCea(incomingCer(null, -1L), DiameterConstants.RES_DIAMETER_SUCCESS);
 
         // THEN
         assertThat(cea.getOriginStateId()).isEqualTo(123L);
