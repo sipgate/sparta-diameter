@@ -20,6 +20,8 @@ All meters use the `diameter.` prefix and follow [Micrometer naming conventions]
 | `diameter.requests.errors` | Counter | ✓ | ✓ | | | ✓ | Error events for outbound requests. |
 | `diameter.handler.errors` | Counter | ✓ | ✓ | | | ✓ | Error events for inbound handler failures. |
 
+The `diameter.connections.active*` gauges, like all counters, report the sum over every `DiameterNode` registered with the same `MeterRegistry`; give each node its own registry (or a common tag via `MeterFilter`) to observe nodes separately.
+
 > Malicious peers can inflate `application_id` and `command_code` values to generate high-cardinality label sets. Defending against this is the application's responsibility via Micrometer's `MeterFilter`. See also ADR-0010 for the design rationale.
 
 ## Tag values
