@@ -157,6 +157,33 @@ class OriginStateIdTest {
     }
 
     @Test
+    void it_does_not_record_the_origin_state_id_of_a_rejected_CER() throws Exception {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        final DiameterResponderSession session = openedSession(peer);
+
+        // WHEN — the CER shares no application with us and is rejected (5010)
+        session.onMessage(incomingCer("client-g1.example.com", 5L, 99L));
+
+        // THEN — the rejected peer is not remembered
+        assertThat(DiameterSession.lastKnownRemoteOriginStateId("client-g1.example.com")).isEqualTo(-1L);
+    }
+
+    @Test
+    void it_does_not_record_the_origin_state_id_of_an_unsuccessful_CEA() throws Exception {
+        // GIVEN — initiator in WAIT_I_CEA
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        final DiameterInitiatorSession session = connectedInitiator(peer);
+
+        // WHEN — the peer rejects our CER with a non-success CEA
+        session.onMessage(incomingCea(peer, "hss-h1.example.com", 77L,
+                DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION));
+
+        // THEN
+        assertThat(DiameterSession.lastKnownRemoteOriginStateId("hss-h1.example.com")).isEqualTo(-1L);
+    }
+
+    @Test
     void it_detects_a_peer_restart_when_the_origin_state_id_increases() throws Exception {
         // GIVEN — first connection saw state id 5
         final DiameterPeer peer = mock(DiameterPeer.class);
@@ -256,8 +283,13 @@ class OriginStateIdTest {
 
     private static CapabilitiesExchangeRequest.In incomingCer(final String originHost, final long originStateId)
             throws Exception {
+        return incomingCer(originHost, originStateId, 5L);
+    }
+
+    private static CapabilitiesExchangeRequest.In incomingCer(final String originHost, final long originStateId,
+                                                              final long authApplicationId) throws Exception {
         final CapabilitiesExchangeRequest.Out cerOut = new CapabilitiesExchangeRequest.Out();
-        cerOut.addAuthApplicationId(5L);
+        cerOut.addAuthApplicationId(authApplicationId);
         if (originHost != null) {
             cerOut.setOriginHost(originHost);
         }
@@ -274,6 +306,12 @@ class OriginStateIdTest {
      */
     private static CapabilitiesExchangeAnswer.In incomingCea(final DiameterPeer peer, final String originHost,
                                                              final long originStateId) throws Exception {
+        return incomingCea(peer, originHost, originStateId, DiameterConstants.RES_DIAMETER_SUCCESS);
+    }
+
+    private static CapabilitiesExchangeAnswer.In incomingCea(final DiameterPeer peer, final String originHost,
+                                                             final long originStateId, final long resultCode)
+            throws Exception {
         final ArgumentCaptor<HopByHopId> hbh = ArgumentCaptor.forClass(HopByHopId.class);
         final ArgumentCaptor<EndToEndId> e2e = ArgumentCaptor.forClass(EndToEndId.class);
         verify(peer).send(any(com.sipgate.sparta.diameter.base.core.OutgoingRequest.class),
@@ -284,7 +322,7 @@ class OriginStateIdTest {
         final CapabilitiesExchangeRequest.In cer =
                 (CapabilitiesExchangeRequest.In) toIncoming(cerOut, hbh.getValue(), e2e.getValue());
         final CapabilitiesExchangeAnswer.Out ceaOut =
-                DiameterMessageFactory.createAnswer(cer, DiameterConstants.RES_DIAMETER_SUCCESS);
+                DiameterMessageFactory.createAnswer(cer, resultCode);
         ceaOut.setOriginHost(originHost);
         ceaOut.setOriginStateId(originStateId);
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();

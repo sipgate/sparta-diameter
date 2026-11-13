@@ -153,8 +153,8 @@ public class DiameterInitiatorSession extends DiameterSession {
     }
 
     private void handleCea(final CapabilitiesExchangeAnswer.In cea) {
-        recordRemoteOriginStateId(cea.getOriginHost(), cea.getOriginStateId());
         if (cea.getResultCode() == DiameterConstants.RES_DIAMETER_SUCCESS) {
+            recordRemoteOriginStateId(cea.getOriginHost(), cea.getOriginStateId());
             peerState = PeerState.I_OPEN;
             startWatchdog();
         } else {

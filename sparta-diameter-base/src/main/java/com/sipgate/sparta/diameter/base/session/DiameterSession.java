@@ -750,8 +750,8 @@ public abstract class DiameterSession {
     }
 
     /**
-     * Records the Origin-State-Id a peer presented in its CER or CEA and detects peer
-     * restarts (RFC 6733 §8.6/§8.16): a strictly higher value than the last known one
+     * Records the Origin-State-Id a peer presented in an accepted CER or a successful
+     * CEA and detects peer restarts (RFC 6733 §8.6/§8.16): a strictly higher value than the last known one
      * means the peer restarted with loss of state — sessions established before the
      * restart are no longer valid. Emits a WARN log on detection.
      *
@@ -759,7 +759,9 @@ public abstract class DiameterSession {
      * instances (sessions are per-connection and never reused across reconnects,
      * ADR-0004). Absent values ({@code -1} from the AVP mixin) are ignored; a lower
      * value than previously seen (a misbehaving peer, RFC 6733 §8.16 mandates
-     * monotonic increase) is recorded without a restart warning.</p>
+     * monotonic increase) is recorded without a restart warning. Callers record only
+     * after a successful capabilities exchange, so rejected peers never enter the
+     * process-wide memory.</p>
      *
      * @param remoteOriginHost    the Origin-Host the peer presented
      * @param remoteOriginStateId the Origin-State-Id the peer presented, or -1 if absent
