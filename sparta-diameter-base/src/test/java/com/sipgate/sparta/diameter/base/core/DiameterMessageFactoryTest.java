@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import static com.sipgate.sparta.diameter.base.core.DiameterConstants.RES_DIAMETER_SUCCESS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -331,7 +332,7 @@ class DiameterMessageFactoryTest {
     class GenericAnswerMirrorsRequestAvps {
 
         @Test
-        void an_experimental_result_answer_mirrors_auth_session_state_and_vsai() throws Exception {
+        void it_mirrors_auth_session_state_and_vsai_into_an_experimental_result_answer() throws Exception {
             // GIVEN — a command without a typed answer class (e.g. Cx LIR) carrying both AVPs
             final IncomingRequest<?> request = parsedGenericRequest(authSessionState(), vsai());
 
@@ -347,7 +348,7 @@ class DiameterMessageFactoryTest {
         }
 
         @Test
-        void a_result_code_answer_mirrors_auth_session_state() throws Exception {
+        void it_mirrors_auth_session_state_into_a_result_code_answer() throws Exception {
             // GIVEN
             final IncomingRequest<?> request = parsedGenericRequest(authSessionState());
 
@@ -361,7 +362,7 @@ class DiameterMessageFactoryTest {
         }
 
         @Test
-        void a_parse_error_answer_mirrors_the_parsed_auth_session_state() throws Exception {
+        void it_mirrors_the_parsed_auth_session_state_into_a_parse_error_answer() throws Exception {
             // GIVEN — Auth-Session-State parsed before an AVP with an invalid length (5014)
             final RelayForwardFrame frame = new RelayForwardFrame();
             frame.addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_SESSION_ID, 0), "sid"));
@@ -370,7 +371,7 @@ class DiameterMessageFactoryTest {
             final java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
             frame.writeTo(new java.io.DataOutputStream(bytes), HOP, END);
             final byte[] wire = withTrailingShortAvp(bytes.toByteArray());
-            final DiameterResultCodeException cause = org.junit.jupiter.api.Assertions.assertThrows(
+            final DiameterResultCodeException cause = catchThrowableOfType(
                     DiameterResultCodeException.class, () -> Command.parseMessage(java.nio.ByteBuffer.wrap(wire)));
             assertThat(cause.getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_INVALID_AVP_LENGTH);
 
@@ -384,7 +385,7 @@ class DiameterMessageFactoryTest {
         }
 
         @Test
-        void an_E_bit_answer_to_a_parse_failure_mirrors_the_parsed_auth_session_state() throws Exception {
+        void it_mirrors_the_parsed_auth_session_state_into_an_E_bit_answer_to_a_parse_failure() throws Exception {
             // GIVEN — Auth-Session-State parsed before an AVP with an invalid length (5014)
             final RelayForwardFrame frame = new RelayForwardFrame();
             frame.addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_SESSION_ID, 0), "sid"));
@@ -393,8 +394,9 @@ class DiameterMessageFactoryTest {
             final java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
             frame.writeTo(new java.io.DataOutputStream(bytes), HOP, END);
             final byte[] wire = withTrailingShortAvp(bytes.toByteArray());
-            final DiameterResultCodeException cause = org.junit.jupiter.api.Assertions.assertThrows(
+            final DiameterResultCodeException cause = catchThrowableOfType(
                     DiameterResultCodeException.class, () -> Command.parseMessage(java.nio.ByteBuffer.wrap(wire)));
+            assertThat(cause).isNotNull();
 
             // WHEN — the Yate-style answer a session subclass can build
             final OutgoingAnswer answer = DiameterMessageFactory.createErrorAnswer(cause);
@@ -605,9 +607,14 @@ class DiameterMessageFactoryTest {
 
     @Test
     void it_keeps_the_P_bit_of_a_received_error_answer() {
+        // GIVEN — an answer header with E and P bits set
+        final boolean isRequest = false;
+        final boolean proxiable = true;
+        final boolean isError = true;
+
         // WHEN
         final var result = DiameterMessageFactory.createForParsing(
-            318, 16777251, false, true, true, HOP, END, false);
+            318, 16777251, isRequest, proxiable, isError, HOP, END, false);
 
         // THEN
         assertThat(result).isInstanceOf(ErrorAnswer.In.class);

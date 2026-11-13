@@ -294,6 +294,7 @@ public final class DiameterMessageFactory {
      * @param <A>                    the outgoing answer type
      * @return the constructed answer
      * @throws IllegalArgumentException if no factory handles the request's command code
+     *         and it is not a {@link GenericRequest}
      */
     public static <A extends OutgoingAnswer> A createExperimentalResultAnswer(
             final IncomingRequest<A> request,
