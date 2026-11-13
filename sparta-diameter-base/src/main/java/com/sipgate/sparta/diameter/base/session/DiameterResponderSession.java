@@ -108,7 +108,6 @@ public class DiameterResponderSession extends DiameterSession {
             LOGGER.info("received CER on already open connection from {}", cer.getOriginHost());
             onCapabilitiesReExchange(cer);
         }
-        recordRemoteOriginStateId(cer.getOriginHost(), cer.getOriginStateId());
         final List<Long> remoteAuthIds = cer.getAuthApplicationIds();
         final List<Long> remoteAcctIds = cer.getAcctApplicationIds();
         final List<Long> remoteVendorSpecificAppIds = extractVendorSpecificAppIds(cer);
@@ -117,6 +116,9 @@ public class DiameterResponderSession extends DiameterSession {
         if (negotiator.hasCommonApplication(configCapabilities, remoteAuthIds, remoteAcctIds, remoteVendorSpecificAppIds)) {
             send(buildCea(cer, DiameterConstants.RES_DIAMETER_SUCCESS));
             peerState = PeerState.R_OPEN;
+            // Only an accepted peer is remembered: rejected CERs would otherwise grow the
+            // process-wide memory with arbitrary Origin-Hosts.
+            recordRemoteOriginStateId(cer.getOriginHost(), cer.getOriginStateId());
             startWatchdog();
             onCapabilitiesExchange(cer);
         } else {
