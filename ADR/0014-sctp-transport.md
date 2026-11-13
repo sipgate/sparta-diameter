@@ -52,12 +52,32 @@ pipeline is otherwise a mirror of the TCP one:
   is dropped with a warning. The stream identifier and unordered flag are logged at
   debug level.
 - Outbound: `SctpRequestEncoder`/`SctpAnswerEncoder` wrap each message into a single `SctpMessage`
-  on **stream 0 with the unordered delivery flag set** and PPID 46 — the mapping RFC 6733 §2.1.1
-  recommends to avoid head-of-line blocking. Hop-by-hop/end-to-end identifiers are stamped at
-  encode time exactly like `OutgoingRequestEncoder` does for TCP; the `ioBuffer` is released when
-  `writeTo` throws.
+  on **stream 0 with ordered delivery** and PPID 46 (see *Ordered delivery on stream 0* below).
+  Hop-by-hop/end-to-end identifiers are stamped at encode time exactly like
+  `OutgoingRequestEncoder` does for TCP; the `ioBuffer` is released when `writeTo` throws.
 
 Session handling (`DiameterPeerHandler`), decode error policy, and meters are shared unchanged.
+
+### Ordered delivery on stream 0
+
+RFC 6733 §2.1.1 recommends stream 0 with the unordered flag to avoid head-of-line blocking, but
+only with the caveat that the responder must not send unordered until the initiator is in I-Open,
+and it warns that a DPR/DPA can overtake queued application messages. The base-protocol state
+machines depend on order:
+
+- A responder sends CEA and may immediately relay a request to the new peer. Sent unordered, that
+  request can arrive before the CEA while the initiator is still in WAIT_I_CEA, where
+  `DiameterInitiatorSession.onMessage` drops it silently.
+- A DPA (or DPR) can overtake answers still in flight on the same association, so the peer tears
+  the connection down before it has seen them.
+
+Marking only the base-protocol messages ordered does not help: SCTP may deliver an unordered
+message before an earlier-sent ordered one, so an unordered request can still overtake a CEA.
+Therefore every message is sent **ordered on stream 0** — the same sequencing guarantee TCP gives.
+Rejected alternative — a multi-stream scheme (base protocol on stream 0, applications spread over
+further streams, all ordered): it reduces head-of-line blocking but needs a stream-selection
+policy and cross-stream ordering rules for CEA/DPA versus application traffic; not worth it
+without a measured need.
 
 ### Multi-homing via `bindAddress` (the `sctp_bindx` equivalent)
 
@@ -70,10 +90,10 @@ ordering Yate's `addr` + `sctp_bindx` fields have.
 
 ### Plain SCTP only — DTLS explicitly out
 
-No DTLS handshake, no port 5658, no PPID 47 sending, and no implementation of the §2.1.1 responder
-refinement (delaying unordered delivery until the initiator has sent its first message). The
-decoder-side PPID-47 drop keeps a later DTLS/SCTP implementation additive. `SCTP_NODELAY` is not
-set (obsolete for SCTP).
+No DTLS handshake, no port 5658, no PPID 47 sending. The §2.1.1 responder refinement (delaying
+unordered delivery until the initiator has sent its first message) is moot because nothing is sent
+unordered. The decoder-side PPID-47 drop keeps a later DTLS/SCTP implementation additive.
+`SCTP_NODELAY` is not set (obsolete for SCTP).
 
 ### TCP path byte-identical (backwards compatibility)
 
@@ -87,7 +107,7 @@ The default `listen`/`connect` overloads behave exactly as before; all existing 
   (`tcp_*:3868` + `sctp_*:3868`).
 - macOS has no SCTP kernel support (and the development sandbox blocks JVM sockets entirely):
   encoder/decoder behavior is covered by offline unit tests (`SctpMessageDecoderTest`,
-  `SctpRequestEncoderTest`, `SctpAnswerEncoderTest`, `DiameterNodeSctpValidationTest` — framing,
+  `SctpAnswerEncoderTest` (both encoders), `DiameterNodeSctpValidationTest` — framing,
   PPID filter, stream/order/PPID fields, address validation). Real SCTP wire behavior cannot be
   exercised outside Linux.
 
@@ -95,9 +115,11 @@ The default `listen`/`connect` overloads behave exactly as before; all existing 
 > mandatory (two nodes, multi-homing, CER/CEA, DWR, relay roundtrip) — the e2e docker-compose environment exists
 > exactly for this; SCTP is not verified by the offline test suite.
 
-- Sending every message unordered on stream 0 means message reordering inside one association is
-  possible; all request/answer correlation in the session layer is identifier-based (hop-by-hop),
-  never order-based, so this is safe.
+- Sending every message ordered on stream 0 preserves send order inside one association, so the
+  CER/CEA and DPR/DPA state handling sees messages in the order the peer sent them, as on TCP.
+- Head-of-line blocking is accepted: one lost or delayed message holds back every later message on
+  the association until it is retransmitted. Request/answer correlation stays identifier-based
+  (hop-by-hop), so a multi-stream scheme can be added later without session-layer changes.
 - DTLS/SCTP (specs/dtls-sctp remainder) stays a separate future feature on the same pipeline seams.
 
 ## Related ADRs

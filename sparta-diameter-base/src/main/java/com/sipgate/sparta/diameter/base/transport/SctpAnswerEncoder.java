@@ -12,8 +12,10 @@ import java.util.List;
 
 /**
  * Outbound adapter for the SCTP transport: serializes an {@link OutgoingAnswer} into a
- * single {@link SctpMessage} on stream 0 with the unordered delivery flag set and the
- * payload protocol identifier {@link SctpPayloadProtocolId#DIAMETER}.
+ * single {@link SctpMessage} on stream 0 with ordered delivery and the payload protocol
+ * identifier {@link SctpPayloadProtocolId#DIAMETER}. Ordered delivery keeps the base-protocol
+ * state machines safe: a CEA cannot be overtaken by a request sent right after it, and a DPA
+ * cannot overtake answers still in flight (see ADR-0014).
  *
  * <p>Replaces {@link OutgoingAnswerEncoder} in SCTP pipelines — the wire format is
  * identical, only the transport envelope differs. Installed after
@@ -22,7 +24,6 @@ import java.util.List;
 public final class SctpAnswerEncoder extends MessageToMessageEncoder<OutgoingAnswer> {
 
     private static final int DIAMETER_STREAM = 0;
-    private static final boolean DIAMETER_UNORDERED = true;
 
     @Override
     protected void encode(final ChannelHandlerContext ctx, final OutgoingAnswer answer,
@@ -34,7 +35,7 @@ public final class SctpAnswerEncoder extends MessageToMessageEncoder<OutgoingAns
             buffer.release();
             throw e;
         }
-        // Netty 4.2 ctor: (protocolIdentifier, streamIdentifier, unordered, content)
-        out.add(new SctpMessage(SctpPayloadProtocolId.DIAMETER, DIAMETER_STREAM, DIAMETER_UNORDERED, buffer));
+        // Netty ctor (protocolIdentifier, streamIdentifier, content): ordered delivery
+        out.add(new SctpMessage(SctpPayloadProtocolId.DIAMETER, DIAMETER_STREAM, buffer));
     }
 }
