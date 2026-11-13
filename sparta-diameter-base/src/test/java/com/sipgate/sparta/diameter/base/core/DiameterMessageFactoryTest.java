@@ -374,13 +374,35 @@ class DiameterMessageFactoryTest {
                     DiameterResultCodeException.class, () -> Command.parseMessage(java.nio.ByteBuffer.wrap(wire)));
             assertThat(cause.getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_INVALID_AVP_LENGTH);
 
-            // WHEN / THEN — both styles (RFC and Yate-compatible), Auth-Session-State only (Yate omits VSAI)
-            for (final boolean yate : new boolean[]{false, true}) {
-                final OutgoingAnswer answer = DiameterMessageFactory.createParseErrorAnswer(cause, yate);
-                assertThat(answer.findAVP(AUTH_SESSION_STATE_KEY).getDataAsInt())
-                        .isEqualTo(DiameterConstants.AUTH_SESSION_STATE_NOT_MAINTAINED);
-                assertThat(answer.findAVP(VSAI_KEY)).isNull();
-            }
+            // WHEN
+            final OutgoingAnswer answer = DiameterMessageFactory.createParseErrorAnswer(cause);
+
+            // THEN — Auth-Session-State only (like Yate, no VSAI)
+            assertThat(answer.findAVP(AUTH_SESSION_STATE_KEY).getDataAsInt())
+                    .isEqualTo(DiameterConstants.AUTH_SESSION_STATE_NOT_MAINTAINED);
+            assertThat(answer.findAVP(VSAI_KEY)).isNull();
+        }
+
+        @Test
+        void an_E_bit_answer_to_a_parse_failure_mirrors_the_parsed_auth_session_state() throws Exception {
+            // GIVEN — Auth-Session-State parsed before an AVP with an invalid length (5014)
+            final RelayForwardFrame frame = new RelayForwardFrame();
+            frame.addAVP(AVP.create(new AVPKey(DiameterConstants.AVP_SESSION_ID, 0), "sid"));
+            frame.addAVP(vsai());
+            frame.addAVP(authSessionState());
+            final java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
+            frame.writeTo(new java.io.DataOutputStream(bytes), HOP, END);
+            final byte[] wire = withTrailingShortAvp(bytes.toByteArray());
+            final DiameterResultCodeException cause = org.junit.jupiter.api.Assertions.assertThrows(
+                    DiameterResultCodeException.class, () -> Command.parseMessage(java.nio.ByteBuffer.wrap(wire)));
+
+            // WHEN — the Yate-style answer a session subclass can build
+            final OutgoingAnswer answer = DiameterMessageFactory.createErrorAnswer(cause);
+
+            // THEN — Auth-Session-State only (Yate omits VSAI)
+            assertThat(answer.findAVP(AUTH_SESSION_STATE_KEY).getDataAsInt())
+                    .isEqualTo(DiameterConstants.AUTH_SESSION_STATE_NOT_MAINTAINED);
+            assertThat(answer.findAVP(VSAI_KEY)).isNull();
         }
 
         private static final AVPKey AUTH_SESSION_STATE_KEY = new AVPKey(DiameterConstants.AVP_AUTH_SESSION_STATE, 0);
@@ -529,14 +551,14 @@ class DiameterMessageFactoryTest {
     }
 
     @Test
-    void it_creates_a_parse_error_answer_with_E_bit_and_without_Failed_AVP_on_request() {
+    void it_creates_an_E_bit_answer_without_Failed_AVP_from_an_AVP_parse_failure() {
         // GIVEN — 5014 invalid AVP length
         final AVP offending = AVP.createRaw(new AVPKey(1, 0), false, true, false, new byte[0]);
         final var cause = new com.sipgate.sparta.diameter.base.core.avp.AVPParseException(
                 DiameterConstants.RES_DIAMETER_INVALID_AVP_LENGTH, 316, true, 16777251, HOP, END, offending, "sid");
 
         // WHEN
-        final OutgoingAnswer answer = DiameterMessageFactory.createParseErrorAnswer(cause, true);
+        final OutgoingAnswer answer = DiameterMessageFactory.createErrorAnswer(cause);
 
         // THEN
         assertThat(answer).isInstanceOf(ErrorAnswer.Out.class);

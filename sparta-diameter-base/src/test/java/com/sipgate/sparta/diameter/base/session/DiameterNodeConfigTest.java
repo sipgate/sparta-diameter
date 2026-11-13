@@ -52,37 +52,6 @@ class DiameterNodeConfigTest {
     }
 
     @Test
-    void it_defaults_to_the_RFC_behaviour() {
-        // GIVEN / WHEN
-        final DiameterNodeConfig config = minimal();
-
-        // THEN
-        assertThat(config.getBehaviour()).isEqualTo(DiameterNodeConfig.Behaviour.DEFAULT);
-        assertThat(config.getBehaviour().parseErrorAnswerWithErrorBit()).isFalse();
-        assertThat(config.getBehaviour().keepTransportOpenAfterDpa()).isFalse();
-    }
-
-    @Test
-    void it_copies_every_value_when_replacing_the_behaviour() {
-        // GIVEN
-        final DiameterNodeConfig config = minimalWithOriginStateId(42L);
-        final DiameterNodeConfig.Behaviour behaviour = new DiameterNodeConfig.Behaviour(true, true);
-
-        // WHEN
-        final DiameterNodeConfig copy = config.withBehaviour(behaviour);
-
-        // THEN
-        assertThat(copy.getBehaviour()).isEqualTo(behaviour);
-        assertThat(copy).usingRecursiveComparison().ignoringFields("behaviour").isEqualTo(config);
-    }
-
-    @Test
-    void it_rejects_a_null_behaviour() {
-        // GIVEN / WHEN / THEN
-        assertThatThrownBy(() -> minimal().withBehaviour(null)).isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
     void it_defaults_origin_state_id_to_zero_omitting_the_AVP() {
         // GIVEN / WHEN — RFC 6733 §8.16: omit Origin-State-Id (or set 0) to not let
         // peers infer session termination

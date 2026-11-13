@@ -5,15 +5,13 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Configuration for a local Diameter node.
  * <p>
  * Carries the node identity (Origin-Host, Origin-Realm, Host-IP-Address list, Vendor-Id,
  * Product-Name) used in CER/CEA, the declared application capabilities, the protocol
- * timers TWINIT and Tc as defined in RFC 3539, the request timeout and the per-node
- * {@link Behaviour} toggles.
+ * timers TWINIT and Tc as defined in RFC 3539, and the request timeout.
  * </p>
  */
 public final class DiameterNodeConfig {
@@ -46,7 +44,6 @@ public final class DiameterNodeConfig {
     private final Duration tc;
     private final Duration requestTimeout;
     private final long originStateId;
-    private final Behaviour behaviour;
 
     /**
      * Creates a config with explicit timer values and an Origin-State-Id.
@@ -71,35 +68,6 @@ public final class DiameterNodeConfig {
             final Duration tc,
             final Duration requestTimeout,
             final long originStateId) {
-        this(originHost, originRealm, hostIpAddresses, vendorId, productName, capabilities,
-                twinit, tc, requestTimeout, originStateId, Behaviour.DEFAULT);
-    }
-
-    /**
-     * Creates a config with explicit timer values, an Origin-State-Id and protocol
-     * behaviour toggles.
-     *
-     * @param hostIpAddresses every local address advertised as Host-IP-Address in CER/CEA, in
-     *                        order; for SCTP all multi-homing addresses (RFC 6733 §5.3.5)
-     * @param twinit          watchdog timer initial value; must be at least 6 seconds (RFC 3539 §3.4.1)
-     * @param tc              reconnect timer
-     * @param requestTimeout  per-request answer timeout (also used for relayed requests)
-     * @param originStateId   Origin-State-Id stamped into CER/CEA; 0 omits the AVP
-     * @param behaviour       per-node protocol behaviour toggles; {@link Behaviour#DEFAULT} is
-     *                        the RFC behaviour of the other constructors
-     */
-    public DiameterNodeConfig(
-            final String originHost,
-            final String originRealm,
-            final List<InetAddress> hostIpAddresses,
-            final long vendorId,
-            final String productName,
-            final Capabilities capabilities,
-            final Duration twinit,
-            final Duration tc,
-            final Duration requestTimeout,
-            final long originStateId,
-            final Behaviour behaviour) {
         if (originHost == null || originHost.isEmpty()) {
             throw new IllegalArgumentException("originHost is required");
         }
@@ -128,7 +96,6 @@ public final class DiameterNodeConfig {
         this.tc = tc;
         this.requestTimeout = requestTimeout;
         this.originStateId = originStateId;
-        this.behaviour = Objects.requireNonNull(behaviour, "behaviour must not be null");
     }
 
     /**
@@ -220,21 +187,6 @@ public final class DiameterNodeConfig {
     }
 
     /**
-     * Per-node protocol behaviour toggles; {@link Behaviour#DEFAULT} unless configured.
-     */
-    public Behaviour getBehaviour() {
-        return behaviour;
-    }
-
-    /**
-     * Returns a copy of this config with the given behaviour toggles; all other values unchanged.
-     */
-    public DiameterNodeConfig withBehaviour(final Behaviour newBehaviour) {
-        return new DiameterNodeConfig(originHost, originRealm, hostIpAddresses, vendorId, productName,
-                capabilities, twinit, tc, requestTimeout, originStateId, newBehaviour);
-    }
-
-    /**
      * Watchdog timer initial value (TWINIT), per RFC 3539 §3.4.1.
      */
     public Duration getTwinit() {
@@ -256,26 +208,6 @@ public final class DiameterNodeConfig {
     }
 
     // -------------------------------------------------------------------------
-
-    /**
-     * Independent per-node protocol behaviour toggles. Every toggle defaults to
-     * {@code false}, which is the RFC 6733 behaviour; {@code true} selects the
-     * behaviour of peers such as the Yate DRA, for wire-level compatibility.
-     *
-     * @param parseErrorAnswerWithErrorBit {@code false}: an answer to an unparseable request
-     *                                     carries the E-bit only for 3xxx and a
-     *                                     {@code Failed-AVP} for AVP errors (RFC 6733 §7.1);
-     *                                     {@code true}: always E-bit, never {@code Failed-AVP}
-     * @param keepTransportOpenAfterDpa    {@code false}: after answering a peer's DPR the
-     *                                     transport is closed (RFC 6733 §5.4);
-     *                                     {@code true}: the DPA is sent and the transport is
-     *                                     left open until the peer closes it
-     */
-    public record Behaviour(boolean parseErrorAnswerWithErrorBit, boolean keepTransportOpenAfterDpa) {
-
-        /** RFC 6733 behaviour: every toggle {@code false}. */
-        public static final Behaviour DEFAULT = new Behaviour(false, false);
-    }
 
     /**
      * A single vendor-specific application entry as defined in RFC 6733 §6.11.

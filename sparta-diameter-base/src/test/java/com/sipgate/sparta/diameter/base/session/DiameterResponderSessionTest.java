@@ -735,17 +735,21 @@ class DiameterResponderSessionTest {
     }
 
     // -------------------------------------------------------------------------
-    // Behaviour toggles
+    // Overridable protocol hooks
     // -------------------------------------------------------------------------
 
     @Test
-    void it_keeps_the_transport_open_after_DPA_when_configured() throws Exception {
+    void it_keeps_the_transport_open_after_DPA_when_a_subclass_overrides_the_close_hook() throws Exception {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         stubSend(peer);
         stubEventLoop(peer);
-        final DiameterResponderSession session = new DiameterResponderSession(
-                CONFIG_WITH_AUTH_APP.withBehaviour(new DiameterNodeConfig.Behaviour(false, true)));
+        final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_AUTH_APP) {
+            @Override
+            protected boolean closeTransportAfterInboundDpa() {
+                return false;
+            }
+        };
         session.onConnected(peer);
         session.onMessage(buildIncomingCer(5L));
         final DisconnectPeerRequest.In dpr = (DisconnectPeerRequest.In)
@@ -761,12 +765,16 @@ class DiameterResponderSessionTest {
     }
 
     @Test
-    void it_sends_an_E_bit_parse_error_answer_without_Failed_AVP_when_configured() throws Exception {
-        // GIVEN
+    void it_sends_the_parse_error_answer_of_a_subclass_overriding_the_answer_hook() throws Exception {
+        // GIVEN — a subclass answering with an E-bit answer without Failed-AVP
         final DiameterPeer peer = mock(DiameterPeer.class);
         stubSend(peer);
-        final DiameterResponderSession session = new DiameterResponderSession(
-                CONFIG_WITH_AUTH_APP.withBehaviour(new DiameterNodeConfig.Behaviour(true, false)));
+        final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_AUTH_APP) {
+            @Override
+            protected OutgoingAnswer parseErrorAnswer(final DiameterResultCodeException cause) {
+                return DiameterMessageFactory.createErrorAnswer(cause);
+            }
+        };
         final AVP offending = AVP.createRaw(new AVPKey(999, 0), true, true, false, new byte[0]);
         final AVPParseException cause = new AVPParseException(
                 DiameterConstants.RES_DIAMETER_INVALID_AVP_LENGTH,
@@ -775,9 +783,10 @@ class DiameterResponderSessionTest {
         // WHEN
         session.onParseError(peer, cause);
 
-        // THEN
+        // THEN — the overridden answer is sent; the connection handling is unchanged
         final ArgumentCaptor<OutgoingAnswer> captor = ArgumentCaptor.forClass(OutgoingAnswer.class);
         verify(peer).send(captor.capture());
+        assertThat(captor.getValue()).isInstanceOf(ErrorAnswer.Out.class);
         assertThat(captor.getValue().isError()).isTrue();
         assertThat(captor.getValue().getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_INVALID_AVP_LENGTH);
         assertThat(captor.getValue().findAVP(new AVPKey(DiameterConstants.AVP_FAILED_AVP, 0))).isNull();
