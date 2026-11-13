@@ -340,7 +340,7 @@ class DiameterMessageFactoryTest {
             final OutgoingAnswer answer = DiameterMessageFactory.createExperimentalResultAnswer(
                     (GenericRequest) request, 10415L, 3003L);
 
-            // THEN — like the typed answers (RFC 6733 §8.11; Yate mirrors both)
+            // THEN — like the typed answers (RFC 6733 §8.11)
             assertThat(answer.findAVP(AUTH_SESSION_STATE_KEY).getDataAsInt())
                     .isEqualTo(DiameterConstants.AUTH_SESSION_STATE_NOT_MAINTAINED);
             assertThat(answer.findAVP(VSAI_KEY)).isNotNull();
@@ -378,7 +378,7 @@ class DiameterMessageFactoryTest {
             // WHEN
             final OutgoingAnswer answer = DiameterMessageFactory.createParseErrorAnswer(cause);
 
-            // THEN — Auth-Session-State only (like Yate, no VSAI)
+            // THEN — Auth-Session-State only, no VSAI
             assertThat(answer.findAVP(AUTH_SESSION_STATE_KEY).getDataAsInt())
                     .isEqualTo(DiameterConstants.AUTH_SESSION_STATE_NOT_MAINTAINED);
             assertThat(answer.findAVP(VSAI_KEY)).isNull();
@@ -398,10 +398,10 @@ class DiameterMessageFactoryTest {
                     DiameterResultCodeException.class, () -> Command.parseMessage(java.nio.ByteBuffer.wrap(wire)));
             assertThat(cause).isNotNull();
 
-            // WHEN — the Yate-style answer a session subclass can build
+            // WHEN — the E-bit answer without Failed-AVP a session subclass can build
             final OutgoingAnswer answer = DiameterMessageFactory.createErrorAnswer(cause);
 
-            // THEN — Auth-Session-State only (Yate omits VSAI)
+            // THEN — Auth-Session-State only, no VSAI
             assertThat(answer.findAVP(AUTH_SESSION_STATE_KEY).getDataAsInt())
                     .isEqualTo(DiameterConstants.AUTH_SESSION_STATE_NOT_MAINTAINED);
             assertThat(answer.findAVP(VSAI_KEY)).isNull();

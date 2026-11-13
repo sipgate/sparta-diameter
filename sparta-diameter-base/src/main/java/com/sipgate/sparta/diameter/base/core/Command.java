@@ -367,12 +367,9 @@ public abstract class Command implements
             } finally {
                 PARSED_WIRE_HEADER.remove();
             }
-            // A command no factory knows is never interpreted locally: it is relayed opaquely
-            // (fallback handler) or answered 3001. Its AVPs are not ours to judge, so an
-            // unrecognized M-bit AVP must not turn it into a 5001 (RFC 6733 §2.8.1: relays do
-            // not need to understand non-routing AVPs) - e.g. SWx ANID/Non-3GPP-User-Data on a
-            // DRA without the SWx dictionary. The same holds for a known proxiable command on a
-            // relay node: it is forwarded, not interpreted.
+            // Unknown commands, and proxiable commands on a relay node, are forwarded, not
+            // interpreted: an unrecognized M-bit AVP must not turn them into a 5001
+            // (RFC 6733 §2.8.1: relays do not need to understand non-routing AVPs).
             final boolean opaque = command instanceof GenericRequest || command instanceof GenericAnswer.In
                     || (relay && proxiable);
 
