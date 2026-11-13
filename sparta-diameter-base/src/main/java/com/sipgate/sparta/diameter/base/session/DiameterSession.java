@@ -229,13 +229,16 @@ public abstract class DiameterSession {
         final int commandCode = forward.getCommandCode();
         final int applicationId = forward.getApplicationId();
 
-        startTracking(future, commandCode, applicationId, outboundHopByHop, config.getRequestTimeout());
+        // Translation first, then the pending entry: fail() only removes a translation when
+        // it finds the pending entry, so the reverse order lets a connection loss between
+        // the two calls leak the translation forever.
         relayTranslations.put(outboundHopByHop, new RelayTranslation(
                 upstreamSession.peer(),
                 received.hopByHopId(),
                 endToEnd,
                 System.currentTimeMillis(),
                 received));
+        startTracking(future, commandCode, applicationId, outboundHopByHop, config.getRequestTimeout());
 
         // Deliberately NOT via send(request, hopByHop, endToEnd): that helper stamps
         // absent Origin-Host/Origin-Realm with our own identity, which would mutate the
