@@ -2,13 +2,15 @@
 title: "ADR-0007: Decode/Encode Error Handling"
 description: "How the stack responds to unknown commands, invalid messages, and unexpected exceptions during decode/encode"
 owner: "sipgate-uhlig"
-status: accepted
+status: superseded by ADR-0016
 tags:
   - error-handling
   - decode
   - encode
 created: "2026-03-27"
 ---
+
+> **Note:** Superseded in part — ADR-0016 replaces the answer format of Cases 2 and 3 (E-bit only for 3xxx) and adds answer and relay rules; Cases 1 and 4 remain in force.
 
 ## Context
 
@@ -39,8 +41,7 @@ RFC 6733 distinguishes protocol errors (§7.1.3, 3xxx codes) from permanent fail
 
 If the incoming message is a **request** and the header was parsed far enough to recover the hop-by-hop and end-to-end identifiers:
 
-1. Send an answer with the appropriate Result-Code — E-bit set only for the 3xxx protocol error
-   (RFC 6733 §7.1; 5xxx permanent failures are regular answers, see Case 3):
+1. Send an error answer with the E-bit set and the appropriate Result-Code:
    - `DIAMETER_INVALID_HDR_BITS` (3008) — reserved bits set or flags inconsistent with the Command Code
    - `DIAMETER_INVALID_MESSAGE_LENGTH` (5015) — reported length does not match actual payload
    - `DIAMETER_UNSUPPORTED_VERSION` (5011) — version field is not 1; bytes 4–19 are still readable and used to construct the reply
@@ -54,17 +55,13 @@ If the incoming message is an **answer**, or if the header cannot be parsed far 
 
 If the incoming message is a **request** and the header was fully decoded:
 
-1. Send an answer **without** the E-bit, with the appropriate Result-Code and a `Failed-AVP` wrapping the offending AVP:
+1. Send an error answer with the E-bit set, the appropriate Result-Code, and a `Failed-AVP` wrapping the offending AVP:
    - `DIAMETER_AVP_UNSUPPORTED` (5001) — unrecognized AVP with M-bit set
    - `DIAMETER_INVALID_AVP_LENGTH` (5014) — AVP length field out of range; use a zero-padded stub if the header itself was incomplete
    - `DIAMETER_INVALID_AVP_BIT_COMBO` (5016) — reserved flag bits set
 2. Keep the transport connection open.
 
-RFC 6733 §7.1 reserves the E-bit for protocol errors (3xxx); permanent failures are carried in answers with the E-bit not set (§7.1.5). The violation is detected before the command is fully decoded, so the typed command-specific answer cannot be built; the stack sends a generic answer with the request's header fields (command code, P-bit, application id, identifiers), Session-Id, Auth-Session-State and Proxy-Info when already parsed, Result-Code and `Failed-AVP` (`DiameterMessageFactory.createParseErrorAnswer`). *(Amended 2026-11: the E-bit form used before set the E-bit on 5xxx answers, which peers read as a protocol error.)* A consumer that must reproduce a non-RFC wire form for a specific peer overrides the protected `DiameterSession.parseErrorAnswer` hook in its session subclass; the library itself ships only the RFC form.
-
-If the incoming message is an **answer**: drop it with a warning and keep the connection open — an answer is never answered (RFC 6733 §7). The pending request it belonged to runs into its timeout.
-
-A **relay agent** (`new DiameterNode(meterRegistry, true)`) does not apply the 5001 rule to proxiable messages: an unrecognized M-bit AVP is kept opaque and forwarded (RFC 6733 §2.8.1, §6.1 — relays need not understand non-routing AVPs). Non-proxiable messages (CER/DWR/DPR, always consumed locally) stay strict. Endpoints keep the default (strict) parsing.
+RFC 6733 §7.1.5 states that permanent failures SHOULD be returned in answers with the E-bit not set (using the command-specific CCF). The E-bit form MAY be used when composing a command-specific answer is not possible or efficient. For these three codes the violation is detected before the command is fully decoded, so the E-bit form is the practical choice.
 
 ### Case 4 — Unexpected Java exception
 

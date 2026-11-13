@@ -2,7 +2,7 @@
 title: "ADR-0015: Relay Architecture"
 description: "Relay lives on DiameterSession itself with per-session translation state; no dedicated relay session subtype"
 owner: "insomnick"
-status: accepted
+status: draft
 tags:
   - relay
   - session
