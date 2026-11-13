@@ -238,7 +238,8 @@ class DiameterSessionRelayTest {
 
         // THEN — mirrors the fail-fast contract of send() when not OPEN (ADR-0004)
         assertThat(relayed).isCompletedExceptionally();
-        assertThat(causeOf(relayed)).isInstanceOf(IllegalStateException.class);
+        assertThat(causeOf(relayed)).isInstanceOf(RelayFailedException.class)
+                .hasCauseInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -260,7 +261,8 @@ class DiameterSessionRelayTest {
 
         // THEN
         assertThat(hop.future()).isCompletedExceptionally();
-        assertThat(causeOf(hop.future())).isInstanceOf(TimeoutException.class);
+        assertThat(causeOf(hop.future())).isInstanceOf(RelayFailedException.class)
+                .hasCauseInstanceOf(TimeoutException.class);
 
         // and a late answer under the same identifiers is no longer forwarded upstream —
         // the translation is gone
@@ -366,6 +368,43 @@ class DiameterSessionRelayTest {
         assertThat(sent.getAllValues()).hasSize(1);
         assertThat(sent.getValue()).isNotInstanceOf(RelayedAnswer.class);
         assertThat(sent.getValue().hopByHopId()).isEqualTo(ORIGINAL_HBH);
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void it_answers_unable_to_deliver_with_E_bit_when_the_relay_fails() {
+        // GIVEN — the handler relays to an egress session that is not open
+        final DiameterSessionPair up = openedSession();
+        final DiameterResponderSession egress = new DiameterResponderSession(CONFIG);
+        up.session().setHandler(AbortSessionRequest.In.class, request -> (CompletableFuture) egress
+                .relay(up.session(), request, new RelayForwardRequest(request)));
+
+        // WHEN
+        up.session().onMessage(buildIncomingRequest(ORIGINAL_HBH, ORIGINAL_E2E));
+
+        // THEN — RFC 6733 §7.1.3: 3002 is a protocol error → E-bit set
+        final ArgumentCaptor<OutgoingAnswer> sent = ArgumentCaptor.forClass(OutgoingAnswer.class);
+        verify(up.peer()).send(sent.capture());
+        assertThat(sent.getValue().getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_UNABLE_TO_DELIVER);
+        assertThat(sent.getValue().isError()).isTrue();
+        assertThat(sent.getValue().hopByHopId()).isEqualTo(ORIGINAL_HBH);
+    }
+
+    @Test
+    void it_answers_unable_to_comply_without_E_bit_when_a_handler_future_fails() {
+        // GIVEN — a non-relay handler failure
+        final DiameterSessionPair up = openedSession();
+        up.session().setHandler(AbortSessionRequest.In.class, request ->
+                CompletableFuture.failedFuture(new IllegalStateException("boom")));
+
+        // WHEN
+        up.session().onMessage(buildIncomingRequest(ORIGINAL_HBH, ORIGINAL_E2E));
+
+        // THEN
+        final ArgumentCaptor<OutgoingAnswer> sent = ArgumentCaptor.forClass(OutgoingAnswer.class);
+        verify(up.peer()).send(sent.capture());
+        assertThat(sent.getValue().getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY);
+        assertThat(sent.getValue().isError()).isFalse();
     }
 
     @Test

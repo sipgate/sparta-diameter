@@ -30,7 +30,8 @@
  * <p>This package holds the relay-specific value types instead:
  * {@link com.sipgate.sparta.diameter.base.session.relay.RelayTranslation},
  * {@link com.sipgate.sparta.diameter.base.session.relay.RelayTranslationStore},
- * {@link com.sipgate.sparta.diameter.base.session.relay.RelayedAnswer}, and
+ * {@link com.sipgate.sparta.diameter.base.session.relay.RelayedAnswer},
+ * {@link com.sipgate.sparta.diameter.base.session.relay.RelayFailedException}, and
  * {@link com.sipgate.sparta.diameter.base.session.relay.LoopDetector}.</p>
  */
 package com.sipgate.sparta.diameter.base.session.relay;
