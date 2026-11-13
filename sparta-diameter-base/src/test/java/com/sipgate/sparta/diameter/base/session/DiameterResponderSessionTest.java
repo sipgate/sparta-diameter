@@ -806,7 +806,7 @@ class DiameterResponderSessionTest {
                 new DiameterNodeConfig.Capabilities(List.of(5L), List.of(), List.of(), List.of())));
 
         // WHEN
-        final CapabilitiesExchangeAnswer.Out cea = session.buildCeaForTest();
+        final CapabilitiesExchangeAnswer.Out cea = session.buildCea(buildIncomingCer(5L), DiameterConstants.RES_DIAMETER_SUCCESS);
 
         // THEN — RFC 6733 §5.3.5: all addresses, in configured order
         assertThat(cea.getHostIpAddresses()).containsExactly(LOCALHOST, second);
