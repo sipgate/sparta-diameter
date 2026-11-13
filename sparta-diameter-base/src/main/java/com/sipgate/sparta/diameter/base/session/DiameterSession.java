@@ -169,15 +169,9 @@ public abstract class DiameterSession {
      * (RFC 6733 §6.1.9) and returns a future that completes when the downstream answer
      * arrives.
      *
-     * <p><strong>Placement note (why this lives on {@code DiameterSession}):</strong>
-     * relay state is inherently per-connection — the outbound hop-by-hop identifier must
-     * be unique on the egress connection (RFC 6733 §3), and the answer dispatch
-     * ({@code complete}) runs on the session that owns that connection. A dedicated
-     * {@code DiameterRelaySession} subtype would either duplicate the
-     * initiator/responder capability state machines or be an empty marker class.
-     * Every session can therefore act as the egress side of a relay hop; the
-     * relay-specific types live in
-     * {@link com.sipgate.sparta.diameter.base.session.relay}.</p>
+     * <p>Relay state is per-connection, so every session can act as the egress side of a
+     * relay hop; see {@link com.sipgate.sparta.diameter.base.session.relay} for the
+     * rationale and the relay-specific types.</p>
      *
      * <p><strong>Identifier semantics:</strong> a fresh hop-by-hop identifier is minted
      * from the egress session's {@link DiameterIdentifiers}; the end-to-end identifier

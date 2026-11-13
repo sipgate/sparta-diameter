@@ -112,7 +112,7 @@ public final class DiameterNode implements Closeable {
     }
 
     /**
-     * @param relay {@code true} for a relay agent (DRA): proxiable messages with an
+     * @param relay {@code true} for a relay agent: proxiable messages with an
      *              unrecognized M-bit AVP are decoded and kept opaque instead of being
      *              rejected with {@code DIAMETER_AVP_UNSUPPORTED} (5001) — a relay forwards
      *              AVPs it does not understand (RFC 6733 §2.8.1, §6.1). Endpoints keep the
@@ -219,8 +219,7 @@ public final class DiameterNode implements Closeable {
                 .group(bossGroup, workerGroup)
                 .channel(io.netty.channel.sctp.nio.NioSctpServerChannel.class)
                 .childHandler(new SctpInitializer(factory, DiameterTransportMeters.DIRECTION_INBOUND))
-                // primary bind with the FIRST address; equivalent of the mandatory `addr` in Yate's
-                // `[listener ... type=sctp]`. NioSctpServerChannel.doBind() calls
+                // primary bind with the FIRST address; NioSctpServerChannel.doBind() calls
                 // SctpServerChannel.bind(address, backlog).
                 .bind(primary)
                 .addListener((final ChannelFuture bound) -> {

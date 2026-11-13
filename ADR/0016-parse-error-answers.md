@@ -25,7 +25,7 @@ the 5001 rule to every node. A relay agent (ADR-0015) forwards messages it does 
 6733 §2.8.1 and §6.1 do not require relays to understand non-routing AVPs, so rejecting an unknown
 M-bit AVP with 5001 breaks relaying of applications whose dictionary the relay does not load.
 
-Finally, the Diameter Routing Agent must reproduce the wire form of the peer it replaces, which may
+Finally, a node replacing an existing peer may need to reproduce that peer's wire form, which may
 differ from the RFC form, without the library shipping non-RFC behaviour.
 
 ## Decision

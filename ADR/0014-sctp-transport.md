@@ -13,14 +13,14 @@ created: "2026-09-22"
 ## Context
 
 RFC 6733 §2.1: Diameter clients MUST support TCP or SCTP; relay agents and servers SHOULD support
-both, with plain SCTP on port 3868. The Diameter Routing Agent that replaces the Yate DRA serves
-the Telefonica DEA links as plain SCTP on 3868 (Yate `[listener sctp_*:3868]`) while the internal
-UCN/HSS/SMSC side stays on TCP — so the library's transport layer, previously TCP-only
-(`LengthFieldBasedFrameDecoder` on a byte stream), needs a second wire transport.
+both, with plain SCTP on port 3868. A Diameter routing agent built on this library must
+interoperate with peers that only offer SCTP while other links stay on TCP — so the library's
+transport layer, previously TCP-only (`LengthFieldBasedFrameDecoder` on a byte stream), needs a
+second wire transport.
 
 `specs/dtls-sctp/01-requirements.md` defines the full SCTP scope including DTLS (port 5658, PPID 47,
-mutual authentication). This ADR covers the plain-SCTP subset that is actually implemented
-(commit `ccbf444`, branch `feature/relay-sctp`); DTLS/SCTP remains an open spec.
+mutual authentication). This ADR covers the plain-SCTP subset that is actually implemented;
+DTLS/SCTP remains an open spec.
 
 ## Decision
 
@@ -85,8 +85,7 @@ A server binds its primary address with `ServerBootstrap.bind(...)` and adds eve
 with `NioSctpServerChannel.bindAddress(InetAddress)` once the server channel is active. A client
 binds its primary address via `Bootstrap.localAddress(...)` (honoured by
 `NioSctpChannel.doConnect`) and adds further addresses with `NioSctpChannel.bindAddress(InetAddress)`
-after the association is established. The first list entry is always the primary address — the same
-ordering Yate's `addr` + `sctp_bindx` fields have.
+after the association is established. The first list entry is always the primary address.
 
 ### Plain SCTP only — DTLS explicitly out
 
@@ -98,13 +97,12 @@ unordered. The decoder-side PPID-47 drop keeps a later DTLS/SCTP implementation 
 ### TCP path byte-identical (backwards compatibility)
 
 The default `listen`/`connect` overloads behave exactly as before; all existing callers
-(sparta-hss' 3-arg `connect`, plain `listen`) are untouched.
+(3-arg `connect`, plain `listen`) are untouched.
 
 ## Consequences
 
 - A live node can serve TCP and SCTP **on the same port number** (3868) — TCP and SCTP bind in
-  independent protocol namespaces, so there is no collision. This is Yate's production shape
-  (`tcp_*:3868` + `sctp_*:3868`).
+  independent protocol namespaces, so there is no collision.
 - macOS has no SCTP kernel support (and the development sandbox blocks JVM sockets entirely):
   encoder/decoder behavior is covered by offline unit tests (`SctpMessageDecoderTest`,
   `SctpAnswerEncoderTest` (both encoders), `DiameterNodeSctpValidationTest` — framing,

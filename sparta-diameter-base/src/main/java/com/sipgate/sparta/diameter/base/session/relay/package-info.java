@@ -4,9 +4,7 @@
  *
  * <h2>Why there is no {@code DiameterRelaySession} class</h2>
  *
- * The original feature sketch placed a
- * {@code DiameterRelaySession} here. Implementation showed that relay state is
- * inherently per-connection state, so the relay entry points live on
+ * Relay state is inherently per-connection state, so the relay entry points live on
  * {@link com.sipgate.sparta.diameter.base.session.DiameterSession} itself and are
  * inherited by both concrete session classes:
  *

@@ -12,7 +12,7 @@ created: "2026-09-22"
 
 ## Context
 
-The Diameter Routing Agent (Yate-DRA successor) needs relay forwarding per RFC 6733 §6.1.9
+A Diameter routing agent built on this library needs relay forwarding per RFC 6733 §6.1.9
 (request: minimal mutation, fresh hop-by-hop identifier, preserved end-to-end identifier, appended
 Route-Record) and §6.2.2 (answer: restore the original hop-by-hop identifier upstream). The
 original feature sketch (the relay-support spec, since removed) placed a dedicated
@@ -83,7 +83,7 @@ a map; **an empty map is the 3002 signal** — deciding and answering `DIAMETER_
 is the caller's obligation, not the library's. The library does not attempt alternate routes
 either; re-selection (same group, alternate groups) is routing policy of the caller. Equally, `relay()` never appends the Route-Record:
 **the caller hangs the Route-Record on** the forward frame (RFC 6733 §6.1.9: the relay identifies
-itself); the DRA service appends the egress identity's Route-Record before each hop.
+itself), typically with the egress identity before each hop.
 
 ### Origin-State-Id restart memory is process-wide
 
@@ -97,9 +97,8 @@ WARN log; a restart callback with cleanup of affected sessions is left to a futu
 
 ## Consequences
 
-- Backwards compatibility is untouched: `relay()` is additive on `DiameterSession`; all sparta-hss
-  call sites (config constructor, `connect`, session constructors) compile unchanged against this
-  branch (verified per commit `ccbf444`).
+- Backwards compatibility is untouched: `relay()` is additive on `DiameterSession`; existing call
+  sites (config constructor, `connect`, session constructors) compile unchanged.
 - The relay future completes normally with every forwarded downstream answer, E-bit included, and
   exceptionally only when nothing was forwarded (timeout, write failure, connection lost, not
   open). A request handler may return it; the handler machinery does not answer a second time.
@@ -107,12 +106,12 @@ WARN log; a restart callback with cleanup of affected sessions is left to a futu
   `complete()` dispatch restores and forwards the answer automatically; `sendAnswerRestored` is
   public only for applications that intercept answers themselves.
 - The library implements RFC 6733 behaviour only. Wire deviations a relay needs to mimic a
-  specific peer (e.g. the Yate DRA) live in the consumer: it subclasses `DiameterResponderSession`
+  specific peer live in the consumer: it subclasses `DiameterResponderSession`
   / `DiameterInitiatorSession` and overrides the protected hooks `parseErrorAnswer` (answer to an
   unparseable request; default RFC 6733 §7.1) and `closeTransportAfterInboundDpa` (default `true`,
   RFC 6733 §5.4). There are no per-node behaviour toggles in `DiameterNodeConfig`.
 - The empty-candidates signal couples the loop-avoidance result format to the caller: a caller
-  that ignores an empty map would forward to nothing; the DRA answers 3002 in that branch.
+  that ignores an empty map would forward to nothing instead of answering 3002.
 
 ## Related ADRs
 
