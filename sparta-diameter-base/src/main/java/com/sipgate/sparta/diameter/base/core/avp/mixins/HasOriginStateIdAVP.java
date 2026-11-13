@@ -27,12 +27,12 @@ public interface HasOriginStateIdAVP extends AVPContainer {
     /**
      * Gets the Origin-State-Id from this message.
      *
-     * @return The origin state identifier, or -1 if not found.
+     * @return The origin state identifier (Unsigned32, 0..2^32-1), or -1 if not found.
      */
     default long getOriginStateId() {
         final AVP originStateIdAVP = findAVP(new AVPKey(DiameterConstants.AVP_ORIGIN_STATE_ID, 0));
         if (originStateIdAVP != null && originStateIdAVP.getData().length >= 4) {
-            return originStateIdAVP.getDataAsInt();
+            return originStateIdAVP.getDataAsUnsignedInt();
         }
         return -1;
     }

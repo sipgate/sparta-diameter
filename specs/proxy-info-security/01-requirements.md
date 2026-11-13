@@ -4,7 +4,7 @@
 
 RFC 6733 §6.1.9 and §6.7.2 define the Proxy-Info AVP (code 284, type Grouped) and its security requirements. A relay or proxy agent MAY include Proxy-Info in a forwarded request to carry local state needed when the corresponding answer returns. Because this state is distributed to other entities in the network, the RFC RECOMMENDS cryptographic protection.
 
-The relay path (see `specs/relay-support/`) handles forwarding; this spec covers only the security and answer-path lifecycle of Proxy-Info.
+The relay path (see ADR-0015) handles forwarding; this spec covers only the security and answer-path lifecycle of Proxy-Info.
 
 ## Proxy-Info structure (§6.7.2)
 

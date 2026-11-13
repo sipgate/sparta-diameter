@@ -39,7 +39,48 @@ public class AVPParseException extends DiameterResultCodeException {
             final boolean proxiable, final int applicationId,
             final HopByHopId hopByHop, final EndToEndId endToEnd,
             final AVP offendingAvp, final String sessionId, final Throwable cause) {
-        super(resultCode, commandCode, proxiable, applicationId, hopByHop, endToEnd, sessionId, cause);
+        this(resultCode, true, commandCode, proxiable, applicationId, hopByHop, endToEnd, offendingAvp, sessionId, cause);
+    }
+
+    /**
+     * @param request whether the R-bit was set in the parsed header (an answer is never answered)
+     */
+    public AVPParseException(final long resultCode, final boolean request, final int commandCode,
+            final boolean proxiable, final int applicationId,
+            final HopByHopId hopByHop, final EndToEndId endToEnd,
+            final AVP offendingAvp, final String sessionId, final Throwable cause) {
+        this(resultCode, request, commandCode, proxiable, applicationId, hopByHop, endToEnd, offendingAvp, sessionId,
+                java.util.List.of(), cause);
+    }
+
+    /**
+     * @param request    whether the R-bit was set in the parsed header (an answer is never answered)
+     * @param proxyInfos Proxy-Info AVPs of the request parsed before the failure, in order
+     *                   (RFC 6733 §6.2); {@code null} means none
+     */
+    public AVPParseException(final long resultCode, final boolean request, final int commandCode,
+            final boolean proxiable, final int applicationId,
+            final HopByHopId hopByHop, final EndToEndId endToEnd,
+            final AVP offendingAvp, final String sessionId, final java.util.List<AVP> proxyInfos,
+            final Throwable cause) {
+        this(resultCode, request, commandCode, proxiable, applicationId, hopByHop, endToEnd, offendingAvp, sessionId,
+                proxyInfos, null, cause);
+    }
+
+    /**
+     * @param request          whether the R-bit was set in the parsed header (an answer is never answered)
+     * @param proxyInfos       Proxy-Info AVPs of the request parsed before the failure, in order
+     *                         (RFC 6733 §6.2); {@code null} means none
+     * @param authSessionState Auth-Session-State AVP of the request parsed before the failure,
+     *                         mirrored into the answer (RFC 6733 §8.11); {@code null} means none
+     */
+    public AVPParseException(final long resultCode, final boolean request, final int commandCode,
+            final boolean proxiable, final int applicationId,
+            final HopByHopId hopByHop, final EndToEndId endToEnd,
+            final AVP offendingAvp, final String sessionId, final java.util.List<AVP> proxyInfos,
+            final AVP authSessionState, final Throwable cause) {
+        super(resultCode, request, commandCode, proxiable, applicationId, hopByHop, endToEnd, sessionId, proxyInfos,
+                authSessionState, cause);
         this.offendingAvp = offendingAvp;
     }
 

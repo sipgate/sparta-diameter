@@ -4,12 +4,22 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Collection;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.sipgate.sparta.diameter.base.MetersUtils.TAG_CAUSE;
 import static com.sipgate.sparta.diameter.base.MetersUtils.extractCauseTag;
 
+/**
+ * Transport-level meters of a {@link DiameterNode}.
+ *
+ * <p>The connection gauges are shared by every node registering into the same
+ * {@link MeterRegistry} and report the sum over those nodes, like the counters do.
+ * Micrometer keeps only the first gauge registered under a given name and tag set,
+ * so per-node gauge state would silently drop every node but the first.</p>
+ */
 final class DiameterTransportMeters {
 
     static final String DIRECTION_INBOUND = "inbound";
@@ -23,25 +33,34 @@ final class DiameterTransportMeters {
     private static final String TAG_COMMAND_CODE = "command_code";
     private static final String TAG_COMMAND_TYPE = "command_type";
 
+    /** Gauge state per registry; weak keys so a discarded registry is not retained. */
+    private static final Map<MeterRegistry, ConnectionGauges> GAUGES_BY_REGISTRY = new WeakHashMap<>();
+
     private final MeterRegistry registry;
-    private final AtomicInteger activeConnections = new AtomicInteger(0);
-    private final AtomicInteger activeInboundConnections = new AtomicInteger(0);
-    private final AtomicInteger activeOutboundConnections = new AtomicInteger(0);
-    private final ConcurrentHashMap<String, AtomicInteger> activeConnectionsByAppId = new ConcurrentHashMap<>();
+    private final AtomicInteger activeConnections;
+    private final AtomicInteger activeInboundConnections;
+    private final AtomicInteger activeOutboundConnections;
+    private final ConcurrentHashMap<String, AtomicInteger> activeConnectionsByAppId;
 
     DiameterTransportMeters(final MeterRegistry registry) {
         this.registry = registry;
-        Gauge.builder(PREFIX + "connections.active", activeConnections, AtomicInteger::get)
-                .description("Number of currently open TCP connections.")
-                .register(registry);
-        Gauge.builder(PREFIX + "connections.active.direction", activeInboundConnections, AtomicInteger::get)
-                .description("Number of currently open TCP connections by direction.")
-                .tag(TAG_DIRECTION, DIRECTION_INBOUND)
-                .register(registry);
-        Gauge.builder(PREFIX + "connections.active.direction", activeOutboundConnections, AtomicInteger::get)
-                .description("Number of currently open TCP connections by direction.")
-                .tag(TAG_DIRECTION, DIRECTION_OUTBOUND)
-                .register(registry);
+        final ConnectionGauges gauges = connectionGauges(registry);
+        this.activeConnections = gauges.activeConnections;
+        this.activeInboundConnections = gauges.activeInboundConnections;
+        this.activeOutboundConnections = gauges.activeOutboundConnections;
+        this.activeConnectionsByAppId = gauges.activeConnectionsByAppId;
+    }
+
+    private static ConnectionGauges connectionGauges(final MeterRegistry registry) {
+        synchronized (GAUGES_BY_REGISTRY) {
+            final ConnectionGauges existing = GAUGES_BY_REGISTRY.get(registry);
+            if (existing != null) {
+                return existing;
+            }
+            final ConnectionGauges created = new ConnectionGauges(registry);
+            GAUGES_BY_REGISTRY.put(registry, created);
+            return created;
+        }
     }
 
     /**
@@ -169,5 +188,28 @@ final class DiameterTransportMeters {
                 .description("Messages that could not be decoded")
                 .register(registry)
                 .increment();
+    }
+
+    /** Connection gauge state shared by all nodes of one registry. */
+    private static final class ConnectionGauges {
+
+        private final AtomicInteger activeConnections = new AtomicInteger(0);
+        private final AtomicInteger activeInboundConnections = new AtomicInteger(0);
+        private final AtomicInteger activeOutboundConnections = new AtomicInteger(0);
+        private final ConcurrentHashMap<String, AtomicInteger> activeConnectionsByAppId = new ConcurrentHashMap<>();
+
+        ConnectionGauges(final MeterRegistry registry) {
+            Gauge.builder(PREFIX + "connections.active", activeConnections, AtomicInteger::get)
+                    .description("Number of currently open TCP connections.")
+                    .register(registry);
+            Gauge.builder(PREFIX + "connections.active.direction", activeInboundConnections, AtomicInteger::get)
+                    .description("Number of currently open TCP connections by direction.")
+                    .tag(TAG_DIRECTION, DIRECTION_INBOUND)
+                    .register(registry);
+            Gauge.builder(PREFIX + "connections.active.direction", activeOutboundConnections, AtomicInteger::get)
+                    .description("Number of currently open TCP connections by direction.")
+                    .tag(TAG_DIRECTION, DIRECTION_OUTBOUND)
+                    .register(registry);
+        }
     }
 }

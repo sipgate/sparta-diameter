@@ -2,7 +2,6 @@ package com.sipgate.sparta.diameter.base.core;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
-import com.sipgate.sparta.diameter.base.core.avp.mixins.HasExperimentalResultAVP;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +66,7 @@ public final class DiameterMessageFactory {
         final EndToEndId endToEnd,
         final boolean retransmitted) {
         if (!isRequest && isError) {
-            return new ErrorAnswer.In(commandCode, applicationId, hopByHop, endToEnd);
+            return new ErrorAnswer.In(commandCode, proxiable, applicationId, hopByHop, endToEnd);
         }
         for (final var factory : FACTORIES) {
             final var result = factory.createForParsing(
@@ -77,16 +76,22 @@ public final class DiameterMessageFactory {
             }
         }
 
-        LOGGER.warn("unknown command code {} for application id {}", commandCode, applicationId);
-        return new GenericCommand.In(commandCode, isRequest, proxiable, isError, retransmitted, applicationId, hopByHop, endToEnd);
+        // Debug only: unknown commands are legitimate traffic for relay agents.
+        LOGGER.debug("unknown command code {} for application id {}", commandCode, applicationId);
+        if (isRequest) {
+            return new GenericRequest(commandCode, proxiable, retransmitted, applicationId, hopByHop, endToEnd);
+        }
+        return new GenericAnswer.In(commandCode, proxiable, applicationId, hopByHop, endToEnd);
     }
 
     /**
      * Creates an outgoing answer for the given incoming request.
      * <p>
      * The answer receives the same hop-by-hop and end-to-end identifiers as the request
-     * (required by RFC 6733 §3), has its Result-Code set to {@code resultCode}, and has
-     * Destination-Host / Destination-Realm populated from the request's origin.
+     * (required by RFC 6733 §3) and has its Result-Code set to {@code resultCode}. Every
+     * Proxy-Info AVP of the request is copied, in order (RFC 6733 §6.2 MUST). For a
+     * {@link GenericRequest} (no typed answer class) the answer is a {@link GenericAnswer.Out}
+     * that mirrors the request's Auth-Session-State and Vendor-Specific-Application-Id, if present.
      * </p>
      *
      * @param request    the received request to answer
@@ -94,6 +99,7 @@ public final class DiameterMessageFactory {
      * @param <A>        the outgoing answer type
      * @return the constructed answer
      * @throws IllegalArgumentException if no factory handles the request's command code
+     *         and it is not a {@link GenericRequest}
      */
     public static <A extends OutgoingAnswer> A createAnswer(
             final IncomingRequest<A> request,
@@ -106,7 +112,8 @@ public final class DiameterMessageFactory {
      * <p>
      * Use this for protocol errors (RFC 6733 §7.2). The answer has the E-bit set, carries the
      * same hop-by-hop and end-to-end identifiers as the request, and its Result-Code is set to
-     * {@code resultCode}. Per RFC 6733, only 3xxx result codes are valid here.
+     * {@code resultCode}. Per RFC 6733, only 3xxx result codes are valid here. Every Proxy-Info
+     * AVP of the request is copied, in order (RFC 6733 §6.2 MUST).
      * </p>
      *
      * @param request    the received request to answer
@@ -116,7 +123,28 @@ public final class DiameterMessageFactory {
     public static ErrorAnswer.Out createErrorAnswer(
             final IncomingRequest<?> request,
             final long resultCode) {
-        return createErrorAnswer(request, errorAnswer -> errorAnswer.setResultCode(resultCode));
+        return createErrorAnswer(request, resultCode, null);
+    }
+
+    /**
+     * Like {@link #createErrorAnswer(IncomingRequest, long)}, additionally carrying an
+     * Error-Message AVP (RFC 6733 §7.3) with a human-readable reason.
+     *
+     * @param request      the received request to answer
+     * @param resultCode   the Result-Code AVP value to set (should be a 3xxx protocol error code)
+     * @param errorMessage the Error-Message text; {@code null} omits the AVP
+     * @return the constructed error answer
+     */
+    public static ErrorAnswer.Out createErrorAnswer(
+            final IncomingRequest<?> request,
+            final long resultCode,
+            final String errorMessage) {
+        return createErrorAnswer(request, errorAnswer -> {
+            errorAnswer.setResultCode(resultCode);
+            if (errorMessage != null) {
+                errorAnswer.setErrorMessage(errorMessage);
+            }
+        });
     }
 
     public static ErrorAnswer.Out createErrorAnswer(
@@ -133,34 +161,102 @@ public final class DiameterMessageFactory {
             errorAnswer -> {
                 mirrorSessionAvps(request, errorAnswer);
                 initializer.accept(errorAnswer);
+                copyProxyInfos(request, errorAnswer);
             }
         );
     }
 
     /**
-     * Copies the session-scoped AVPs of the request onto an E-bit answer.
+     * Appends every Proxy-Info AVP of the request to the answer, in order. RFC 6733 §6.2: a
+     * locally generated answer MUST carry the Proxy-Info AVPs of the request, in the same order.
+     */
+    private static void copyProxyInfos(final Command request, final Command answer) {
+        final List<AVP> proxyInfos = request.findAVPs(new AVPKey(DiameterConstants.AVP_PROXY_INFO, 0));
+        for (final AVP proxyInfo : proxyInfos) {
+            answer.addAVP(proxyInfo);
+        }
+    }
+
+    /**
+     * Copies the session-scoped AVPs of the request onto an E-bit answer or a
+     * {@link GenericAnswer.Out}.
      * <p>
-     * An {@link ErrorAnswer.Out} is built without the per-application factory, so it misses what
-     * that factory would add - for S6a/Cx that is Auth-Session-State and Vendor-Specific-Application-Id.
+     * Both are built without the per-application factory, so they miss what that factory would
+     * add - for S6a/Cx that is Auth-Session-State and Vendor-Specific-Application-Id.
      * 3GPP peers expect both on answers (Auth-Session-State must match the request per RFC 6733
      * §8.11), and without them an MME sees a truncated AIA/ULA.
      * </p>
      */
-    private static void mirrorSessionAvps(final IncomingRequest<?> request, final ErrorAnswer.Out errorAnswer) {
+    private static void mirrorSessionAvps(final IncomingRequest<?> request, final Command answer) {
         for (final var code : new int[]{
             DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID,
             DiameterConstants.AVP_AUTH_SESSION_STATE}
         ) {
             final var avp = request.findAVP(new AVPKey(code, 0));
             if (avp != null) {
-                errorAnswer.setAVP(avp);
+                answer.setAVP(avp);
             }
         }
     }
 
 
     public static ErrorAnswer.Out createErrorAnswer(final DiameterResultCodeException cause) {
-        return createErrorAnswer(cause.getCommandCode(), cause.isProxiable(), cause.getApplicationId(), cause.getHopByHop(), cause.getEndToEnd(), cause.getSessionId(), errorAnswer -> errorAnswer.setResultCode(cause.getResultCode()));
+        return createErrorAnswer(cause.getCommandCode(), cause.isProxiable(), cause.getApplicationId(), cause.getHopByHop(), cause.getEndToEnd(), cause.getSessionId(), errorAnswer -> {
+            errorAnswer.setResultCode(cause.getResultCode());
+            if (cause.getAuthSessionState() != null) {
+                errorAnswer.setAVP(cause.getAuthSessionState());
+            }
+            for (final AVP proxyInfo : cause.getProxyInfos()) {
+                errorAnswer.addAVP(proxyInfo);
+            }
+        });
+    }
+
+    /**
+     * Creates the answer to a request that failed to parse.
+     * <p>
+     * Only protocol errors (3xxx) are E-bit error answers (RFC 6733 §7.1/§7.2); a permanent
+     * failure such as {@code DIAMETER_AVP_UNSUPPORTED} (5001) or
+     * {@code DIAMETER_INVALID_AVP_LENGTH} (5014) is a regular answer without the E-bit
+     * (RFC 6733 §7.1.5). The request could not be decoded into its typed form, so the
+     * non-E-bit variant is a {@link GenericAnswer.Out} with the request's header fields.
+     * An {@link com.sipgate.sparta.diameter.base.core.avp.AVPParseException} contributes a
+     * {@code Failed-AVP} wrapping the offending AVP. Proxy-Info AVPs parsed before the failure
+     * ({@link DiameterResultCodeException#getProxyInfos()}) are copied in order (RFC 6733 §6.2),
+     * an Auth-Session-State parsed before it ({@link DiameterResultCodeException#getAuthSessionState()})
+     * is mirrored (RFC 6733 §8.11).
+     * </p>
+     *
+     * @param cause the parse failure of a request ({@link DiameterResultCodeException#isRequest()})
+     * @return the answer to send
+     */
+    public static OutgoingAnswer createParseErrorAnswer(final DiameterResultCodeException cause) {
+        final OutgoingAnswer answer;
+        if (isProtocolError(cause.getResultCode())) {
+            answer = createErrorAnswer(cause);
+        } else {
+            answer = new GenericAnswer.Out(cause.getCommandCode(), cause.isProxiable(),
+                    cause.getApplicationId(), cause.getHopByHop(), cause.getEndToEnd());
+            if (cause.getSessionId() != null) {
+                answer.unshiftAvp(AVP.create(new AVPKey(DiameterConstants.AVP_SESSION_ID, 0), cause.getSessionId()));
+            }
+            answer.setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_RESULT_CODE, 0), cause.getResultCode()));
+            if (cause.getAuthSessionState() != null) {
+                answer.setAVP(cause.getAuthSessionState());
+            }
+            for (final AVP proxyInfo : cause.getProxyInfos()) {
+                answer.addAVP(proxyInfo);
+            }
+        }
+        if (cause instanceof final com.sipgate.sparta.diameter.base.core.avp.AVPParseException avpEx) {
+            answer.setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_FAILED_AVP, 0),
+                    List.of(avpEx.getOffendingAvp())));
+        }
+        return answer;
+    }
+
+    private static boolean isProtocolError(final long resultCode) {
+        return resultCode >= 3000 && resultCode < 4000;
     }
 
     private static ErrorAnswer.Out createErrorAnswer(
@@ -187,6 +283,9 @@ public final class DiameterMessageFactory {
      * Use this for vendor-specific results (RFC 6733 §7.6). The answer is a normal typed answer
      * (no E-bit) with the Experimental-Result grouped AVP set. Per RFC 6733, Result-Code and
      * Experimental-Result are mutually exclusive — this method sets only Experimental-Result.
+     * Every Proxy-Info AVP of the request is copied, in order (RFC 6733 §6.2 MUST); a
+     * {@link GenericRequest} gets a {@link GenericAnswer.Out} mirroring the request's
+     * Auth-Session-State and Vendor-Specific-Application-Id, if present.
      * </p>
      *
      * @param request                the received request to answer
@@ -195,17 +294,20 @@ public final class DiameterMessageFactory {
      * @param <A>                    the outgoing answer type
      * @return the constructed answer
      * @throws IllegalArgumentException if no factory handles the request's command code
+     *         and it is not a {@link GenericRequest}
      */
-    public static <A extends OutgoingAnswer & HasExperimentalResultAVP> A createExperimentalResultAnswer(
+    public static <A extends OutgoingAnswer> A createExperimentalResultAnswer(
             final IncomingRequest<A> request,
             final long vendorId,
             final long experimentalResultCode) {
-        return createAnswer(request, answer -> {
-            answer.setExperimentalResult(List.of(
+        // setAVP instead of the HasExperimentalResultAVP mixin: works for every answer type,
+        // including base-protocol and generic answers that do not declare the mixin.
+        return createAnswer(request, answer -> answer.setAVP(AVP.create(
+                new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT, 0),
+                List.of(
                     AVP.create(new AVPKey(DiameterConstants.AVP_VENDOR_ID, 0), vendorId),
                     AVP.create(new AVPKey(DiameterConstants.AVP_EXPERIMENTAL_RESULT_CODE, 0), experimentalResultCode)
-                ));
-        });
+                ))));
     }
 
     public static ErrorAnswer.Out createExperimentalErrorAnswer(
@@ -233,8 +335,22 @@ public final class DiameterMessageFactory {
             if (answer != null) {
                 prependSessionId(request, answer);
                 initializer.accept(answer);
+                copyProxyInfos(request, answer);
                 return answer;
             }
+        }
+
+        if (request instanceof GenericRequest) {
+            @SuppressWarnings("unchecked")
+            final A answer = (A) new GenericAnswer.Out(
+                    commandCode, request.isProxiable(), applicationId, request.hopByHopId(), request.endToEndId());
+            prependSessionId(request, answer);
+            // no per-application factory adds them: mirror what the request carried, as the
+            // typed answers do (Auth-Session-State is mandatory in 3GPP answers, RFC 6733 §8.11)
+            mirrorSessionAvps(request, answer);
+            initializer.accept(answer);
+            copyProxyInfos(request, answer);
+            return answer;
         }
 
         throw new IllegalArgumentException("No factory handles answer for command code: " + commandCode);

@@ -4,6 +4,7 @@ import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.core.avp.AVPParseException;
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogRequest;
+import com.sipgate.sparta.diameter.base.messages.SessionTerminationRequest;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -179,6 +180,174 @@ public class CommandTest {
 
         // THEN
         assertThat(buffer.position()).isEqualTo(initialPosition);
+    }
+
+    // unknown 3GPP vendor AVP 1504 (ANID) with V+M bits, 4 bytes data
+    private static final String UNKNOWN_MANDATORY_AVP = "000005e0" + "c0000010" + "000028af" + "61626364";
+
+    @Test
+    void it_keeps_an_unknown_mandatory_avp_of_an_unknown_request_for_relaying() throws Exception {
+        // GIVEN: request of a command no factory knows (8388999, app SWx), carrying an
+        // AVP outside the dictionary with the M-bit set
+        final byte[] message = hexStringToByteArray(
+                "01000024" + "c0800287" + "01000031" + "0000abcd" + "00001234" + UNKNOWN_MANDATORY_AVP);
+
+        // WHEN
+        final IncomingCommand command = Command.parseMessage(ByteBuffer.wrap(message));
+
+        // THEN: parsed (no 5001) and the AVP is retained unchanged for the relay
+        assertThat(command).isInstanceOf(GenericRequest.class);
+        final AVP avp = ((Command) command).findAVP(new AVPKey(1504, 10415));
+        assertThat(avp).isNotNull();
+        assertThat(avp.isMandatory()).isTrue();
+        assertThat(avp.getData()).isEqualTo("abcd".getBytes());
+    }
+
+    @Test
+    void it_keeps_an_unknown_mandatory_avp_of_an_unknown_answer_for_relaying() throws Exception {
+        // GIVEN: the downstream answer to such a relayed request
+        final byte[] message = hexStringToByteArray(
+                "01000024" + "40800287" + "01000031" + "0000abcd" + "00001234" + UNKNOWN_MANDATORY_AVP);
+
+        // WHEN
+        final IncomingCommand command = Command.parseMessage(ByteBuffer.wrap(message));
+
+        // THEN
+        assertThat(command).isInstanceOf(GenericAnswer.In.class);
+        assertThat(((Command) command).findAVP(new AVPKey(1504, 10415))).isNotNull();
+    }
+
+    @Test
+    void it_still_rejects_an_unknown_mandatory_avp_in_a_known_command_with_5001() {
+        // GIVEN: a DWR (typed, interpreted locally) with the same AVP
+        final byte[] message = hexStringToByteArray(
+                "01000024" + "80000118" + "00000000" + "0000abcd" + "00001234" + UNKNOWN_MANDATORY_AVP);
+
+        // WHEN / THEN
+        assertThatThrownBy(() -> Command.parseMessage(ByteBuffer.wrap(message)))
+                .isInstanceOf(AVPParseException.class)
+                .satisfies(ex -> assertThat(((AVPParseException) ex).getResultCode())
+                        .isEqualTo(DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED));
+    }
+
+    @Test
+    void it_keeps_an_unknown_mandatory_avp_of_a_known_proxiable_command_on_a_relay() throws Exception {
+        // GIVEN: an STR (typed, P-bit set) carrying an AVP outside the dictionary with the M-bit
+        final byte[] message = hexStringToByteArray(
+                "01000024" + "c0000113" + "00000004" + "0000abcd" + "00001234" + UNKNOWN_MANDATORY_AVP);
+
+        // WHEN: parsed by a relay node
+        final IncomingCommand command = Command.parseMessage(ByteBuffer.wrap(message), true);
+
+        // THEN: typed, no 5001, AVP retained for the forward copy (RFC 6733 §2.8.1)
+        assertThat(command).isInstanceOf(SessionTerminationRequest.In.class);
+        assertThat(((Command) command).findAVP(new AVPKey(1504, 10415))).isNotNull();
+    }
+
+    @Test
+    void it_rejects_an_unknown_mandatory_avp_of_a_known_proxiable_command_on_an_endpoint() {
+        // GIVEN: the same STR
+        final byte[] message = hexStringToByteArray(
+                "01000024" + "c0000113" + "00000004" + "0000abcd" + "00001234" + UNKNOWN_MANDATORY_AVP);
+
+        // WHEN / THEN: strict endpoint parsing (default)
+        assertThatThrownBy(() -> Command.parseMessage(ByteBuffer.wrap(message)))
+                .isInstanceOf(AVPParseException.class)
+                .satisfies(ex -> assertThat(((AVPParseException) ex).isRequest()).isTrue());
+    }
+
+    @Test
+    void it_rejects_an_unknown_mandatory_avp_of_a_non_proxiable_command_even_on_a_relay() {
+        // GIVEN: a DWR (consumed locally, never relayed) with the same AVP
+        final byte[] message = hexStringToByteArray(
+                "01000024" + "80000118" + "00000000" + "0000abcd" + "00001234" + UNKNOWN_MANDATORY_AVP);
+
+        // WHEN / THEN
+        assertThatThrownBy(() -> Command.parseMessage(ByteBuffer.wrap(message), true))
+                .isInstanceOf(AVPParseException.class)
+                .satisfies(ex -> assertThat(((AVPParseException) ex).getResultCode())
+                        .isEqualTo(DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED));
+    }
+
+    @Test
+    void it_marks_a_parse_failure_of_an_answer_as_not_a_request() {
+        // GIVEN: an STA (R-bit clear) with the unknown M-bit AVP, parsed strictly
+        final byte[] message = hexStringToByteArray(
+                "01000024" + "40000113" + "00000004" + "0000abcd" + "00001234" + UNKNOWN_MANDATORY_AVP);
+
+        // WHEN / THEN: the session must be able to tell it is an answer (never answered)
+        assertThatThrownBy(() -> Command.parseMessage(ByteBuffer.wrap(message)))
+                .isInstanceOf(AVPParseException.class)
+                .satisfies(ex -> assertThat(((AVPParseException) ex).isRequest()).isFalse());
+    }
+
+    @Test
+    void it_presents_a_typed_request_with_the_P_bit_clear_as_not_proxiable() throws Exception {
+        // GIVEN: an STR (typed class defaults to proxiable) received with R=1, P=0
+        final byte[] message = hexStringToByteArray(
+                "01000014" + "80000113" + "00000004" + "0000abcd" + "00001234");
+
+        // WHEN
+        final IncomingCommand command = Command.parseMessage(ByteBuffer.wrap(message), true);
+
+        // THEN: the wire flags win - a relay must not forward it as proxiable
+        assertThat(command).isInstanceOf(SessionTerminationRequest.In.class);
+        final Command parsed = (Command) command;
+        assertThat(parsed.isRequest()).isTrue();
+        assertThat(parsed.isProxiable()).isFalse();
+        assertThat(parsed.isError()).isFalse();
+        assertThat(parsed.isRetransmitted()).isFalse();
+    }
+
+    @Test
+    void it_keeps_the_wire_application_id_of_a_typed_command() throws Exception {
+        // GIVEN: an STR (typed class constant: Application-Id 0) received with Application-Id 4
+        final byte[] message = hexStringToByteArray(
+                "01000014" + "c0000113" + "00000004" + "0000abcd" + "00001234");
+
+        // WHEN
+        final IncomingCommand command = Command.parseMessage(ByteBuffer.wrap(message));
+
+        // THEN
+        assertThat(command).isInstanceOf(SessionTerminationRequest.In.class);
+        assertThat(command.getApplicationId()).isEqualTo(4);
+        assertThat(((Command) command).isProxiable()).isTrue();
+    }
+
+    @Test
+    void it_keeps_the_wire_T_bit_of_a_typed_command() throws Exception {
+        // GIVEN: an STR with R, P and T set; and a DWR with R, T set
+        final byte[] str = hexStringToByteArray(
+                "01000014" + "d0000113" + "00000000" + "0000abcd" + "00001234");
+        final byte[] dwr = hexStringToByteArray(
+                "01000014" + "90000118" + "00000000" + "0000abcd" + "00001234");
+
+        // WHEN
+        final Command parsedStr = (Command) Command.parseMessage(ByteBuffer.wrap(str));
+        final Command parsedDwr = (Command) Command.parseMessage(ByteBuffer.wrap(dwr));
+
+        // THEN
+        assertThat(parsedStr.isRetransmitted()).isTrue();
+        assertThat(parsedStr.isProxiable()).isTrue();
+        assertThat(parsedDwr).isInstanceOf(DeviceWatchdogRequest.In.class);
+        assertThat(parsedDwr.isRetransmitted()).isTrue();
+        assertThat(parsedDwr.isProxiable()).isFalse();
+    }
+
+    @Test
+    void it_keeps_the_wire_header_flags_of_a_generic_request() throws Exception {
+        // GIVEN: an unknown command with R=1, P=0, T=1
+        final byte[] message = hexStringToByteArray(
+                "01000014" + "90800287" + "01000031" + "0000abcd" + "00001234");
+
+        // WHEN
+        final Command parsed = (Command) Command.parseMessage(ByteBuffer.wrap(message), true);
+
+        // THEN
+        assertThat(parsed).isInstanceOf(GenericRequest.class);
+        assertThat(parsed.isProxiable()).isFalse();
+        assertThat(parsed.isRetransmitted()).isTrue();
+        assertThat(parsed.getApplicationId()).isEqualTo(0x01000031);
     }
 
     private byte[] hexStringToByteArray(final String hexString) {

@@ -1,5 +1,7 @@
 package com.sipgate.sparta.diameter.base.session;
 
+import com.sipgate.sparta.diameter.base.core.avp.GroupedAVP;
+
 import com.sipgate.sparta.diameter.base.core.Command;
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
@@ -553,10 +555,12 @@ class DiameterInitiatorSessionTest {
         session.onMessage(rar);
 
         // THEN
-        final ArgumentCaptor<ReAuthAnswer.Out> captor = ArgumentCaptor.forClass(ReAuthAnswer.Out.class);
+        final ArgumentCaptor<ErrorAnswer.Out> captor = ArgumentCaptor.forClass(ErrorAnswer.Out.class);
         verify(peer).send(captor.capture());
         assertThat(captor.getValue().getResultCode())
                 .isEqualTo(DiameterConstants.RES_DIAMETER_COMMAND_UNSUPPORTED);
+        // RFC 6733 §7.1.3: 3001 is a protocol error → E-bit set
+        assertThat(captor.getValue().isError()).isTrue();
     }
 
     @Test
@@ -1092,9 +1096,61 @@ class DiameterInitiatorSessionTest {
         assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
     }
 
+    @Test
+    void it_keeps_the_transport_open_after_DPA_when_a_subclass_overrides_the_close_hook() throws Exception {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        final DiameterInitiatorSession session = openedSession(peer, new DiameterInitiatorSession(CONFIG, (ignored) -> {}) {
+            @Override
+            protected boolean closeTransportAfterInboundDpa() {
+                return false;
+            }
+        });
+        final DisconnectPeerRequest.In dpr = (DisconnectPeerRequest.In)
+                DiameterMessageFactory.createForParsing(DiameterConstants.CMD_DISCONNECT_PEER, 0, true, true, false, new HopByHopId(10), new EndToEndId(20), false);
+
+        // WHEN
+        session.onMessage(dpr);
+
+        // THEN — DPA sent, transport left for the peer to close
+        verify(peer).send(any(DisconnectPeerAnswer.Out.class));
+        verify(peer, never()).close();
+        assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSING);
+    }
+
     // -------------------------------------------------------------------------
     // onParseError
     // -------------------------------------------------------------------------
+
+    @Test
+    void it_sends_the_parse_error_answer_of_a_subclass_overriding_the_answer_hook() throws Exception {
+        // GIVEN — a subclass answering with an E-bit answer without Failed-AVP
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        final DiameterInitiatorSession session = openedSession(peer, new DiameterInitiatorSession(CONFIG, (ignored) -> {}) {
+            @Override
+            protected OutgoingAnswer parseErrorAnswer(final DiameterResultCodeException cause) {
+                return DiameterMessageFactory.createErrorAnswer(cause);
+            }
+        });
+        final AVP offending = AVP.createRaw(new AVPKey(999, 0), true, true, false, new byte[0]);
+        final AVPParseException cause = new AVPParseException(
+                DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED,
+                280, true, 0, new HopByHopId(1), new EndToEndId(2), offending, null);
+
+        // WHEN
+        session.onParseError(peer, cause);
+
+        // THEN — the overridden answer is sent; the connection handling is unchanged
+        final ArgumentCaptor<OutgoingAnswer> captor = ArgumentCaptor.forClass(OutgoingAnswer.class);
+        verify(peer).send(captor.capture());
+        assertThat(captor.getValue()).isInstanceOf(ErrorAnswer.Out.class);
+        assertThat(captor.getValue().isError()).isTrue();
+        assertThat(captor.getValue().getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED);
+        assertThat(captor.getValue().findAVP(new AVPKey(DiameterConstants.AVP_FAILED_AVP, 0))).isNull();
+        verify(peer, never()).close();
+    }
 
     @Test
     void it_sends_error_answer_with_Failed_AVP_on_AVPParseException() throws Exception {
@@ -1111,11 +1167,33 @@ class DiameterInitiatorSessionTest {
         // WHEN
         session.onParseError(peer, cause);
 
-        // THEN
-        final ArgumentCaptor<ErrorAnswer.Out> captor = ArgumentCaptor.forClass(ErrorAnswer.Out.class);
+        // THEN — 5001 is a permanent failure, not a protocol error: no E-bit (RFC 6733 §7.1)
+        final ArgumentCaptor<OutgoingAnswer> captor = ArgumentCaptor.forClass(OutgoingAnswer.class);
         verify(peer).send(captor.capture());
-        assertThat(captor.getValue().getFailedAVP()).isNotNull();
-        assertThat(captor.getValue().getFailedAVP().findAVPs(offendingKey)).containsExactly(offending);
+        assertThat(captor.getValue().isError()).isFalse();
+        assertThat(captor.getValue().getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED);
+        final AVP failedAvp = captor.getValue().findAVP(new AVPKey(DiameterConstants.AVP_FAILED_AVP, 0));
+        assertThat(failedAvp).isInstanceOf(GroupedAVP.class);
+        assertThat(((GroupedAVP) failedAvp).findAVPs(offendingKey)).containsExactly(offending);
+        verify(peer, never()).close();
+    }
+
+    @Test
+    void it_drops_an_unparseable_answer_without_answering_it() throws Exception {
+        // GIVEN
+        final DiameterPeer peer = mock(DiameterPeer.class);
+        stubSend(peer);
+        final DiameterInitiatorSession session = openedSession(peer);
+        final AVP offending = AVP.createRaw(new AVPKey(999, 0), true, true, false, new byte[0]);
+        final AVPParseException cause = new AVPParseException(
+                DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED, false,
+                316, true, 16777251, new HopByHopId(1), new EndToEndId(2), offending, null, null);
+
+        // WHEN
+        session.onParseError(peer, cause);
+
+        // THEN — never an answer to an answer
+        verify(peer, never()).send(any(OutgoingAnswer.class));
         verify(peer, never()).close();
     }
 
@@ -1138,7 +1216,7 @@ class DiameterInitiatorSessionTest {
         session.onDisconnected(peer);
 
         // THEN — stop() was called: no Tc timer scheduled, reconnect suppressed
-        verify(peer).send(any(ErrorAnswer.Out.class));
+        verify(peer).send(any(OutgoingAnswer.class));
         assertThat(session.getPeerState()).isEqualTo(PeerState.CLOSED);
         assertThat(tasks).hasSize(taskCountAfterParseError);
     }
@@ -1148,8 +1226,13 @@ class DiameterInitiatorSessionTest {
     // -------------------------------------------------------------------------
 
     private static DiameterInitiatorSession openedSession(final DiameterPeer peer) throws Exception {
+        return openedSession(peer, new DiameterInitiatorSession(CONFIG, (ignored) -> {}));
+    }
+
+    /** Opens the given session (CER/CEA exchanged, state I_OPEN) on the peer. */
+    private static DiameterInitiatorSession openedSession(
+            final DiameterPeer peer, final DiameterInitiatorSession session) throws Exception {
         stubEventLoop(peer);
-        final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG, (ignored) -> {});
         session.onConnected(peer);
         final CapabilitiesExchangeAnswer.In cea = captureAndBuildCea(peer, DiameterConstants.RES_DIAMETER_SUCCESS);
         session.onMessage(cea);

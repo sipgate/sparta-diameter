@@ -2,8 +2,8 @@ package com.sipgate.sparta.diameter.base.session;
 
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
-import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
+import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
@@ -22,8 +22,13 @@ import java.util.ArrayList;
 import java.util.List;
 /**
  * Diameter session for the responder (R-) side of a connection.
+ *
+ * <p>Subclassable (not final) so routing agents can bind a configured peer
+ * identity at capabilities-exchange time via {@link #onCapabilitiesExchange};
+ * request-time binding alone never sees peers that only answer (an HSS behind
+ * a relay).</p>
  */
-public final class DiameterResponderSession extends DiameterSession {
+public class DiameterResponderSession extends DiameterSession {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DiameterResponderSession.class);
 
@@ -37,7 +42,7 @@ public final class DiameterResponderSession extends DiameterSession {
 
     @Override
     public void onConnected(final DiameterPeer peer) {
-        LOGGER.info("remote {} connected to local {}", peer.remoteAddress(), peer.localAddress());
+        LOGGER.info("remote {} connected to local {}", peer.remoteAddress(), peer.localAddressesForLog());
         super.onConnected(peer);
     }
 
@@ -65,7 +70,43 @@ public final class DiameterResponderSession extends DiameterSession {
         }
     }
 
+    /**
+     * Application hook fired after a SUCCESSFUL capabilities exchange: the CEA
+     * has been sent, the peer is in {@link PeerState#R_OPEN} and the watchdog is
+     * running. Routing agents bind the connection to a configured peer identity
+     * ({@code cer.getOriginHost()}) here — BEFORE any application request
+     * arrives; inbound peers that only answer (e.g. an HSS behind a relay)
+     * would never be bound by request-time tracking.
+     *
+     * <p>Default: no-op. Exceptions from overrides propagate like from
+     * {@link #onMessage}.</p>
+     *
+     * @param cer the capabilities exchange request of the now-open peer
+     */
+    protected void onCapabilitiesExchange(final CapabilitiesExchangeRequest.In cer) {
+        // no-op
+    }
+
+    /**
+     * Application hook fired when a CER arrives on a connection that is already
+     * {@link PeerState#R_OPEN} (a repeated capabilities exchange), before it is
+     * processed. The CER is then handled like the first one: a CEA is sent, the watchdog
+     * is restarted (never duplicated) and {@link #onCapabilitiesExchange} fires again on
+     * success — or the connection is closed if no common application remains.
+     *
+     * <p>Default: no-op.</p>
+     *
+     * @param cer the repeated capabilities exchange request
+     */
+    protected void onCapabilitiesReExchange(final CapabilitiesExchangeRequest.In cer) {
+        // no-op
+    }
+
     private void handleCer(final CapabilitiesExchangeRequest.In cer) {
+        if (peerState == PeerState.R_OPEN) {
+            LOGGER.info("received CER on already open connection from {}", cer.getOriginHost());
+            onCapabilitiesReExchange(cer);
+        }
         final List<Long> remoteAuthIds = cer.getAuthApplicationIds();
         final List<Long> remoteAcctIds = cer.getAcctApplicationIds();
         final List<Long> remoteVendorSpecificAppIds = extractVendorSpecificAppIds(cer);
@@ -74,7 +115,11 @@ public final class DiameterResponderSession extends DiameterSession {
         if (negotiator.hasCommonApplication(configCapabilities, remoteAuthIds, remoteAcctIds, remoteVendorSpecificAppIds)) {
             send(buildCea(cer, DiameterConstants.RES_DIAMETER_SUCCESS));
             peerState = PeerState.R_OPEN;
+            // Only an accepted peer is remembered: rejected CERs would otherwise grow the
+            // process-wide memory with arbitrary Origin-Hosts.
+            recordRemoteOriginStateId(cer.getOriginHost(), cer.getOriginStateId());
             startWatchdog();
+            onCapabilitiesExchange(cer);
         } else {
             LOGGER.warn("capabilities exchange did not find any common application");
             LOGGER.debug(
@@ -91,7 +136,7 @@ public final class DiameterResponderSession extends DiameterSession {
             final AVP authAppAvp = container.findAVP(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0));
             if (authAppAvp != null) {
                 appIds.add(authAppAvp.getDataAsUnsignedInt());
-                }
+            }
             final AVP acctAppAvp = container.findAVP(new AVPKey(DiameterConstants.AVP_ACCT_APPLICATION_ID, 0));
             if (acctAppAvp != null) {
                 appIds.add(acctAppAvp.getDataAsUnsignedInt());
@@ -100,8 +145,9 @@ public final class DiameterResponderSession extends DiameterSession {
         return appIds;
     }
 
-    private CapabilitiesExchangeAnswer.Out buildCea(final CapabilitiesExchangeRequest.In cer,
-                                                    final long resultCode) {
+    // package-private for tests
+    CapabilitiesExchangeAnswer.Out buildCea(final CapabilitiesExchangeRequest.In cer,
+                                            final long resultCode) {
         final CapabilitiesExchangeAnswer.Out cea = DiameterMessageFactory.createAnswer(cer, resultCode);
         populateCapabilityAvps(cea);
         return cea;
