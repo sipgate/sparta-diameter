@@ -2,7 +2,7 @@
 title: "ADR-0014: SCTP Transport"
 description: "Plain SCTP as a second wire transport on the shared DiameterNode via Netty NioSctpChannel, no separate node class"
 owner: "insomnick"
-status: accepted
+status: draft
 tags:
   - transport
   - sctp
