@@ -24,6 +24,7 @@ import com.sipgate.sparta.diameter.base.messages.DisconnectPeerRequest;
 import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
 import com.sipgate.sparta.diameter.base.session.relay.RelayAnswerHook;
 import com.sipgate.sparta.diameter.base.session.relay.RelayedAnswer;
+import com.sipgate.sparta.diameter.base.session.relay.RelayFailedException;
 import com.sipgate.sparta.diameter.base.session.relay.RelayTranslation;
 import com.sipgate.sparta.diameter.base.session.relay.RelayTranslationStore;
 import com.sipgate.sparta.diameter.base.core.avp.mixins.HasOriginStateIdAVP;
@@ -201,8 +202,9 @@ public abstract class DiameterSession {
                         end-to-end identifier and the hop-by-hop identifier to restore
      * @param forward        the outbound request built by the application; never mutated
      * @return a future that completes with the downstream answer (including E-bit error
-            answers) after it was forwarded upstream, or exceptionally when no answer
-            was forwarded: {@code IllegalStateException} (not open, connection lost),
+            answers) after it was forwarded upstream, or exceptionally with a
+            {@link RelayFailedException} when no answer was forwarded; its cause is an
+            {@code IllegalStateException} (not open, connection lost), a
             {@code TimeoutException}, or the write failure cause
      * @throws NullPointerException if any argument is {@code null}
      */
@@ -216,8 +218,8 @@ public abstract class DiameterSession {
 
         final CompletableFuture<IncomingAnswer> future = new CompletableFuture<>();
         if (peerState != PeerState.I_OPEN && peerState != PeerState.R_OPEN) {
-            future.completeExceptionally(
-                    new IllegalStateException("Cannot relay in state: " + peerState));
+            future.completeExceptionally(new RelayFailedException("relay failed",
+                    new IllegalStateException("Cannot relay in state: " + peerState)));
             return future;
         }
 
@@ -427,8 +429,11 @@ public abstract class DiameterSession {
      *
      * <p>A handler that returns the future of {@link #relay} completes with the
      * downstream {@link IncomingAnswer}, which the relay answer path has already
-     * forwarded upstream; nothing further is sent for it. A handler that throws
-     * synchronously is treated like a failed future ({@code DIAMETER_UNABLE_TO_COMPLY}).</p>
+     * forwarded upstream; nothing further is sent for it. If that future fails with a
+     * {@link RelayFailedException} (nothing was forwarded), the request is answered with
+     * the protocol error {@code DIAMETER_UNABLE_TO_DELIVER} (3002, E-bit, RFC 6733 §7.1.3).
+     * Any other failure, including a handler that throws synchronously, is answered with
+     * {@code DIAMETER_UNABLE_TO_COMPLY}.</p>
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     protected void dispatchInboundRequest(final IncomingRequest<? extends OutgoingAnswer> request) {
@@ -453,6 +458,10 @@ public abstract class DiameterSession {
             // answer for an Experimental-Result (RFC 6733 §7.6 - no E-bit on those).
             if (err instanceof final DiameterErrorAnswerException e && e.getAnswer() instanceof final OutgoingAnswer out) {
                 send(out);
+                meters.recordHandlerError(commandCode, applicationId, err);
+            } else if (err instanceof RelayFailedException) {
+                // 3002 is a protocol error (RFC 6733 §7.1.3) → E-bit answer
+                send(DiameterMessageFactory.createErrorAnswer(request, DiameterConstants.RES_DIAMETER_UNABLE_TO_DELIVER));
                 meters.recordHandlerError(commandCode, applicationId, err);
             } else if (err != null) {
                 send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
@@ -701,10 +710,13 @@ public abstract class DiameterSession {
         // every relay entry is paired with a pending entry, so request timeout, write
         // failure, and connection loss clean up both halves together. A late answer
         // after that finds neither and is logged as unsolicited.
-        relayTranslations.remove(hopByHop);
+        final RelayTranslation translation = relayTranslations.remove(hopByHop);
         meters.recordOutgoingRequestError(pending.commandCode, pending.applicationId, cause);
         pending.timeoutTask.cancel(false);
-        pending.future.completeExceptionally(cause);
+        // A relay future fails with RelayFailedException so the upstream request is
+        // answered DIAMETER_UNABLE_TO_DELIVER rather than a generic handler failure.
+        pending.future.completeExceptionally(
+                translation == null ? cause : new RelayFailedException("relay failed", cause));
     }
 
     /**
