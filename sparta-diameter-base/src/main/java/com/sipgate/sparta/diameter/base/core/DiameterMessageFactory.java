@@ -231,26 +231,8 @@ public final class DiameterMessageFactory {
      * @return the answer to send
      */
     public static OutgoingAnswer createParseErrorAnswer(final DiameterResultCodeException cause) {
-        return createParseErrorAnswer(cause, false);
-    }
-
-    /**
-     * Creates the answer to a request that failed to parse, optionally in the style of
-     * peers that flag every parse-error answer as an error.
-     *
-     * @param cause                    the parse failure of a request
-     * @param errorBitWithoutFailedAvp {@code false} (RFC 6733, see
-     *                                 {@link #createParseErrorAnswer(DiameterResultCodeException)}):
-     *                                 E-bit only for 3xxx, {@code Failed-AVP} for an
-     *                                 {@link com.sipgate.sparta.diameter.base.core.avp.AVPParseException};
-     *                                 {@code true} (Yate-compatible): always an E-bit
-     *                                 {@link ErrorAnswer.Out} and never a {@code Failed-AVP}
-     * @return the answer to send
-     */
-    public static OutgoingAnswer createParseErrorAnswer(final DiameterResultCodeException cause,
-                                                        final boolean errorBitWithoutFailedAvp) {
         final OutgoingAnswer answer;
-        if (errorBitWithoutFailedAvp || isProtocolError(cause.getResultCode())) {
+        if (isProtocolError(cause.getResultCode())) {
             answer = createErrorAnswer(cause);
         } else {
             answer = new GenericAnswer.Out(cause.getCommandCode(), cause.isProxiable(),
@@ -266,8 +248,7 @@ public final class DiameterMessageFactory {
                 answer.addAVP(proxyInfo);
             }
         }
-        if (!errorBitWithoutFailedAvp
-                && cause instanceof final com.sipgate.sparta.diameter.base.core.avp.AVPParseException avpEx) {
+        if (cause instanceof final com.sipgate.sparta.diameter.base.core.avp.AVPParseException avpEx) {
             answer.setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_FAILED_AVP, 0),
                     List.of(avpEx.getOffendingAvp())));
         }

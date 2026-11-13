@@ -19,8 +19,11 @@ import java.util.function.Consumer;
 
 /**
  * Diameter session for the initiator (I-) side of a connection.
+ *
+ * <p>Subclassable (not final) so consumers can override the protected protocol hooks of
+ * {@link DiameterSession} for outgoing connections.</p>
  */
-public final class DiameterInitiatorSession extends DiameterSession {
+public class DiameterInitiatorSession extends DiameterSession {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DiameterInitiatorSession.class);
 

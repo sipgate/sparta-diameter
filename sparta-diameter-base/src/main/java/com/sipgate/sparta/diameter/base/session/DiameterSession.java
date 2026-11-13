@@ -387,17 +387,32 @@ public abstract class DiameterSession {
     }
 
     /**
-     * Handles a peer-initiated DPR: sends a DPA and closes the channel — or, with
-     * {@link DiameterNodeConfig.Behaviour#keepTransportOpenAfterDpa()}, leaves the channel
-     * open (state {@link PeerState#CLOSING}) until the peer closes it.
+     * Handles a peer-initiated DPR: sends a DPA and, if
+     * {@link #closeTransportAfterInboundDpa()} returns {@code true} (the default), closes the
+     * channel once the DPA is written. Otherwise the channel stays open (state
+     * {@link PeerState#CLOSING}) until the peer closes it.
      */
     protected void handleInboundDpr(final DisconnectPeerRequest.In dpr) {
         stopWatchdog();
         peerState = PeerState.CLOSING;
         final ChannelFuture sent = send(DiameterMessageFactory.createAnswer(dpr, DiameterConstants.RES_DIAMETER_SUCCESS));
-        if (!config.getBehaviour().keepTransportOpenAfterDpa()) {
+        if (closeTransportAfterInboundDpa()) {
             sent.addListener(ignored -> closePeer());
         }
+    }
+
+    /**
+     * Whether the transport is closed after the DPA to a peer-initiated DPR has been written.
+     * <p>
+     * The default {@code true} is the RFC 6733 §5.4 behaviour. A subclass may return
+     * {@code false} to send the DPA and leave the transport open until the peer closes it,
+     * for wire compatibility with peers that expect to close the connection themselves.
+     * </p>
+     *
+     * @return {@code true} to close the transport after the DPA, {@code false} to keep it open
+     */
+    protected boolean closeTransportAfterInboundDpa() {
+        return true;
     }
 
     protected void closePeer() {
@@ -588,9 +603,9 @@ public abstract class DiameterSession {
      *
      * <p>The answer carries the E-bit only for protocol errors (3xxx); permanent failures
      * such as 5001/5014 are regular answers (RFC 6733 §7.1), see
-     * {@link DiameterMessageFactory#createParseErrorAnswer}. With
-     * {@link DiameterNodeConfig.Behaviour#parseErrorAnswerWithErrorBit()} every such answer
-     * carries the E-bit and no {@code Failed-AVP}.</p>
+     * {@link DiameterMessageFactory#createParseErrorAnswer}. Both request branches build
+     * their answer through the overridable {@link #parseErrorAnswer(DiameterResultCodeException)}
+     * hook.</p>
      */
     public void onParseError(final DiameterPeer peer, final DiameterException cause) {
         if (cause instanceof final DiameterResultCodeException rcEx && !rcEx.isRequest()) {
@@ -600,15 +615,33 @@ public abstract class DiameterSession {
                 stop();
             }
         } else if (cause instanceof final AVPParseException avpEx) {
-            send(peer, DiameterMessageFactory.createParseErrorAnswer(
-                    avpEx, config.getBehaviour().parseErrorAnswerWithErrorBit()));
+            send(peer, parseErrorAnswer(avpEx));
         } else if (cause instanceof final DiameterResultCodeException rcEx) {
-            send(peer, DiameterMessageFactory.createParseErrorAnswer(
-                    rcEx, config.getBehaviour().parseErrorAnswerWithErrorBit()));
+            send(peer, parseErrorAnswer(rcEx));
             stop();
         } else {
             closePeer();
         }
+    }
+
+    /**
+     * Builds the answer sent for a request that failed to parse (see
+     * {@link #onParseError(DiameterPeer, DiameterException)}).
+     * <p>
+     * The default returns the RFC 6733 answer of
+     * {@link DiameterMessageFactory#createParseErrorAnswer(DiameterResultCodeException)}:
+     * E-bit only for protocol errors (3xxx), {@code Failed-AVP} for an
+     * {@link AVPParseException}. A subclass may return a different answer for wire
+     * compatibility with a specific peer; the connection handling of
+     * {@code onParseError} is unaffected.
+     * </p>
+     *
+     * @param cause the parse failure of a request ({@link DiameterResultCodeException#isRequest()});
+     *              an {@link AVPParseException} for a recoverable AVP error
+     * @return the answer to send, never {@code null}
+     */
+    protected OutgoingAnswer parseErrorAnswer(final DiameterResultCodeException cause) {
+        return DiameterMessageFactory.createParseErrorAnswer(cause);
     }
 
     public PeerState getPeerState() {

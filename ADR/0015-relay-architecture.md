@@ -95,6 +95,11 @@ itself); the DRA service appends the egress identity's Route-Record before each 
 - Answer-path work is zero-code for the caller: as long as the request went through `relay()`, the
   `complete()` dispatch restores and forwards the answer automatically; `sendAnswerRestored` is
   public only for applications that intercept answers themselves.
+- The library implements RFC 6733 behaviour only. Wire deviations a relay needs to mimic a
+  specific peer (e.g. the Yate DRA) live in the consumer: it subclasses `DiameterResponderSession`
+  / `DiameterInitiatorSession` and overrides the protected hooks `parseErrorAnswer` (answer to an
+  unparseable request; default RFC 6733 §7.1) and `closeTransportAfterInboundDpa` (default `true`,
+  RFC 6733 §5.4). There are no per-node behaviour toggles in `DiameterNodeConfig`.
 - The empty-candidates signal couples the loop-avoidance result format to the caller: a caller
   that ignores an empty map would forward to nothing; the DRA answers 3002 in that branch.
 
