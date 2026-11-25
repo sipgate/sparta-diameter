@@ -1,5 +1,7 @@
 package com.sipgate.sparta.diameter.base.core;
 
+import java.io.Serializable;
+
 /**
  * Header fields of a received message, carried by parse errors to build the error answer.
  *
@@ -16,5 +18,5 @@ public record MessageHeader(
         boolean proxiable,
         int applicationId,
         HopByHopId hopByHop,
-        EndToEndId endToEnd) {
+        EndToEndId endToEnd) implements Serializable {
 }

@@ -1,3 +1,5 @@
 package com.sipgate.sparta.diameter.base.core;
 
-public record EndToEndId(int value) {}
+import java.io.Serializable;
+
+public record EndToEndId(int value) implements Serializable {}
