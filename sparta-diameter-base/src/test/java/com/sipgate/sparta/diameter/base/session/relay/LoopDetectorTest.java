@@ -135,6 +135,20 @@ class LoopDetectorTest {
         assertThat(remaining).isEqualTo(candidates);
     }
 
+    @Test
+    void it_detects_a_loop_in_a_request_type_without_route_record_accessors() {
+        // GIVEN — a typed request that does not implement HasRouteRecordAVPs (CER), sent proxiable
+        final CapabilitiesExchangeRequest.Out cerOut = new CapabilitiesExchangeRequest.Out();
+        cerOut.addAVP(routeRecord(OWN_HOST));
+        final IncomingRequest<?> request = parseProxiable(cerOut);
+
+        // WHEN
+        final var verdict = LoopDetector.checkReceived(request, OWN_HOST);
+
+        // THEN
+        assertThat(verdict).isPresent();
+    }
+
     // ---------------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------------
@@ -154,6 +168,18 @@ class LoopDetectorTest {
             rar.addAVP(routeRecord(routeRecord));
         }
         return rar;
+    }
+
+    private static IncomingRequest<?> parseProxiable(final OutgoingRequest<?> out) {
+        try {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            out.writeTo(new DataOutputStream(baos), new HopByHopId(1), new EndToEndId(2));
+            final byte[] wire = baos.toByteArray();
+            wire[4] |= 0x40;
+            return (IncomingRequest<?>) Command.parseMessage(ByteBuffer.wrap(wire));
+        } catch (final Exception e) {
+            throw new UncheckedIOException(new IOException(e));
+        }
     }
 
     private static IncomingRequest<?> parseRequest(final OutgoingRequest<?> out) {

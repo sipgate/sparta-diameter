@@ -2,7 +2,8 @@ package com.sipgate.sparta.diameter.base.session.relay;
 
 import com.sipgate.sparta.diameter.base.core.DiameterConstants;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
-import com.sipgate.sparta.diameter.base.core.avp.mixins.HasRouteRecordAVPs;
+import com.sipgate.sparta.diameter.base.core.avp.AVP;
+import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.transport.DiameterPeer;
 
 import java.util.ArrayList;
@@ -23,11 +24,13 @@ import java.util.OptionalLong;
  *
  * <p>Identities are DiameterIdentity FQDNs and compared case-insensitively.</p>
  *
- * <p>Route-Records are read via {@link HasRouteRecordAVPs}, which the proxiable base
- * request types (ASR, RAR, STR, ACR) implement; requests without that capability
- * are treated as having no route records.</p>
+ * <p>Route-Records are read directly from the request's AVPs, so every request type
+ * is covered, including typed requests that do not declare Route-Record accessors
+ * (e.g. the SWx requests).</p>
  */
 public final class LoopDetector {
+
+    private static final AVPKey ROUTE_RECORD = new AVPKey(DiameterConstants.AVP_ROUTE_RECORD, 0);
 
     private LoopDetector() {
         // Static utility - no instantiation
@@ -112,11 +115,11 @@ public final class LoopDetector {
     }
 
     private static List<String> routeRecords(final IncomingRequest<?> request) {
-        if (!(request instanceof final HasRouteRecordAVPs routed)) {
-            return List.of();
+        final List<String> records = new ArrayList<>();
+        for (final AVP avp : request.findAVPs(ROUTE_RECORD)) {
+            records.add(avp.getDataAsString());
         }
-        final List<String> records = routed.getRouteRecords();
-        return records == null ? List.of() : records;
+        return records;
     }
 
     /**
