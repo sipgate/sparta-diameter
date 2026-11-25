@@ -29,7 +29,6 @@ import org.mockito.Mockito;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -597,8 +596,9 @@ class DiameterSessionRelayTest {
                     scheduledTasks.add(inv.getArgument(0));
                     return mock(ScheduledFuture.class);
                 });
+        final ChannelFuture requestFuture = mock(ChannelFuture.class);
         when(peer.send(any(OutgoingRequest.class), any(HopByHopId.class), any(EndToEndId.class)))
-                .thenReturn(mock(ChannelFuture.class));
+                .thenReturn(requestFuture);
         when(peer.send(any(OutgoingAnswer.class)))
                 .thenAnswer(ignored -> immediatelyCompletedFuture());
         final DiameterResponderSession session = new DiameterResponderSession(config);

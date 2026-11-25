@@ -20,6 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class RelayTranslationStore {
 
+    private static final String OUTBOUND_NULL_MESSAGE = "outboundHopByHop must not be null";
+
     private final ConcurrentHashMap<HopByHopId, RelayTranslation> translations = new ConcurrentHashMap<>();
 
     /**
@@ -30,7 +32,7 @@ public final class RelayTranslationStore {
      * @throws NullPointerException if an argument is {@code null}
      */
     public void put(final HopByHopId outboundHopByHop, final RelayTranslation translation) {
-        Objects.requireNonNull(outboundHopByHop, "outboundHopByHop must not be null");
+        Objects.requireNonNull(outboundHopByHop, OUTBOUND_NULL_MESSAGE);
         Objects.requireNonNull(translation, "translation must not be null");
         translations.put(outboundHopByHop, translation);
     }
@@ -43,7 +45,7 @@ public final class RelayTranslationStore {
      * @return the translation, or {@code null} if none is registered
      */
     public RelayTranslation lookup(final HopByHopId outboundHopByHop) {
-        Objects.requireNonNull(outboundHopByHop, "outboundHopByHop must not be null");
+        Objects.requireNonNull(outboundHopByHop, OUTBOUND_NULL_MESSAGE);
         return translations.get(outboundHopByHop);
     }
 
@@ -53,7 +55,7 @@ public final class RelayTranslationStore {
      * @return the removed translation, or {@code null} if none was registered
      */
     public RelayTranslation remove(final HopByHopId outboundHopByHop) {
-        Objects.requireNonNull(outboundHopByHop, "outboundHopByHop must not be null");
+        Objects.requireNonNull(outboundHopByHop, OUTBOUND_NULL_MESSAGE);
         return translations.remove(outboundHopByHop);
     }
 
@@ -61,7 +63,7 @@ public final class RelayTranslationStore {
      * @return {@code true} if a translation is registered for the given identifier
      */
     public boolean contains(final HopByHopId outboundHopByHop) {
-        Objects.requireNonNull(outboundHopByHop, "outboundHopByHop must not be null");
+        Objects.requireNonNull(outboundHopByHop, OUTBOUND_NULL_MESSAGE);
         return translations.containsKey(outboundHopByHop);
     }
 

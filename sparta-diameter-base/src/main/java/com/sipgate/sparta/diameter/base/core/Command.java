@@ -193,12 +193,7 @@ public abstract class Command implements
      */
     @Override
     public AVP findAVP(final AVPKey key) {
-        for (final AVP avp : avps) {
-            if (avp.isSameKey(key)) {
-                return avp;
-            }
-        }
-        return null;
+        return findFirstAVP(avps, key);
     }
 
     /**

@@ -50,6 +50,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -637,7 +638,7 @@ class DiameterResponderSessionTest {
     }
 
     @Test
-    void it_drops_an_unparseable_answer_without_answering_it() throws Exception {
+    void it_drops_an_unparseable_answer_without_answering_it() {
         // GIVEN
         final DiameterPeer peer = mock(DiameterPeer.class);
         stubSend(peer);
@@ -731,7 +732,7 @@ class DiameterResponderSessionTest {
         verify(timers.get(1), never()).cancel(false);
         assertThat(session.getPeerState()).isEqualTo(PeerState.R_OPEN);
         assertThat(reExchanges).containsExactly(secondCer);
-        verify(peer, Mockito.times(2)).send(any(CapabilitiesExchangeAnswer.Out.class));
+        verify(peer, times(2)).send(any(CapabilitiesExchangeAnswer.Out.class));
     }
 
     // -------------------------------------------------------------------------
@@ -765,7 +766,7 @@ class DiameterResponderSessionTest {
     }
 
     @Test
-    void it_sends_the_parse_error_answer_of_a_subclass_overriding_the_answer_hook() throws Exception {
+    void it_sends_the_parse_error_answer_of_a_subclass_overriding_the_answer_hook() {
         // GIVEN — a subclass answering with an E-bit answer without Failed-AVP
         final DiameterPeer peer = mock(DiameterPeer.class);
         stubSend(peer);

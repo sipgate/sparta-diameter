@@ -118,7 +118,7 @@ class SctpMessageDecoderTest {
     }
 
     @Test
-    void it_participates_in_a_full_roundtrip_through_the_request_encoder() throws Exception {
+    void it_participates_in_a_full_roundtrip_through_the_request_encoder() {
         // GIVEN: the complete SCTP codec chain as wired by DiameterNode
         final EmbeddedChannel channel = newDecoder();
         final OutgoingRequestEncoder tcpRequestEncoder = new OutgoingRequestEncoder();

@@ -45,8 +45,8 @@ public final class SctpMessageDecoder extends MessageToMessageDecoder<SctpMessag
         }
         LOGGER.debug("processing SCTP Diameter message (payload protocol id {}) on stream {} (unordered: {})",
                 payloadProtocolId, msg.streamIdentifier(), msg.isUnordered());
-        // MessageToMessageDecoder releases the (refcounted) message after decode;
-        // retain the payload so it survives into the next handler.
+        // MessageToMessageDecoder releases the (refcounted) message after decode,
+        // so retain the payload to let it survive into the next handler.
         out.add(msg.content().retain());
     }
 }

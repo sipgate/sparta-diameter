@@ -6,7 +6,6 @@ import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
 import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
-import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogAnswer;
 import com.sipgate.sparta.diameter.base.messages.DeviceWatchdogRequest;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.embedded.EmbeddedChannel;

@@ -20,7 +20,6 @@ import org.mockito.Mockito;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -73,7 +72,7 @@ class OriginStateIdTest {
     @Test
     void it_stamps_the_configured_origin_state_id_into_the_CER() {
         // GIVEN
-        final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG_WITH_STATE_ID, (ignored) -> {});
+        final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG_WITH_STATE_ID, ignored -> {});
 
         // WHEN
         final CapabilitiesExchangeRequest.Out cer = session.buildCer();
@@ -89,7 +88,7 @@ class OriginStateIdTest {
         final DiameterNodeConfig config = new DiameterNodeConfig(
                 "dra.example.com", "example.com", java.util.List.of(LOCALHOST, second),
                 0L, "sparta", CAPABILITIES);
-        final DiameterInitiatorSession session = new DiameterInitiatorSession(config, (ignored) -> {});
+        final DiameterInitiatorSession session = new DiameterInitiatorSession(config, ignored -> {});
 
         // WHEN
         final CapabilitiesExchangeRequest.Out cer = session.buildCer();
@@ -105,7 +104,7 @@ class OriginStateIdTest {
         final DiameterNodeConfig config = new DiameterNodeConfig(
                 "dra.example.com", "example.com", Collections.singletonList(LOCALHOST),
                 0L, "sparta", CAPABILITIES);
-        final DiameterInitiatorSession session = new DiameterInitiatorSession(config, (ignored) -> {});
+        final DiameterInitiatorSession session = new DiameterInitiatorSession(config, ignored -> {});
 
         // WHEN
         final CapabilitiesExchangeRequest.Out cer = session.buildCer();
@@ -273,7 +272,7 @@ class OriginStateIdTest {
     // Helpers
     // -------------------------------------------------------------------------
 
-    private static DiameterResponderSession openedSession(final DiameterPeer peer) throws Exception {
+    private static DiameterResponderSession openedSession(final DiameterPeer peer) {
         stubPeer(peer);
         final DiameterResponderSession session = new DiameterResponderSession(CONFIG_WITH_STATE_ID);
         session.onConnected(peer);
@@ -281,9 +280,9 @@ class OriginStateIdTest {
         return session;
     }
 
-    private static DiameterInitiatorSession connectedInitiator(final DiameterPeer peer) throws Exception {
+    private static DiameterInitiatorSession connectedInitiator(final DiameterPeer peer) {
         stubPeer(peer);
-        final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG_WITH_STATE_ID, (ignored) -> {});
+        final DiameterInitiatorSession session = new DiameterInitiatorSession(CONFIG_WITH_STATE_ID, ignored -> {});
         session.onConnected(peer);
         // NOTE: no clearInvocations here — incomingCea() captures the CER's identifiers
         // from this peer to build the matching CEA (RFC 6733 §6.2).
@@ -293,11 +292,13 @@ class OriginStateIdTest {
     private static void stubPeer(final DiameterPeer peer) {
         final EventLoop eventLoop = mock(EventLoop.class);
         when(peer.eventLoop()).thenReturn(eventLoop);
+        final ScheduledFuture scheduledFuture = mock(ScheduledFuture.class);
         when(eventLoop.schedule(any(Runnable.class), anyLong(), any(TimeUnit.class)))
-                .thenReturn(mock(ScheduledFuture.class));
+                .thenReturn(scheduledFuture);
+        final ChannelFuture requestFuture = mock(ChannelFuture.class);
         when(peer.send(any(com.sipgate.sparta.diameter.base.core.OutgoingRequest.class),
                 any(HopByHopId.class), any(EndToEndId.class)))
-                .thenReturn(mock(ChannelFuture.class));
+                .thenReturn(requestFuture);
         when(peer.send(any(com.sipgate.sparta.diameter.base.core.OutgoingAnswer.class)))
                 .thenAnswer(ignored -> {
                     final ChannelFuture future = mock(ChannelFuture.class);

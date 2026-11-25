@@ -15,7 +15,7 @@ import com.sipgate.sparta.diameter.base.core.HopByHopId;
  */
 public class AVPParseException extends DiameterResultCodeException {
 
-    private final AVP offendingAvp;
+    private final transient AVP offendingAvp;
 
     /**
      * @param resultCode   the result code identifying the violation

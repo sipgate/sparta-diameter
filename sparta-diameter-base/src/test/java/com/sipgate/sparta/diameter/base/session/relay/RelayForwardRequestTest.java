@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class RelayForwardRequestTest {
 
     @Test
-    void it_copies_all_avps_and_carries_route_records() throws Exception {
+    void it_copies_all_avps_and_carries_route_records() {
         // GIVEN — an incoming ASR with origin AVPs, a Session-Id and one existing
         // Route-Record from an upstream relay hop
         final AbortSessionRequest.Out out = new AbortSessionRequest.Out();

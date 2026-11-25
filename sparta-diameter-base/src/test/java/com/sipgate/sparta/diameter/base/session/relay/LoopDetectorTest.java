@@ -29,7 +29,7 @@ class LoopDetectorTest {
     private static final String OWN_HOST = "dra.example.com";
 
     @Test
-    void it_reports_loop_detected_when_own_origin_host_is_in_a_route_record() throws Exception {
+    void it_reports_loop_detected_when_own_origin_host_is_in_a_route_record() {
         // GIVEN — a proxiable request whose Route-Records contain our own identity
         final IncomingRequest<?> request =
                 parseRequest(proxiableRequestWithRouteRecords(OWN_HOST, "hss.example.com"));
@@ -43,7 +43,7 @@ class LoopDetectorTest {
     }
 
     @Test
-    void it_compares_identities_case_insensitively() throws Exception {
+    void it_compares_identities_case_insensitively() {
         // GIVEN — DiameterIdentity is an FQDN; a peer may record it in another case
         final IncomingRequest<?> request = parseRequest(proxiableRequestWithRouteRecords("DRA.Example.COM"));
         final Map<String, DiameterPeer> candidates = new LinkedHashMap<>();
@@ -59,7 +59,7 @@ class LoopDetectorTest {
     }
 
     @Test
-    void it_reports_no_loop_when_own_origin_host_is_not_in_a_route_record() throws Exception {
+    void it_reports_no_loop_when_own_origin_host_is_not_in_a_route_record() {
         // GIVEN
         final IncomingRequest<?> request = parseRequest(proxiableRequestWithRouteRecords("hss.example.com"));
 
@@ -71,7 +71,7 @@ class LoopDetectorTest {
     }
 
     @Test
-    void it_skips_loop_detection_when_proxiable_bit_is_clear() throws Exception {
+    void it_skips_loop_detection_when_proxiable_bit_is_clear() {
         // GIVEN — a non-proxiable message (CER) that carries a Route-Record naming us;
         // non-proxiable messages are never relayed, so no loop can occur
         final CapabilitiesExchangeRequest.Out cerOut = new CapabilitiesExchangeRequest.Out();
@@ -86,7 +86,7 @@ class LoopDetectorTest {
     }
 
     @Test
-    void it_excludes_candidates_whose_identity_appears_in_a_route_record() throws Exception {
+    void it_excludes_candidates_whose_identity_appears_in_a_route_record() {
         // GIVEN
         final IncomingRequest<?> request =
                 parseRequest(proxiableRequestWithRouteRecords("hss1.example.com", "hss2.example.com"));
@@ -104,7 +104,7 @@ class LoopDetectorTest {
     }
 
     @Test
-    void it_excludes_all_candidates_when_every_identity_appears_in_a_route_record() throws Exception {
+    void it_excludes_all_candidates_when_every_identity_appears_in_a_route_record() {
         // GIVEN
         final IncomingRequest<?> request =
                 parseRequest(proxiableRequestWithRouteRecords("hss1.example.com", "hss2.example.com"));
@@ -120,7 +120,7 @@ class LoopDetectorTest {
     }
 
     @Test
-    void it_returns_candidates_unchanged_when_proxiable_bit_is_clear() throws Exception {
+    void it_returns_candidates_unchanged_when_proxiable_bit_is_clear() {
         // GIVEN
         final CapabilitiesExchangeRequest.Out cerOut = new CapabilitiesExchangeRequest.Out();
         cerOut.addAVP(routeRecord(OWN_HOST));

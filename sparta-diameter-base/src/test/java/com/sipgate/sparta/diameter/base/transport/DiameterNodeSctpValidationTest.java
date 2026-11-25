@@ -2,7 +2,6 @@ package com.sipgate.sparta.diameter.base.transport;
 
 import com.sipgate.sparta.diameter.base.session.DiameterInitiatorSession;
 import com.sipgate.sparta.diameter.base.session.DiameterResponderSession;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 
 import java.net.InetAddress;
@@ -62,8 +61,9 @@ class DiameterNodeSctpValidationTest {
     void it_rejects_local_addresses_for_tcp_listen() {
         // GIVEN / WHEN / THEN
         try (DiameterNode node = new DiameterNode()) {
+            final List<InetAddress> localAddresses = List.of(InetAddress.getLoopbackAddress());
             assertThatThrownBy(() -> node.listen(
-                    3868, RESPONDER_FACTORY, TRANSPORT_TCP, List.of(InetAddress.getLoopbackAddress())))
+                    3868, RESPONDER_FACTORY, TRANSPORT_TCP, localAddresses))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Transport.SCTP");
         }
@@ -93,8 +93,9 @@ class DiameterNodeSctpValidationTest {
     void it_rejects_local_addresses_for_tcp_connect() {
         // GIVEN / WHEN / THEN
         try (DiameterNode node = new DiameterNode()) {
+            final List<InetAddress> localAddresses = List.of(InetAddress.getLoopbackAddress());
             assertThatThrownBy(() -> node.connect(
-                    "localhost", 3868, INITIATOR_FACTORY, TRANSPORT_TCP, List.of(InetAddress.getLoopbackAddress())))
+                    "localhost", 3868, INITIATOR_FACTORY, TRANSPORT_TCP, localAddresses))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Transport.SCTP");
         }

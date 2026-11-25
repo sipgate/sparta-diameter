@@ -25,8 +25,8 @@ public class DiameterResultCodeException extends DiameterException {
     private final HopByHopId hopByHop;
     private final EndToEndId endToEnd;
     private final String sessionId;
-    private final List<AVP> proxyInfos;
-    private final AVP authSessionState;
+    private final transient List<AVP> proxyInfos;
+    private final transient AVP authSessionState;
 
     /**
      * Constructs a {@code DiameterResultCodeException} with the given result code and

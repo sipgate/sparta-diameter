@@ -314,7 +314,7 @@ public final class DiameterNode implements Closeable {
     public ChannelFuture connect(final String host, final int port,
                                  final Function<Consumer<DiameterInitiatorSession>, DiameterInitiatorSession> factory,
                                  final Transport transport, final List<InetAddress> clientLocalAddresses) {
-        final Consumer<DiameterInitiatorSession> reconnect = (session) -> doConnect(host, port, session,
+        final Consumer<DiameterInitiatorSession> reconnect = session -> doConnect(host, port, session,
                 transport, clientLocalAddresses);
         final var session = factory.apply(reconnect);
         return doConnect(host, port, session, transport, clientLocalAddresses);
