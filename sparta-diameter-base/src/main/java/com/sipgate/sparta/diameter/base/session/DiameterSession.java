@@ -64,6 +64,7 @@ public abstract class DiameterSession {
     private static final Logger LOGGER = LoggerFactory.getLogger(DiameterSession.class);
 
     static final int MAX_REMEMBERED_PEERS = 10_000;
+    private static final String RELAY_FAILED = "relay failed";
 
     /**
      * Last known Origin-State-Id per remote Origin-Host (RFC 6733 §8.6/§8.16).
@@ -230,12 +231,12 @@ public abstract class DiameterSession {
 
         final CompletableFuture<IncomingAnswer> future = new CompletableFuture<>();
         if (peerState != PeerState.I_OPEN && peerState != PeerState.R_OPEN) {
-            future.completeExceptionally(new RelayFailedException("relay failed",
+            future.completeExceptionally(new RelayFailedException(RELAY_FAILED,
                     new IllegalStateException("Cannot relay in state: " + peerState)));
             return future;
         }
         if (!received.isProxiable()) {
-            future.completeExceptionally(new RelayFailedException("relay failed",
+            future.completeExceptionally(new RelayFailedException(RELAY_FAILED,
                     new IllegalStateException("Cannot relay a non-proxiable request (P-bit clear)")));
             return future;
         }
@@ -258,7 +259,7 @@ public abstract class DiameterSession {
             startTracking(future, commandCode, applicationId, outboundHopByHop, config.getRequestTimeout());
         } catch (final RejectedExecutionException e) {
             relayTranslations.remove(outboundHopByHop);
-            future.completeExceptionally(new RelayFailedException("relay failed", e));
+            future.completeExceptionally(new RelayFailedException(RELAY_FAILED, e));
             return future;
         }
 
@@ -752,7 +753,7 @@ public abstract class DiameterSession {
         // A relay future fails with RelayFailedException so the upstream request is
         // answered DIAMETER_UNABLE_TO_DELIVER rather than a generic handler failure.
         pending.future.completeExceptionally(
-                translation == null ? cause : new RelayFailedException("relay failed", cause));
+                translation == null ? cause : new RelayFailedException(RELAY_FAILED, cause));
     }
 
     /**

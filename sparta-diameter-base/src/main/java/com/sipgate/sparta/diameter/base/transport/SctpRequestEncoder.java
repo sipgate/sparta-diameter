@@ -25,11 +25,9 @@ public final class SctpRequestEncoder extends MessageToMessageEncoder<OutgoingRe
     protected void encode(final ChannelHandlerContext ctx, final OutgoingRequestEnvelope envelope,
                           final List<Object> out) throws Exception {
         final ByteBuf buffer = ctx.alloc().ioBuffer();
-        try {
-            envelope.request().writeTo(
-                    new DataOutputStream(new ByteBufOutputStream(buffer)),
-                    envelope.hopByHop(),
-                    envelope.endToEnd());
+        // closing the stream does not release the buffer (ByteBufOutputStream default)
+        try (final DataOutputStream stream = new DataOutputStream(new ByteBufOutputStream(buffer))) {
+            envelope.request().writeTo(stream, envelope.hopByHop(), envelope.endToEnd());
         } catch (final Exception e) {
             buffer.release();
             throw e;

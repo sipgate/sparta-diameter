@@ -29,8 +29,9 @@ public final class SctpAnswerEncoder extends MessageToMessageEncoder<OutgoingAns
     protected void encode(final ChannelHandlerContext ctx, final OutgoingAnswer answer,
                           final List<Object> out) throws Exception {
         final ByteBuf buffer = ctx.alloc().ioBuffer();
-        try {
-            answer.writeTo(new DataOutputStream(new ByteBufOutputStream(buffer)));
+        // closing the stream does not release the buffer (ByteBufOutputStream default)
+        try (final DataOutputStream stream = new DataOutputStream(new ByteBufOutputStream(buffer))) {
+            answer.writeTo(stream);
         } catch (final Exception e) {
             buffer.release();
             throw e;

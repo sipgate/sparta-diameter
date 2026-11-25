@@ -239,32 +239,41 @@ public final class DiameterNode implements Closeable {
                 listening.setFailure(bound.cause());
                 return;
             }
-            final io.netty.channel.sctp.nio.NioSctpServerChannel server =
-                    (io.netty.channel.sctp.nio.NioSctpServerChannel) bound.channel();
-            final AtomicInteger remaining = new AtomicInteger(serverLocalAddresses.size() - 1);
-            if (remaining.get() == 0) {
-                listening.setSuccess();
-                return;
-            }
-            // sctp_bindx equivalent: bind the remaining addresses onto the live server channel.
-            for (int i = 1; i < serverLocalAddresses.size(); i++) {
-                final InetAddress address = serverLocalAddresses.get(i);
-                server.bindAddress(address)
-                        .addListener(f -> {
-                            if (!f.isSuccess()) {
-                                LOGGER.error("failed to bind SCTP multi-homing address {}, closing the server",
-                                        address, f.cause());
-                                transportMeters.recordListenError(f.cause());
-                                if (listening.tryFailure(f.cause())) {
-                                    server.close();
-                                }
-                            } else if (remaining.decrementAndGet() == 0) {
-                                listening.trySuccess();
-                            }
-                        });
-            }
+            bindAdditionalServerAddresses(
+                    (io.netty.channel.sctp.nio.NioSctpServerChannel) bound.channel(), serverLocalAddresses, listening);
         });
         return listening;
+    }
+
+    /**
+     * {@code sctp_bindx} equivalent: binds every address after the first onto the live
+     * server channel. {@code listening} succeeds once all are bound; the first failure
+     * closes the server and fails it.
+     */
+    private void bindAdditionalServerAddresses(final io.netty.channel.sctp.nio.NioSctpServerChannel server,
+                                               final List<InetAddress> serverLocalAddresses,
+                                               final ChannelPromise listening) {
+        final AtomicInteger remaining = new AtomicInteger(serverLocalAddresses.size() - 1);
+        if (remaining.get() == 0) {
+            listening.setSuccess();
+            return;
+        }
+        for (int i = 1; i < serverLocalAddresses.size(); i++) {
+            final InetAddress address = serverLocalAddresses.get(i);
+            server.bindAddress(address).addListener(f -> {
+                if (f.isSuccess()) {
+                    if (remaining.decrementAndGet() == 0) {
+                        listening.trySuccess();
+                    }
+                    return;
+                }
+                LOGGER.error("failed to bind SCTP multi-homing address {}, closing the server", address, f.cause());
+                transportMeters.recordListenError(f.cause());
+                if (listening.tryFailure(f.cause())) {
+                    server.close();
+                }
+            });
+        }
     }
 
     /**
