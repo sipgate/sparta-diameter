@@ -2,6 +2,7 @@ package com.sipgate.sparta.diameter.base.core;
 
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
+import com.sipgate.sparta.diameter.base.core.avp.AVPParseException;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -248,7 +249,7 @@ public final class DiameterMessageFactory {
                 answer.addAVP(proxyInfo);
             }
         }
-        if (cause instanceof final com.sipgate.sparta.diameter.base.core.avp.AVPParseException avpEx) {
+        if (cause instanceof final AVPParseException avpEx) {
             answer.setAVP(AVP.create(new AVPKey(DiameterConstants.AVP_FAILED_AVP, 0),
                     List.of(avpEx.getOffendingAvp())));
         }
