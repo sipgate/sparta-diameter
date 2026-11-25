@@ -9,6 +9,7 @@ import com.sipgate.sparta.diameter.base.core.DiameterResultCodeException;
 import com.sipgate.sparta.diameter.base.core.EndToEndId;
 import com.sipgate.sparta.diameter.base.core.ErrorAnswer;
 import com.sipgate.sparta.diameter.base.core.HopByHopId;
+import com.sipgate.sparta.diameter.base.core.MessageHeader;
 import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
 import com.sipgate.sparta.diameter.base.core.OutgoingAnswer;
@@ -1186,8 +1187,9 @@ class DiameterInitiatorSessionTest {
         final DiameterInitiatorSession session = openedSession(peer);
         final AVP offending = AVP.createRaw(new AVPKey(999, 0), true, true, false, new byte[0]);
         final AVPParseException cause = new AVPParseException(
-                DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED, false,
-                316, true, 16777251, new HopByHopId(1), new EndToEndId(2), offending, null, null);
+                DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED,
+                new MessageHeader(false, 316, true, 16777251, new HopByHopId(1), new EndToEndId(2)),
+                offending, null, null, null, null);
 
         // WHEN
         session.onParseError(peer, cause);

@@ -508,8 +508,9 @@ class DiameterMessageFactoryTest {
             // GIVEN — Proxy-Info AVPs parsed before the offending AVP
             final AVP offending = AVP.createRaw(new AVPKey(1504, 10415), true, true, false, new byte[4]);
             final var cause = new com.sipgate.sparta.diameter.base.core.avp.AVPParseException(
-                    DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED, true, 316, true, 16777251, HOP, END,
-                    offending, "sid", List.of(proxyInfo("p1.example.com"), proxyInfo("p2.example.com")), null);
+                    DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED,
+                    new MessageHeader(true, 316, true, 16777251, HOP, END),
+                    offending, "sid", List.of(proxyInfo("p1.example.com"), proxyInfo("p2.example.com")), null, null);
 
             // WHEN
             final OutgoingAnswer answer = DiameterMessageFactory.createParseErrorAnswer(cause);

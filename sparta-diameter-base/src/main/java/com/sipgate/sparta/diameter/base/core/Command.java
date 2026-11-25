@@ -349,8 +349,9 @@ public abstract class Command implements
 
             if (version != DiameterConstants.DIAMETER_VERSION) {
                 throw new DiameterResultCodeException(
-                        DiameterConstants.RES_DIAMETER_UNSUPPORTED_VERSION, isRequest,
-                        commandCode, proxiable, applicationId, hopByHop, endToEnd, null, null);
+                        DiameterConstants.RES_DIAMETER_UNSUPPORTED_VERSION,
+                        new MessageHeader(isRequest, commandCode, proxiable, applicationId, hopByHop, endToEnd),
+                        null, List.of(), null, null);
             }
 
             // Typed In classes hard-code their header flags and Application-Id; the received
@@ -403,8 +404,8 @@ public abstract class Command implements
                 final AVP authSessionState = findFirstAVP(avps, authSessionStateKey);
 
                 // the exception from parseAVPs doesn't know about the context so we must enrich it here.
-                throw new AVPParseException(e.getResultCode(), isRequest,
-                    commandCode, proxiable, applicationId, hopByHop, endToEnd,
+                throw new AVPParseException(e.getResultCode(),
+                    new MessageHeader(isRequest, commandCode, proxiable, applicationId, hopByHop, endToEnd),
                     e.getOffendingAvp(), sessionId, proxyInfos, authSessionState, e);
             }
 
