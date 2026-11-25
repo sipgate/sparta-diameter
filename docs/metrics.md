@@ -8,19 +8,19 @@ All meters use the `diameter.` prefix and follow [Micrometer naming conventions]
 | `diameter.commands.sent` | Counter | ✓ | ✓ | ✓ | | | Incremented only on confirmed write success. |
 | `diameter.commands.send_errors` | Counter | ✓ | ✓ | ✓ | | | Incremented only on failed writes. |
 | `diameter.connect.error` | Counter | | | | | ✓ | Causes of transport connection errors |
-| `diameter.connections` | Counter | | | | ✓ | | Counts completed TCP handshakes (SYN/ACK). Does NOT indicate a successful Diameter CER/CEA exchange. |
-| `diameter.connections.active` | Gauge | | | | | | Total number of currently open TCP connections. |
-| `diameter.connections.active.application` | Gauge | ✓ | | | | | Number of currently open TCP connections by application. |
-| `diameter.connections.active.direction` | Gauge | | | | ✓ | | Number of currently open TCP connections by direction. |
+| `diameter.connections` | Counter | | | | ✓ | | Counts established transport (TCP or SCTP) connections. Does NOT indicate a successful Diameter CER/CEA exchange. |
+| `diameter.connections.active` | Gauge | | | | | | Total number of currently open transport (TCP or SCTP) connections. |
+| `diameter.connections.active.application` | Gauge | ✓ | | | | | Number of currently open transport (TCP or SCTP) connections by application. |
+| `diameter.connections.active.direction` | Gauge | | | | ✓ | | Number of currently open transport (TCP or SCTP) connections by direction. |
 | `diameter.decode.errors` | Counter | | | | | | Counts messages that could not be parsed. |
-| `diameter.disconnections` | Counter | | | | ✓ | | Counts TCP disconnections. Does NOT indicate a clean Diameter DPR/DPA exchange. |
+| `diameter.disconnections` | Counter | | | | ✓ | | Counts transport (TCP or SCTP) disconnections. Does NOT indicate a clean Diameter DPR/DPA exchange. |
 | `diameter.handler.duration` | Timer | ✓ | ✓ | | | | Time from receiving an inbound request to the handler future completing. |
 | `diameter.listen.error` | Counter | | | | | ✓ | Causes of transport listen errors |
 | `diameter.request.duration` | Timer | ✓ | ✓ | | | | Round-trip time for an outbound request, measured until the answer is received. Excludes timed-out and write-failed requests. |
 | `diameter.requests.errors` | Counter | ✓ | ✓ | | | ✓ | Error events for outbound requests. |
 | `diameter.handler.errors` | Counter | ✓ | ✓ | | | ✓ | Error events for inbound handler failures. |
 
-The `diameter.connections.active*` gauges, like all counters, report the sum over every `DiameterNode` registered with the same `MeterRegistry`; give each node its own registry (or a common tag via `MeterFilter`) to observe nodes separately.
+The `diameter.connections.active*` gauges, like all counters, report the sum over every `DiameterNode` registered with the same `MeterRegistry`; give each node its own registry to observe nodes separately (a common tag via `MeterFilter` does not help: the nodes share one gauge per registry).
 
 > Malicious peers can inflate `application_id` and `command_code` values to generate high-cardinality label sets. Defending against this is the application's responsibility via Micrometer's `MeterFilter`. See also ADR-0010 for the design rationale.
 

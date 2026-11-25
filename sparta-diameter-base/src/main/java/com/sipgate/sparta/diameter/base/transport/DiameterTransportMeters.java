@@ -74,7 +74,7 @@ final class DiameterTransportMeters {
             activeOutboundConnections.incrementAndGet();
         }
         Counter.builder(PREFIX + "connections")
-                .description("TCP connections established; a direction=inbound/outbound tag indicates which side initiated. Does not imply a successful Diameter CER/CEA handshake — only that the TCP SYN/ACK completed.")
+                .description("Transport (TCP or SCTP) connections established; a direction=inbound/outbound tag indicates which side initiated. Does not imply a successful Diameter CER/CEA handshake — only that the transport connection was set up.")
                 .tag(TAG_DIRECTION, direction)
                 .register(registry)
                 .increment();
@@ -91,7 +91,7 @@ final class DiameterTransportMeters {
             activeOutboundConnections.decrementAndGet();
         }
         Counter.builder(PREFIX + "disconnections")
-                .description("TCP disconnections observed; does not correlate with a clean Diameter DPR/DPA exchange.")
+                .description("Transport (TCP or SCTP) disconnections observed; does not correlate with a clean Diameter DPR/DPA exchange.")
                 .tag(TAG_DIRECTION, direction)
                 .register(registry)
                 .increment();
@@ -104,7 +104,7 @@ final class DiameterTransportMeters {
                     .computeIfAbsent(appIdStr, id -> {
                         final var counter = new AtomicInteger(0);
                         Gauge.builder(PREFIX + "connections.active.application", counter, AtomicInteger::get)
-                                .description("Number of currently open TCP connections by application.")
+                                .description("Number of currently open transport (TCP or SCTP) connections by application.")
                                 .tag(TAG_APPLICATION_ID, id)
                                 .register(registry);
                         return counter;
@@ -200,14 +200,14 @@ final class DiameterTransportMeters {
 
         ConnectionGauges(final MeterRegistry registry) {
             Gauge.builder(PREFIX + "connections.active", activeConnections, AtomicInteger::get)
-                    .description("Number of currently open TCP connections.")
+                    .description("Number of currently open transport (TCP or SCTP) connections.")
                     .register(registry);
             Gauge.builder(PREFIX + "connections.active.direction", activeInboundConnections, AtomicInteger::get)
-                    .description("Number of currently open TCP connections by direction.")
+                    .description("Number of currently open transport (TCP or SCTP) connections by direction.")
                     .tag(TAG_DIRECTION, DIRECTION_INBOUND)
                     .register(registry);
             Gauge.builder(PREFIX + "connections.active.direction", activeOutboundConnections, AtomicInteger::get)
-                    .description("Number of currently open TCP connections by direction.")
+                    .description("Number of currently open transport (TCP or SCTP) connections by direction.")
                     .tag(TAG_DIRECTION, DIRECTION_OUTBOUND)
                     .register(registry);
         }
