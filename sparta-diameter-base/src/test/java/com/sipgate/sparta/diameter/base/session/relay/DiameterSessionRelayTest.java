@@ -473,6 +473,26 @@ class DiameterSessionRelayTest {
     }
 
     @Test
+    void it_answers_upstream_exactly_once_when_the_downstream_answer_has_a_wrong_end_to_end_identifier() {
+        // GIVEN — a relaying handler; the downstream peer breaks RFC 6733 §6.2 on the end-to-end id
+        final DiameterSessionPair up = openedSession();
+        final DiameterSessionPair egress = openedSession();
+        registerRelayingHandler(up, egress);
+        up.session().onMessage(buildIncomingRequest(ORIGINAL_HBH, ORIGINAL_E2E));
+        final Ids outbound = capturedOutbound(egress);
+
+        // WHEN
+        egress.session().onMessage(buildIncomingAnswer(outbound.hopByHop(), new EndToEndId(999), null));
+
+        // THEN — only the relayed answer, with the original identifiers; no extra 5012
+        final ArgumentCaptor<OutgoingAnswer> sent = ArgumentCaptor.forClass(OutgoingAnswer.class);
+        verify(up.peer()).send(sent.capture());
+        assertThat(sent.getAllValues()).hasSize(1);
+        assertThat(sent.getValue()).isInstanceOf(RelayedAnswer.class);
+        assertThat(sent.getValue().endToEndId()).isEqualTo(ORIGINAL_E2E);
+    }
+
+    @Test
     void it_refuses_to_relay_a_non_proxiable_request() {
         // GIVEN — a received request with the P-bit clear (RFC 6733 §3: process locally)
         final DiameterSessionPair up = openedSession();

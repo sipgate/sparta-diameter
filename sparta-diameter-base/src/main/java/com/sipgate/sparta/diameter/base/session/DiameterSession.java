@@ -277,7 +277,8 @@ public abstract class DiameterSession {
     /**
      * Forwards a downstream answer upstream with the original hop-by-hop identifier
      * restored (RFC 6733 §6.2.2). Looks up the relay translation by the answer's
-     * hop-by-hop identifier; on a hit, removes the translation, sends the answer —
+     * hop-by-hop identifier; on a hit, removes the translation, marks the original request
+     * as answered ({@link IncomingRequest#markAnsweredByRelay()}), sends the answer —
      * with all AVPs unchanged, including the downstream origin's Origin-Host and
      * Origin-Realm — to the upstream peer. The future returned by
      * {@link #relay(DiameterSession, IncomingRequest, OutgoingRequest)} is completed
@@ -297,6 +298,9 @@ public abstract class DiameterSession {
         final RelayTranslation translation = relayTranslations.remove(downstreamAnswer.hopByHopId());
         if (translation == null) {
             return false;
+        }
+        if (translation.originalRequest() != null) {
+            translation.originalRequest().markAnsweredByRelay();
         }
         final RelayedAnswer restored = RelayedAnswer.of(
                 downstreamAnswer, translation.originalHopByHop(), translation.endToEnd());
@@ -456,7 +460,9 @@ public abstract class DiameterSession {
      *
      * <p>A handler that returns the future of {@link #relay} completes with the
      * downstream {@link IncomingAnswer}, which the relay answer path has already
-     * forwarded upstream; nothing further is sent for it. If that future fails with a
+     * forwarded upstream; nothing further is sent for it. A returned answer that was not
+     * forwarded for this request ({@link IncomingRequest#isAnsweredByRelay()} is false)
+     * is answered {@code DIAMETER_UNABLE_TO_COMPLY}. If that future fails with a
      * {@link RelayFailedException} (nothing was forwarded), the request is answered with
      * the protocol error {@code DIAMETER_UNABLE_TO_DELIVER} (3002, E-bit, RFC 6733 §7.1.3).
      * Any other failure, including a handler that throws synchronously, is answered with
@@ -493,9 +499,10 @@ public abstract class DiameterSession {
             } else if (err != null) {
                 send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
                 meters.recordHandlerError(commandCode, applicationId, err);
-            } else if (answer instanceof final IncomingAnswer relayed) {
-                // relay() preserves the end-to-end identifier; anything else was never forwarded.
-                if (!relayed.endToEndId().equals(request.endToEndId())) {
+            } else if (answer instanceof IncomingAnswer) {
+                // Only an answer the relay path already forwarded for this very request is
+                // done; any other received answer was never sent upstream.
+                if (!request.isAnsweredByRelay()) {
                     LOGGER.warn("handler for {} returned a received answer that was not relayed for this request",
                             request.getCommandName());
                     send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
