@@ -2,13 +2,15 @@
 title: "ADR-0007: Decode/Encode Error Handling"
 description: "How the stack responds to unknown commands, invalid messages, and unexpected exceptions during decode/encode"
 owner: "sipgate-uhlig"
-status: accepted
+status: superseded by ADR-0016
 tags:
   - error-handling
   - decode
   - encode
 created: "2026-03-27"
 ---
+
+> **Note:** Superseded in part — ADR-0016 replaces the answer format of Cases 2 and 3 (E-bit only for 3xxx) and adds answer and relay rules; Cases 1 and 4 remain in force.
 
 ## Context
 

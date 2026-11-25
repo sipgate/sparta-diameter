@@ -839,6 +839,17 @@ public class AVP {
      * @throws AVPParseException  If the AVP violates RFC 6733 in a detectable way.
      */
     public static AVP readFrom(final ByteBuffer buffer) throws EOFException, AVPParseException {
+        return readFrom(buffer, false);
+    }
+
+    /**
+     * Like {@link #readFrom(ByteBuffer)}, but with {@code acceptUnknownMandatory} an unrecognized
+     * AVP with the M-bit set is kept as an opaque AVP instead of failing with 5001 - for messages
+     * that are only relayed, never interpreted (unknown commands, proxiable commands on a relay
+     * node). Such AVPs are logged at debug level only.
+     */
+    public static AVP readFrom(final ByteBuffer buffer, final boolean acceptUnknownMandatory)
+            throws EOFException, AVPParseException {
         if (buffer.remaining() < 8) {
             throw new EOFException("Buffer does not contain enough data for an AVP header");
         }
@@ -876,8 +887,13 @@ public class AVP {
         final var key = new AVPKey(code, vendorId);
         final AVPDefinition definition = registry.get(key);
         if (definition == null) {
-            LOGGER.warn("AVP unsupported: {}", key);
-            if (mandatory) {
+            if (acceptUnknownMandatory) {
+                // relayed opaquely: legitimate traffic, not a peer anomaly
+                LOGGER.debug("AVP unsupported, kept opaque: {}", key);
+            } else {
+                LOGGER.warn("AVP unsupported: {}", key);
+            }
+            if (mandatory && !acceptUnknownMandatory) {
                 // RFC 6733 §1.3.4: unrecognized AVP with M-bit set MUST trigger 5001
                 throw new AVPParseException(DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED,
                     new AVP(code, vendorSpecific, mandatory, protectedAVP, vendorId, data));
@@ -887,7 +903,7 @@ public class AVP {
             final ByteBuffer dataBuffer = ByteBuffer.wrap(data);
             final List<AVP> nestedAVPs = new ArrayList<>();
             while (dataBuffer.remaining() >= 8) {
-                nestedAVPs.add(readFrom(dataBuffer));
+                nestedAVPs.add(readFrom(dataBuffer, acceptUnknownMandatory));
             }
             return new GroupedAVP(code, vendorSpecific, mandatory, protectedAVP, vendorId, nestedAVPs);
         }

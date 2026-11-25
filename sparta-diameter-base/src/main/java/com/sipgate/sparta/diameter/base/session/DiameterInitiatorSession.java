@@ -19,8 +19,11 @@ import java.util.function.Consumer;
 
 /**
  * Diameter session for the initiator (I-) side of a connection.
+ *
+ * <p>Subclassable (not final) so consumers can override the protected protocol hooks of
+ * {@link DiameterSession} for outgoing connections.</p>
  */
-public final class DiameterInitiatorSession extends DiameterSession {
+public class DiameterInitiatorSession extends DiameterSession {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DiameterInitiatorSession.class);
 
@@ -60,7 +63,7 @@ public final class DiameterInitiatorSession extends DiameterSession {
 
     @Override
     public void onConnected(final DiameterPeer peer) {
-        LOGGER.info("local {} connected to remote {}", peer.localAddress(), peer.remoteAddress());
+        LOGGER.info("local {} connected to remote {}", peer.localAddressesForLog(), peer.remoteAddress());
         super.onConnected(peer);
         this.peerState = PeerState.WAIT_I_CEA;
         sendAndTrack(buildCer()).whenComplete((cea, err) -> {
@@ -151,6 +154,7 @@ public final class DiameterInitiatorSession extends DiameterSession {
 
     private void handleCea(final CapabilitiesExchangeAnswer.In cea) {
         if (cea.getResultCode() == DiameterConstants.RES_DIAMETER_SUCCESS) {
+            recordRemoteOriginStateId(cea.getOriginHost(), cea.getOriginStateId());
             peerState = PeerState.I_OPEN;
             startWatchdog();
         } else {
@@ -158,7 +162,8 @@ public final class DiameterInitiatorSession extends DiameterSession {
         }
     }
 
-    private CapabilitiesExchangeRequest.Out buildCer() {
+    // package-private for tests
+    CapabilitiesExchangeRequest.Out buildCer() {
         final CapabilitiesExchangeRequest.Out cer =
             new CapabilitiesExchangeRequest.Out();
         populateCapabilityAvps(cer);

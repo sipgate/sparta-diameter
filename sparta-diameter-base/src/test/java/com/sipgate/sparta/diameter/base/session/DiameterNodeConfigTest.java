@@ -37,6 +37,56 @@ class DiameterNodeConfigTest {
                 EMPTY_CAPABILITIES);
     }
 
+    private DiameterNodeConfig minimalWithOriginStateId(final long originStateId) {
+        return new DiameterNodeConfig(
+                "hss.example.com",
+                "example.com",
+                Collections.singletonList(LOCALHOST),
+                0L,
+                "sparta",
+                EMPTY_CAPABILITIES,
+                DiameterNodeConfig.TWINIT_DEFAULT,
+                DiameterNodeConfig.TC_RECOMMENDED,
+                DiameterNodeConfig.REQUEST_TIMEOUT_DEFAULT,
+                originStateId);
+    }
+
+    @Test
+    void it_defaults_origin_state_id_to_zero_omitting_the_AVP() {
+        // GIVEN / WHEN — RFC 6733 §8.16: omit Origin-State-Id (or set 0) to not let
+        // peers infer session termination
+        final DiameterNodeConfig config = minimal();
+
+        // THEN
+        assertThat(config.getOriginStateId()).isZero();
+    }
+
+    @Test
+    void it_stores_the_configured_origin_state_id() {
+        // GIVEN / WHEN — application supplies the value; the library never generates it
+        final DiameterNodeConfig config = minimalWithOriginStateId(42L);
+
+        // THEN
+        assertThat(config.getOriginStateId()).isEqualTo(42L);
+    }
+
+    @Test
+    void it_keeps_all_constructors_compatible_with_origin_state_id() {
+        // GIVEN / WHEN — every pre-existing constructor delegates to the full one with
+        // originStateId = 0; behavioural identity for non-relay callers
+        final var timers = new DiameterNodeConfig(
+                "hss.example.com", "example.com", Collections.singletonList(LOCALHOST),
+                0L, "sparta", EMPTY_CAPABILITIES,
+                DiameterNodeConfig.TWINIT_DEFAULT, DiameterNodeConfig.TC_RECOMMENDED);
+        final var defaults = minimal();
+
+        // THEN
+        assertThat(timers.getOriginStateId()).isZero();
+        assertThat(defaults.getOriginStateId()).isZero();
+        assertThat(defaults.getRequestTimeout()).isEqualTo(DiameterNodeConfig.REQUEST_TIMEOUT_DEFAULT);
+        assertThat(timers.getTwinit()).isEqualTo(DiameterNodeConfig.TWINIT_DEFAULT);
+    }
+
     @Test
     void it_uses_rfc_default_timers_when_not_specified() {
         // GIVEN / WHEN

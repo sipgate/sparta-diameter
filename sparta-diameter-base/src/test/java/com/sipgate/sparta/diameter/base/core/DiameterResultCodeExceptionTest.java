@@ -5,9 +5,16 @@ import com.sipgate.sparta.diameter.base.core.avp.AVP;
 import com.sipgate.sparta.diameter.base.core.avp.AVPParseException;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.List;
+
 import static com.sipgate.sparta.diameter.base.core.DiameterConstants.RES_DIAMETER_AVP_UNSUPPORTED;
 import static com.sipgate.sparta.diameter.base.core.DiameterConstants.RES_DIAMETER_UNSUPPORTED_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class DiameterResultCodeExceptionTest {
 
@@ -74,5 +81,40 @@ class DiameterResultCodeExceptionTest {
         assertThat(exception.getOffendingAvp()).isSameAs(offendingAvp);
         assertThat(exception.getResultCode()).isEqualTo(RES_DIAMETER_AVP_UNSUPPORTED);
         assertThat(exception.getCommandCode()).isEqualTo(280);
+    }
+
+    @Test
+    void it_rejects_a_null_header() {
+        // GIVEN
+        final List<AVP> noProxyInfos = List.of();
+
+        // WHEN / THEN
+        assertThatThrownBy(() -> new DiameterResultCodeException(
+                RES_DIAMETER_UNSUPPORTED_VERSION, null, null, noProxyInfos, null, null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("header");
+    }
+
+    @Test
+    void it_returns_empty_proxy_infos_after_deserialization() throws Exception {
+        // GIVEN
+        final DiameterResultCodeException exception = new DiameterResultCodeException(
+                RES_DIAMETER_UNSUPPORTED_VERSION,
+                new MessageHeader(true, 257, false, 0, new HopByHopId(1), new EndToEndId(2)),
+                null, List.of(), null, null);
+        final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (final ObjectOutputStream out = new ObjectOutputStream(bytes)) {
+            out.writeObject(exception);
+        }
+
+        // WHEN
+        final DiameterResultCodeException restored;
+        try (final ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()))) {
+            restored = (DiameterResultCodeException) in.readObject();
+        }
+
+        // THEN
+        assertThat(restored.getProxyInfos()).isEmpty();
+        assertThat(restored.getHopByHop()).isEqualTo(new HopByHopId(1));
     }
 }
