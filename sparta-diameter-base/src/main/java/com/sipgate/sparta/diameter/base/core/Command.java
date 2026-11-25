@@ -45,6 +45,8 @@ public abstract class Command implements
      * Typed incoming classes pass class constants (e.g. proxiable=true) to the constructor; while
      * {@link #parseMessage} builds the command, the first {@code Command} constructed on the thread
      * takes these wire values instead, so a parsed message reflects what was actually received.
+     * {@link #parseMessage} fails if the returned command did not take them (a factory that
+     * constructed another {@code Command} first would otherwise silently consume the header).
      */
     private static final ThreadLocal<WireHeader> PARSED_WIRE_HEADER = new ThreadLocal<>();
 
@@ -360,12 +362,21 @@ public abstract class Command implements
             // message must reflect what was actually on the wire (e.g. a P=0 request must not be
             // presented as proxiable and thus relayed), so the constructor takes them from here.
             final IncomingCommand command;
+            final boolean headerConsumed;
             PARSED_WIRE_HEADER.set(new WireHeader(isRequest, proxiable, isError, isRetransmitted, applicationId));
             try {
                 command = DiameterMessageFactory.createForParsing(
                         commandCode, applicationId, isRequest, proxiable, isError, hopByHop, endToEnd, isRetransmitted);
+                headerConsumed = PARSED_WIRE_HEADER.get() == null;
             } finally {
                 PARSED_WIRE_HEADER.remove();
+            }
+            final Command parsed = (Command) command;
+            if (!headerConsumed || parsed.request != isRequest || parsed.proxiable != proxiable
+                    || parsed.error != isError || parsed.retransmitted != isRetransmitted
+                    || parsed.applicationId != applicationId) {
+                throw new IllegalStateException("parsed " + command.getClass().getName()
+                        + " did not take the wire header; another Command was constructed before it");
             }
             // Unknown commands, and proxiable commands on a relay node, are forwarded, not
             // interpreted: an unrecognized M-bit AVP must not turn them into a 5001
