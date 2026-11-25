@@ -15,15 +15,16 @@ import java.util.Objects;
  * <p>Stored by the egress session keyed by the outbound hop-by-hop identifier it
  * minted for the forwarded request. When the downstream answer arrives, the entry
  * supplies the peer the original request came in on ({@code upstreamPeer}) and the
- * hop-by-hop identifier to restore in the answer header ({@code originalHopByHop}).</p>
+ * hop-by-hop and end-to-end identifiers to restore in the answer header
+ * ({@code originalHopByHop}, {@code endToEnd}).</p>
  *
  * @param upstreamPeer     the peer connection the original request arrived on; the
  *                         restored answer is sent here
  * @param originalHopByHop the hop-by-hop identifier of the original inbound request,
  *                         restored into the answer forwarded upstream
  * @param endToEnd         the end-to-end identifier of the original request; it is
- *                         preserved unchanged on the forwarded request (RFC 6733 §3)
- * @param createdAtMillis  wall-clock creation time, for diagnostics and timeout cleanup
+ *                         preserved unchanged on the forwarded request (RFC 6733 §3) and
+ *                         set on the answer forwarded upstream
  * @param originalRequest  the original inbound request, handed to a
  *                         {@link RelayAnswerHook}; {@code null} when not recorded
  */
@@ -31,13 +32,12 @@ public record RelayTranslation(
         DiameterPeer upstreamPeer,
         HopByHopId originalHopByHop,
         EndToEndId endToEnd,
-        long createdAtMillis,
         IncomingRequest<?> originalRequest) {
 
     /** Creates a translation without the original request ({@code originalRequest} is {@code null}). */
     public RelayTranslation(final DiameterPeer upstreamPeer, final HopByHopId originalHopByHop,
-                            final EndToEndId endToEnd, final long createdAtMillis) {
-        this(upstreamPeer, originalHopByHop, endToEnd, createdAtMillis, null);
+                            final EndToEndId endToEnd) {
+        this(upstreamPeer, originalHopByHop, endToEnd, null);
     }
 
     public RelayTranslation {

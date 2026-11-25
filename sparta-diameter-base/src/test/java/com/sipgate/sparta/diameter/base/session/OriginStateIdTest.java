@@ -184,7 +184,7 @@ class OriginStateIdTest {
     }
 
     @Test
-    void it_detects_a_peer_restart_when_the_origin_state_id_increases() throws Exception {
+    void it_records_the_higher_origin_state_id_of_a_restarted_peer() throws Exception {
         // GIVEN — first connection saw state id 5
         final DiameterPeer peer = mock(DiameterPeer.class);
         final DiameterResponderSession session = openedSession(peer);
@@ -194,9 +194,37 @@ class OriginStateIdTest {
         // after restart; sessions are per-connection instances, ADR-0004)
         session.onMessage(incomingCer("client-c1.example.com", 7L));
 
-        // THEN — restart detected (WARN logged per recordRemoteOriginStateId); memory
-        // holds the latest value
+        // THEN — memory holds the latest value (the restart WARN itself is not captured)
         assertThat(DiameterSession.lastKnownRemoteOriginStateId("client-c1.example.com")).isEqualTo(7L);
+    }
+
+    @Test
+    void it_matches_the_origin_host_case_insensitively() {
+        // GIVEN
+        DiameterSession.recordRemoteOriginStateId("HSS.Example.COM", 5L);
+
+        // WHEN
+        DiameterSession.recordRemoteOriginStateId("hss.example.com", 7L);
+
+        // THEN
+        assertThat(DiameterSession.lastKnownRemoteOriginStateId("Hss.Example.Com")).isEqualTo(7L);
+    }
+
+    @Test
+    void it_evicts_the_least_recently_seen_peer_when_the_memory_is_full() {
+        // GIVEN — memory filled to the cap; the first host is seen again, so the second is now the oldest
+        for (int i = 0; i < DiameterSession.MAX_REMEMBERED_PEERS; i++) {
+            DiameterSession.recordRemoteOriginStateId("peer-" + i + ".example.com", 1L);
+        }
+        DiameterSession.recordRemoteOriginStateId("peer-0.example.com", 2L);
+
+        // WHEN
+        DiameterSession.recordRemoteOriginStateId("one-too-many.example.com", 1L);
+
+        // THEN
+        assertThat(DiameterSession.lastKnownRemoteOriginStateId("peer-1.example.com")).isEqualTo(-1L);
+        assertThat(DiameterSession.lastKnownRemoteOriginStateId("peer-0.example.com")).isEqualTo(2L);
+        assertThat(DiameterSession.lastKnownRemoteOriginStateId("one-too-many.example.com")).isEqualTo(1L);
     }
 
     @Test

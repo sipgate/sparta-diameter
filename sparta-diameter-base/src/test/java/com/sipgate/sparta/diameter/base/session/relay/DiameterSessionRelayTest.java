@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -471,6 +472,76 @@ class DiameterSessionRelayTest {
         assertThat(sent.getValue().hopByHopId()).isEqualTo(ORIGINAL_HBH);
     }
 
+    @Test
+    void it_refuses_to_relay_a_non_proxiable_request() {
+        // GIVEN — a received request with the P-bit clear (RFC 6733 §3: process locally)
+        final DiameterSessionPair up = openedSession();
+        final DiameterSessionPair egress = openedSession();
+        final IncomingRequest<?> received = buildNonProxiableIncomingRequest(ORIGINAL_HBH, ORIGINAL_E2E);
+
+        // WHEN
+        final CompletableFuture<IncomingAnswer> relayed =
+                egress.session().relay(up.session(), received, new AbortSessionRequest.Out());
+
+        // THEN — nothing is forwarded
+        assertThat(causeOf(relayed)).isInstanceOf(RelayFailedException.class)
+                .hasCauseInstanceOf(IllegalStateException.class);
+        verify(egress.peer(), never()).send(any(OutgoingRequest.class), any(HopByHopId.class), any(EndToEndId.class));
+    }
+
+    @Test
+    void it_fails_the_relay_future_without_forwarding_when_the_event_loop_rejects_the_timeout() {
+        // GIVEN — the egress event loop is shutting down
+        final DiameterSessionPair up = openedSession();
+        final DiameterSessionPair egress = openedSession();
+        when(egress.peer().eventLoop().schedule(any(Runnable.class), anyLong(), any(TimeUnit.class)))
+                .thenThrow(new RejectedExecutionException("event loop shut down"));
+
+        // WHEN
+        final CompletableFuture<IncomingAnswer> relayed = egress.session().relay(
+                up.session(), buildIncomingRequest(ORIGINAL_HBH, ORIGINAL_E2E), new AbortSessionRequest.Out());
+
+        // THEN
+        assertThat(causeOf(relayed)).isInstanceOf(RelayFailedException.class)
+                .hasCauseInstanceOf(RejectedExecutionException.class);
+        verify(egress.peer(), never()).send(any(OutgoingRequest.class), any(HopByHopId.class), any(EndToEndId.class));
+    }
+
+    @Test
+    void it_restores_the_original_end_to_end_identifier_on_the_upstream_answer() {
+        // GIVEN — a downstream peer that answers with a wrong end-to-end identifier
+        final DiameterSessionPair up = openedSession();
+        final DiameterSessionPair egress = openedSession();
+        final RelayHop hop = startRelay(up, egress);
+
+        // WHEN
+        egress.session().onMessage(buildIncomingAnswer(hop.outbound().hopByHop(), new EndToEndId(999), null));
+
+        // THEN
+        final ArgumentCaptor<OutgoingAnswer> restored = ArgumentCaptor.forClass(OutgoingAnswer.class);
+        verify(up.peer()).send(restored.capture());
+        assertThat(restored.getValue().endToEndId()).isEqualTo(ORIGINAL_E2E);
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void it_answers_unable_to_comply_when_a_handler_returns_an_answer_not_relayed_for_the_request() {
+        // GIVEN — a handler that returns some received answer of another request
+        final DiameterSessionPair up = openedSession();
+        final IncomingAnswer foreign = buildIncomingAnswer(new HopByHopId(5), new EndToEndId(6), null);
+        up.session().setHandler(AbortSessionRequest.In.class,
+                request -> (CompletableFuture) CompletableFuture.completedFuture(foreign));
+
+        // WHEN
+        up.session().onMessage(buildIncomingRequest(ORIGINAL_HBH, ORIGINAL_E2E));
+
+        // THEN
+        final ArgumentCaptor<OutgoingAnswer> sent = ArgumentCaptor.forClass(OutgoingAnswer.class);
+        verify(up.peer()).send(sent.capture());
+        assertThat(sent.getValue().hopByHopId()).isEqualTo(ORIGINAL_HBH);
+        assertThat(sent.getValue().getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY);
+    }
+
     // ---------------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------------
@@ -603,6 +674,18 @@ class DiameterSessionRelayTest {
             return (AbortSessionRequest.In) Command.parseMessage(ByteBuffer.wrap(baos.toByteArray()));
         } catch (final Exception e) {
             throw new IllegalStateException("cannot build incoming ASR", e);
+        }
+    }
+
+    private static IncomingRequest<?> buildNonProxiableIncomingRequest(final HopByHopId hbh, final EndToEndId e2e) {
+        try {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            new AbortSessionRequest.Out().writeTo(new DataOutputStream(baos), hbh, e2e);
+            final byte[] wire = baos.toByteArray();
+            wire[4] &= (byte) ~0x40;
+            return (IncomingRequest<?>) Command.parseMessage(ByteBuffer.wrap(wire));
+        } catch (final Exception e) {
+            throw new IllegalStateException("cannot build non-proxiable ASR", e);
         }
     }
 

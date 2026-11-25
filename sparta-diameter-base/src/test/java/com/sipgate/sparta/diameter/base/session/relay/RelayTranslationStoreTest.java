@@ -11,7 +11,7 @@ import static org.mockito.Mockito.mock;
 class RelayTranslationStoreTest {
 
     private static RelayTranslation translation() {
-        return new RelayTranslation(mock(DiameterPeer.class), new HopByHopId(1), new EndToEndId(2), 42L);
+        return new RelayTranslation(mock(DiameterPeer.class), new HopByHopId(1), new EndToEndId(2));
     }
 
     @Test

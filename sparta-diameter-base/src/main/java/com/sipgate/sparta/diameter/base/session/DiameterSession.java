@@ -38,8 +38,11 @@ import org.slf4j.LoggerFactory;
 import java.io.UncheckedIOException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.*;
@@ -60,6 +63,8 @@ public abstract class DiameterSession {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DiameterSession.class);
 
+    static final int MAX_REMEMBERED_PEERS = 10_000;
+
     /**
      * Last known Origin-State-Id per remote Origin-Host (RFC 6733 §8.6/§8.16).
      * <p>
@@ -67,10 +72,19 @@ public abstract class DiameterSession {
      * (ADR-0004), so the memory needed to detect a peer restart across a reconnect
      * cannot live on the session. It is keyed by the remote Origin-Host and therefore
      * valid process-wide: a given remote host can only be reachable through one node
-     * identity. See {@link #recordRemoteOriginStateId(String, long)}.
+     * identity. Keys are lower-cased (DiameterIdentity comparison is case-insensitive).
+     * At most {@link #MAX_REMEMBERED_PEERS} hosts are kept; the least recently seen one
+     * is evicted first, so peers presenting many Origin-Hosts cannot grow it without bound.
+     * See {@link #recordRemoteOriginStateId(String, long)}.
      * </p>
      */
-    private static final ConcurrentHashMap<String, Long> REMOTE_ORIGIN_STATE_IDS = new ConcurrentHashMap<>();
+    private static final Map<String, Long> REMOTE_ORIGIN_STATE_IDS = Collections.synchronizedMap(
+            new LinkedHashMap<>(16, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(final Map.Entry<String, Long> eldest) {
+                    return size() > MAX_REMEMBERED_PEERS;
+                }
+            });
 
     public void onConnected(final DiameterPeer peer) {
         this.peer = peer;
@@ -187,7 +201,12 @@ public abstract class DiameterSession {
      * requests already carry the original Origin AVPs per RFC 6733 §6.1.9 (all other
      * AVPs are forwarded unchanged as well), so stamping our own identity would be a
      * protocol violation. The application is responsible for appending a
-     * Route-Record AVP before calling {@code relay} (see ADR-0015).</p>
+     * Route-Record AVP before calling {@code relay}, and for loop detection
+     * ({@link com.sipgate.sparta.diameter.base.session.relay.LoopDetector}): {@code relay}
+     * does not check Route-Record itself (see ADR-0015).</p>
+     *
+     * <p>A non-proxiable request (P-bit clear) must be processed locally (RFC 6733 §3)
+     * and is never forwarded.</p>
      *
      * @param upstreamSession the session on whose connection {@code received} arrived;
                         the restored answer is sent to its peer
@@ -197,7 +216,7 @@ public abstract class DiameterSession {
      * @return a future that completes with the downstream answer (including E-bit error
             answers) after it was forwarded upstream, or exceptionally with a
             {@link RelayFailedException} when no answer was forwarded; its cause is an
-            {@code IllegalStateException} (not open, connection lost), a
+            {@code IllegalStateException} (not open, not proxiable, connection lost), a
             {@code TimeoutException}, or the write failure cause
      * @throws NullPointerException if any argument is {@code null}
      */
@@ -215,6 +234,11 @@ public abstract class DiameterSession {
                     new IllegalStateException("Cannot relay in state: " + peerState)));
             return future;
         }
+        if (!received.isProxiable()) {
+            future.completeExceptionally(new RelayFailedException("relay failed",
+                    new IllegalStateException("Cannot relay a non-proxiable request (P-bit clear)")));
+            return future;
+        }
 
         final HopByHopId outboundHopByHop = identifiers.nextHopByHop();
         // RFC 6733 §3: the end-to-end identifier of the original request is preserved.
@@ -229,9 +253,14 @@ public abstract class DiameterSession {
                 upstreamSession.peer(),
                 received.hopByHopId(),
                 endToEnd,
-                System.currentTimeMillis(),
                 received));
-        startTracking(future, commandCode, applicationId, outboundHopByHop, config.getRequestTimeout());
+        try {
+            startTracking(future, commandCode, applicationId, outboundHopByHop, config.getRequestTimeout());
+        } catch (final RejectedExecutionException e) {
+            relayTranslations.remove(outboundHopByHop);
+            future.completeExceptionally(new RelayFailedException("relay failed", e));
+            return future;
+        }
 
         // Deliberately NOT via send(request, hopByHop, endToEnd): that helper stamps
         // absent Origin-Host/Origin-Realm with our own identity, which would mutate the
@@ -268,7 +297,8 @@ public abstract class DiameterSession {
         if (translation == null) {
             return false;
         }
-        final RelayedAnswer restored = RelayedAnswer.of(downstreamAnswer, translation.originalHopByHop());
+        final RelayedAnswer restored = RelayedAnswer.of(
+                downstreamAnswer, translation.originalHopByHop(), translation.endToEnd());
         final RelayAnswerHook hook = relayAnswerHook;
         if (hook != null) {
             try {
@@ -468,6 +498,8 @@ public abstract class DiameterSession {
                     LOGGER.warn("handler for {} returned a received answer that was not relayed for this request",
                             request.getCommandName());
                     send(DiameterMessageFactory.createAnswer(request, DiameterConstants.RES_DIAMETER_UNABLE_TO_COMPLY));
+                    meters.recordHandlerError(commandCode, applicationId,
+                            new IllegalStateException("answer not relayed for this request"));
                 }
             } else {
                 send((OutgoingAnswer) answer);
@@ -503,7 +535,12 @@ public abstract class DiameterSession {
             final OutgoingRequest<A> request, final HopByHopId hopByHop, final EndToEndId endToEnd,
             final Duration timeout) {
         final CompletableFuture<A> future = new CompletableFuture<>();
-        startTracking(future, request.getCommandCode(), request.getApplicationId(), hopByHop, timeout);
+        try {
+            startTracking(future, request.getCommandCode(), request.getApplicationId(), hopByHop, timeout);
+        } catch (final RejectedExecutionException e) {
+            future.completeExceptionally(e);
+            return future;
+        }
         send(request, hopByHop, endToEnd).addListener(writeResult -> {
             if (!writeResult.isSuccess()) {
                 fail(hopByHop, writeResult.cause());
@@ -517,6 +554,9 @@ public abstract class DiameterSession {
      * request timeout (unless {@code timeout} is {@link Duration#ZERO}, mirroring the
      * DWR exception from ADR-0004) and starts the request duration timer sample.
      * Shared by {@code sendAndTrack} and {@code relay}.
+     *
+     * @throws RejectedExecutionException if the event loop is shutting down; nothing is
+     *         registered then, so the caller fails its future and must not send
      */
     private <A> void startTracking(final CompletableFuture<A> future, final int commandCode,
                                    final int applicationId, final HopByHopId hopByHop,
@@ -769,7 +809,7 @@ public abstract class DiameterSession {
      * value than previously seen (a misbehaving peer, RFC 6733 §8.16 mandates
      * monotonic increase) is recorded without a restart warning. Callers record only
      * after a successful capabilities exchange, so rejected peers never enter the
-     * process-wide memory.</p>
+     * process-wide memory, which is bounded (least recently seen host evicted first).</p>
      *
      * @param remoteOriginHost    the Origin-Host the peer presented
      * @param remoteOriginStateId the Origin-State-Id the peer presented, or -1 if absent
@@ -778,7 +818,7 @@ public abstract class DiameterSession {
         if (remoteOriginHost == null || remoteOriginStateId < 0) {
             return;
         }
-        REMOTE_ORIGIN_STATE_IDS.compute(remoteOriginHost, (host, previous) -> {
+        REMOTE_ORIGIN_STATE_IDS.compute(remoteOriginHost.toLowerCase(Locale.ROOT), (host, previous) -> {
             if (previous != null && remoteOriginStateId > previous) {
                 LOGGER.warn(
                         "peer restart detected for {}: Origin-State-Id increased from {} to {}; "
@@ -794,7 +834,7 @@ public abstract class DiameterSession {
      * yet. Test seam for the process-wide restart-detection memory.
      */
     static long lastKnownRemoteOriginStateId(final String remoteOriginHost) {
-        final Long last = REMOTE_ORIGIN_STATE_IDS.get(remoteOriginHost);
+        final Long last = REMOTE_ORIGIN_STATE_IDS.get(remoteOriginHost.toLowerCase(Locale.ROOT));
         return last == null ? -1L : last;
     }
 
