@@ -4,6 +4,7 @@ import com.sipgate.sparta.diameter.base.DiameterException;
 import com.sipgate.sparta.diameter.base.core.avp.AVP;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Thrown when a Diameter message can be parsed far enough to identify a specific
@@ -47,7 +48,8 @@ public class DiameterResultCodeException extends DiameterException {
      * Canonical constructor.
      *
      * @param header           the header of the received message; an answer that fails to
-     *                         parse is never answered (RFC 6733 §7: errors are reported in answers to requests)
+     *                         parse is never answered (RFC 6733 §7: errors are reported in answers to requests);
+     *                         must not be {@code null}
      * @param proxyInfos       Proxy-Info AVPs of the request parsed before the failure, in order;
      *                         copied into the answer (RFC 6733 §6.2). {@code null} means none
      * @param authSessionState the Auth-Session-State AVP of the request parsed before the failure;
@@ -56,7 +58,7 @@ public class DiameterResultCodeException extends DiameterException {
     public DiameterResultCodeException(final long resultCode, final MessageHeader header, final String sessionId, final List<AVP> proxyInfos, final AVP authSessionState, final Throwable cause) {
         super("Diameter protocol error: result code " + resultCode, cause);
         this.resultCode = resultCode;
-        this.header = header;
+        this.header = Objects.requireNonNull(header, "header must not be null");
         this.sessionId = sessionId;
         this.proxyInfos = proxyInfos == null ? List.of() : List.copyOf(proxyInfos);
         this.authSessionState = authSessionState;
@@ -138,7 +140,8 @@ public class DiameterResultCodeException extends DiameterException {
      *         empty if none (or none was parsed yet)
      */
     public List<AVP> getProxyInfos() {
-        return proxyInfos;
+        // transient: null after deserialization
+        return proxyInfos == null ? List.of() : proxyInfos;
     }
 
     /**
