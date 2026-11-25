@@ -28,6 +28,18 @@ public final class RelayedAnswer extends OutgoingAnswer {
     }
 
     /**
+     * Builds the upstream copy of a downstream answer with the original hop-by-hop
+     * identifier restored, keeping the downstream answer's end-to-end identifier.
+     *
+     * @param downstream        the answer received from the downstream peer
+     * @param originalHopByHop   the hop-by-hop identifier of the original inbound request
+     * @return the answer to send upstream
+     */
+    public static RelayedAnswer of(final IncomingAnswer downstream, final HopByHopId originalHopByHop) {
+        return of(downstream, originalHopByHop, downstream.endToEndId());
+    }
+
+    /**
      * Builds the upstream copy of a downstream answer with the original hop-by-hop and
      * end-to-end identifiers restored. Command code, application id, flags (including
      * the E-bit), and all AVPs are copied unchanged.
