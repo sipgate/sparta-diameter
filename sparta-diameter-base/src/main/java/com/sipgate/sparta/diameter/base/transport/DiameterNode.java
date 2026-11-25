@@ -10,6 +10,7 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPromise;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.MultiThreadIoEventLoopGroup;
 import io.netty.channel.nio.NioIoHandler;
@@ -26,6 +27,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -83,6 +85,9 @@ public final class DiameterNode implements Closeable {
     private static final Logger LOGGER = LoggerFactory.getLogger(DiameterNode.class);
 
     private static final int MAX_FRAME_LENGTH = 16 * 1024 * 1024;
+    // Netty's defaults, spelled out next to the explicit byte limit
+    private static final int SCTP_MAX_INCOMPLETE_MESSAGES = 128;
+    private static final int SCTP_MAX_FRAGMENTS = 128;
     private static final int LENGTH_FIELD_OFFSET = 1;
     private static final int LENGTH_FIELD_LENGTH = 3;
     private static final int LENGTH_ADJUSTMENT = -4;
@@ -160,6 +165,8 @@ public final class DiameterNode implements Closeable {
      *                             {@code NioSctpServerChannel.bindAddress(InetAddress)} once the
      *                             server channel is active (the {@code sctp_bindx} equivalent).
      *                             Must be {@code null} for TCP and non-null, non-empty for SCTP
+     * @return for SCTP, a future that succeeds once every address is bound; if any further
+     *         address fails to bind, the server channel is closed and the future fails
      * @throws NullPointerException     for {@link Transport#SCTP} when {@code serverLocalAddresses}
      *                                  is null
      * @throws IllegalArgumentException for {@link Transport#SCTP} when {@code serverLocalAddresses}
@@ -215,32 +222,47 @@ public final class DiameterNode implements Closeable {
             throw new IllegalArgumentException("serverLocalAddresses must not be empty for SCTP");
         }
         final var primary = new InetSocketAddress(serverLocalAddresses.get(0), port);
-        return new ServerBootstrap()
+        final ChannelFuture primaryBind = new ServerBootstrap()
                 .group(bossGroup, workerGroup)
                 .channel(io.netty.channel.sctp.nio.NioSctpServerChannel.class)
                 .childHandler(new SctpInitializer(factory, DiameterTransportMeters.DIRECTION_INBOUND))
                 // primary bind with the FIRST address; NioSctpServerChannel.doBind() calls
                 // SctpServerChannel.bind(address, backlog).
-                .bind(primary)
-                .addListener((final ChannelFuture bound) -> {
-                    if (!bound.isSuccess()) {
-                        transportMeters.recordListenError(bound.cause());
-                        return;
-                    }
-                    final io.netty.channel.sctp.nio.NioSctpServerChannel server =
-                            (io.netty.channel.sctp.nio.NioSctpServerChannel) bound.channel();
-                    // sctp_bindx equivalent: bind the remaining addresses onto the live server channel.
-                    for (int i = 1; i < serverLocalAddresses.size(); i++) {
-                        final InetAddress address = serverLocalAddresses.get(i);
-                        server.bindAddress(address)
-                                .addListener(f -> {
-                                    if (!f.isSuccess()) {
-                                        LOGGER.error("failed to bind SCTP multi-homing address {}", address, f.cause());
-                                        transportMeters.recordListenError(f.cause());
-                                    }
-                                });
-                    }
-                });
+                .bind(primary);
+        // Fail closed: a server missing one of its configured addresses is a configuration error.
+        final ChannelPromise listening = primaryBind.channel().newPromise();
+        primaryBind.addListener((final ChannelFuture bound) -> {
+            if (!bound.isSuccess()) {
+                transportMeters.recordListenError(bound.cause());
+                listening.setFailure(bound.cause());
+                return;
+            }
+            final io.netty.channel.sctp.nio.NioSctpServerChannel server =
+                    (io.netty.channel.sctp.nio.NioSctpServerChannel) bound.channel();
+            final AtomicInteger remaining = new AtomicInteger(serverLocalAddresses.size() - 1);
+            if (remaining.get() == 0) {
+                listening.setSuccess();
+                return;
+            }
+            // sctp_bindx equivalent: bind the remaining addresses onto the live server channel.
+            for (int i = 1; i < serverLocalAddresses.size(); i++) {
+                final InetAddress address = serverLocalAddresses.get(i);
+                server.bindAddress(address)
+                        .addListener(f -> {
+                            if (!f.isSuccess()) {
+                                LOGGER.error("failed to bind SCTP multi-homing address {}, closing the server",
+                                        address, f.cause());
+                                transportMeters.recordListenError(f.cause());
+                                if (listening.tryFailure(f.cause())) {
+                                    server.close();
+                                }
+                            } else if (remaining.decrementAndGet() == 0) {
+                                listening.trySuccess();
+                            }
+                        });
+            }
+        });
+        return listening;
     }
 
     /**
@@ -386,7 +408,8 @@ public final class DiameterNode implements Closeable {
      * Pipeline for SCTP channels. Mirrors the TCP pipeline except that:
      * <ul>
      *     <li>no {@code LengthFieldBasedFrameDecoder}: SCTP preserves message boundaries</li>
-     *     <li>{@link SctpMessageCompletionHandler} reassembles fragmented SCTP messages</li>
+     *     <li>{@link SctpMessageCompletionHandler} reassembles fragmented SCTP messages, buffering
+     *     at most {@code MAX_FRAME_LENGTH} bytes (the TCP frame limit) before closing the connection</li>
      *     <li>{@link SctpMessageDecoder} unwraps {@code SctpMessage}s (PPID check) into
      *     {@code ByteBuf}s for the shared {@link DiameterMessageDecoder}</li>
      *     <li>{@link SctpAnswerEncoder}/{@link SctpRequestEncoder} wrap outgoing messages
@@ -406,7 +429,8 @@ public final class DiameterNode implements Closeable {
         @Override
         protected void initChannel(final Channel ch) {
             ch.pipeline()
-                    .addLast(new SctpMessageCompletionHandler())
+                    .addLast(new SctpMessageCompletionHandler(
+                            SCTP_MAX_INCOMPLETE_MESSAGES, SCTP_MAX_FRAGMENTS, MAX_FRAME_LENGTH))
                     .addLast(new SctpMessageDecoder())
                     .addLast(new DiameterMessageDecoder(transportMeters, relay))
                     .addLast(new SctpAnswerEncoder())
