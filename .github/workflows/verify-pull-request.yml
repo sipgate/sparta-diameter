@@ -50,9 +50,9 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # No coverage report, so skipping tests loses no Sonar input.
+        # Tests run here (not skipped) so the coverage profile can feed JaCoCo reports to Sonar.
         run: |
-          mvn -B clean verify -DskipTests \
+          mvn -B clean verify -Pcoverage \
             org.sonarsource.scanner.maven:sonar-maven-plugin:5.1.0.4751:sonar \
             -Dsonar.organization=sipgate \
             -Dsonar.projectKey=sipgate_${{ github.event.repository.name }}
