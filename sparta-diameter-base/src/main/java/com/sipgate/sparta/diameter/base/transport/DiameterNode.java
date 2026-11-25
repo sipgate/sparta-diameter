@@ -121,7 +121,9 @@ public final class DiameterNode implements Closeable {
      *              unrecognized M-bit AVP are decoded and kept opaque instead of being
      *              rejected with {@code DIAMETER_AVP_UNSUPPORTED} (5001) — a relay forwards
      *              AVPs it does not understand (RFC 6733 §2.8.1, §6.1). Endpoints keep the
-     *              default {@code false} (strict).
+     *              default {@code false} (strict). The decision is made at parse time, so on a
+     *              relay node it also applies to proxiable requests a handler answers locally:
+     *              such a handler must reject unknown M-bit AVPs itself if it needs to.
      */
     public DiameterNode(final MeterRegistry meterRegistry, final boolean relay) {
         this.bossGroup = new MultiThreadIoEventLoopGroup(1, NioIoHandler.newFactory());
