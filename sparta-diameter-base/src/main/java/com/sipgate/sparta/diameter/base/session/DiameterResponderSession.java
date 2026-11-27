@@ -5,9 +5,6 @@ import com.sipgate.sparta.diameter.base.core.DiameterMessageFactory;
 import com.sipgate.sparta.diameter.base.core.IncomingCommand;
 import com.sipgate.sparta.diameter.base.core.IncomingAnswer;
 import com.sipgate.sparta.diameter.base.core.IncomingRequest;
-import com.sipgate.sparta.diameter.base.core.avp.AVP;
-import com.sipgate.sparta.diameter.base.core.avp.AVPContainer;
-import com.sipgate.sparta.diameter.base.core.avp.AVPKey;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeAnswer;
 import com.sipgate.sparta.diameter.base.messages.CapabilitiesExchangeRequest;
 import com.sipgate.sparta.diameter.base.messages.DisconnectPeerRequest;
@@ -18,7 +15,6 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 /**
  * Diameter session for the responder (R-) side of a connection.
@@ -109,7 +105,7 @@ public class DiameterResponderSession extends DiameterSession {
         }
         final List<Long> remoteAuthIds = cer.getAuthApplicationIds();
         final List<Long> remoteAcctIds = cer.getAcctApplicationIds();
-        final List<Long> remoteVendorSpecificAppIds = extractVendorSpecificAppIds(cer);
+        final List<Long> remoteVendorSpecificAppIds = cer.getVendorSpecificApplicationIdValues();
 
         final DiameterNodeConfig.Capabilities configCapabilities = config.getCapabilities();
         if (negotiator.hasCommonApplication(configCapabilities, remoteAuthIds, remoteAcctIds, remoteVendorSpecificAppIds)) {
@@ -128,21 +124,6 @@ public class DiameterResponderSession extends DiameterSession {
             send(buildCea(cer, DiameterConstants.RES_DIAMETER_NO_COMMON_APPLICATION));
             closePeer();
         }
-    }
-
-    private static List<Long> extractVendorSpecificAppIds(final CapabilitiesExchangeRequest.In cer) {
-        final List<Long> appIds = new ArrayList<>();
-        for (final AVPContainer container : cer.getVendorSpecificApplicationIds()) {
-            final AVP authAppAvp = container.findAVP(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0));
-            if (authAppAvp != null) {
-                appIds.add(authAppAvp.getDataAsUnsignedInt());
-            }
-            final AVP acctAppAvp = container.findAVP(new AVPKey(DiameterConstants.AVP_ACCT_APPLICATION_ID, 0));
-            if (acctAppAvp != null) {
-                appIds.add(acctAppAvp.getDataAsUnsignedInt());
-            }
-        }
-        return appIds;
     }
 
     // package-private for tests

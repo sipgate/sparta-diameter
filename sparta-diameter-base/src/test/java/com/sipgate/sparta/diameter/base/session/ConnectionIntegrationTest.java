@@ -1,5 +1,6 @@
 package com.sipgate.sparta.diameter.base.session;
 
+import com.sipgate.sparta.diameter.base.transport.DialedConnection;
 import com.sipgate.sparta.diameter.base.transport.DiameterNode;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
@@ -56,12 +57,12 @@ public class ConnectionIntegrationTest {
             final var serverSessionRef = listen(server);
             try (final var client = new DiameterNode(meterRegistry)) {
                 // WHEN
-                final var clientSessionRef = connect(client);
+                final var connection = connect(client);
 
                 // THEN: after some time both sides think they are connected
-                await().untilAsserted(() -> assertBothSidesConnected(serverSessionRef.get(), clientSessionRef.get()));
+                await().untilAsserted(() -> assertBothSidesConnected(serverSessionRef.get(), connection.session()));
 
-                clientSessionRef.get().stop();
+                connection.session().stop();
             }
         }
     }
@@ -71,10 +72,10 @@ public class ConnectionIntegrationTest {
         // GIVEN: no server ready yet
         try (final var client = new DiameterNode(meterRegistry)) {
             // WHEN
-            final var clientSessionRef = connect(client);
+            final var connection = connect(client);
 
             // THEN: Client is initially "down"
-            await().untilAsserted(() -> assertThat(clientSessionRef.get().getPeerState()).isEqualTo(PeerState.CLOSED));
+            await().untilAsserted(() -> assertThat(connection.session().getPeerState()).isEqualTo(PeerState.CLOSED));
 
             // GIVEN: there is a listening server
             try (final var server = new DiameterNode(meterRegistry)) {
@@ -82,9 +83,9 @@ public class ConnectionIntegrationTest {
                 final var serverSessionRef = listen(server);
 
                 // THEN: after some time both sides think they are connected
-                await().untilAsserted(() -> assertBothSidesConnected(serverSessionRef.get(), clientSessionRef.get()));
+                await().untilAsserted(() -> assertBothSidesConnected(serverSessionRef.get(), connection.session()));
 
-                clientSessionRef.get().stop();
+                connection.session().stop();
             }
         }
     }
@@ -96,19 +97,20 @@ public class ConnectionIntegrationTest {
             final var serverSessionRef = listen(server);
             try (final var client = new DiameterNode(meterRegistry)) {
                 // GIVEN: connection has been established
-                final var clientSessionRef = connect(client);
-                await().untilAsserted(() -> assertBothSidesConnected(serverSessionRef.get(), clientSessionRef.get()));
+                final var connection = connect(client);
+                await().untilAsserted(() -> assertBothSidesConnected(serverSessionRef.get(), connection.session()));
 
                 // WHEN
-                clientSessionRef.get().closeGracefully();
+                connection.session().closeGracefully();
 
                 // THEN: first it is closed
-                await().untilAsserted(() -> assertThat(clientSessionRef.get().getPeerState()).isEqualTo(PeerState.CLOSED));
+                await().untilAsserted(() -> assertThat(connection.session().getPeerState())
+                    .isEqualTo(PeerState.CLOSED));
 
                 // THEN: it has reconnected
-                await().untilAsserted(() -> assertBothSidesConnected(serverSessionRef.get(), clientSessionRef.get()));
+                await().untilAsserted(() -> assertBothSidesConnected(serverSessionRef.get(), connection.session()));
 
-                clientSessionRef.get().stop();
+                connection.session().stop();
             }
         }
     }
@@ -125,18 +127,12 @@ public class ConnectionIntegrationTest {
         return serverSessionRef;
     }
 
-    private AtomicReference<DiameterInitiatorSession> connect(final DiameterNode node) {
-        final var clientSessionRef = new AtomicReference<DiameterInitiatorSession>();
-        node.connect(
+    private DialedConnection connect(final DiameterNode node) {
+        return node.dial(
             "localhost",
             PORT,
-            reconnect -> {
-                final var diameterInitiatorSession = new DiameterInitiatorSession(CLIENT_NODE_CONFIG, reconnect, meterRegistry);
-                clientSessionRef.set(diameterInitiatorSession);
-                return diameterInitiatorSession;
-            }
+            reconnect -> new DiameterInitiatorSession(CLIENT_NODE_CONFIG, reconnect, meterRegistry)
         );
-        return clientSessionRef;
     }
 
     private void assertBothSidesConnected(final DiameterResponderSession serverSession, final DiameterInitiatorSession clientSession) {

@@ -140,7 +140,27 @@ public final class DiameterMessageFactory {
             final IncomingRequest<?> request,
             final long resultCode,
             final String errorMessage) {
-        return createErrorAnswer(request, errorAnswer -> {
+        return createErrorAnswer(request, resultCode, errorMessage, ErrorAnswerAvps.ALL);
+    }
+
+    /**
+     * Like {@link #createErrorAnswer(IncomingRequest, long, String)}, with control over
+     * which session-scoped AVPs of the request are mirrored.
+     *
+     * <p>Every Proxy-Info is always copied (RFC 6733 §6.2).</p>
+     *
+     * @param request      the received request to answer
+     * @param resultCode   the Result-Code AVP value to set
+     * @param errorMessage the Error-Message text; {@code null} omits the AVP
+     * @param avps         which session-scoped AVPs to mirror
+     * @return the constructed error answer
+     */
+    public static ErrorAnswer.Out createErrorAnswer(
+            final IncomingRequest<?> request,
+            final long resultCode,
+            final String errorMessage,
+            final ErrorAnswerAvps avps) {
+        return createErrorAnswer(request, avps, errorAnswer -> {
             errorAnswer.setResultCode(resultCode);
             if (errorMessage != null) {
                 errorAnswer.setErrorMessage(errorMessage);
@@ -152,6 +172,23 @@ public final class DiameterMessageFactory {
         final IncomingRequest<?> request,
         final Consumer<ErrorAnswer.Out> initializer
     ) {
+        return createErrorAnswer(request, ErrorAnswerAvps.ALL, initializer);
+    }
+
+    /**
+     * Like {@link #createErrorAnswer(IncomingRequest, Consumer)}, with control over which
+     * session-scoped AVPs of the request are mirrored.
+     *
+     * @param request      the received request to answer
+     * @param avps         which session-scoped AVPs to mirror
+     * @param initializer  customizes the answer before Proxy-Info is copied
+     * @return the constructed error answer
+     */
+    public static ErrorAnswer.Out createErrorAnswer(
+        final IncomingRequest<?> request,
+        final ErrorAnswerAvps avps,
+        final Consumer<ErrorAnswer.Out> initializer
+    ) {
         return createErrorAnswer(
             request.getCommandCode(),
             request.isProxiable(),
@@ -160,7 +197,7 @@ public final class DiameterMessageFactory {
             request.endToEndId(),
             request.getSessionId(),
             errorAnswer -> {
-                mirrorSessionAvps(request, errorAnswer);
+                mirrorSessionAvps(request, errorAnswer, avps);
                 initializer.accept(errorAnswer);
                 copyProxyInfos(request, errorAnswer);
             }
@@ -187,16 +224,22 @@ public final class DiameterMessageFactory {
      * 3GPP peers expect both on answers (Auth-Session-State must match the request per RFC 6733
      * §8.11), and without them an MME sees a truncated AIA/ULA.
      * </p>
+     *
+     * @param avps which of the session-scoped AVPs to mirror
      */
-    private static void mirrorSessionAvps(final IncomingRequest<?> request, final Command answer) {
-        for (final var code : new int[]{
-            DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID,
-            DiameterConstants.AVP_AUTH_SESSION_STATE}
-        ) {
-            final var avp = request.findAVP(new AVPKey(code, 0));
-            if (avp != null) {
-                answer.setAVP(avp);
+    private static void mirrorSessionAvps(final IncomingRequest<?> request, final Command answer,
+                                          final ErrorAnswerAvps avps) {
+        if (avps == ErrorAnswerAvps.ALL) {
+            final var vendorSpecificApplicationId = request.findAVP(
+                    new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0));
+            if (vendorSpecificApplicationId != null) {
+                answer.setAVP(vendorSpecificApplicationId);
             }
+        }
+        final var authSessionState = request.findAVP(
+                new AVPKey(DiameterConstants.AVP_AUTH_SESSION_STATE, 0));
+        if (authSessionState != null) {
+            answer.setAVP(authSessionState);
         }
     }
 
@@ -348,7 +391,7 @@ public final class DiameterMessageFactory {
             prependSessionId(request, answer);
             // no per-application factory adds them: mirror what the request carried, as the
             // typed answers do (Auth-Session-State is mandatory in 3GPP answers, RFC 6733 §8.11)
-            mirrorSessionAvps(request, answer);
+            mirrorSessionAvps(request, answer, ErrorAnswerAvps.ALL);
             initializer.accept(answer);
             copyProxyInfos(request, answer);
             return answer;

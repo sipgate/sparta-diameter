@@ -34,6 +34,29 @@ public interface HasVendorSpecificApplicationIdAVPs extends AVPContainer {
         return result;
     }
 
+    /**
+     * The Auth-Application-Id and Acct-Application-Id values carried inside every
+     * Vendor-Specific-Application-Id grouped AVP, in AVP order. The Vendor-Id of the
+     * group is informational and is not returned (RFC 6733 §5.3).
+     *
+     * @return the application identifiers inside the vendor-specific groups; empty when
+     *         the message carries none
+     */
+    default List<Long> getVendorSpecificApplicationIdValues() {
+        final List<Long> result = new ArrayList<>();
+        for (final AVPContainer container : getVendorSpecificApplicationIds()) {
+            final AVP authApp = container.findAVP(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0));
+            if (authApp != null) {
+                result.add(authApp.getDataAsUnsignedInt());
+            }
+            final AVP acctApp = container.findAVP(new AVPKey(DiameterConstants.AVP_ACCT_APPLICATION_ID, 0));
+            if (acctApp != null) {
+                result.add(acctApp.getDataAsUnsignedInt());
+            }
+        }
+        return result;
+    }
+
     default AVPContainer getFirstVendorSpecificApplicationId() {
         final var all = getVendorSpecificApplicationIds();
         return all.isEmpty() ? null : all.get(0);

@@ -76,28 +76,31 @@ public final class LoopDetector {
      *
      * <p>{@code DiameterPeer} does not expose the negotiated remote Origin-Host, so the
      * caller supplies the candidates as a map from peer identity (the Origin-Host the
-     * candidate advertises) to the peer connection. The returned map preserves the
-     * iteration order of {@code candidatesByIdentity}.</p>
+     * candidate advertises) to the candidate. The value type is free: a relay may keep
+     * its own peer configuration type instead of a {@code DiameterPeer}. The returned
+     * map preserves the iteration order of {@code candidatesByIdentity}.</p>
      *
      * <p>Skipped (all candidates returned unchanged) when the P-bit is clear.</p>
      *
      * @param request               the received proxiable request
-     * @param candidatesByIdentity candidate peers keyed by their Origin-Host identity
+     * @param candidatesByIdentity candidates keyed by their Origin-Host identity
+     * @param <T>                  candidate value type, for example {@code DiameterPeer}
+     *                             or an application's own peer configuration
      * @return the candidates not present in any Route-Record, in input order; empty
      *         when every candidate is excluded (caller answers 3002)
      * @throws NullPointerException if an argument is {@code null}
      */
-    public static Map<String, DiameterPeer> filterCandidates(
-            final IncomingRequest<?> request, final Map<String, DiameterPeer> candidatesByIdentity) {
+    public static <T> Map<String, T> filterCandidates(
+            final IncomingRequest<?> request, final Map<String, T> candidatesByIdentity) {
         Objects.requireNonNull(request, "request must not be null");
         Objects.requireNonNull(candidatesByIdentity, "candidatesByIdentity must not be null");
-        final Map<String, DiameterPeer> remaining = new LinkedHashMap<>();
+        final Map<String, T> remaining = new LinkedHashMap<>();
         if (!request.isProxiable()) {
             remaining.putAll(candidatesByIdentity);
             return remaining;
         }
         final List<String> routeRecords = routeRecords(request);
-        for (final Map.Entry<String, DiameterPeer> candidate : candidatesByIdentity.entrySet()) {
+        for (final Map.Entry<String, T> candidate : candidatesByIdentity.entrySet()) {
             if (!contains(routeRecords, candidate.getKey())) {
                 remaining.put(candidate.getKey(), candidate.getValue());
             }
@@ -125,7 +128,8 @@ public final class LoopDetector {
     /**
      * Convenience for callers that need the candidate list, not the identity mapping.
      *
-     * @param filtered the result of {@link #filterCandidates(IncomingRequest, Map)}
+     * @param filtered the result of {@link #filterCandidates(IncomingRequest, Map)} for
+     *                 {@code DiameterPeer} candidates
      * @return the remaining candidate peers in the same order
      */
     public static List<DiameterPeer> peersOf(final Map<String, DiameterPeer> filtered) {

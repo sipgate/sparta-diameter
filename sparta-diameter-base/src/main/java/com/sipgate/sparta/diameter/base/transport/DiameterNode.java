@@ -281,7 +281,7 @@ public final class DiameterNode implements Closeable {
      */
     public ChannelFuture connect(final String host, final int port,
                                  final Function<Consumer<DiameterInitiatorSession>, DiameterInitiatorSession> factory) {
-        return connect(host, port, factory, Transport.TCP);
+        return dial(host, port, factory, Transport.TCP).connectFuture();
     }
 
     /**
@@ -290,7 +290,7 @@ public final class DiameterNode implements Closeable {
     public ChannelFuture connect(final String host, final int port,
                                  final Function<Consumer<DiameterInitiatorSession>, DiameterInitiatorSession> factory,
                                  final Transport transport) {
-        return connect(host, port, factory, transport, null);
+        return dial(host, port, factory, transport, null).connectFuture();
     }
 
     /**
@@ -314,10 +314,41 @@ public final class DiameterNode implements Closeable {
     public ChannelFuture connect(final String host, final int port,
                                  final Function<Consumer<DiameterInitiatorSession>, DiameterInitiatorSession> factory,
                                  final Transport transport, final List<InetAddress> clientLocalAddresses) {
+        return dial(host, port, factory, transport, clientLocalAddresses).connectFuture();
+    }
+
+    /**
+     * Initiates an outgoing Diameter connection to the given host and port, over TCP,
+     * and returns the created initiator session together with the connect future.
+     */
+    public DialedConnection dial(final String host, final int port,
+                                 final Function<Consumer<DiameterInitiatorSession>, DiameterInitiatorSession> factory) {
+        return dial(host, port, factory, Transport.TCP);
+    }
+
+    /**
+     * Initiates an outgoing Diameter connection to the given host and port and returns
+     * the created initiator session together with the connect future.
+     */
+    public DialedConnection dial(final String host, final int port,
+                                 final Function<Consumer<DiameterInitiatorSession>, DiameterInitiatorSession> factory,
+                                 final Transport transport) {
+        return dial(host, port, factory, transport, null);
+    }
+
+    /**
+     * Initiates an outgoing Diameter connection to the given host and port, with explicit
+     * SCTP client multi-homing addresses, and returns the created initiator session
+     * together with the connect future. The factory and validation semantics match
+     * {@link #connect(String, int, Function, Transport, List)}.
+     */
+    public DialedConnection dial(final String host, final int port,
+                                 final Function<Consumer<DiameterInitiatorSession>, DiameterInitiatorSession> factory,
+                                 final Transport transport, final List<InetAddress> clientLocalAddresses) {
         final Consumer<DiameterInitiatorSession> reconnect = session -> doConnect(host, port, session,
                 transport, clientLocalAddresses);
         final var session = factory.apply(reconnect);
-        return doConnect(host, port, session, transport, clientLocalAddresses);
+        return new DialedConnection(session, doConnect(host, port, session, transport, clientLocalAddresses));
     }
 
     private ChannelFuture doConnect(final String host, final int port, final DiameterInitiatorSession session,
