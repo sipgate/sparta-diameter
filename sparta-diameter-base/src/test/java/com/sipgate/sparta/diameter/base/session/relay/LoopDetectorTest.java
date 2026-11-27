@@ -104,6 +104,22 @@ class LoopDetectorTest {
     }
 
     @Test
+    void it_filters_candidates_of_any_value_type_by_identity() {
+        // GIVEN — a relay may keep its own candidate type instead of DiameterPeer
+        final IncomingRequest<?> request =
+                parseRequest(proxiableRequestWithRouteRecords("hss1.example.com"));
+        final Map<String, String> candidates = new LinkedHashMap<>();
+        candidates.put("hss1.example.com", "excluded");
+        candidates.put("hss3.example.com", "eligible");
+
+        // WHEN
+        final Map<String, String> remaining = LoopDetector.filterCandidates(request, candidates);
+
+        // THEN
+        assertThat(remaining).containsExactly(Map.entry("hss3.example.com", "eligible"));
+    }
+
+    @Test
     void it_excludes_all_candidates_when_every_identity_appears_in_a_route_record() {
         // GIVEN
         final IncomingRequest<?> request =

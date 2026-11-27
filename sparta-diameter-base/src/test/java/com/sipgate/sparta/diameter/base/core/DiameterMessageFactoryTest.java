@@ -253,6 +253,50 @@ class DiameterMessageFactoryTest {
             assertThat(answer.getAuthSessionState()).isEqualTo(-1);
             assertThat(answer.getVendorSpecificApplicationId()).isNull();
         }
+
+        @Test
+        void it_can_omit_vendor_specific_application_id_but_keeps_auth_session_state() {
+            // GIVEN a request carrying both AVPs
+            when(request.findAVP(new AVPKey(DiameterConstants.AVP_AUTH_SESSION_STATE, 0)))
+                .thenReturn(AVP.create(
+                    new AVPKey(DiameterConstants.AVP_AUTH_SESSION_STATE, 0),
+                    DiameterConstants.AUTH_SESSION_STATE_NOT_MAINTAINED));
+            when(request.findAVP(new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0)))
+                .thenReturn(AVP.create(
+                    new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0),
+                    List.of(AVP.create(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0), 16777251L))));
+
+            // WHEN
+            final var answer = DiameterMessageFactory.createErrorAnswer(
+                request, DiameterConstants.RES_DIAMETER_UNABLE_TO_DELIVER, "no route",
+                ErrorAnswerAvps.AUTH_SESSION_STATE_ONLY);
+
+            // THEN Auth-Session-State is still mirrored (RFC 6733 §8.11), VSAI is not
+            assertThat(answer.getResultCode()).isEqualTo(DiameterConstants.RES_DIAMETER_UNABLE_TO_DELIVER);
+            assertThat(answer.getAuthSessionState())
+                .isEqualTo(DiameterConstants.AUTH_SESSION_STATE_NOT_MAINTAINED);
+            assertThat(answer.getVendorSpecificApplicationId()).isNull();
+        }
+
+        @Test
+        void it_applies_the_mirroring_choice_to_a_custom_initializer() {
+            // GIVEN a request advertising a VSAI
+            when(request.findAVP(new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0)))
+                .thenReturn(AVP.create(
+                    new AVPKey(DiameterConstants.AVP_VENDOR_SPECIFIC_APPLICATION_ID, 0),
+                    List.of(AVP.create(new AVPKey(DiameterConstants.AVP_AUTH_APPLICATION_ID, 0), 16777251L))));
+
+            // WHEN
+            final var answer = DiameterMessageFactory.createErrorAnswer(
+                request, ErrorAnswerAvps.AUTH_SESSION_STATE_ONLY, errorAnswer -> {
+                    errorAnswer.setResultCode(DiameterConstants.RES_DIAMETER_UNABLE_TO_DELIVER);
+                    errorAnswer.setErrorMessage("custom");
+                });
+
+            // THEN
+            assertThat(answer.getErrorMessage()).isEqualTo("custom");
+            assertThat(answer.getVendorSpecificApplicationId()).isNull();
+        }
     }
 
     @Test
